@@ -219,7 +219,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：20:58:15" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
+              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：21:38:26" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -244,9 +244,6 @@
       
           <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>因为最近这段时间被拉去打一个程序开发的比赛，所以花几天学了一下go语言。</p>
 <p>接下来打算把学习go的笔记更一下，后面再写一些关于go的安全编程的内容。</p>
-<h2 id="基本结构"><a href="#基本结构" class="headerlink" title="基本结构"></a>基本结构</h2><h3 id="包和函数"><a href="#包和函数" class="headerlink" title="包和函数"></a>包和函数</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main()</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;hello world&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>package关键字声明了代码所属的包。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/07/27/1%20go%20%E5%91%BD%E4%BB%A4%E5%BC%8F%E7%BC%96%E7%A8%8B/#more" rel="contents">
@@ -301,7 +298,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：20:58:46" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
+              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：21:38:46" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -325,13 +322,6 @@
 
       
           <h2 id="实数"><a href="#实数" class="headerlink" title="实数"></a>实数</h2><h3 id="声明浮点类型变量"><a href="#声明浮点类型变量" class="headerlink" title="声明浮点类型变量"></a>声明浮点类型变量</h3><p>每个变量都有与之相关联的类型，其中声明和初始化实数变量就需要用到浮点类型。</p>
-<p>以下代码具有相同的作用，即使我们不为days变量指定类型，go编译器也会根据给定值推断出该变量的类型</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">days :=<span class="number">365.2425</span></span><br><span class="line"><span class="keyword">var</span> days=<span class="number">265.2425</span></span><br><span class="line"><span class="keyword">var</span> days <span class="type">float64</span>=<span class="number">365.2425</span></span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>在go语言中，所有带小数点的数字在默认情况下都会被设置为float64类型</p>
-</blockquote>
-<p>如果使用整数去初始化一个变量，匿名go语言只有在显式地指定浮点类型的情况下，才会将其声明为浮点类型变量</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> days <span class="type">float64</span>=<span class="number">30</span></span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2024/07/27/2%20%E7%B1%BB%E5%9E%8B/#more" rel="contents">
@@ -386,7 +376,16 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：20:36:35" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
+              <time title="创建时间：2024-07-27 00:00:00 / 修改时间：21:32:10" itemprop="dateCreated datePublished" datetime="2024-07-27T00:00:00+08:00">2024-07-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%85%B6%E5%AE%83/" itemprop="url" rel="index"><span itemprop="name">其它</span></a>
+                </span>
             </span>
 
           
@@ -401,11 +400,12 @@
 
       
           <blockquote>
-<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>第一次尝试在github上搭建博客，也是除次开始尝试实验nvim编写博客。所以特地研究了一下markdown的语法，这里整理成笔记放在博客上了。</p>
-</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2></blockquote>
+<p>第一次尝试在github上搭建博客，也是初次开始尝试实验nvim编写博客。所以特地研究了一下markdown的语法，这里整理成笔记放在博客上了。</p>
 <blockquote>
 <h2 id="创建博客"><a href="#创建博客" class="headerlink" title="创建博客"></a>创建博客</h2></blockquote>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new post &quot;博客&quot;</span><br></pre></td></tr></table></figure>
+<p>创建博客只需要执行下面这条命令就会在post文件夹下创建一个相应名称的博客文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new post &quot;博客名称&quot;</span><br></pre></td></tr></table></figure>
 
 <h3 id="Front-matter"><a href="#Front-matter" class="headerlink" title="Front-matter"></a>Front-matter</h3><p><code>Front-matter</code>是md文件最上方以<code>---</code>分割的区域，用于指定个别文件的变量。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">title: 博客标题</span><br><span class="line">date: 发布时间</span><br><span class="line">update: 更新日期</span><br><span class="line">top: 是否置顶</span><br><span class="line">categories: 分类</span><br><span class="line">comments: 开启文章的评论功能</span><br><span class="line">tags: 标签（不适用于分页）</span><br><span class="line">summary: 自定义的文章摘要功能</span><br></pre></td></tr></table></figure>
@@ -504,7 +504,7 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
