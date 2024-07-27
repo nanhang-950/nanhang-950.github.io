@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>南行</title>
+    <link>http://example.com/</link>
+    
+    <atom:link href="http://example.com/rss2.xml" rel="self" type="application/rss+xml"/>
+    
+    <description>为了更强，我们存在！</description>
+    <pubDate>Sat, 27 Jul 2024 10:24:56 GMT</pubDate>
+    <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>测试博客</title>
+      <link>http://example.com/2024/07/27/%E6%B5%8B%E8%AF%95%E5%8D%9A%E5%AE%A2/</link>
+      <guid>http://example.com/2024/07/27/%E6%B5%8B%E8%AF%95%E5%8D%9A%E5%AE%A2/</guid>
+      <pubDate>Sat, 27 Jul 2024 10:12:56 GMT</pubDate>
+      
+        
+        
+      <description>&lt;h1 id=&quot;闭关&quot;&gt;&lt;a href=&quot;#闭关&quot; class=&quot;headerlink&quot; title=&quot;闭关&quot;&gt;&lt;/a&gt;闭关&lt;/h1&gt;&lt;h2 id=&quot;c&quot;&gt;&lt;a href=&quot;#c&quot; class=&quot;headerlink&quot; title=&quot;c&quot;&gt;&lt;/a&gt;c&lt;/h2&gt;&lt;p&gt;&lt;code&gt;p</description>
+        
+      
+      
+      
+      <content:encoded><![CDATA[<h1 id="闭关"><a href="#闭关" class="headerlink" title="闭关"></a>闭关</h1><h2 id="c"><a href="#c" class="headerlink" title="c"></a>c</h2><p><code>printf</code></p><h2 id="c-1"><a href="#c-1" class="headerlink" title="c++"></a>c++</h2><h2 id="rust"><a href="#rust" class="headerlink" title="rust"></a>rust</h2>]]></content:encoded>
+      
+      
+      
+      
+      <comments>http://example.com/2024/07/27/%E6%B5%8B%E8%AF%95%E5%8D%9A%E5%AE%A2/#disqus_thread</comments>
+      
+    </item>
+    
+  </channel>
+</rss>
