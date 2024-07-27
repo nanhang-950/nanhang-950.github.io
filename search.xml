@@ -4,7 +4,7 @@
   
     
     <entry>
-      <title>Go 语言学习笔记1</title>
+      <title>Go 笔记 1 命令式编程</title>
       <link href="/2024/07/27/1%20go%20%E5%91%BD%E4%BB%A4%E5%BC%8F%E7%BC%96%E7%A8%8B/"/>
       <url>/2024/07/27/1%20go%20%E5%91%BD%E4%BB%A4%E5%BC%8F%E7%BC%96%E7%A8%8B/</url>
       
@@ -13,7 +13,7 @@
       
       <categories>
           
-          <category> 编写语言 </category>
+          <category> 编程语言 </category>
           
       </categories>
       
@@ -29,7 +29,7 @@
     
     
     <entry>
-      <title>Go 语言学习笔记2</title>
+      <title>Go 笔记 2 类型</title>
       <link href="/2024/07/27/2%20%E7%B1%BB%E5%9E%8B/"/>
       <url>/2024/07/27/2%20%E7%B1%BB%E5%9E%8B/</url>
       
@@ -58,7 +58,7 @@
       <link href="/2024/07/27/markdown/"/>
       <url>/2024/07/27/markdown/</url>
       
-        <content type="html"><![CDATA[<blockquote><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2></blockquote><p>第一次尝试在github上搭建博客，也是初次开始尝试实验nvim编写博客。所以特地研究了一下markdown的语法，这里整理成笔记放在博客上了。</p><blockquote><h2 id="创建博客"><a href="#创建博客" class="headerlink" title="创建博客"></a>创建博客</h2></blockquote><p>创建博客只需要执行下面这条命令就会在post文件夹下创建一个相应名称的博客文件</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new post &quot;博客名称&quot;</span><br></pre></td></tr></table></figure><h3 id="Front-matter"><a href="#Front-matter" class="headerlink" title="Front-matter"></a>Front-matter</h3><p><code>Front-matter</code>是md文件最上方以<code>---</code>分割的区域，用于指定个别文件的变量。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">title: 博客标题</span><br><span class="line">date: 发布时间</span><br><span class="line">update: 更新日期</span><br><span class="line">top: 是否置顶</span><br><span class="line">categories: 分类</span><br><span class="line">comments: 开启文章的评论功能</span><br><span class="line">tags: 标签（不适用于分页）</span><br><span class="line">summary: 自定义的文章摘要功能</span><br></pre></td></tr></table></figure><p><strong>示例</strong></p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">title: 模板</span><br><span class="line">date: 2024-07-27</span><br><span class="line">top: true</span><br><span class="line">tags: </span><br><span class="line"><span class="bullet">-</span> c </span><br><span class="line"><span class="bullet">-</span> c++ </span><br><span class="line"><span class="bullet">-</span> go</span><br><span class="line">categories:</span><br><span class="line"><span class="bullet">-</span> 编程语言</span><br></pre></td></tr></table></figure>]]></content>
+        <content type="html"><![CDATA[<blockquote><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2></blockquote><p>第一次尝试在github上搭建博客，也是初次开始尝试实验nvim编写博客。所以特地研究了一下markdown的语法，这里整理成笔记放在博客上了。</p><span id="more"></span><blockquote><h2 id="创建博客"><a href="#创建博客" class="headerlink" title="创建博客"></a>创建博客</h2></blockquote><p>创建博客只需要执行下面这条命令就会在post文件夹下创建一个相应名称的博客文件</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new post &quot;博客名称&quot;</span><br></pre></td></tr></table></figure><h3 id="Front-matter"><a href="#Front-matter" class="headerlink" title="Front-matter"></a>Front-matter</h3><p><code>Front-matter</code>是md文件最上方以<code>---</code>分割的区域，用于指定个别文件的变量。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">title: 博客标题</span><br><span class="line">date: 发布时间</span><br><span class="line">update: 更新日期</span><br><span class="line">top: 是否置顶</span><br><span class="line">categories: 分类</span><br><span class="line">comments: 开启文章的评论功能</span><br><span class="line">tags: 标签（不适用于分页）</span><br><span class="line">summary: 自定义的文章摘要功能</span><br></pre></td></tr></table></figure><p><strong>示例</strong></p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">title: 模板</span><br><span class="line">date: 2024-07-27</span><br><span class="line">top: true</span><br><span class="line">tags: </span><br><span class="line"><span class="bullet">-</span> c </span><br><span class="line"><span class="bullet">-</span> c++ </span><br><span class="line"><span class="bullet">-</span> go</span><br><span class="line">categories:</span><br><span class="line"><span class="bullet">-</span> 编程语言</span><br></pre></td></tr></table></figure>]]></content>
       
       
       <categories>
