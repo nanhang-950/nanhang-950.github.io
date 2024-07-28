@@ -1168,6 +1168,12 @@ pre .javascript .function {
   padding: 2px;
   border-radius: 50%;
 }
+.site-author-image {
+  transition: transform 1s ease-out;
+}
+.site-author-image:hover {
+  transform: rotateZ(360deg);
+}
 .site-author-name {
   color: var(--text-color);
   font-weight: 600;
@@ -1194,7 +1200,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #7fd0ff;
+  background: #ffb605;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -1539,7 +1545,7 @@ pre .javascript .function {
   }
 }
 .reading-progress-bar {
-  background: #06d633;
+  background: #37C6C0;
   display: block;
   height: 3px;
   left: 0;
@@ -2767,4 +2773,43 @@ mjx-container + br {
   .pagination {
     margin: 8px 0 0;
   }
+}
+.post-body p a {
+  color: #0593d3;
+  border-bottom: none;
+}
+.post-body p a:hover {
+  color: #ff106c;
+}
+a,
+span.exturl {
+  border-bottom: none;
+}
+a:hover,
+span.exturl:hover {
+  color: #2bf;
+}
+/* webkit, opera, IE9 */
+::selection {
+  background: #00c4b6;
+  color: #f7f7f7;
+}
+/* firefox */
+::-moz-selection {
+  background: #00c4b6;
+  color: #f7f7f7;
+}
+.headband {
+  display: none;
+}
+.highlight *::selection {
+  background: #00c4b6;
+}
+blockquote {
+  border-left: 4px solid #2bf;
+}
+.site-brand-container {
+  background-image: url("/images/bg.png");
+  background-size: 100% 100%;
+  opacity: 0.9;
 }
