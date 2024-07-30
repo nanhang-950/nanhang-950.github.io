@@ -787,7 +787,7 @@
 
 <div class="copyright">
   
-  &copy; Sat Jul 27 2024 08:00:00 GMT+0800 (China Standard Time) – 
+  &copy; 
   <span itemprop="copyrightYear">2024</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
@@ -805,58 +805,71 @@
     <span title="站点阅读时长">22 分钟</span>
 </div>
 
-<!-- 网站运行时间的设置 -->
-<span id="timeDate">载入天数...</span>
-<span id="times">载入时分秒...</span>
+<div>
+	<span id="timeDate">载入天数...</span><span id="times">载入时分秒...</span>
+	<script>
+		var now = new Date();
+		function createtime() {
+			var grt= new Date("07/27/2024 18:00:00");
+			now.setTime(now.getTime()+250);
+			days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+			hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+			if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+			mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+			seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+			snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+			document.getElementById("timeDate").innerHTML = "本站已运行 "+dnum+" 天 ";
+			document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+		}
+	setInterval("createtime()",250);
+	</script>
+</div>
+
+
+    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <span id="busuanzi_container_site_pv">总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">总访客数<span id="busuanzi_value_site_uv"></span>人</span>
+    <span class="post-meta-divider">|</span>
+<!-- 不蒜子计数初始值纠正 -->
 <script>
-    var now = new Date();
-    function createtime() {
-        var grt= new Date("08/10/2021 12:00:00");//此处修改你的建站时间或者网站上线时间
-        now.setTime(now.getTime()+250);
-        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
-        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
-        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
-        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
-        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
-        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
-        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
-        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+$(document).ready(function() {
+
+    var int = setInterval(fixCount, 50);  // 50ms周期检测函数
+    var countOffset = 20000;  // 初始化首次数据
+
+    function fixCount() {
+       if (document.getElementById("busuanzi_container_site_pv").style.display != "none")
+        {
+            $("#busuanzi_value_site_pv").html(parseInt($("#busuanzi_value_site_pv").html()) + countOffset);
+            clearInterval(int);
+        }
+        if ($("#busuanzi_container_site_pv").css("display") != "none")
+        {
+            $("#busuanzi_value_site_uv").html(parseInt($("#busuanzi_value_site_uv").html()) + countOffset); // 加上初始数据
+            clearInterval(int); // 停止检测
+        }
     }
-    setInterval("createtime()",250);
+
+});
 </script>
 
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-<span><br></span>
-
-<span class="post-meta-item-icon">
-      <i class="fa fa-user"></i>
-</span>
-<span>总访客&nbsp<span id="busuanzi_value_site_uv"></span>&nbsp人</span>
-    <span class="post-meta-divider">|</span>
-<span class="post-meta-item-icon">
-      <i class="fa fa-eye"></i>
-</span>
-    <span>总访问量&nbsp<span id="busuanzi_value_site_pv"></span>&nbsp次</span>
-
-<div class="theme-info">
-  <div class="powered-by"></div>
-  <span class="post-count">博客全站共12.6k字</span>
-</div>
 
         
 <div class="busuanzi-count">
   <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
-      访客数<span class="post-meta-item-icon">
+      访客<span class="post-meta-item-icon">
         <i class="fa fa-user"></i>
       </span>
       <span class="site-uv" title="总访客量">
         <span id="busuanzi_value_site_uv"></span>
       </span>人次
     </span>
-    <span class="post-meta-divider">|</span>
+    <span class="post-meta-divider"></span>
     <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
-      总访问量<span class="post-meta-item-icon">
+      访问量<span class="post-meta-item-icon">
         <i class="fa fa-eye"></i>
       </span>
       <span class="site-pv" title="总访问量">
@@ -981,7 +994,7 @@ NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
   </div>
 </div><script src="/js/injector.js"></script>
   <!-- 页面点击小红心 -->
-
+  <script type="text/javascript" src="/js/src/clicklove.js"></script>
 <script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/01/assets/haru01.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":150,"vOffset":0},"mobile":{"show":true},"react":{"opacity":0.7},"log":false});</script></body>
 </html>
 
