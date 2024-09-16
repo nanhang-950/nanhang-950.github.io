@@ -1194,7 +1194,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #4efeff;
+  background: #ff13cf;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2766,4 +2766,9 @@ blockquote {
 .darkmode--activated code {
   color: #69dbdc;
   background: transparent;
+}
+.posts-expand .post-tags a {
+  border-bottom: none;
+  padding: 1px 5px;
+  background: var(--content-bg-color);
 }
