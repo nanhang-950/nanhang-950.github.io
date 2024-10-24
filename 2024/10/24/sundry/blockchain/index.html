@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>区块链原理 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"键入以继续","blurHolder":"数据检索","noResult":"无 $0 相关数据"},"code":{"codeInfo":"$0 - $1 行","copy":"复制"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: '确认'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="数据检索" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>区块链原理</h1></div><hr><div id="post-content"><h2 id="比特币"><a href="#比特币" class="headerlink" title="比特币"></a>比特币</h2><p>比特币是一种基于密码学的数字加密货币，它允许用户通过互联网进行安全的点对点交易。2008年10月31日，中本聪在网络上发表了一篇名为《比特币：一种点对点的电子现金系统》的文章，提出了一种去中心化的电子记账系统。这一系统的核心在于，它不依赖于中央银行或政府来管理和维护交易记录。</p>
+<p>在比特币网络中，所有的交易记录会被打包成区块。每个区块的大小为1MB，通常可以存储大约4000条交易记录。新的区块会被连接到之前的区块上，形成一条连续的区块链。区块链不仅记录了所有的交易信息，也为比特币的安全性提供了保障。</p>
+<p>然而，由于网络延迟的存在，用户在同一时间可能会收到不同的账单，导致账单的不一致。因此，网络需要一种机制来决定以谁的账单为准，这就引入了工作量证明的概念。</p>
+<h2 id="记账的动机"><a href="#记账的动机" class="headerlink" title="记账的动机"></a>记账的动机</h2><p>在比特币网络中，记账的用户（即矿工）可以获得多种奖励，包括：</p>
+<ol>
+<li><strong>交易手续费</strong>：每笔交易都会包含一小部分手续费，矿工在打包区块时会获得这些手续费。</li>
+<li><strong>打包奖励</strong>：每打包一个新区块，矿工会获得一定数量的比特币奖励。在比特币的设计中，最初的打包奖励为50个比特币，每经过约四年，奖励数量会减半，最终总供应量将达到2100万个比特币。</li>
+</ol>
+<p>这种激励机制促使越来越多的矿工参与到比特币的网络中，确保网络的安全和交易的有效性。</p>
+<h2 id="以谁为准"><a href="#以谁为准" class="headerlink" title="以谁为准"></a>以谁为准</h2><p>为了确定以谁的账单为准，比特币网络采用了<strong>工作量证明</strong>（Proof of Work）机制。每个参与者需要解决一个复杂的数学问题，只有成功解决该问题后，才有权打包新区块。这个过程被称为<strong>挖矿</strong>。</p>
+<h2 id="挖矿原理"><a href="#挖矿原理" class="headerlink" title="挖矿原理"></a>挖矿原理</h2><h3 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h3><p>比特币使用的哈希函数是 <code>SHA-256</code>，它能够返回一个256位的二进制数。哈希函数的特性在于，其正向计算相对简单，但从结果反推输入几乎是不可能的，这为比特币提供了安全性。</p>
+<h3 id="挖矿流程"><a href="#挖矿流程" class="headerlink" title="挖矿流程"></a>挖矿流程</h3><ol>
+<li><strong>构建字符串</strong>：每个矿工将当前的账单信息、前一个区块的头部、当前时间戳和一个随机数拼接成一个字符串。</li>
+<li><strong>进行哈希计算</strong>：对这个字符串进行两次 <code>SHA-256</code> 计算，得到哈希值。</li>
+<li><strong>满足条件</strong>：要求运算结果的前 <code>n</code> 位为0。矿工通过不断调整随机数（称为“nonce”）来尝试找到满足条件的哈希值。</li>
+</ol>
+<p>由于每个矿工的账单信息和时间戳各不相同，他们的计算难度也各不相同。因此，计算能力较强的矿工在挖矿过程中更有可能成功打包新区块。</p>
+<h3 id="难度调整"><a href="#难度调整" class="headerlink" title="难度调整"></a>难度调整</h3><p>比特币网络会定期调整挖矿的难度，具体方法是根据过去一定时间内生成的区块数量来决定。<code>n</code> 的值越大，要求的前导0位数就越多，挖矿的难度随之增加。通过这种方式，网络确保平均每10分钟能够生成一个新区块。</p>
+<h2 id="身份认证"><a href="#身份认证" class="headerlink" title="身份认证"></a>身份认证</h2><p>比特币通过<strong>电子签名</strong>实现身份认证。用户在注册时，系统生成一个<strong>随机数</strong>，并基于此生成对应的<strong>私钥</strong>、<strong>公钥</strong>和<strong>地址</strong>：</p>
+<ul>
+<li><strong>私钥</strong>：应严格保密，控制用户对比特币的所有权，任何人拥有私钥便可支配该地址上的比特币。</li>
+<li><strong>公钥</strong>：可公开，用于验证交易的合法性，接收方可以使用公钥来验证发送方的签名。</li>
+<li><strong>地址</strong>：用户分享的公开信息，其他用户可以通过这个地址向其发送比特币。</li>
+</ul>
+<p>当用户 A 想给用户 B 转账时，A 会生成一条记录（例如，A 赋给 B 十个比特币），然后对其进行哈希运算。接下来，A 使用私钥对哈希值进行加密，形成交易签名。最终，A 将记录、公共钥和加密后的数据广播到比特币网络中。</p>
+<p>接收方 B 通过公钥解密密码，得到原始的哈希摘要。如果该摘要与 B 自己计算出的哈希值一致，则确认交易有效。</p>
+<h2 id="防止双重支付"><a href="#防止双重支付" class="headerlink" title="防止双重支付"></a>防止双重支付</h2><p>比特币系统设计中，每个用户在进行交易时会下载所有区块信息，以验证账户余额。如果 A 尝试向 B 转账但其账户余额不足，网络中的其他节点会拒绝该交易请求。通过这种方式，系统能够防止双重支付问题。</p>
+<p>如果 A 同时向不同的接收者发送转账请求，网络通过检查交易记录来验证每笔交易的合法性，确保用户不会利用相同的比特币进行多次支付。</p>
+<h2 id="防止篡改"><a href="#防止篡改" class="headerlink" title="防止篡改"></a>防止篡改</h2><h3 id="最长链原则"><a href="#最长链原则" class="headerlink" title="最长链原则"></a>最长链原则</h3><p>比特币网络中的所有节点根据<strong>最长链原则</strong>来维护账本。即，当出现多个区块时，节点将选择链条最长的作为有效链。这一原则确保了即使存在分叉情况，最终所有节点会达成共识，选择一致的账本。</p>
+<h3 id="防伪机制"><a href="#防伪机制" class="headerlink" title="防伪机制"></a>防伪机制</h3><p>通过工作量证明和区块链的结构设计，比特币系统能够有效抵御篡改风险。任何对区块链的修改都需要重新计算后续所有区块的哈希值，这在算力消耗上几乎不可能实现，从而确保比特币交易记录的不可篡改性。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/sundry/powershell-cmd/">← 下一篇 cmd和powershell常用命令</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/sundry/sql/">sql语句和sql注入 上一篇 →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="回到顶部" style="opacity: 0; display: none;">∧ </a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="切换主题"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"></div><footer><nobr>构建自 <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> 使用主题 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> 主题作者 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
