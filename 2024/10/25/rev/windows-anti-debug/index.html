@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Windows反调试 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"键入以继续","blurHolder":"数据检索","noResult":"无 $0 相关数据"},"code":{"codeInfo":"$0 - $1 行","copy":"复制"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: '确认'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="数据检索" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>Windows反调试</h1></div><hr><div id="post-content"><p>反调试技术，恶意代码用它识别是否被调试，或者让调试器失效。恶意代码编写者意识到分析人员经常使用调试器来观察恶意diamond的操作，因此他们使用反调试技术尽可能地延长恶意代码的分析时间。为了阻止调试器的分析，当恶意代码意识到自己被调试时，他们可能改变正常的执行路径或者自身程序让自己崩溃，从而增加调试时间和复杂度。很多种反调试技术可以达到反调试效果。</p>
+<h2 id="使用Windows-API"><a href="#使用Windows-API" class="headerlink" title="使用Windows API"></a>使用Windows API</h2><p>使用Windows API函数检测调试器是否存在是最简单的反调试技术。Windows操作系统中提供了这样一些API，应用程序可以通过调用这些API，来检测自己是否正在被调试。这些API中有些是专门用来检测调试器的存在的，而另外一些API是出于其他目的而设计的，但也可以被改造用来探测调试器的存在。其中很小部分API函数没有在微软官方文档显示。通常，防止恶意代码使用API进行反调试的最简单的办法是在恶意代码运行期间修改恶意代码，使其不能调用探测调试器的API函数，或者修改这些API函数的返回值，确保恶意代码执行合适的路径。与这些方法相比，较复杂的做法是挂钩这些函数，如使用rootkit技术。</p>
+<h3 id="IsDebuggerPresent"><a href="#IsDebuggerPresent" class="headerlink" title="IsDebuggerPresent"></a>IsDebuggerPresent</h3><p><code>IsDebuggerPresent</code>查询进程环境块(PEB)中的<code>IsDebugged</code>标志。如果进程没有运行在调试器环境中，函数返回0；如果调试附加了进程，函数返回一个非零值。</p>
+<p>函数原型</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">BOOL WINAPI <span class="hljs-title">IsDebuggerPresent</span><span class="hljs-params">(VOID)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">NtCurrentPeb</span>() -&gt; BeingDebugged;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>实例程序</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;windows.h&gt;</span></span><br><br>BOOL <span class="hljs-title function_">CheckDebugger</span><span class="hljs-params">()</span>&#123;<br>	<span class="hljs-keyword">return</span> IsDebuggerPresent();<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc,<span class="hljs-type">char</span> *argv[])</span>&#123;<br>	<span class="hljs-keyword">if</span>(CheckDebugger())&#123;<br>		<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;进程正在被调试\n&quot;</span>);<br>				&#125;<br>	<span class="hljs-keyword">else</span>&#123;<br>		<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;进程没有被调试\n&quot;</span>);<br>	&#125;<br><br>	system(<span class="hljs-string">&quot;pause&quot;</span>);<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如何过掉<br>通过IDA动态调试修改寄存器标志，亦或者直接patch到文件<br>修改代码使其不能调用反调试函数，或者修改这些API函数的返回值</p>
+<h3 id="CheckRemoteDebuggerPresent"><a href="#CheckRemoteDebuggerPresent" class="headerlink" title="CheckRemoteDebuggerPresent"></a>CheckRemoteDebuggerPresent</h3><p><code>CheckRemoteDebuggerPresent</code>同IsDebuggerPresent几乎一致。它不仅可以探测系统其他进程是否被调试，通过传递自身进程句柄还可以探测自身是否被调试。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">BOOL CheckRemoteDebuggerPresent&#123;<br>    HANDLE hProcess,<br>    PBOOL pbDebuggerPresent<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h3 id="NtQueryInformationProcess"><a href="#NtQueryInformationProcess" class="headerlink" title="NtQueryInformationProcess"></a>NtQueryInformationProcess</h3><p>这个函数是Ntdll.dll中一个API，它用来提取一个给定进程的信息。它的第一个参数是进程句柄，第二个参数告诉我们它需要提取进程信息的类型。为第二个参数指定特定值并调用该函数，相关信息就会设置到第三个参数。第二个参数是一个枚举类型，其中与反调试有关的成员有ProcessDebugPort(0x7)、ProcessDebugObjectHandle(0x1E)和ProcessDebugFlags(0x1F)。例如将该参数置为ProcessDebugPort，如果进程正在被调试，则返回调试端口，否则返回0。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c">BOOL <span class="hljs-title function_">CheckDebug</span><span class="hljs-params">()</span>  <br>&#123;  <br>    <span class="hljs-type">int</span> debugPort = <span class="hljs-number">0</span>;  <br><br>    HMODULE hModule = LoadLibrary(<span class="hljs-string">&quot;Ntdll.dll&quot;</span>);  <br><br>    NtQueryInformationProcessPtr NtQueryInformationProcess = (NtQueryInformationProcessPtr)GetProcAddress(hModule,<span class="hljs-string">&quot;NtQueryInformationProcess&quot;</span>);  <br><br>    NtQueryInformationProcess(GetCurrentProcess(), <span class="hljs-number">0x7</span>, &amp;debugPort,<span class="hljs-keyword">sizeof</span>(debugPort), <span class="hljs-literal">NULL</span>);  <br><br>    <span class="hljs-keyword">return</span> debugPort != <span class="hljs-number">0</span>;  <br>&#125;  <br><br>BOOL <span class="hljs-title function_">CheckDebug</span><span class="hljs-params">()</span>  <br>&#123;  <br><br>    HANDLE hdebugObject = <span class="hljs-literal">NULL</span>;  <br><br>    HMODULE hModule = LoadLibrary(<span class="hljs-string">&quot;Ntdll.dll&quot;</span>);  <br><br>    NtQueryInformationProcessPtr NtQueryInformationProcess = (NtQueryInformationProcessPtr)GetProcAddress(hModule,<span class="hljs-string">&quot;NtQueryInformationProcess&quot;</span>);  <br><br>    NtQueryInformationProcess(GetCurrentProcess(), <span class="hljs-number">0x1E</span>, &amp;hdebugObject, <span class="hljs-keyword">sizeof</span>(hdebugObject), <span class="hljs-literal">NULL</span>);  <br><br>    <span class="hljs-keyword">return</span> hdebugObject != <span class="hljs-literal">NULL</span>;  <br><br>&#125;  <br><br>BOOL <span class="hljs-title function_">CheckDebug</span><span class="hljs-params">()</span>  <br><br>&#123;  <br><br>    BOOL bdebugFlag = TRUE;  <br><br>    HMODULE hModule = LoadLibrary(<span class="hljs-string">&quot;Ntdll.dll&quot;</span>);  <br><br>    NtQueryInformationProcessPtr NtQueryInformationProcess = (NtQueryInformationProcessPtr)GetProcAddress(hModule, <span class="hljs-string">&quot;NtQueryInformationProcess&quot;</span>);  <br><br>    NtQueryInformationProcess(GetCurrentProcess(), <span class="hljs-number">0x1E</span>, &amp;bdebugFlag, <span class="hljs-keyword">sizeof</span>(bdebugFlag), <span class="hljs-literal">NULL</span>);  <br><br>    <span class="hljs-keyword">return</span> bdebugFlag != TRUE;  <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="OutputDebugString"><a href="#OutputDebugString" class="headerlink" title="OutputDebugString"></a>OutputDebugString</h3><h2 id="基于PEB的静态反调试"><a href="#基于PEB的静态反调试" class="headerlink" title="基于PEB的静态反调试"></a>基于PEB的静态反调试</h2><p>利用PEB结构体信息可以判断当前进行是否处于被调试状态。很多常见的反调试都是用这个来判断的，比如<code>IsDebuggerPresent()</code>等，那么PEB是什么呢？Process Environment Block（进程环境块），是存放进程信息的一个结构体。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c">+<span class="hljs-number">0x000</span> InheritedAddressSpace : UChar<br>+<span class="hljs-number">0x001</span> ReadImageFileExecOptions : UChar<br>+<span class="hljs-number">0x002</span> BeingDebugged : UChar 调试标志<br>+<span class="hljs-number">0x003</span> SpareBool : UChar<br>+<span class="hljs-number">0x004</span> Mutant : Ptr32 Void<br>+<span class="hljs-number">0x008</span> ImageBaseAddress : Ptr32 Void 映像基址<br>+<span class="hljs-number">0x00c</span> Ldr : Ptr32 _PEB_LDR_DATA 进程加载模块链表<br>+<span class="hljs-number">0x010</span> ProcessParameters : Ptr32 _RTL_USER_PROCESS_PARAMETERS<br>+<span class="hljs-number">0x014</span> SubSystemData : Ptr32 Void<br>+<span class="hljs-number">0x018</span> ProcessHeap : Ptr32 Void<br>+<span class="hljs-number">0x01c</span> FastPebLock : Ptr32 _RTL_CRITICAL_SECTION<br>+<span class="hljs-number">0x020</span> FastPebLockRoutine : Ptr32 Void<br>+<span class="hljs-number">0x024</span> FastPebUnlockRoutine : Ptr32 Void<br>+<span class="hljs-number">0x028</span> EnvironmentUpdateCount : Uint4B<br>+<span class="hljs-number">0x02c</span> KernelCallbackTable : Ptr32 Void<br>+<span class="hljs-number">0x030</span> SystemReserved : [<span class="hljs-number">1</span>] Uint4B<br>+<span class="hljs-number">0x034</span> AtlThunkSListPtr32 : Uint4B<br>+<span class="hljs-number">0x038</span> FreeList : Ptr32 _PEB_FREE_BLOCK<br>+<span class="hljs-number">0x03c</span> TlsExpansionCounter : Uint4B<br></code></pre></td></tr></table></figure>
+
+<p> BeingDebugged成员是一个标志（flag），用来表示进行是否处于被调试状态。Ldr、ProcessHeap、NtGlobalFlag成员与被调试进程的堆内存特性相关。</p>
+<p>TEB（线程环境块）结构体也是必须指定的，该结构体包含进程中运行线程的各种信息，进程中的每个线程都对应着一个TEB结构体。完整的TEB结构体定义在TEB.txt中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">+<span class="hljs-number">0x000</span> NtTib            : _NT_TIB<br>+<span class="hljs-number">0x01c</span> EnvironmentPointer : Ptr32 Void<br>+<span class="hljs-number">0x020</span> ClientId         : _CLIENT_ID  ：当前进程ID<br>+<span class="hljs-number">0x028</span> ActiveRpcHandle  : Ptr32 Void<br>+<span class="hljs-number">0x02c</span> ThreadLocalStoragePointer : Ptr32 Void<br>+<span class="hljs-number">0x030</span> ProcessEnvironmentBlock : Ptr32 _PEB 当前进程的PEB指针<br>+<span class="hljs-number">0x034</span> LastErrorValue   : Uint4B<br>+<span class="hljs-number">0x038</span> CountOfOwnedCriticalSections : Uint4B<br></code></pre></td></tr></table></figure>
+
+
+<p class='item-img' data-src='/assets/Pasted%20image%2020241003094642.png'><img src="/assets/Pasted%20image%2020241003094642.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241003094918.png'><img src="/assets/Pasted%20image%2020241003094918.png"></p>
+<h3 id="Process-Heap"><a href="#Process-Heap" class="headerlink" title="Process Heap"></a>Process Heap</h3><p class='item-img' data-src='/assets/Pasted%20image%2020241003095041.png'><img src="/assets/Pasted%20image%2020241003095041.png"></p>
+<h3 id="NtGlobalFlag"><a href="#NtGlobalFlag" class="headerlink" title="NtGlobalFlag"></a>NtGlobalFlag</h3><p class='item-img' data-src='/assets/Pasted%20image%2020241003095235.png'><img src="/assets/Pasted%20image%2020241003095235.png"><img src="/assets/Pasted%20image%2020241003095421.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241003095508.png'><img src="/assets/Pasted%20image%2020241003095508.png"></p>
+<h2 id="TLS回调"><a href="#TLS回调" class="headerlink" title="TLS回调"></a>TLS回调</h2><blockquote>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/179709#h3-2">Windows平台常见反调试技术梳理（上）-安全客 - 安全资讯平台 (anquanke.com)</a><br>  参考链接：<a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-225740.htm#msg_header_h2_0">[原创]反调试技术总结-软件逆向-看雪-安全社区|安全招聘|kanxue.com</a><br>  参考链接：<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_73985089/article/details/131394834">【CTF-Reverse】IDA动态调试，反调试技术_ida 动态调试-CSDN博客</a></p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/25/program/go/go-chapter3/">← 下一篇 Go chapter3</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/25/program/go/go-chapter2/">Go chapter2 上一篇 →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="回到顶部" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="文章目录">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="切换主题"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>目录</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8Windows-API"><span class="toc-number">1.</span> <span class="toc-text">使用Windows API</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IsDebuggerPresent"><span class="toc-number">1.1.</span> <span class="toc-text">IsDebuggerPresent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CheckRemoteDebuggerPresent"><span class="toc-number">1.2.</span> <span class="toc-text">CheckRemoteDebuggerPresent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NtQueryInformationProcess"><span class="toc-number">1.3.</span> <span class="toc-text">NtQueryInformationProcess</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OutputDebugString"><span class="toc-number">1.4.</span> <span class="toc-text">OutputDebugString</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8EPEB%E7%9A%84%E9%9D%99%E6%80%81%E5%8F%8D%E8%B0%83%E8%AF%95"><span class="toc-number">2.</span> <span class="toc-text">基于PEB的静态反调试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Process-Heap"><span class="toc-number">2.1.</span> <span class="toc-text">Process Heap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NtGlobalFlag"><span class="toc-number">2.2.</span> <span class="toc-text">NtGlobalFlag</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TLS%E5%9B%9E%E8%B0%83"><span class="toc-number">3.</span> <span class="toc-text">TLS回调</span></a></li></ol></div></div><footer><nobr>构建自 <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> 使用主题 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> 主题作者 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
