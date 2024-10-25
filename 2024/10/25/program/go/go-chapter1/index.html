@@ -1,0 +1,353 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Go chapter1 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"键入以继续","blurHolder":"数据检索","noResult":"无 $0 相关数据"},"code":{"codeInfo":"$0 - $1 行","copy":"复制"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: '确认'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="数据检索" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>Go chapter1</h1></div><hr><div id="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>因为最近这段时间被拉去打一个程序开发的比赛，所以花几天学了一下go语言。</p>
+<p>接下来打算把学习go的笔记更一下，后面再写一些关于go的安全编程的内容。</p>
+<h2 id="基本结构"><a href="#基本结构" class="headerlink" title="基本结构"></a>基本结构</h2><h3 id="包和函数"><a href="#包和函数" class="headerlink" title="包和函数"></a>包和函数</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main()<br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	fmt.Println(<span class="hljs-string">&quot;hello world&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>package关键字声明了代码所属的包。</p>
+<p>在package关键字之后，代码使用了import关键字来导入自己将要用到的包。一个包可以包含任意数量的函数。</p>
+<p>fmt包提供了用于格式化输入和输出的函数。</p>
+<p>func关键字用于声明函数，在本例中这个函数的名字就是main。每个函数的体都需要使用大括号包围，这样go才能知道每个函数从何处开始，又在何处结束。</p>
+<p>当我们运行一个程序的时候，它总是从 main 包的 main 函数开始运行。如果 main 不存在，编译器将报错。</p>
+<p>每次用到被导入包的某个函数时，我们都需要在函数的名字前面加上包的名字以及一个点号作为前缀。</p>
+<h3 id="唯一允许的大括号放置风格"><a href="#唯一允许的大括号放置风格" class="headerlink" title="唯一允许的大括号放置风格"></a>唯一允许的大括号放置风格</h3><p>go对于大括号（{}）的摆放非常挑剔。左大括号 { 与func关键字位于同一行，而右大括号 } 则独占一行。这是go语言<strong>唯一允许的大括号放置风格</strong>，除此之外的其他大括号放置风格都是不被允许的。</p>
+<p>如果用户尝试将左大括号和 func 关键字放在不同的行里面，那么go编译器将报告一个语法错误。</p>
+<h2 id="被美化的计算器"><a href="#被美化的计算器" class="headerlink" title="被美化的计算器"></a>被美化的计算器</h2><h3 id="执行计算"><a href="#执行计算" class="headerlink" title="执行计算"></a>执行计算</h3><h4 id="注释"><a href="#注释" class="headerlink" title="注释"></a>注释</h4><p>go语言的注释和C语言一样</p>
+<p><strong>单行注释</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//这是单行注释</span><br></code></pre></td></tr></table></figure>
+
+<p><strong>多行注释</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">/*</span><br><span class="hljs-comment">这是多行注释</span><br><span class="hljs-comment">*/</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="算术运算符"><a href="#算术运算符" class="headerlink" title="算术运算符"></a>算术运算符</h4><p>编程语言中一般通用的常规运算符。</p>
+<table>
+<thead>
+<tr>
+<th>运算符</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>+</td>
+<td>加</td>
+</tr>
+<tr>
+<td>-</td>
+<td>减</td>
+</tr>
+<tr>
+<td>*</td>
+<td>乘</td>
+</tr>
+<tr>
+<td>&#x2F;</td>
+<td>除</td>
+</tr>
+<tr>
+<td>%</td>
+<td>模</td>
+</tr>
+</tbody></table>
+<h3 id="格式化输出"><a href="#格式化输出" class="headerlink" title="格式化输出"></a>格式化输出</h3><p><strong>Println输出函数</strong><br>这个函数输出的内容会在后面加一个换行，也就是<code>\n</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">fmt.Println(<span class="hljs-string">&quot;hello world&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p><strong>Printf格式化输出函数</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">fmt.Printf(<span class="hljs-string">&quot;number: %v&quot;</span>,<span class="hljs-number">10</span>)<br></code></pre></td></tr></table></figure>
+<p>Printf 接收的第一个参数总是文本，第二个参数则是表达式，而文本中包含的格式化变量<code>%v</code>则会在之后被替换成表达式的值。</p>
+<p>这个和C语言中的<code>printf</code>很相似。</p>
+<p>%v是通用类型的意思</p>
+<p>虽然Println会自动将输出的内容推进至下一行，但是Printf和Print却不会那么做。对于后面这两个函数，用户可以通过在文本里面放置换行符<code>\n</code>来将输出内容推进至下一行。</p>
+<p>如果用户指定多个格式化变量，那么Printf函数将按顺序把它们替换成相应的值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">fmt.Printf(<span class="hljs-string">&quot;string: %[0]v \n number: %[1]v \n&quot;</span>,<span class="hljs-string">&quot;Earth&quot;</span>,<span class="hljs-number">10</span>)<br></code></pre></td></tr></table></figure>
+
+<p>Printf除可以在句子的任意位置将格式化变量替换成指定的值之外，还能够调整文本的对齐位置。</p>
+<p>用户可以通过指定带有宽度的格式化变量%4v，将文本的输出宽度填充至4个字符。</p>
+<p>当宽度为正数时，空格将被填充至文本左边，而当宽度为负数时，空格将被填充至文本右边。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go">fmt.Printf(<span class="hljs-string">&quot;%10v\n&quot;</span>,<span class="hljs-number">10</span>)<br><span class="hljs-comment">//输出结果</span><br><span class="hljs-comment">//左边被以空格填充</span><br>        <span class="hljs-number">10</span><br>fmt.Printf(<span class="hljs-string">&quot;%-10v1\n&quot;</span>,<span class="hljs-number">10</span>)<br><span class="hljs-comment">//输出结果</span><br><span class="hljs-comment">//右边被以空格填充</span><br><span class="hljs-number">10</span>        <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="常量和变量"><a href="#常量和变量" class="headerlink" title="常量和变量"></a>常量和变量</h3><p><strong>常量</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//基本声明</span><br><span class="hljs-keyword">const</span> host=<span class="hljs-number">24</span><br></code></pre></td></tr></table></figure>
+<p><strong>变量</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//基本声明</span><br><span class="hljs-keyword">var</span> dis=<span class="hljs-number">9633</span><br></code></pre></td></tr></table></figure>
+<p>\</p>
+<h3 id="走捷径"><a href="#走捷径" class="headerlink" title="走捷径"></a>走捷径</h3><h4 id="一次声明多个变量"><a href="#一次声明多个变量" class="headerlink" title="一次声明多个变量"></a>一次声明多个变量</h4><p>每一行单独声明一个变量</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> dis =<span class="hljs-number">560</span><br></code></pre></td></tr></table></figure>
+<p>一次声明一组变量</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span>(<br>	dis=<span class="hljs-number">560</span><br>	speed=<span class="hljs-number">1008</span><br>)<br></code></pre></td></tr></table></figure>
+<p>同一行声明多个变量</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> dis,speed=<span class="hljs-number">560</span>,<span class="hljs-number">1008</span><br></code></pre></td></tr></table></figure>
+
+<p>需要注意的是，为了保证代码的可读性，我们在一次声明一组变量或者在同一行声明多个变量之前，应该先考虑这些变量是否相关。</p>
+<h4 id="增量并赋值操作符"><a href="#增量并赋值操作符" class="headerlink" title="增量并赋值操作符"></a>增量并赋值操作符</h4><p>有几种快捷方式可以让我们在赋值的同时执行以下操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> weight=<span class="hljs-number">129.0</span><br>weigth*=<span class="hljs-number">0.37</span><br><span class="hljs-comment">//等效于：weight=weight*0.37</span><br></code></pre></td></tr></table></figure>
+<p>常见的有，这些概念一般其他编程语言中也有</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>+&#x3D;</td>
+<td>加上符号右边的值后再赋值</td>
+</tr>
+<tr>
+<td>-&#x3D;</td>
+<td>减上符号右边的值后再赋值</td>
+</tr>
+<tr>
+<td>*&#x3D;</td>
+<td>乘以符号右边的值后再赋值</td>
+</tr>
+<tr>
+<td>&#x2F;&#x3D;</td>
+<td>除以符号右边的值后再赋值</td>
+</tr>
+<tr>
+<td>%&#x3D;</td>
+<td>模运算符号右边的值后再赋值</td>
+</tr>
+</tbody></table>
+<p><strong>自增运算符</strong>、</p>
+<p>用户可以使用<code>i++</code>执行加1操作</p>
+<p>但是go并不支持<code>++i</code>这种C语言中的操作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span><br>i++<br>i--<br></code></pre></td></tr></table></figure>
+
+<h3 id="数字游戏"><a href="#数字游戏" class="headerlink" title="数字游戏"></a>数字游戏</h3><p>使用rand包来生成伪随机数</p>
+<p>下列代码中，会显示一个1<del>10之间的数字。这个程序会先向Intn函数传入数字10以返回一个0</del>9的随机数，然后把这个数字加一并将其结果赋值给变量num。</p>
+<p>传入给Intn函数的10会让rand生成从零开始的十个数字之间的随机数，即一个0<del>9的数字，所以如果我们要求是1</del>10则需加上一个1。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span>(<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;math/rand&quot;</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-keyword">var</span> num = rand.Intn(<span class="hljs-number">10</span>)+<span class="hljs-number">1</span><br>	fmt.Println(num)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>虽然 rand 包的导入路径为math&#x2F;rand，但是我们在调用 Intn 函数的时候只需要使用包名 rand 作为前缀即可，不需要使用整个导入路径。</p>
+<h2 id="循环和分支"><a href="#循环和分支" class="headerlink" title="循环和分支"></a>循环和分支</h2><h3 id="真或假"><a href="#真或假" class="headerlink" title="真或假"></a>真或假</h3><p>布尔变量</p>
+<p>注意，go中0和1不能作为布尔值使用。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//真</span><br><span class="hljs-keyword">var</span> z=ture<br><span class="hljs-comment">//假</span><br><span class="hljs-keyword">var</span> j=<span class="hljs-literal">false</span><br></code></pre></td></tr></table></figure>
+
+<p>go语言标准库里面有好多函数都会返回布尔值。</p>
+<p>例如如下代码</p>
+<p>代码中使用了strings包的Contais函数来检查command变量是否包含单词”outsize”，如果包含则返回为true，否则返回false</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>  <span class="hljs-string">&quot;strings&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> command=<span class="hljs-string">&quot;hello world&quot;</span><br>  <span class="hljs-keyword">var</span> exit=strings.Contains(command,<span class="hljs-string">&quot;hello&quot;</span>)<br>  fmt.Println(<span class="hljs-string">&quot;结果&quot;</span>,exit)<br>&#125;<br><span class="hljs-comment">//运行结果</span><br>结果 <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="比较"><a href="#比较" class="headerlink" title="比较"></a>比较</h3><p><strong>比较运算符</strong></p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#x3D;&#x3D;</td>
+<td>相等</td>
+</tr>
+<tr>
+<td>!&#x3D;</td>
+<td>不相等</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>小于</td>
+</tr>
+<tr>
+<td>&lt;&#x3D;</td>
+<td>小于等于</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>大于</td>
+</tr>
+<tr>
+<td>&gt;&#x3D;</td>
+<td>大于等于</td>
+</tr>
+<tr>
+<td>表中的运算符既可以比较文本，又可以比较数值。</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>比较结果返回的是布尔值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> num=<span class="hljs-number">33</span><br>  <span class="hljs-keyword">var</span> age=num&lt;<span class="hljs-number">10</span><br>  fmt.Printf(<span class="hljs-string">&quot;%v是否小于10：%v（true/false）\n&quot;</span>,num,age)<br>&#125;<br><span class="hljs-comment">//运行结果</span><br><span class="hljs-number">33</span>是否小于<span class="hljs-number">10</span>：<span class="hljs-literal">false</span>（<span class="hljs-literal">true</span>/<span class="hljs-literal">false</span>）<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="使用if实现分支判断"><a href="#使用if实现分支判断" class="headerlink" title="使用if实现分支判断"></a>使用if实现分支判断</h3><p>如下所示，计算机可以使用布尔值或者比较条件在if语句中选择不同的执行路径。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> command=<span class="hljs-string">&quot;go&quot;</span><br>  <span class="hljs-keyword">if</span> command==<span class="hljs-string">&quot;no&quot;</span>&#123;<br>    fmt.Println(<span class="hljs-string">&quot;1&quot;</span>)<br>  &#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> command==<span class="hljs-string">&quot;go&quot;</span>&#123;<br>    fmt.Println(<span class="hljs-string">&quot;2&quot;</span>)<br>  &#125;<span class="hljs-keyword">else</span>&#123;<br>    fmt.Println(<span class="hljs-string">&quot;3&quot;</span>)<br>  &#125;<br>&#125;<br><span class="hljs-comment">//运行结果</span><br><span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>这里要注意，else if 和 else 都要紧跟在前一个大括号后面，否则会报错。</p>
+<p>else if语句和else语句都是可选的。当有多个分支路径可选时，可以重复使用else if直到满足需要为止。</p>
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>基本都是编程语言通用的。</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>||</td>
+<td>逻辑或</td>
+</tr>
+<tr>
+<td>&amp;&amp;</td>
+<td>逻辑与</td>
+</tr>
+<tr>
+<td>！</td>
+<td>逻辑非</td>
+</tr>
+</tbody></table>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> num=<span class="hljs-number">1000</span><br>  <span class="hljs-keyword">var</span> bin=num&gt;<span class="hljs-number">500</span> || (num/<span class="hljs-number">2</span>==<span class="hljs-number">500</span> &amp;&amp; num%<span class="hljs-number">100</span>==<span class="hljs-number">10</span>)<br>  <span class="hljs-keyword">if</span> bin&#123;<br>    fmt.Println(<span class="hljs-string">&quot;真&quot;</span>)<br>  &#125;<span class="hljs-keyword">else</span>&#123;<br>    fmt.Println(<span class="hljs-string">&quot;假&quot;</span>)<br>  &#125;<br>&#125;<br><span class="hljs-comment">//运行结果</span><br>真<br></code></pre></td></tr></table></figure>
+<p>跟大多数编程语言一样，go也采用了<strong>短路逻辑</strong>：如果位于 || 运算符之前的第一个条件为真，那么位于 || 运算符之后的条件就可以被忽略，没有必要再对其进行求值。</p>
+<p>&amp;&amp; 运算符的行为与 || 运算符正好相反：只有在两个条件都为真的情况下，运算结果才为真。</p>
+<p>逻辑非运算符 ! 可以将一个布尔值从 false 变为 true，或者将 true 变为 false。</p>
+<h3 id="使用switch实现分支判断"><a href="#使用switch实现分支判断" class="headerlink" title="使用switch实现分支判断"></a>使用switch实现分支判断</h3><p>go提供了 switch 语句，它可以将单个值和多个值进行比较。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> command=<span class="hljs-string">&quot;b&quot;</span><br>  <span class="hljs-comment">//将命令和给定的多个分支进行比较</span><br>  <span class="hljs-keyword">switch</span> command &#123;<br>  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;a&quot;</span>:<br>    fmt.Println(<span class="hljs-string">&quot;a&quot;</span>)<br>    <span class="hljs-comment">//使用逗号分隔多个可选值</span><br>  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;b&quot;</span>,<span class="hljs-string">&quot;c&quot;</span>:<br>    fmt.Println(<span class="hljs-string">&quot;b/c&quot;</span>)<br>    <span class="hljs-comment">//没有匹配的分支则执行</span><br>  <span class="hljs-keyword">default</span>:<br>    fmt.Println(<span class="hljs-string">&quot;d&quot;</span>)<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>switch 语句的另一种用法是像 if…else 那样，在每个分支中单独设置比较条件。</p>
+<p>switch 还拥有独特的 <code>fallthrough</code> 关键字，它可以用于执行下一个分支的代码。</p>
+<blockquote>
+<p>与 c 和 java 等编程语言不同，go的 switch 语句执行一个条件分支后默认是不执行下一行的</p>
+</blockquote>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> command=<span class="hljs-string">&quot;b&quot;</span><br>  <span class="hljs-comment">//比较表达式放置到单独的分支里</span><br>  <span class="hljs-keyword">switch</span> command &#123;<br>  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;a&quot;</span>:<br>    fmt.Println(<span class="hljs-string">&quot;a&quot;</span>)<br>  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;b&quot;</span>:<br>    fmt.Println(<span class="hljs-string">&quot;b&quot;</span>)<br>    <span class="hljs-comment">//下降至下一分支</span><br>    <span class="hljs-keyword">fallthrough</span><br>  <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;c&quot;</span>:<br>    fmt.Println(<span class="hljs-string">&quot;c&quot;</span>)<br>  <span class="hljs-keyword">default</span>:<br>    fmt.Println(<span class="hljs-string">&quot;d&quot;</span>)<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="使用循环实现重复执行"><a href="#使用循环实现重复执行" class="headerlink" title="使用循环实现重复执行"></a>使用循环实现重复执行</h3><p>当需要重复执行同一段代码的时候，与一遍又一遍键入相同的代码相比，更好的办法是使用 for 关键字。</p>
+<p>go语言是没有 while 循环关键字的，不过如下所示我们可以通过 for 关键字实现 while 循环。</p>
+<p>后面会讲解 for 关键字如何实现类似于C语言中的那种形式。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> count=<span class="hljs-number">10</span><br>  <span class="hljs-keyword">for</span> count&gt;<span class="hljs-number">0</span>&#123;<br>    fmt.Println(count)<br>    count--<br>  &#125;<br>  fmt.Println(<span class="hljs-string">&quot;结束&quot;</span>)<br>&#125;<br><span class="hljs-comment">//运行结果</span><br><span class="hljs-number">10</span><br><span class="hljs-number">9</span><br><span class="hljs-number">8</span><br><span class="hljs-number">7</span><br><span class="hljs-number">6</span><br><span class="hljs-number">5</span><br><span class="hljs-number">4</span><br><span class="hljs-number">3</span><br><span class="hljs-number">2</span><br><span class="hljs-number">1</span><br>结束<br></code></pre></td></tr></table></figure>
+
+<p>在每次迭代开始之前，表达式 count&gt;0 都会被求值并产生一个布尔值。当该值为 false也就是 count 变量等于 0 的时候，循环就会终止。反之，如果该值为真，那么程序将继续执行循环体，也就是被 { 和 } 包围的那部分代码。</p>
+<p>此外我们还可以通过不为 for 语句设置任何条件来产生无限循环，然后在有需要的时候通过在循环体内使用 break 语句来跳出循环。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>  <span class="hljs-string">&quot;fmt&quot;</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>  <span class="hljs-keyword">var</span> count=<span class="hljs-number">10</span><br>  <span class="hljs-keyword">for</span> count&gt;<span class="hljs-number">0</span>&#123;<br>    fmt.Println(count)<br>    count++<br>    <span class="hljs-keyword">if</span> count&gt;<span class="hljs-number">20</span>&#123;<br>      <span class="hljs-keyword">break</span><br>    &#125;<br>  &#125;<br>  fmt.Println(<span class="hljs-string">&quot;结束&quot;</span>)<br>&#125;<br><span class="hljs-comment">//运行结果</span><br><span class="hljs-number">10</span><br><span class="hljs-number">11</span><br><span class="hljs-number">12</span><br><span class="hljs-number">13</span><br><span class="hljs-number">14</span><br><span class="hljs-number">15</span><br><span class="hljs-number">16</span><br><span class="hljs-number">17</span><br><span class="hljs-number">18</span><br><span class="hljs-number">19</span><br><span class="hljs-number">20</span><br>结束<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="变量作用域"><a href="#变量作用域" class="headerlink" title="变量作用域"></a>变量作用域</h2><h3 id="审视作用域"><a href="#审视作用域" class="headerlink" title="审视作用域"></a>审视作用域</h3><p>变量从声明之时开始就处于作用域当中，换句话说，变量就是从那时开始变为可见的。</p>
+<p>只要变量仍然存在于作用域当中，程序就可以访问它。然而在作用域之外访问变量就会报错。</p>
+<p>变量作用域的一个好处是我们可以为不同的变量复用相同的名字。因为除极少数小型程序之外，程序的变量几乎不可能不出现重名。</p>
+<p>go 的作用域通常会随着大括号 {} 的出现而开启和结束。</p>
+<p>在下面的代码清单中，main函数开启了一个作用域，而for循环则开启了一个嵌套作用域</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;math/rand&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">pmain</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-keyword">var</span> count = <span class="hljs-number">0</span><br>	<span class="hljs-comment">//开启新的作用域</span><br>	<span class="hljs-keyword">for</span> count &lt;<span class="hljs-number">10</span> &#123;<br>		<span class="hljs-keyword">var</span> num = rand.Intn(<span class="hljs-number">10</span>)+<span class="hljs-number">1</span><br>		fmt.Println(num)<br>		count++<br>	&#125;<br>	<span class="hljs-comment">//作用域结束</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为对 count 变量的声明用于 main 函数的函数作用域之内，所以它在 main 函数结束之前将一致可见</p>
+<p>在循环结束之后访问num变量将会引发编译器报错。</p>
+<h3 id="简短声明"><a href="#简短声明" class="headerlink" title="简短声明"></a>简短声明</h3><p>简短声明为 var 关键字提供了另一种备选语法。</p>
+<p>以下两行代码是完全等效的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">var count = 10 <br>count := 10<br></code></pre></td></tr></table></figure>
+
+<p>简短声明不仅仅是简化了声明语句，而且可以在无法使用 var 关键字的地方使用。</p>
+<p>如下例代码</p>
+<p><strong>未使用简短声明</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> count=<span class="hljs-number">0</span><br><span class="hljs-keyword">for</span> count=<span class="hljs-number">10</span>;count&gt;<span class="hljs-number">0</span>;count--&#123;<br>	fmt.Println(count)<br>&#125;<br>fmt.Println(count)<br></code></pre></td></tr></table></figure>
+<p>在不使用简短声明的情况下，count 变量的声明必须被放置在循环之外，这意味着在循环解释之后 count 变量将继续存在于作用域。</p>
+<p><strong>在for循环中使用简短声明</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">for</span> count := <span class="hljs-number">10</span>; count &gt; <span class="hljs-number">0</span>; count--&#123;<br>	fmt.Println(count)<br>&#125;<br><span class="hljs-comment">//随着循环结束，count变量将不再处于作用域之内</span><br></code></pre></td></tr></table></figure>
+
+<p><strong>简短声明还可以在 if 语句中声明新的变量</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> num := rand.Intn(<span class="hljs-number">3</span>);num==<span class="hljs-number">0</span>&#123;<br>	fmt.Println(<span class="hljs-string">&quot;Space Adventures&quot;</span>)<br>&#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> num ==<span class="hljs-number">1</span>&#123;<br>	fmt.Println(<span class="hljs-string">&quot;SpaceX&quot;</span>)<br>&#125;<span class="hljs-keyword">else</span>&#123;<br>	fmt.Println(<span class="hljs-string">&quot;Virgin Galactic&quot;</span>)<br>&#125;<span class="hljs-comment">//随着if语句结束，变量将不再处于作用域之内</span><br></code></pre></td></tr></table></figure>
+
+<p><strong>在switch语句中使用</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">switch</span> num := rand.Intn(<span class="hljs-number">10</span>);num&#123;<br><span class="hljs-keyword">case</span> <span class="hljs-number">0</span>:<br>	fmt.Println(<span class="hljs-string">&quot;Space Adventures&quot;</span>)<br><span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>	fmt.Println(<span class="hljs-string">&quot;SpaceX&quot;</span>)<br><span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>	fmt.Println(<span class="hljs-string">&quot;Virgin Galactic&quot;</span>)<br><span class="hljs-keyword">default</span>:<br>	fmt.Println(<span class="hljs-string">&quot;Random spaceline #&quot;</span>,num)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="作用域的范围"><a href="#作用域的范围" class="headerlink" title="作用域的范围"></a>作用域的范围</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><span class="hljs-keyword">import</span> &#123;<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;math/rand&quot;</span><br>&#125;<br><span class="hljs-comment">//era变量在整个包都是可用的，相当于全局变量</span><br><span class="hljs-keyword">var</span> era=<span class="hljs-string">&quot;AD&quot;</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-comment">//era变量和year变量都处于作用域之内</span><br>	year := <span class="hljs-number">2018</span><br><br>	<span class="hljs-comment">//变量era、year和month都处于作用域之内</span><br>	<span class="hljs-keyword">switch</span> month := rand.Intn(<span class="hljs-number">12</span>)+<span class="hljs-number">1</span>;month&#123;<br>	<span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:<br>	<span class="hljs-comment">//变量era、year、month和day都处于作用域之内</span><br>		day := rand.Intn(<span class="hljs-number">28</span>)+<span class="hljs-number">1</span><br>		fmt.Println(era,year,month,day)<br>	<br>	<span class="hljs-comment">//上面那个day和下面的day变量是全新声明的变量，跟上面生成的同名变量并不相同</span><br>	<span class="hljs-keyword">case</span> <span class="hljs-number">4</span>,<span class="hljs-number">6</span>,<span class="hljs-number">9</span>,<span class="hljs-number">11</span>:<br>		day := rand.Intn(<span class="hljs-number">30</span>)+<span class="hljs-number">1</span><br>		fmt.Println(era,year,month,day)<br>	<span class="hljs-keyword">default</span>:<br>		day := rand.Intn(<span class="hljs-number">31</span>)+<span class="hljs-number">1</span><br>		fmt.Println(era,year,month,day)<br>	&#125;<span class="hljs-comment">//month变量和day变量不再处于作用域之内</span><br>&#125;<span class="hljs-comment">//year变量不再处于作用域之内</span><br></code></pre></td></tr></table></figure>
+<p>因为对 era 变量的声明位于 main 函数之外的包作用域中，所以它对于 main 包中的所有函数都是可见的。</p>
+<blockquote>
+<p>注意：因为包作用域在声明变量时不允许使用简短声明，所以我们无法在这个作用域中使用</p>
+</blockquote>
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考书籍：Go语言趣学指南<br>参考课程：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1fD4y1m7TD/?p=25&share_source=copy_web&vd_source=a1e0ec33522dd06cf97338beeab421c6">Go语言编程快速入门（Golang）</a></p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/25/program/go/go-chapter2/">← 下一篇 Go chapter2</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/25/sundry/git/">git 上一篇 →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="回到顶部" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="文章目录">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="切换主题"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>目录</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84"><span class="toc-number">2.</span> <span class="toc-text">基本结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8C%85%E5%92%8C%E5%87%BD%E6%95%B0"><span class="toc-number">2.1.</span> <span class="toc-text">包和函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%94%AF%E4%B8%80%E5%85%81%E8%AE%B8%E7%9A%84%E5%A4%A7%E6%8B%AC%E5%8F%B7%E6%94%BE%E7%BD%AE%E9%A3%8E%E6%A0%BC"><span class="toc-number">2.2.</span> <span class="toc-text">唯一允许的大括号放置风格</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A2%AB%E7%BE%8E%E5%8C%96%E7%9A%84%E8%AE%A1%E7%AE%97%E5%99%A8"><span class="toc-number">3.</span> <span class="toc-text">被美化的计算器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E8%AE%A1%E7%AE%97"><span class="toc-number">3.1.</span> <span class="toc-text">执行计算</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B3%A8%E9%87%8A"><span class="toc-number">3.1.1.</span> <span class="toc-text">注释</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%97%E6%9C%AF%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">3.1.2.</span> <span class="toc-text">算术运算符</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%BC%E5%BC%8F%E5%8C%96%E8%BE%93%E5%87%BA"><span class="toc-number">3.2.</span> <span class="toc-text">格式化输出</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F%E5%92%8C%E5%8F%98%E9%87%8F"><span class="toc-number">3.3.</span> <span class="toc-text">常量和变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B5%B0%E6%8D%B7%E5%BE%84"><span class="toc-number">3.4.</span> <span class="toc-text">走捷径</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%80%E6%AC%A1%E5%A3%B0%E6%98%8E%E5%A4%9A%E4%B8%AA%E5%8F%98%E9%87%8F"><span class="toc-number">3.4.1.</span> <span class="toc-text">一次声明多个变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A2%9E%E9%87%8F%E5%B9%B6%E8%B5%8B%E5%80%BC%E6%93%8D%E4%BD%9C%E7%AC%A6"><span class="toc-number">3.4.2.</span> <span class="toc-text">增量并赋值操作符</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E5%AD%97%E6%B8%B8%E6%88%8F"><span class="toc-number">3.5.</span> <span class="toc-text">数字游戏</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E5%92%8C%E5%88%86%E6%94%AF"><span class="toc-number">4.</span> <span class="toc-text">循环和分支</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9C%9F%E6%88%96%E5%81%87"><span class="toc-number">4.1.</span> <span class="toc-text">真或假</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AF%94%E8%BE%83"><span class="toc-number">4.2.</span> <span class="toc-text">比较</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8if%E5%AE%9E%E7%8E%B0%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD"><span class="toc-number">4.3.</span> <span class="toc-text">使用if实现分支判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">4.4.</span> <span class="toc-text">逻辑运算符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8switch%E5%AE%9E%E7%8E%B0%E5%88%86%E6%94%AF%E5%88%A4%E6%96%AD"><span class="toc-number">4.5.</span> <span class="toc-text">使用switch实现分支判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%BE%AA%E7%8E%AF%E5%AE%9E%E7%8E%B0%E9%87%8D%E5%A4%8D%E6%89%A7%E8%A1%8C"><span class="toc-number">4.6.</span> <span class="toc-text">使用循环实现重复执行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%98%E9%87%8F%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.</span> <span class="toc-text">变量作用域</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%A1%E8%A7%86%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.1.</span> <span class="toc-text">审视作用域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E7%9F%AD%E5%A3%B0%E6%98%8E"><span class="toc-number">5.2.</span> <span class="toc-text">简短声明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%9A%84%E8%8C%83%E5%9B%B4"><span class="toc-number">5.3.</span> <span class="toc-text">作用域的范围</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">6.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>构建自 <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> 使用主题 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> 主题作者 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
