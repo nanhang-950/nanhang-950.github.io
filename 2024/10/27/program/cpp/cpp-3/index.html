@@ -1,0 +1,619 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>C++ chapter3 标准库类型 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>C++ chapter3 标准库类型</h1></div><hr><div id="post-content"><p>除了这些在语言中定义的类型外，C++标准库还定义了许多更高级的<strong>抽象数据类型（abstract data type）</strong>。之所以说这些标准库类型是更高级的，是因为其中反映了更复杂的概念；之所以说它们是抽象的，是因为我们在使用时不需要关心它们是如何表示的，只需指定这些抽象数据类型支持哪些操作就可以了。</p>
+<p>两种最重要的标准库类型是<code>string</code>和<code>vector</code>。<code>string</code>类型支持长度可变的字符串，<code>vector</code>可用于保存一组指定类型的对象。说它们重要，是因为它们在C++定义的级别类型基础上作了一些改进。</p>
+<p>另一种标准库类型提供了更方便和合理有效的语言级的抽象设施，它就是<code>bitset</code>类。通过这个类可以把某个值当作位的集合来处理。与位操作符相比，<code>bitset</code>类提供操作位更直接的方法。</p>
+<h3 id="命名空间的using声明"><a href="#命名空间的using声明" class="headerlink" title="命名空间的using声明"></a>命名空间的using声明</h3><p>在前面看到的程序都是通过直接说明名字来自<code>std</code>命名空间，来引用标准库中的名字。这些名字都使用了<code>::</code>操作符，该操作符是作用域操作符。它的含义是右操作数的名字可以在左操作数的作用域中找到。因此，<code>std::cin</code>的意思是说所需名字<code>cin</code>是在命名空间<code>std</code>中定义的。显然，这样这样非常麻烦。</p>
+<p>C++提供了更简洁的方式来使用命名空间成员。<code>using</code>声明。</p>
+<p>使用<code>using</code>声明可以在不需要加前缀<code>namespace_name::</code>的情况下访问命名空间中的名字。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span>::name;<br></code></pre></td></tr></table></figure>
+<p>一旦使用了<code>using</code>声明，我们就可以直接引用名字，而不需要再引用该名字的命名空间：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">using</span> std::cin;<br><span class="hljs-keyword">using</span> std::string;<br></code></pre></td></tr></table></figure>
+
+
+<p><strong>1.每个名字都需要一个<code>using</code>声明</strong></p>
+<p>一个<code>using</code>声明一次只能作用于一个命名空间成员。<code>using</code>声明可用来明确指定在程序中用到的命名空间中的名字，如果希望使用<code>std</code>中的几个名字，则必须为要用到的每个名字都提供一个<code>using</code>声明。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">using</span> std::cin;<br><span class="hljs-keyword">using</span> std::cout;<br><span class="hljs-keyword">using</span> std::endl;<br></code></pre></td></tr></table></figure>
+
+
+<p><strong>2.使用标准库类型的类定义</strong></p>
+<p>有一种情况下，必须总是使用完全限定的标准库名字：在头文件中。理由是头文件的内容会被预处理器复制到程序中。用<code>#include</code>包含文件时，相当于头文件中的文本将称为我们编写的文件的一部分。如果在头文件中放置<code>using</code>声明，就相当于在包含该头文件的每个程序中都放置了同一<code>using</code>声明，<strong>不论该程序是否需要<code>using</code>声明</strong>。</p>
+<blockquote>
+<p>注意：在编译我们提供的实例程序前，读者一定要注意在程序中添加适当的<code>#include</code>和<code>using</code>声明。</p>
+</blockquote>
+<h3 id="标准库string类型"><a href="#标准库string类型" class="headerlink" title="标准库string类型"></a>标准库string类型</h3><p><code>string</code>类型支持长度可变的字符串，C++标准库将负责管理与存储字符相关的内存，以及提供各种有用的操作符。标准库<code>string</code>类型的目的就是满足对字符串的一般应用。</p>
+<p>与其他的标准库类型一样，用户程序要使用<code>string</code>类型对象，必须包含相关头文件。如果提供了合适的<code>using</code>声明，那么编写处理的程序将会变得简短些：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string&gt;</span></span><br><span class="hljs-keyword">using</span> std::string;<br></code></pre></td></tr></table></figure>
+
+<h4 id="string对象的定义和初始化"><a href="#string对象的定义和初始化" class="headerlink" title="string对象的定义和初始化"></a>string对象的定义和初始化</h4><p><code>string</code>标准库支持几个构造函数。构造函数是一个特殊成员函数，定义如何初始化该类型的对象下表列出了几个<code>string</code>类型常用的构造函数。当没有明确指定对象初始化式时，系统将使用默认构造函数。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>几种格式化string对象的方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>string s1;</code></td>
+<td>默认构造函数，s1为空串</td>
+</tr>
+<tr>
+<td><code>string s2(21);</code></td>
+<td>将s2初始化为s1的一个副本</td>
+</tr>
+<tr>
+<td><code>string s3(&quot;value&quot;)</code>;</td>
+<td>将s3初始化为一个字符串字面值</td>
+</tr>
+<tr>
+<td><code>string s4(n,&#39;c&#39;)</code>;</td>
+<td>将s4初始化为字符’c’的n个副本</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>警告：标准库string类型和字符串字面值<br>因为历史原因以及未来与C语言兼容，字符串字面值与标准库string类型不是同一种类型。</p>
+</blockquote>
+<h4 id="string对象的读写"><a href="#string对象的读写" class="headerlink" title="string对象的读写"></a>string对象的读写</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">cin&gt;&gt;s;<br></code></pre></td></tr></table></figure>
+<p>从标准输入读取<code>string</code>，并将读入的串存储在s中。<code>string</code>类型的输入操作符：</p>
+<ul>
+<li>读取并忽略开头所有的空白字符（入空格，换行符，制表符）。</li>
+<li>读取字符直至再次遇到空白字符，读取终止。</li>
+</ul>
+<p>输入和输出操作的行为与内置类型操作符级别类似。</p>
+<p><strong>1.读入未知数目的<code>string</code>对象</strong></p>
+<p>和内置类型的输入操作符一样，<code>string</code>的输入操作符也会返回所读的数据流。因此，可以把输入操作作为判断条件。</p>
+<p>下面的程序将从标准输入读取一组<code>string</code>对象，然后在标准输出上逐行输出：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	string word;<br>	<span class="hljs-keyword">while</span>(cin&gt;&gt;word)&#123;<br>		cout&lt;&lt;word&lt;&lt;endl;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>2.用<code>getline</code>读取整行文本</strong></p>
+<p>这个函数接受两个参数：一个输入流对象和一个<code>string</code>对象。<code>getline</code>函数从输入流的下一行读取，并保存读取的内容到<code>string</code>中，但不包括换行符。和输入操作符不一样的是，<code>getline</code>并不忽略开头的换行符。只要<code>getline</code>遇到换行符，即便它是输入的第一个字符，<code>getline</code>也将停止读入并返回。如果第一个字符就是换行符，则<code>string</code>参数将被置为空<code>string</code>。</p>
+<p><code>getline</code>函数将<code>istream</code>参数作为返回值，和输入操作符一样也把它用作判断条件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	string line;<br>	<span class="hljs-keyword">while</span>(<span class="hljs-built_in">getline</span>(cin,line))<br>		cout&lt;&lt;line&lt;&lt;endl;<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>由于getline函数返回时丢弃换行符，换行符将不会存储在<code>string</code>对象中。</p>
+</blockquote>
+<h4 id="string对象的操作"><a href="#string对象的操作" class="headerlink" title="string对象的操作"></a>string对象的操作</h4><table>
+<thead>
+<tr>
+<th></th>
+<th>string操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>s.empty()</code></td>
+<td>如果s为空字符串，则返回true，否则返回false</td>
+</tr>
+<tr>
+<td><code>s.size()</code></td>
+<td>返回s中字符的个数</td>
+</tr>
+<tr>
+<td><code>s[n]</code></td>
+<td>返回s位置为n的字符，位置从0开始计数</td>
+</tr>
+<tr>
+<td><code>s1+s2</code></td>
+<td>把s1和s2连接成一个新字符串，返回新生成的字符串</td>
+</tr>
+<tr>
+<td><code>s1=s2</code></td>
+<td>把s1内容替换为s2的副本</td>
+</tr>
+<tr>
+<td><code>v1==v2</code></td>
+<td>比较v1与v2的内容，相等则返回true，否则返回false</td>
+</tr>
+<tr>
+<td><code>!=,&lt;,&lt;=,</code></td>
+<td>保持这些操作符惯有的含义</td>
+</tr>
+<tr>
+<td><code>&gt;和&gt;=</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>1.<code>string</code>的<code>size</code>和<code>empty</code>操作</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><code>string</code>对象的长度指的是<code>string</code>对象中字符的个数，可以通过<code>size</code>操作获取：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>		<span class="hljs-function">string <span class="hljs-title">st</span><span class="hljs-params">(<span class="hljs-string">&quot;The expense of spirit\n&quot;</span>)</span></span>;<br>		cout&lt;&lt;st.<span class="hljs-built_in">size</span>()&lt;&lt;endl;<br>		<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>了解<code>string</code>对象是否为空是有用的。一种方法是将<code>size</code>与<code>0</code>进行比较：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">if</span>(st.<span class="hljs-built_in">size</span>()==<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+
+<p>本例中，程序员并不需要知道<code>string</code>对象中有多少个字符，只想知道<code>size</code>是否为<code>0</code>。用<code>string</code>的成员函数<code>empty()</code>可以直接回答这个问题：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">if</span>(st.<span class="hljs-built_in">empty</span>())<br></code></pre></td></tr></table></figure>
+
+<p><code>empty()</code>成员函数将返回<code>bool</code>值，如果<code>string</code>对象为空则返回<code>true</code>，否则返回<code>false</code>。</p>
+<p><strong>2.<code>string::size_type</code>类型</strong></p>
+<p>从逻辑上来讲，<code>size()</code>成员函数似乎应该返回整型数值，或为无符号整数。</p>
+<p>但实际上，<code>size</code>操作返回的是<code>string::size_type</code>类型的值。我们需要对这种类型做一些解释。</p>
+<p><code>string</code>类类型和许多其他库类型都定义了一些配套类型（companion type）。通过这些配套类型，库类型的使用就能与机器无关（machine-independent）。<code>size_type</code>就是这些配套类型中的一种。它定义为与<code>unsigned</code>型（unsigned int 或 unsigned long）具有相同的含义，而且可以保证足够大能够存储任意<code>string</code>对象的长度。未来使用由<code>string</code>类型定义的<code>size_type</code>类型，程序员必须加上作用域操作符来说明使用的<code>size_type</code>类型是由<code>string</code>类定义的。</p>
+<blockquote>
+<p>注意：任何存储<code>string</code>的<code>size</code>操作结果的变量必须为<code>string::size_type</code>类型。</p>
+</blockquote>
+<p><strong>3.<code>string</code>关系操作符</strong></p>
+<p><code>string</code>类定义了几种关系操作符用来比较两个<code>string</code>值的大小。这些操作符实际上是比较每个<code>string</code>对象的字符。</p>
+<blockquote>
+<p><code>string</code>对象比较操作是区分大小写的，即同一个字符的大小写形式被认为是两个不同的字符。在多数计算机上，大写的字符位于小写字母之前：任何一个大写字母都小于任意的小写字母。</p>
+</blockquote>
+<p><code>==</code>操作符比较两个<code>string</code>对象，如果它们相等，则返回<code>true</code>。两个<code>string</code>对象相等是指它们的长度相同，且含有相同的字符。标准库还定义了<code>!=</code>操作符来测试两个<code>string</code>对象是否不等。</p>
+<p>关系操作符<code>&lt;,&lt;=,&gt;,&gt;</code>分别用于测试一个<code>string</code>对象是否小于、小于或等于、大于、大于或等于另一个<code>string</code>对象：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp">string big=<span class="hljs-string">&quot;big&quot;</span>,small=<span class="hljs-string">&quot;small&quot;</span>;<br>string s1=big;<br><span class="hljs-keyword">if</span>(big==small)<br><span class="hljs-keyword">if</span>(big&lt;=s1)<br></code></pre></td></tr></table></figure>
+
+<p>关系操作符比较两个<code>string</code>对象时采用了和（大小写敏感的）字典排序相同的策略；</p>
+<ul>
+<li>如果两个<code>string</code>对象长度不同，且短的<code>string</code>对象与长的<code>string</code>对象的前面部分相匹配，则短的<code>string</code>对象小于长的<code>string</code>对象。</li>
+<li>如果两个<code>string</code>对象的字符不同，则比较第一个不匹配的字符。<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp">string substr=<span class="hljs-string">&quot;hello&quot;</span>;<br>string phrase=<span class="hljs-string">&quot;hello world&quot;</span>;<br>string slang=<span class="hljs-string">&quot;hiya&quot;</span>;<br></code></pre></td></tr></table></figure>
+则substr小于phrase，而slang则大于substr或phrase。</li>
+</ul>
+<p><strong>4.<code>string</code>对象的赋值</strong></p>
+<p><code>string</code>对象，可以把一个<code>string</code>对象赋值给另一个<code>string</code>对象：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">string str1,str2=<span class="hljs-string">&quot;the expense of spirit&quot;</span>;<br>str1=str2;<br></code></pre></td></tr></table></figure>
+
+<p><strong>5.两个<code>string</code>对象相加</strong></p>
+<p><code>string</code>对象的加法被定义为连接（concatenation）。也就是说，两个（或多个）<code>string</code>对象可以通过使用加操作符<code>+</code>或者复合赋值操作符+&#x3D;连接起来。给定两个<code>string</code>对象：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">string <span class="hljs-title">s1</span><span class="hljs-params">(<span class="hljs-string">&quot;hello,&quot;</span>)</span></span>;<br><span class="hljs-function">string <span class="hljs-title">s2</span><span class="hljs-params">(<span class="hljs-string">&quot;world\n&quot;</span>)</span></span>;<br>string s3=s1+s2;<br>s1+=s2;<br></code></pre></td></tr></table></figure>
+
+<p><strong>6.和字符串字面值的连接</strong></p>
+<p>上面的字符对象<code>s1</code>和<code>s2</code>直接包含了标点符号。也可以通过将<code>string</code>对象和字符串字面值混合得到同样的结果：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">string <span class="hljs-title">s1</span><span class="hljs-params">(<span class="hljs-string">&quot;hello&quot;</span>)</span></span>;<br><span class="hljs-function">string <span class="hljs-title">s2</span><span class="hljs-params">(<span class="hljs-string">&quot;world&quot;</span>)</span></span>;<br>string s3=s1+<span class="hljs-string">&quot;,&quot;</span>+s2+<span class="hljs-string">&quot;\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>当进行<code>string</code>对象和字符串字面值混合连接操作时，<code>+</code>操作符的左右操作数必须至少有一个是<code>string</code>类型的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">string s5=s1+<span class="hljs-string">&quot;,&quot;</span>+<span class="hljs-string">&quot;world&quot;</span>;<br>string s6=<span class="hljs-string">&quot;hello&quot;</span>+<span class="hljs-string">&quot;,&quot;</span>+s2;<br></code></pre></td></tr></table></figure>
+
+<p><strong>7.从<code>string</code>对象获取字符</strong><br><code>string</code>类型通过<strong>下标</strong>操作符（<code>[]</code>）来访问<code>string</code>对象中的单个字符。下标操作符需要取一个<code>size_type</code>类型的值，来标明要访问的位置。这个下标中的值通常被称为 “下标” 或 “<strong>索引（index）</strong>”。</p>
+<blockquote>
+<p>注解：<code>string</code>对象的下标从0开始。如果<code>s</code>是一个<code>string</code>对象且<code>s</code>不空，则<code>s[0]</code>就是字符串的第一个字符，<code>s[1]</code>就表示第二个字符（如果有的话），而<code>s[s.size()-1]</code>则表示<code>s</code>的最后一个字符。<br>引用下标时如果超出下标作用范围就会引起溢出错误。</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">string <span class="hljs-title">s</span><span class="hljs-params">(<span class="hljs-string">&quot;hello world&quot;</span>)</span></span>;<br><span class="hljs-keyword">for</span>(string::size_type n=<span class="hljs-number">0</span>;n!=s.<span class="hljs-built_in">size</span>();n++)&#123;<br>  cout&lt;&lt;s[n]&lt;&lt;endl;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>8.下标操作可用作左值</strong></p>
+<p>和变量一样，<code>string</code>对象的下标操作返回值也是左值。因此，下标操作可以放于赋值操作符的左边或右边。通过下面循环把<code>str</code>对象的每一个字符置为<code>*</code>：</p>
+<p><strong>9.计算下标值</strong></p>
+<p>任何可产生整型值的表达式都可用作下标操作符的索引。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">str[someotherval*someval]=someval;<br></code></pre></td></tr></table></figure>
+<p>虽然任何整型数值都可作为索引，但索引的实际数据类型却是<code>unsigned</code>类型<code>string::size_type</code>。</p>
+<blockquote>
+<p>建议：前面讲过，一个用<code>string::size_type</code>类型的变量接受<code>size</code>函数的返回值。在定义用作索引的比哪里时，出于同样的道理，<code>string</code>对象的索引变量最好也用<code>string::size_type</code>类型。</p>
+</blockquote>
+<p>在使用下标索引<code>string</code>对象时，必须保证索引值 “在上下界范围内”。“在上下界范围内” 就是指索引值是一个赋值为<code>size_type</code>类型的值，其取值范围在<code>0</code>到<code>string</code>对象长度减1之间。使用<code>string::size_type</code>类型或其他<code>unsigned</code>类型作为索引，就可以保证索引值不小于<code>0</code>，只要索引值是<code>unsigned</code>类型，就只需要检测它是否小于<code>string</code>对象的长度。</p>
+<blockquote>
+<p>注意：标准库不要去检查索引值，所用索引的下标越界是没有定义的，这样往往会导致严重的运行时错误。</p>
+</blockquote>
+<h4 id="string对象中字符的处理"><a href="#string对象中字符的处理" class="headerlink" title="string对象中字符的处理"></a>string对象中字符的处理</h4><p>适用于<code>string</code>对象的字符（或其它<code>char</code>值）。</p>
+<p>这些函数都在<strong>cctype头文件</strong>中定义。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>cctype定义的函数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>isalnum(c)</code></td>
+<td>如果c是字母或数字，则为true。</td>
+</tr>
+<tr>
+<td><code>isalpha(c)</code></td>
+<td>如果c是字母，则为true。</td>
+</tr>
+<tr>
+<td><code>iscntrl(c)</code></td>
+<td>如果c是控制字符，则为true。</td>
+</tr>
+<tr>
+<td><code>isdigit(c)</code></td>
+<td>如果c是数字，则为true。</td>
+</tr>
+<tr>
+<td><code>isgraph(c)</code></td>
+<td>如果c不是空格，但可打印，则为true。</td>
+</tr>
+<tr>
+<td><code>isprint(c)</code></td>
+<td>如果c是可打印的字符，则为true。</td>
+</tr>
+<tr>
+<td><code>ispunct(c)</code></td>
+<td>如果c是标点符号，则为true。</td>
+</tr>
+<tr>
+<td><code>isspace(c)</code></td>
+<td>如果c是空白字符，则为true。</td>
+</tr>
+<tr>
+<td><code>isupper(c)</code></td>
+<td>如果c是大写字母，则为true。</td>
+</tr>
+<tr>
+<td><code>isxdigit(c)</code></td>
+<td>如果c是十六进制数，则为true。</td>
+</tr>
+<tr>
+<td><code>tolower(c)</code></td>
+<td>如果c是大写字母，则返回其小写字母形式，否则之间返回c。</td>
+</tr>
+<tr>
+<td><code>toupper(c)</code></td>
+<td>如果c是小写字母，则返回其大写字母形式，否则之间返回c。</td>
+</tr>
+</tbody></table>
+<p>表中的大部分函数是测试一个给定的字符是否符号条件，并返回一个<code>int</code>值作为真值。如果测试失败，则该函数返回0，否则返回一个（无意义的）非0值，表示被测字符符号条件。</p>
+<p>表中的这些函数，可打印的字符是指那些可用显示表示的字符。空白字符则是空格、制表符、垂直制表符、回车符、换行符和进纸符的任意一种：标点符号则是除了数字、字母或（可打印的）空白字符（如空格）以外的其他可打印字符。</p>
+<p>和返回真值的函数不同的是，<code>tolower</code>和<code>toupper</code>函数返回的是字符，返回实参字符本身或返回该字符相应的大小写字符。我们可用使用</p>
+<h3 id="标准库vector类型"><a href="#标准库vector类型" class="headerlink" title="标准库vector类型"></a>标准库vector类型</h3><p><code>vector</code>是同一种类型的对象的集合，每个对象都有一个对应的整数索引值。和<code>string</code>对象一样，标准库将负责管理与存储元素相关的内存。我们把<code>vector</code>称为<strong>容器</strong>，是因为它可以包含其他对象，一个容器中的所有对象都必须是同一种类型的。</p>
+<p>使用<code>vector</code>之前，必须包含相应的头文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span><br><span class="hljs-keyword">using</span> std::vector;<br></code></pre></td></tr></table></figure>
+
+<p><code>vector</code>是一个<strong>类模板</strong>（class template）。使用模板可以编写一个类定义或函数定义，而用于多个不同的数据类型。因此，我们可以定义保存<code>string</code>对象的<code>vector</code>，或保存<code>int</code>值的<code>vector</code>，又或是保存自定义的类类型对象的vector。</p>
+<p>声明从类模板产生的某种类型的对象，需要提供附加信息，信息的种类取决于模板。以<code>vector</code>为例，必须说明<code>vector</code>保存何种对象的类型，通过将类型放在类模板名称后面的尖括号中来指定类型：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;<span class="hljs-type">int</span>&gt; ivec;<br>vector&lt;Sales_item&gt; Sqles_vec;<br></code></pre></td></tr></table></figure>
+<p>和其他变量定义一样，定义<code>vector</code>对象要指定类型和一个变量的列表。上面的第一个定义，类型是<code>vector&lt;int&gt;</code>，该类型即是含有若干<code>int</code>类型对象的<code>vector</code>，变量名为<code>ivec</code>。第二个定义的变量名是<code>Sales_vec</code>，它保存的元素是Sales_item类型的对象。</p>
+<blockquote>
+<p>注意：<code>vector</code>不是一种数据类型，而只是一个类模板，可用来定义任意多种数据类型。<code>vector</code>类型的每一种都指定了其保存原始的类型。因此，<code>vector&lt;int&gt;</code>和<code>vector&lt;string&gt;</code>都是数据类型。</p>
+</blockquote>
+<h4 id="vector对象的定义和初始化"><a href="#vector对象的定义和初始化" class="headerlink" title="vector对象的定义和初始化"></a>vector对象的定义和初始化</h4><p><code>vector</code>类定义了好几种构造函数，用来定义和初始化<code>vector</code>对象.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>几种初始化 vector 对象的方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>vector&lt;T&gt; v1</code>;</td>
+<td><code>vector</code>保存类型为T的对象，默认构造函数，v1为空</td>
+</tr>
+<tr>
+<td><code>vector&lt;T&gt; v2(v1)</code>;</td>
+<td>v2 是 v1 的一个副本</td>
+</tr>
+<tr>
+<td><code>vector&lt;T&gt; v3(n,i)</code>;</td>
+<td>v3 包含 n 个值为 i 的元素</td>
+</tr>
+<tr>
+<td><code>vector&lt;T&gt; v4(n)</code>;</td>
+<td>v4 含有值初始化的元素的 n 个副本</td>
+</tr>
+</tbody></table>
+<p><strong>1.创建确定个数的元素</strong></p>
+<p>若要创建非空的<code>vector</code>对象，必须给出初始化元素的值。当把一个<code>vector</code>对象复制到另一个<code>vector</code>对象时，新复制的<code>vector</code>中每一个元素都初始化为原<code>vector</code>中相应元素的副本。但这两个<code>vector</code>对象必须保存同一种元素类型：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;<span class="hljs-type">int</span>&gt; ivec1;<br><span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">ivec2</span><span class="hljs-params">(ivec1)</span></span>;<br>vector&lt;string&gt; svec; <span class="hljs-comment">//error</span><br></code></pre></td></tr></table></figure>
+<p>可以用元素个数和元素值对<code>vector</code>对象进行初始化。构造函数用元素个数来决定<code>vector</code>对象保存元素的个数，元素值指定每个元素的初始值：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">ivec4</span><span class="hljs-params">(<span class="hljs-number">10</span>,<span class="hljs-number">-1</span>)</span></span>;<br><span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">svec</span><span class="hljs-params">(<span class="hljs-number">10</span>,<span class="hljs-string">&quot;hi!&quot;</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>关键概念：vector对象动态增长<br><code>vector</code>对象（以及其他标准库容器对象）的重要属性就在于可以在运行时高效地添加元素。</p>
+</blockquote>
+<blockquote>
+<p>注意：虽然可以对给定元素个数的<code>vector</code>对象预先分配内存，但更有效的方法是先初始化一个空<code>vector</code>对象，然后再动态地增加元素。</p>
+</blockquote>
+<p><strong>2.值初始化</strong></p>
+<p>如果没有指定元素的初始化式，那么标准库将自行提供一个元素初始值进行<strong>值初始化</strong>（value initializationd）。这个由库生成的初始值将用来初始化容器中的每个元素，具体值为何，取决于存储在<code>vector</code>中元素的数据类型。</p>
+<p>如果<code>vector</code>保存内置类型（如<code>int</code>型）的元素，那么标准库将用0值创建元素初始化式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">fvec</span><span class="hljs-params">(<span class="hljs-number">10</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<p>如果<code>vector</code>保存的是含有构造函数的类类型（如<code>string</code>）的元素，标准库将用该类型的默认构造函数创建元素初始化式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">vector&lt;string&gt; <span class="hljs-title">svec</span><span class="hljs-params">(<span class="hljs-number">10</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<p>还有第三种可能性：元素类型可能是没有定义任何构造函数的类类型。这种情况下，标准库仍产生一个带初始值的对象，这个对象的每个成员进行了值初始化。</p>
+<h4 id="vector对象的操作"><a href="#vector对象的操作" class="headerlink" title="vector对象的操作"></a>vector对象的操作</h4><p><code>vector</code>标准库提供了许多类似于<code>string</code>对象的操作，下表列出了几种最重要的<code>vector</code>操作。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>vector</code>操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>v.empty()</code></td>
+<td>如果 v 为空，则返回 true，否则返回 false。</td>
+</tr>
+<tr>
+<td><code>v.size()</code></td>
+<td>返回 v 中元素的个数。</td>
+</tr>
+<tr>
+<td><code>v.push_back(t)</code></td>
+<td>在 v 的末尾增加一个值为 t 的元素。</td>
+</tr>
+<tr>
+<td><code>v[n]</code></td>
+<td>返回 v 中位置为 n 的元素。</td>
+</tr>
+<tr>
+<td><code>v1=v2</code></td>
+<td>把 v1 的元素替换为 v2 中元素的副本。</td>
+</tr>
+<tr>
+<td><code>v1==v2</code></td>
+<td>如果 v1 与 v2 相等，则返回 false。</td>
+</tr>
+<tr>
+<td><code>!=, &lt; , &lt;=, &gt;, &gt;=</code></td>
+<td>保持这些操作符惯有的含义。</td>
+</tr>
+</tbody></table>
+<p><strong>1.<code>vector</code>对象的<code>size</code></strong></p>
+<p><code>empty</code>和<code>size</code>操作类似于<code>string</code>类型的相关操作。成员函数<code>size</code>返回相应<code>vector</code>类定义的<code>size_type</code>的值。</p>
+<blockquote>
+<p>注解：使用<code>size_type</code>类型时，必须指出该类型是在哪里定义的。<code>vector</code>类型总是包括<code>vector</code>的元素类型：<br><code>vector&lt;int&gt;::size_type</code></p>
+</blockquote>
+<p><strong>2.向<code>vector</code>添加元素</strong></p>
+<p><code>push_back()</code>操作接受一个元素值，并将它作为一个新的元素添加到<code>vector</code>对象的后面，也就是 “插入（push）” 到<code>vector</code>对象的 “后面（back）”：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp">string word;<br>vector&lt;string&gt; text;<br><span class="hljs-keyword">while</span>(cin&gt;&gt;word)&#123;<br>	test.<span class="hljs-built_in">push_back</span>(word);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>3.<code>vector</code>的下标操作</strong></p>
+<p><code>vector</code>中的对象是没有命名的，可以按<code>vector</code>中对象的位置来访问它们。通常使用下标操作符来获取元素。<code>vector</code>的下标操作类似于<code>string</code>类型的下标操作。</p>
+<p><code>vector</code>的下标操作符接受一个值，并返回<code>vector</code>中该对应位置的元素。<code>vector</code>元素的位置从 0 开始。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">for</span>(vector&lt;<span class="hljs-type">int</span>&gt;::size_type ix=<span class="hljs-number">0</span>;ix!=ivec.<span class="hljs-built_in">size</span>();ix++)&#123;<br>	ivec[ix]=<span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>和<code>string</code>类型的下标操作符一样，<code>vector</code>下标操作的结果作为左值，因此可以像循环体中所做的那样实现写入。另外，和<code>string</code>对象的下标操作类似，这里用<code>size_type</code>类型作为<code>vector</code>下标的类型。</p>
+<p><strong>4.下标操作</strong>不添加元素</p>
+<p>初学C++的程序员可能会认为<code>vector</code>的下标操作符可以添加元素，其实不然：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;<span class="hljs-type">int</span>&gt; ivec;<br><span class="hljs-keyword">for</span>(vector&lt;<span class="hljs-type">int</span>&gt;::size_type ix=<span class="hljs-number">0</span>;ix!=<span class="hljs-number">10</span>;ix++)&#123;<br>	ivec[ix]=ix;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里 ivec 是空的<code>vector</code>对象，而且下标只能用于获取已存在的元素。</p>
+<p>正确写法：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">for</span>(vector&lt;<span class="hljs-type">int</span>&gt;::size_type ix=<span class="hljs-number">0</span>;ix!=<span class="hljs-number">10</span>;ix++)&#123;<br>	ivec.<span class="hljs-built_in">push_back</span>(ix);<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：必须是已存在的元素才能用下标操作符进行索引。通过下标操作进行赋值时，不会添加到任何元素。</p>
+</blockquote>
+<h3 id="迭代器简介"><a href="#迭代器简介" class="headerlink" title="迭代器简介"></a>迭代器简介</h3><p>除了使用下标来访问<code>vector</code>对象的元素外，标准库还提供了另一种访问元素的方法：使用<strong>迭代器（iterator）</strong>。迭代器是一种检查容器内元素并遍历元素的数据类型。</p>
+<p>标准库为每一种标准容器（包括<code>vector</code>）定义了一种迭代器类型。迭代器类型提供了比下标操作更通用化的方法：所有的标准库容器都定义了相应的迭代器类型，而只有少数的容器支持下标操作。因为迭代器对所有的容器都适用，现代C++程序更倾向于适用迭代器而不是下标操作访问容器元素，即使对支持下标操作的<code>vector</code>类型也是这样。</p>
+<p><strong>1.容器的 iterator类型</strong></p>
+<p>每种容器类型都定义了自己的迭代器类型，如<code>vector</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;<span class="hljs-type">int</span>&gt;::iterator iter;<br></code></pre></td></tr></table></figure>
+<p>这条语句定义了一个名为 iter 的变量，它的数据类型是由<code>vector&lt;int&gt;</code>定义的<code>iterator</code>类型。每个标准库容器类型都定义了一个名为<code>iterator</code>的成员，这里的<code>iterator</code>与迭代器实际类型的含义相同。</p>
+<p><strong>2.begin和end操作</strong></p>
+<p>每种容器都定义了一对名为<code>begin</code>和<code>end</code>的函数，用于返回迭代器。如果容器中有元素的化，由<code>begin</code>返回的迭代器指向第一个元素：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;<span class="hljs-type">int</span>&gt;::iterator iter=ivec.<span class="hljs-built_in">begin</span>();<br></code></pre></td></tr></table></figure>
+<p>上述语句把 iter 初始化为名为<code>begin</code>的<code>vector</code>操作返回的值。假设<code>vector</code>不空，初始化后，<code>iter</code>即指该元素为<code>ivec[0]</code>。</p>
+<p>由<code>end</code>操作返回的迭代器指向<code>vector</code>的 “末端元素的下一个”。通常称为<strong>超出末端迭代器</strong>（off-the-end iterator），表明它指向了一个不存在的元素。如果<code>vector</code>为空，<code>begin</code>返回的迭代器与<code>end</code>返回的迭代器相同。</p>
+<blockquote>
+<p>注解：由<code>end</code>操作返回的迭代器并不指向<code>vector</code>中任何实际的元素，相反，它只是起一个哨兵（sentinel）的作用，表示我们已处理完<code>vector</code>中所有元素。</p>
+</blockquote>
+<p><strong>3.vector迭代器的自增和引用运算</strong></p>
+<p>迭代器类型定义了一些操作来获取迭代器所指向的元素，并允许程序员将迭代器从一个元素移动到另一个元素。</p>
+<p>迭代器类型可使用<strong>解引用操作符</strong>（<code>*</code>操作符）来访问迭代器所指向的元素：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">*iter=<span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+<p>解引用操作符返回迭代器当前所指向的元素。假设<code>iter</code>指向<code>vector</code>对象<code>ivec</code>的第一个元素，那么<code>*iter</code>和<code>ivec[0]</code>就是指向同一个元素。上面这个语句的效果就是把这个元素的值赋为0；</p>
+<p>迭代器使用自增操作符向前移动迭代器指向容器中下一个元素。从逻辑上说，迭代器的自增操作和<code>int</code>型对象的自增操作类似。对<code>int</code>对象来说，操作结果就是把<code>int</code>型值 “加1”，而对迭代器对象则是把容器中的迭代器 “向前移动一个位置”。因此，如果<code>iter</code>指向第一个元素，则<code>++iter</code>指向第二个元素。</p>
+<blockquote>
+<p>注解：由于<code>end</code>操作返回的迭代器不这些任何元素，因此不能对它进行解引用或自增操作。</p>
+</blockquote>
+<p><strong>4.迭代器的其他操作</strong></p>
+<p>另一对可执行于迭代器的操作就是比较：用<code>==</code>或<code>!=</code>操作符来比较两个迭代器，如果两个迭代器对象指向同一个元素，则它们相等，否则就不相等。</p>
+<p>**5.迭代器应用的程序示例</p>
+<p>假设已声明了一个<code>vector&lt;int&gt;</code>型的<code>ivec</code>变量，要把它所有元素值重置为0，可以用下标操作来完成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">for</span>(vector&lt;<span class="hljs-type">int</span>&gt;::size_type ix=<span class="hljs-number">0</span>;ix!=ivec.<span class="hljs-built_in">size</span>();ix++）<br>	ivec[ix]=<span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<p>用迭代器来编写循环：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">for</span>(vector&lt;<span class="hljs-type">int</span>&gt;::iterator iter=ivec.<span class="hljs-built_in">begin</span>();<br>			iter!=ivec.<span class="hljs-built_in">end</span>();iter++)<br>	*iter=<span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+<p><code>for</code>循环首先定义了<code>iter</code>，并将它初始化为指向<code>itec</code>的第一个元素。<code>for</code>循环的条件测试<code>itec</code>是否于<code>end</code>操作返回的迭代器不等。每次迭代<code>iter</code>都自增1，这个<code>for</code>循环的效果是从<code>ivec</code>第一个元素开始，顺序处理<code>vector</code>中的每一个元素。最后，<code>iter</code>将指向<code>ivec</code>中的最好一个元素，处理完最好一个元素后，<code>iter</code>再增加1，就会与<code>end</code>操作的返回值相等，在这种情况下，循环终止。</p>
+<p><code>for</code>循环体内的语句用解引用操作符来访问当前元素的值。和下标操作符一样，解引用操作符的返回值是一个左值，因此可以对它进行赋值来改变它的值。上述循环的效果就是把<code>ivec</code>中所有元素都赋值为0。</p>
+<p>通过上述对代码的详细分析，可以看出这段程序与用下标操作符的版本达到相同的操作效果：从<code>vector</code>的第一个元素开始，把<code>vector</code>中每个元素都置为0.</p>
+<p><strong>6.const_iterator</strong></p>
+<p>前面的程序用<code>vector::iterator</code>改变<code>vector</code>中的元素值。每种容器类型还定义了一种名为<code>const_iterator</code>的类型，该类型只能用于读取容器内元素，但不能改变其值。</p>
+<p>当我们对普通<code>iterator</code>类型解引用时，得到对某个元素的非<code>const</code>引用。而如果我们对<code>const_iterator</code>类型解引用时，则可以得到一个指向<code>const</code>对象的引用，如同任何常量一样，该对象不能进行重写。</p>
+<p>例如，如果 text 是<code>vector&lt;string&gt;</code>类型，程序员想要遍历它，输出每个元素，可以这样编写程序：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">for</span>(vector&lt;string&gt;::const_iterator iter=text.<span class="hljs-built_in">begin</span>();<br>		iter!=test.<span class="hljs-built_in">end</span>();iter++)<br>	cout&lt;&lt;*iter&lt;&lt;endl;<br></code></pre></td></tr></table></figure>
+
+
+
+<p><strong>迭代器的算术操作</strong></p>
+<p>除了一次移动迭代器的一个元素的增量操作符外，<code>wector</code>迭代器（其他标准库容器迭代器很少）也支持其他的算术操作。这些操作称为<strong>迭代器算术操作</strong>（iterator arithmetic），包括：</p>
+<ul>
+<li><code>iter+n</code></li>
+<li><code>iter1-iter2</code></li>
+</ul>
+<blockquote>
+<p>注意：任何改变<code>vector</code>长度的操作都会使已存在的迭代器失效。例如，在调用<code>push_back</code>之后，就不能再信赖指向<code>vector</code>的迭代器的值了。</p>
+</blockquote>
+<h3 id="标准库bitset类型"><a href="#标准库bitset类型" class="headerlink" title="标准库bitset类型"></a>标准库bitset类型</h3><p>有些程序要处理二进制位的有序集，每个位困难包含0（关）值或1（开）值。位是用来保存一组项或条件的<code>yes/no</code>信息（有时也称标志）的简洁方法。标准库提供的<code>bitset</code>类简化了位集的处理。要使用<code>bitset</code>类就必须包含相关的头文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bitset&gt;</span></span><br><span class="hljs-keyword">using</span> std::bitset;<br></code></pre></td></tr></table></figure>
+
+<h4 id="bitset对象的定义和初始化"><a href="#bitset对象的定义和初始化" class="headerlink" title="bitset对象的定义和初始化"></a>bitset对象的定义和初始化</h4><p>下标列出了<code>bitset</code>的构造函数。类似于<code>vector</code>，<code>bitset</code>类是一种类模板；而与<code>vector</code>不一样的是<code>bitset</code>类型对象的区别仅在于其长度而不在其类型。在定义<code>bitset</code>时，要明确<code>bitset</code>含有多少位，须在尖括号内给出它的长度值：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">bitset&lt;32&gt; bitvec; <span class="hljs-comment">//32位，全为0</span><br></code></pre></td></tr></table></figure>
+<p>给出的长度值必须是常量表达式。正如这里给出的，长度值必须定义为整型字面值常量或是已用常量值初始化的整型的<code>const</code>对象。</p>
+<p>这条语句把<code>bitvec</code>定义为含有32个位的<code>bitset</code>对象。喝<code>vector</code>的元素一样，<code>bitset</code>中的位是没有命名的，程序员只能按位置来访问它们。位集合的位置编码从0开始，因此，<code>bitvec</code>的位序是从0到31。以0位开始的位串是低阶位（low-order bit），以31位结束的位串是高阶位（high-order bit）。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>初始化bitset对象的方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bitset&lt;n&gt; b;</code></td>
+<td>b有n位，每位都为0</td>
+</tr>
+<tr>
+<td><code>bitset&lt;n&gt; b(u);</code></td>
+<td>b是<code>unsigned long</code>型u的一个副本</td>
+</tr>
+<tr>
+<td><code>bitset&lt;n&gt; b(s);</code></td>
+<td>b是<code>string</code>对象s中含有的位串的副本</td>
+</tr>
+<tr>
+<td><code>bitset&lt;n&gt; b(s,pos,n);</code></td>
+<td>b是s中从位置pos开始的n个位的副本</td>
+</tr>
+</tbody></table>
+<p><strong>1.用<code>unsigned</code>值初始化<code>bitset</code>对象</strong></p>
+<p>当用<code>unsigned long</code>值作为<code>bitset</code>对象的初始值时，该值将转换为二进制的位模式。而<code>bitset</code>对象中的位集作为这种位模式的副本。如果<code>bitset</code>类型长度大于<code>unsigned long</code>值的二进制位数，则其余的高阶位将置为0；如果<code>bitset</code>类型长度小于<code>unsigned long</code>值的二进制位数，则只使用<code>unsigned</code>值中的低阶位，超过<code>bitset</code>类型长度的高阶位将被丢弃。</p>
+<p>在32位</p>
+<p><strong>2.用<code>string</code>对象初始化<code>bitset</code>对象</strong></p>
+<p>当用<code>string</code>对象初始化<code>bitset</code>对象时，<code>string</code>对象直接表示为位模式。从<code>string</code>对象读入位集的顺序是从右向左：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">string <span class="hljs-title">strval</span><span class="hljs-params">(<span class="hljs-string">&quot;1100&quot;</span>)</span></span>;<br><span class="hljs-function">bitset&lt;32&gt; <span class="hljs-title">bitvec4</span><span class="hljs-params">(strval)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>bitvec4的位模式中第2和3的位置为1，其余位置都为0。如果<code>string</code>对象的字符个数小于<code>bitset</code>类型的长度，则高阶位将置为0。</p>
+<blockquote>
+<p><code>string</code>对象和<code>bitset</code>对象之间是反向转化的：<code>string</code>对象的最右字符（即下标最低的哪个字符）用来初始化<code>bitset</code>对象的低阶位（即下标为0的位）。当用<code>string</code>对象初始化<code>bitset</code>对象时，记住这一差别很重要。</p>
+</blockquote>
+<p>不一定要把整个<code>string</code>对象都作为<code>bitset</code>对象的初始值。相反，可以只用某个子串作为初始值：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">string <span class="hljs-title">str</span><span class="hljs-params">(<span class="hljs-string">&quot;1111111000000011001101&quot;</span>)</span></span>;<br><span class="hljs-function">bitset&lt;32&gt; <span class="hljs-title">bitvec5</span><span class="hljs-params">(str,<span class="hljs-number">5</span>,<span class="hljs-number">4</span>)</span></span>;<br><span class="hljs-function">bitset&lt;32&gt; <span class="hljs-title">bitvec6</span><span class="hljs-params">(str,str.size()<span class="hljs-number">-4</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<h4 id="bitset对象上的操作"><a href="#bitset对象上的操作" class="headerlink" title="bitset对象上的操作"></a>bitset对象上的操作</h4><table>
+<thead>
+<tr>
+<th></th>
+<th>bitset操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>b.any()</code></td>
+<td>b中是否存在置为1的二进制位？</td>
+</tr>
+<tr>
+<td><code>b.none()</code></td>
+<td>b中存在置为1的二进制位吗？</td>
+</tr>
+<tr>
+<td><code>b.count()</code></td>
+<td>b中置为1的二进制位的个数</td>
+</tr>
+<tr>
+<td><code>b.size()</code></td>
+<td>b中二进制位的个数</td>
+</tr>
+<tr>
+<td><code>b[pos]</code></td>
+<td>访问b中在pos处的二进制位</td>
+</tr>
+<tr>
+<td><code>b.test(pos)</code></td>
+<td>b中在pos处的二进制位是否为1？</td>
+</tr>
+<tr>
+<td><code>b.set()</code></td>
+<td>把b中所有二进制位置为1</td>
+</tr>
+<tr>
+<td><code>b.set(pos)</code></td>
+<td>把b中在pos处的二进制位置为1</td>
+</tr>
+<tr>
+<td><code>b.reset()</code></td>
+<td>把b中所有二进制位都置为0</td>
+</tr>
+<tr>
+<td><code>b.reset(pos)</code></td>
+<td>把b中在pos处的二进制位置为0</td>
+</tr>
+<tr>
+<td><code>b.flip()</code></td>
+<td>把b中所有二进制位诸位取反</td>
+</tr>
+<tr>
+<td><code>b.flip(pos)</code></td>
+<td>把b中在pos处的二进制位取反</td>
+</tr>
+<tr>
+<td><code>b.to_ulong()</code></td>
+<td>用b中同样的二进制位返回一个<code>unsigned long</code>值</td>
+</tr>
+<tr>
+<td><code>os&lt;&lt;b</code></td>
+<td>把b中的位集输出到os流</td>
+</tr>
+</tbody></table>
+<p><strong>1.测试整个<code>bitset</code>对象</strong><br><strong>2.访问<code>bitset</code>对象中的位</strong><br><strong>3.对整个<code>bitset</code>对象进行设置</strong><br><strong>4.获取<code>bitset</code>对象的值</strong><br><strong>5.输出二进制位</strong><br><strong>6.使用位操作符</strong></p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages" style="justify-content: flex-end"><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/27/program/c/c-ptr-2/">C chapter2 数据 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%9A%84using%E5%A3%B0%E6%98%8E"><span class="toc-number">1.</span> <span class="toc-text">命名空间的using声明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%BA%93string%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">标准库string类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#string%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">2.1.</span> <span class="toc-text">string对象的定义和初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#string%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%AF%BB%E5%86%99"><span class="toc-number">2.2.</span> <span class="toc-text">string对象的读写</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#string%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="toc-number">2.3.</span> <span class="toc-text">string对象的操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#string%E5%AF%B9%E8%B1%A1%E4%B8%AD%E5%AD%97%E7%AC%A6%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">2.4.</span> <span class="toc-text">string对象中字符的处理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%BA%93vector%E7%B1%BB%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">标准库vector类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#vector%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">3.1.</span> <span class="toc-text">vector对象的定义和初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#vector%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="toc-number">3.2.</span> <span class="toc-text">vector对象的操作</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%AD%E4%BB%A3%E5%99%A8%E7%AE%80%E4%BB%8B"><span class="toc-number">4.</span> <span class="toc-text">迭代器简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%BA%93bitset%E7%B1%BB%E5%9E%8B"><span class="toc-number">5.</span> <span class="toc-text">标准库bitset类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#bitset%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">5.1.</span> <span class="toc-text">bitset对象的定义和初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#bitset%E5%AF%B9%E8%B1%A1%E4%B8%8A%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="toc-number">5.2.</span> <span class="toc-text">bitset对象上的操作</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
