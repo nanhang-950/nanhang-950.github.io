@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ptmalloc2内存管理分析 概述 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>Ptmalloc2内存管理分析 概述</h1></div><hr><div id="post-content"><h2 id="内存管理一般性描述"><a href="#内存管理一般性描述" class="headerlink" title="内存管理一般性描述"></a>内存管理一般性描述</h2><p>当不知道程序的每个部分需要多少内存时，系统内存空间有限，而内存需求又是变化的，这时就需要内存管理程序来负责分配和回收内存。程序的动态性越强，内存管理就越重要，内存分配程序的选择也就更重要。</p>
+<h3 id="内存管理的办法"><a href="#内存管理的办法" class="headerlink" title="内存管理的办法"></a>内存管理的办法</h3><p>可用于内存管理的方法有许多种，它们各有好处与不足，不同的内存管理方法有最适用的情形。</p>
+<p><strong>C 风格的内存管理程序</strong></p>
+<p>C 风格的内存管理程序主要事项 malloc() 和 free() 函数。内存管理程序主要通过调用 brk() 或者 mmap() 进程添加额外的虚拟内存。Doug Lea Malloc, ptmalloc, BSD malloc, Hoard, TCMalloc 都属于这一类内存管理程序。</p>
+<p>基于 malloc() 的内存管理仍然有很多缺点，不够使用的是哪个分配程序。对于那些需要长期存储的程序使用 malloc() 来管理内存可能会非常令人失望。如果有大量的不固定的内存引用，经常难以知道它们何时被释放。生存期局限于当前函数的内存非常容易管理，但是对于生存期超出该范围的内存来说，管理内存则困难得多。因为管理内存的问题，很多程序倾向于使用它们自己的内存管理规则。</p>
+<p><strong>池式内存管理</strong></p>
+<p>内存池是一种半内存管理方法。内存池帮助某些程序进行自动内存管理，这些程序会经历一些特定的阶段，而且每个阶段中都有分配给进程的特定阶段的内存。例如，很多网络服务器进程都会分配很多针对每个连接的内存——内存的最大生存期限为当前连接的存在期。Apache 使用了池式内存（pooled memory），将其连接拆分为各个阶段，每个阶段都有自己的内存池。在结束每个阶段时，会一次释放所有内存。</p>
+<p>在池式内存管理中，每次内存分配都会指定内存池，从中分配内存。每个内存池都有不同的生存期限。在 Apache 中，有一个持续时间为请求的存在期的池，另外还有其他一些内存池。因此，如果我的一系列函数不会生成比连接持续时间更长的数据，那么我就可以完全从连接池中分配内存，并知道在连接结束时，这些内存会被自动释放。另外，有一些实现允许注册函数（cleanup functions），在清除内存池之前，恰好可以调用它，来完成在内存被清理前需要完成的其它所有任务（类似于面向对象中的析构函数）</p>
+<p>使用池式内存分配的优点如下所示：</p>
+<ul>
+<li>应用程序可以简单地管理内存。</li>
+<li>内存分配和回收更快，因为每次都是在一个池中完成的。分配可以在 O(1) 时间内完成，释放内存池所需时间也差不多（实际上是 O(n)时间，不过在大部分情况下会除以一个大的因数，使其变为 O(1)）。</li>
+<li>可以预先分配错误处理池（Error-handling pools），以便程序在常规内存被耗尽时仍可以恢复。</li>
+<li>有非常易于使用的标准实现。</li>
+</ul>
+<p>池式内存的缺点是：</p>
+<ul>
+<li>内存池只适用于操作可以分阶段的程序。</li>
+<li>内存池通常不能域第三方库很好地合作。</li>
+<li>如果程序的结构发送变化，则不得不修改内存池，这可能会导致内存管理系统的重新设计。</li>
+<li>您必须记住需要从哪个池进行分配。另外，如果在这里出错，就很难捕获该内存池。</li>
+</ul>
+<p>3.引用计数</p>
+<p>在引用计数中，所有共享的数据结构都有一个域来包含当前活动 “引用” 结构的次数。当向一个程序传递一个指向某个数据结构指针时，该程序会将引用计数增加 1。实质上，是在告诉数据结构，它正在被存储在多少个位置上。然后，当进程完成对它的使用后，该程序就会将引用计数 减少 1。结束这个动作之后，它还会检查计数是否已经减到零。如果是，那么它将释放内存。</p>
+<p>在 Java，Perl 等高级语言中，进行内存管理时使用引用计数非常广泛。在这些语言中，引用计数由语言自动地处理，所以您根本不必担心它，除非要编写扩展模块。由于所有内容都必须进行引用计数，所以这会对速度产生一些影响，但它极大地提高了编程的安全性和方便性。</p>
+<p>以下是引用计数的好处：</p>
+<ul>
+<li>实现简单。</li>
+<li>易于使用。</li>
+<li>由于引用是数据结构的一部分，所以它有一个好的缓存位置。</li>
+</ul>
+<p>不过，它也有其不足之处：</p>
+<ul>
+<li>要求您永远不要忘记调用引用计数函数。</li>
+<li>无法释放作为循环数据结构的一部分的结构。</li>
+<li>减缓几乎每一个指针的分配。</li>
+<li>尽管所使用的对象采用了引用计数，但是当使用异常处理（比如 try 或 setjmp()&#x2F;longjmp()）时，您必须采用其它方法。</li>
+<li>需要额外的内存来处理引用。</li>
+<li>引用计数占用了结构中的第一个位置，在大部分机器中最快可以访问到的就是这个位置。</li>
+<li>在多线程环境中更慢也更难以使用。</li>
+</ul>
+<p>4.垃圾收集</p>
+<p>垃圾收集（Garbage collection）是全自动地检测并移除不再使用的数据对象。垃圾收集器通常会在当可用内存减少到少于一个具体的阈值时运行。通常，它们以程序所知的可用的一组 “基本” 数据——栈数据、全局变量、寄存器——作为出发点。然后它们尝试去追踪通过这些数据连接到每一块数据。收集器找到的都是有用的数据；它没有找到的就是垃圾，可用被消耗并重新使用这些无用的数据。为了有效地管理内存，很多类型的垃圾收集器都需要知道数据结构内部指针的规划，所以，为了正确运行垃圾收集器，它们必须是语言本身的一部分。</p>
+<p>垃圾收集的以下优点：</p>
+<ul>
+<li>永远不必担心内存的双重释放或者对象的生命周期。</li>
+<li>使用某些收集器，您可以使用与常规分配相同的 API。</li>
+</ul>
+<p>其缺点包括：</p>
+<ul>
+<li>使用大部分收集器时，您都无法干涉何时释放内存。</li>
+<li>在多数情况下，垃圾收集比其他形式的内存管理更慢。</li>
+<li>垃圾收集错误引发的缺陷难于调试。</li>
+<li>如果您忘记将不再使用的指针设置为 null，那么仍然会有内存泄露。</li>
+</ul>
+<h3 id="内存管理器的设计目标"><a href="#内存管理器的设计目标" class="headerlink" title="内存管理器的设计目标"></a>内存管理器的设计目标</h3><p>内存管理器为什么难写？在设计内存管理算法时，要考虑什么因素？管理内存这是内存管理器的功能需求。正如设计其他软件一样，质量需求一样占有重要的地位。分析内存管理算法之前，我们先看看对内存管理算法的质量需求有哪些：<br>    1.</p>
+<h3 id="常见C内存管理程序"><a href="#常见C内存管理程序" class="headerlink" title="常见C内存管理程序"></a>常见C内存管理程序</h3><h2 id="Ptmalloc-内存管理概述"><a href="#Ptmalloc-内存管理概述" class="headerlink" title="Ptmalloc 内存管理概述"></a>Ptmalloc 内存管理概述</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>ptmalloc 实现了 malloc()，free()以及一组其它的函数. 以提供动态内存管理的支持。分配器处在用户程序和内核之间，它响应用户的分配请求，向操作系统申请内存，然后将其返回给用户程序，为了保持高效的分配，分配器一般都会预先分配一块大于用户请求的内存，并通过某种算法管理这块内存。来满足用户的内存分配要求，用户释放掉的内存也并不是立即就返回给操作系统，相反，分配器会管理这些被释放掉的空闲空间，以应对用户以后的内存分配要求。也就是说，分配器不但要管理已分配的内存块，还需要管理空闲的内存块，当响应用户分配要求时，分配器会首先在空闲空间中寻找一块合适的内存给用户，在空闲空间中找不到的情况下才分配一块新的内存。为实现一个高效的分配器，需要考虑很多的因素。比如，分配器本身管理内存块所占用的内存空间必须很小，分配算法必须要足够的快。</p>
+<h3 id="内存管理的设计假设"><a href="#内存管理的设计假设" class="headerlink" title="内存管理的设计假设"></a>内存管理的设计假设</h3><p>Ptmalloc 在设计时折中了高效率，高空间利用率，高可用性等设计目标。在其实现代码中，隐藏着内存管理中的一些设计假设，由于某些设计假设，导致了在某些情况下 ptmalloc的行为很诡异。这些设计假设包括：</p>
+<ol>
+<li>具有长生命周期的大内存分配使用 mmap。</li>
+<li>特别大的内存分配总是使用 mmap。</li>
+<li>具有短生命周期的内存分配使用 brk，因为用 mmap 映射匿名页，当发生缺页异常时，linux 内核为缺页分配一个新物理页，并将该物理页清 0，一个 mmap 的内存块需要映射多个物理页，导致多次清 0 操作，很浪费系统资源，所以引入了 mmap分配阈值动态调整机制，保证在必要的情况下才使用 mmap 分配内存。</li>
+<li>尽量只缓存临时使用的空闲小内存块，对大内存块或是长生命周期的大内存块在释放时都直接归还给操作系统。</li>
+<li>对空闲的小内存块只会在 malloc 和 free 的时候进行合并，free 时空闲内存块可能放入 pool 中，不一定归还给操作系统。</li>
+<li>收缩堆的条件是当前 free 的块大小加上前后能合并 chunk 的大小大于 64KB、，并且堆顶的大小达到阈值，才有可能收缩堆，把堆最顶端的空闲内存返回给操作系统。</li>
+<li>需要保持长期存储的程序不适合用 ptmalloc 来管理内存。</li>
+<li>为了支持多线程，多个线程可以从同一个分配区（arena）中分配内存，ptmalloc假设线程 A 释放掉一块内存后，线程 B 会申请类似大小的内存，但是 A 释放的内存跟 B 需要的内存不一定完全相等，可能有一个小的误差，就需要不停地对内存块作切割和合并，这个过程中可能产生内存碎片。</li>
+</ol>
+<h3 id="内存管理数据结构概述"><a href="#内存管理数据结构概述" class="headerlink" title="内存管理数据结构概述"></a>内存管理数据结构概述</h3><p><strong>Main_arena 与 non_main_arena</strong></p>
+<p><strong>chunk 的组织</strong></p>
+<p>不管内存是在哪里被分配的，用什么方法分配，用户请求分配的空间在 ptmalloc 中都使用一个 chunk 来表示。用户调用 free()函数释放掉的内存也并不是立即就归还给操作系统，相反，它们也会被表示为一个 chunk，ptmalloc 使用特定的数据结构来管理这些空闲的 chunk。</p>
+<p><strong>空闲 chunk 容器</strong></p>
+<blockquote>
+<p>1.Bins</p>
+</blockquote>
+<p>用户 free 掉的内存并不是都会马上归还给系统，ptmalloc 会统一管理 heap 和 mmap 映射区域中的空闲的 chunk，当用户进行下一次分配请求时，ptmalloc 会首先试图在空闲的chunk 中挑选一块给用户，这样就避免了频繁的系统调用，降低了内存分配的开销。ptmalloc将相似大小的 chunk 用双向链表链接起来，这样的一个链表被称为一个 bin。Ptmalloc 一共维护了 128 个 bin，并使用一个数组来存储这些 bin（如下图所示）。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240831212801.png'><img src="/assets/Pasted%20image%2020240831212801.png"></p>
+<p>数组中的第一个为 unsorted bin，数组中从 2 开始编号的前 64 个 bin 称为 small bins，同一个 small bin 中的 chunk 具有相同的大小。两个相邻的 small bin 中的 chunk 大小相差 8bytes。small bins 中的 chunk 按照最近使用顺序进行排列，最后释放的 chunk 被链接到链表的头部，而申请 chunk 是从链表尾部开始，这样，每一个 chunk 都有相同的机会被 ptmalloc 选中。Small bins 后面的 bin 被称作 large bins。large bins 中的每一个 bin 分别包含了一个给定范围内的 chunk，其中的 chunk 按大小序排列。相同大小的 chunk 同样按照最近使用顺序排列。ptmalloc 使用“smallest-first，best-fit”原则在空闲 large bins 中查找合适的 chunk。当空闲的 chunk 被链接到 bin 中的时候，ptmalloc 会把表示该 chunk 是否处于使用中的标志 P 设为 0（注意，这个标志实际上处在下一个 chunk 中），同时 ptmalloc 还会检查它前<br>后的 chunk 是否也是空闲的，如果是的话，ptmalloc 会首先把它们合并为一个大的 chunk，然后将合并后的 chunk 放到 unstored bin 中。要注意的是，并不是所有的 chunk 被释放后就立即被放到 bin 中。ptmalloc 为了提高分配的速度，会把一些小的的 chunk 先放到一个叫做<br>fast bins 的容器内。</p>
+<blockquote>
+<p>Fast Bins</p>
+</blockquote>
+<p>一般的情况是，程序在运行时会经常需要申请和释放一些较小的内存空间。当分配器合并了相邻的几个小的 chunk 之后，也许马上就会有另一个小块内存的请求，这样分配器又需要从大的空闲内存中切分出一块，这样无疑是比较低效的，故而，ptmalloc 中在分配过程中引入了 fast bins，不大于 max_fast（默认值为 64B）的 chunk 被释放后，首先会被放到 fast bins中，fast bins 中的 chunk 并不改变它的使用标志 P。这样也就无法将它们合并，当需要给用户分配的 chunk 小于或等于 max_fast 时，ptmalloc 首先会在 fast bins 中查找相应的空闲块，然后才会去查找 bins 中的空闲 chunk。在某个特定的时候，ptmalloc 会遍历 fast bins 中的 chunk，将相邻的空闲 chunk 进行合并，并将合并后的 chunk 加入 unsorted bin 中，然后再将 usortedbin 里的 chunk 加入 bins 中。</p>
+<blockquote>
+<p>3.Unsorted Bin</p>
+</blockquote>
+<p>unsorted bin 的队列使用 bins 数组的第一个，如果被用户释放的 chunk 大于 max_fast，或者 fast bins 中的空闲 chunk 合并后，这些 chunk 首先会被放到 unsorted bin 队列中，在进行 malloc 操作的时候，如果在 fast bins 中没有找到合适的 chunk，则 ptmalloc 会先在 unsortedbin 中查找合适的空闲 chunk，然后才查找 bins。如果 unsorted bin 不能满足分配要求。malloc便会将 unsorted bin 中的 chunk 加入 bins 中。然后再从 bins 中继续进行查找和分配过程。从这个过程可以看出来，unsorted bin 可以看做是 bins 的一个缓冲区，增加它只是为了加快分配的速度。</p>
+<blockquote>
+<p>4.Top chunk</p>
+</blockquote>
+<p>并不是所有的 chunk 都按照上面的方式来组织，实际上，有三种例外情况。Top chunk，mmaped chunk 和 last remainder，下面会分别介绍这三类特殊的 chunk。top chunk 对于主分配区和非主分配区是不一样的。</p>
+<p>对于非主分配区会预先从 mmap 区域分配一块较大的空闲内存模拟 sub-heap，通过管理 sub-heap 来响应用户的需求，因为内存是按地址从低向高进行分配的，在空闲内存的最高处，必然存在着一块空闲 chunk，叫做 top chunk。当 bins 和 fast bins 都不能满足分配需要的时候，ptmalloc 会设法在 top chunk 中分出一块内存给用户，如果 top chunk 本身不够大，分配程序会重新分配一个 sub-heap，并将 top chunk 迁移到新的 sub-heap 上，新的 sub-heap与已有的 sub-heap 用单向链表连接起来，然后在新的 top chunk 上分配所需的内存以满足分配的需要，实际上，top chunk 在分配时总是在 fast bins 和 bins 之后被考虑，所以，不论 topchunk 有多大，它都不会被放到 fast bins 或者是 bins 中。Top chunk 的大小是随着分配和回收不停变换的，如果从 top chunk 分配内存会导致 top chunk 减小，如果回收的 chunk 恰好与 top chunk 相邻，那么这两个 chunk 就会合并成新的 top chunk，从而使 top chunk 变大。如果在 free 时回收的内存大于某个阈值，并且 top chunk 的大小也超过了收缩阈值，ptmalloc会收缩 sub-heap，如果 top-chunk 包含了整个 sub-heap，ptmalloc 会调用 munmap 把整个sub-heap 的内存返回给操作系统。</p>
+<p>由于主分配区是唯一能够映射进程 heap 区域的分配区，它可以通过 sbrk()来增大或是收缩进程 heap 的大小，ptmalloc 在开始时会预先分配一块较大的空闲内存（也就是所谓的 heap），主分配区的 top chunk 在第一次调用 malloc 时会分配一块(chunk_size + 128KB)align 4KB 大小的空间作为初始的 heap，用户从 top chunk 分配内存时，可以直接取出一块内存给用户。在回收内存时，回收的内存恰好与 top chunk 相邻则合并成新的 top chunk，当该次回收的空闲内存大小达到某个阈值，并且 top chunk 的大小也超过了收缩阈值，会执行内存收缩，减小 top chunk 的大小，但至少要保留一个页大小的空闲内存，从而把内存归还给操作系统。如果向主分配区的 top chunk 申请内存，而 top chunk 中没有空闲内存，ptmalloc会调用 sbrk()将的进程 heap 的边界 brk 上移，然后修改 top chunk 的大小</p>
+<blockquote>
+<p>5.mmaped chunk</p>
+</blockquote>
+<p>当需要分配的 chunk 足够大，而且 fast bins 和 bins 都不能满足要求，甚至 top chunk 本身也不能满足分配需求时，ptmalloc 会使用 mmap 来直接使用内存映射来将页映射到进程空间。这样分配的 chunk 在被 free 时将直接解除映射，于是就将内存归还给了操作系统，再次对这样的内存区的引用将导致 segmentation fault 错误。这样的 chunk 也不会包含在任何bin 中。</p>
+<blockquote>
+<p>6.Last remainder</p>
+</blockquote>
+<p>Last remainder 是另外一种特殊的 chunk，就像 top chunk 和 mmaped chunk 一样，不会在任何 bins 中找到这种 chunk。当需要分配一个 small chunk，但在 small bins 中找不到合适的 chunk，如果 last remainder chunk 的大小大于所需的 small chunk 大小，last remainder chunk被分裂成两个 chunk，其中一个 chunk 返回给用户，另一个 chunk 变成新的 last remainder chuk。</p>
+<p><strong>sbrk 与 mmap</strong></p>
+<p>从进程的内存布局可知，.bss 段之上的这块分配给用户程序的空间被称为 heap （堆）。start_brk 指向 heap 的开始，而 brk 指向 heap 的顶部。可以使用系统调用 brk()和 sbrk()来增加标识 heap 顶部的 brk 值，从而线性的增加分配给用户的 heap 空间。在使 malloc 之前，brk 的值等于 start_brk，也就是说 heap 大小为 0。ptmalloc 在开始时，若请求的空间小于 mmap分配阈值（mmap threshold，默认值为 128KB）时，主分配区会调用 sbrk()增加一块大小为 (128KB + chunk_size) align 4KB 的空间作为 heap。非主分配区会调用 mmap 映射一块大小为HEAP_MAX_SIZE（32 位系统上默认为 1MB，64 位系统上默认为 64MB）的空间作为 sub-heap。这就是前面所说的 ptmalloc 所维护的分配空间，当用户请求内存分配时，首先会在这个区域内找一块合适的 chunk 给用户。当用户释放了 heap 中的 chunk 时，ptmalloc 又会使用 fastbins 和 bins 来组织空闲 chunk。以备用户的下一次分配。若需要分配的 chunk 大小小于 mmap分配阈值，而 heap 空间又不够，则此时主分配区会通过 sbrk()调用来增加 heap 大小，非主分配区会调用 mmap 映射一块新的 sub-heap，也就是增加 top chunk 的大小，每次 heap 增加的值都会对齐到 4KB。当用户的请求超过 mmap 分配阈值，并且主分配区使用 sbrk()分配失败的时候，或是非主分配区在 top chunk 中不能分配到需要的内存时，ptmalloc 会尝试使用 mmap()直接映射一块内存到进程内存空间。使用 mmap()直接映射的 chunk 在释放时直接解除映射，而不再属于进程的内存空间。任何对该内存的访问都会产生段错误。而在 heap 中或是 sub-heap 中分配的空间则可能会留在进程内存空间内，还可以再次引用（当然是很危险的）。当 ptmalloc munmap chunk 时，如果回收的 chunk 空间大小大于 mmap 分配阈值的当前值，并且小于 DEFAULT_MMAP_THRESHOLD_MAX（32 位系统默认为 512KB，64 位系统默认为 32MB），ptmalloc 会把 mmap 分配阈值调整为当前回收的 chunk 的大小，并将 mmap 收缩阈值（mmap trim threshold）设置为 mmap 分配阈值的 2 倍。这就是 ptmalloc 的对 mmap分配阈值的动态调整机制，该机制是默认开启的，当然也可以用 mallopt()关闭该机制（将在3.2.6 节介绍如何关闭该机制）。</p>
+<h3 id="内存分配概述"><a href="#内存分配概述" class="headerlink" title="内存分配概述"></a>内存分配概述</h3><h3 id="内存回收概述"><a href="#内存回收概述" class="headerlink" title="内存回收概述"></a>内存回收概述</h3><h3 id="配置选项概述"><a href="#配置选项概述" class="headerlink" title="配置选项概述"></a>配置选项概述</h3><h3 id="使用注意事项"><a href="#使用注意事项" class="headerlink" title="使用注意事项"></a>使用注意事项</h3><p>为了避免 Glibc 内存暴增，使用时需要注意以下几点：</p>
+<p>1． 后分配的内存先释放，因为 ptmalloc 收缩内存是从 top chunk 开始，如果与 top chunk 相<br>邻的 chunk 不能释放，top chunk 以下的 chunk 都无法释放。</p>
+<p>2． Ptmalloc 不适合用于管理长生命周期的内存，特别是持续不定期分配和释放长生命周期的内存，这将导致 ptmalloc 内存暴增。如果要用 ptmalloc 分配长周期内存，在 32 位系统上，分配的内存块最好大于 1MB，64 位系统上，分配的内存块大小大于 32MB。这是由于ptmalloc 默认开启 mmap 分配阈值动态调整功能，1MB 是 32 位系统 mmap 分配阈值的最大值，32MB 是 64 位系统 mmap 分配阈值的最大值，这样可以保证 ptmalloc 分配的内存一定是从 mmap 映射区域分配的，当 free 时，ptmalloc 会直接把该内存返回给操作系统，避免了被 ptmalloc 缓存。</p>
+<p>3． 不要关闭 ptmalloc 的 mmap 分配阈值动态调整机制，因为这种机制保证了短生命周期的内存分配尽量从 ptmalloc 缓存的内存 chunk 中分配，更高效，浪费更少的内存。如果关闭了该机制，对大于 128KB 的内存分配就会使用系统调用 mmap 向操作系统分配内存，使用系统调用分配内存一般会比从 ptmalloc 缓存的 chunk 中分配内存慢，特别是在多线程同时分配大内存块时，操作系统会串行调用 mmap()，并为发生缺页异常的页加载新物理页时，默认强制清 0。频繁使用 mmap 向操作系统分配内存是相当低效的。使用mmap 分配的内存只适合长生命周期的大内存块。</p>
+<p>4． 多线程分阶段执行的程序不适合用 ptmalloc，这种程序的内存更适合用内存池管理，就像 Appach 那样，每个连接请求处理分为多个阶段，每个阶段都有自己的内存池，每个阶段完成后，将相关的内存就返回给相关的内存池。Google 的许多应用也是分阶段执行的，他们在使用 ptmalloc 也遇到了内存暴增的相关问题，于是他们实现了 TCMalloc 来代替 ptmalloc，TCMalloc 具有内存池的优点，又有垃圾回收的机制，并最大限度优化了锁的争用，并且空间利用率也高于 ptmalloc。Ptmalloc 假设了线程 A 释放的内存块能在线程 B 中得到重用，但 B 不一定会分配和 A 线程同样大小的内存块，于是就需要不断地做切割和合并，可能导致内存碎片。</p>
+<p>5． 尽量减少程序的线程数量和避免频繁分配&#x2F;释放内存，Ptmalloc 在多线程竞争激烈的情况下，首先查看线程私有变量是否存在分配区，如果存在则尝试加锁，如果加锁不成功会尝试其它分配区，如果所有的分配区的锁都被占用着，就会增加一个非主分配区供当前线程使用。由于在多个线程的私有变量中可能会保存同一个分配区，所以当线程较多时，加锁的代价就会上升，ptmalloc 分配和回收内存都要对分配区加锁，从而导致了多线程竞争环境下 ptmalloc 的效率降低。</p>
+<p>6． 防止内存泄露，ptmalloc 对内存泄露是相当敏感的，根据它的内存收缩机制，如果与 top chunk 相邻的那个 chunk 没有回收，将导致 top chunk 一下很多的空闲内存都无法返回给操作系统。</p>
+<p>7． 防止程序分配过多内存，或是由于 Glibc 内存暴增，导致系统内存耗尽，程序因 OOM 被系 统 杀 掉 。 预 估 程 序 可 以 使 用 的 最 大 物 理 内 存 大 小 ， 配 置 系 统 的&#x2F;proc&#x2F;sys&#x2F;vm&#x2F;overcommit_memory，&#x2F;proc&#x2F;sys&#x2F;vm&#x2F;overcommit_ratio，以及使用 ulimt –v 限制程序能使用虚拟内存空间大小，防止程序因 OOM 被杀掉。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/28/pwn/heap/heap-overflow/">← Next 堆溢出</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/27/%E5%AD%A6%E4%B9%A0%E5%91%A8%E6%8A%A5/">学习周报 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%80%E8%88%AC%E6%80%A7%E6%8F%8F%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">内存管理一般性描述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%9A%84%E5%8A%9E%E6%B3%95"><span class="toc-number">1.1.</span> <span class="toc-text">内存管理的办法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%99%A8%E7%9A%84%E8%AE%BE%E8%AE%A1%E7%9B%AE%E6%A0%87"><span class="toc-number">1.2.</span> <span class="toc-text">内存管理器的设计目标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81C%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="toc-number">1.3.</span> <span class="toc-text">常见C内存管理程序</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ptmalloc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%A6%82%E8%BF%B0"><span class="toc-number">2.</span> <span class="toc-text">Ptmalloc 内存管理概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">2.1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%81%87%E8%AE%BE"><span class="toc-number">2.2.</span> <span class="toc-text">内存管理的设计假设</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%A6%82%E8%BF%B0"><span class="toc-number">2.3.</span> <span class="toc-text">内存管理数据结构概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E6%A6%82%E8%BF%B0"><span class="toc-number">2.4.</span> <span class="toc-text">内存分配概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E6%A6%82%E8%BF%B0"><span class="toc-number">2.5.</span> <span class="toc-text">内存回收概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E9%80%89%E9%A1%B9%E6%A6%82%E8%BF%B0"><span class="toc-number">2.6.</span> <span class="toc-text">配置选项概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">2.7.</span> <span class="toc-text">使用注意事项</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
