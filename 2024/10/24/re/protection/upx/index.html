@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>upx脱壳 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>UPX脱壳 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
   font-family: Bender;
   src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
 }
@@ -59,4 +59,244 @@ lightGallery(document.getElementById('post-bg'), {
    }
  }
 });
-document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>upx脱壳</h1></div><hr><div id="post-content"><div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/re/tools/idapython/">← Next idapython</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/integer_overflow/">整数溢出 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>UPX脱壳</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>upx 壳是一种压缩壳，在 CTF 比赛中比较常见。</p>
+<p>针对 upx 壳有专业的脱壳工具，一般我们可以直接使用工具脱壳。</p>
+<p>但是在比赛中往往不会让你那么简单就把壳脱掉，出题人会通过修改加壳程序的一些特征导致脱壳工具无法使用。</p>
+<p>这个时候我们可以通过恢复修改掉的地方让工具继续奏效。</p>
+<p>当然我们也可以直接手脱，手动脱壳我们就需要找到加壳程序的 OEP 然后 dump 文件内存。</p>
+<blockquote>
+<p>OEP 原始程序入口点。EP(Entry Point)，意即程序的入口点。而 OEP 是程序的原始入口点，一个正常的程序只有 EP，只有入口点被修改的程序（加壳），才会拥有OEP。</p>
+</blockquote>
+<h2 id="工具脱壳"><a href="#工具脱壳" class="headerlink" title="工具脱壳"></a>工具脱壳</h2><p>UPX（Ultimate Packer for eXecutables）是一个开源的可执行文件压缩器，用于减小可执行文件的大小，同时保持其功能。UPX 支持多种操作系统，包括 Linux、Windows 和 macOS。</p>
+<p>upx 脱壳工具使用请参考这篇文章。</p>
+<blockquote>
+<p>upx 脱壳工具使用：<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43633973/article/details/102573376">【逆向】UPX工具使用及加壳_upx.exe-CSDN博客</a></p>
+</blockquote>
+<h3 id="常规upx工具脱壳"><a href="#常规upx工具脱壳" class="headerlink" title="常规upx工具脱壳"></a>常规upx工具脱壳</h3><p>直接使用 upx 脱壳工具进行脱壳</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">exe文件</span><br>upx -d demo.exe<br><span class="hljs-meta prompt_">#</span><span class="language-bash">elf文件</span><br>upx -d demo<br></code></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p>例题：[SWPUCTF 2023 秋季新生赛]UPX</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>exeinfo 查看发现有 upx 壳。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708162425.png'><img src="/assets/Pasted%20image%2020240708162425.png"></p>
+<ul>
+<li>脱壳</li>
+</ul>
+<p>直接使用 upx -d 命令进行脱壳。</p>
+<p>可以看到脱壳成功。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708162548.png'><img src="/assets/Pasted%20image%2020240708162548.png"></p>
+<p>exeinfo 查看确认一下</p>
+<p>确认脱壳成功</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708162644.png'><img src="/assets/Pasted%20image%2020240708162644.png"></p>
+<p>ida 打开查看反编译代码，发现 flag</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708162755.png'><img src="/assets/Pasted%20image%2020240708162755.png"></p>
+<h3 id="upx魔改壳"><a href="#upx魔改壳" class="headerlink" title="upx魔改壳"></a>upx魔改壳</h3><p>常规 upx壳 只要利用 upx 脱壳工具直接执行 upx -d 命令即可脱壳。</p>
+<p>不过只要做一些简单的修改就可以让 upx 工具失效。</p>
+<p>这种魔改壳在 CTF 中很常见。</p>
+<ol>
+<li>修改区段名</li>
+</ol>
+<p>​我们先来查看一下未修改前的文件信息。</p>
+<p class='item-img' data-src='/assets/image-20240529102451097.png'><img src="/assets/image-20240529102451097.png" alt="image-20240529102451097"></p>
+<p>可以看到图中显示了 upx1 和 3.91 upx 这两个特征标识。</p>
+<p class='item-img' data-src='/assets/image-20240529102654744.png'><img src="/assets/image-20240529102654744.png" alt="image-20240529102654744"></p>
+<p>然后查看一下加壳后的区段窗口，发现只有三个区段。最明显的特征<code>upx0</code>和<code>upx1</code>.</p>
+<p>我们只需要修改它，就可以让 upx 脱壳工具无法脱壳。</p>
+<p>我们利用 010 Editor 编辑文件将<code>upx</code>改成<code>rpx</code></p>
+<p class='item-img' data-src='/assets/image-20240529103143695.png'><img src="/assets/image-20240529103143695.png" alt="image-20240529103143695"></p>
+<p class='item-img' data-src='/assets/image-20240529102913143.png'><img src="/assets/image-20240529102913143.png" alt="image-20240529102913143"></p>
+<p>尝试脱壳</p>
+<p>​结果：</p>
+<p class='item-img' data-src='/assets/image-20240529103042290.png'><img src="/assets/image-20240529103042290.png" alt="image-20240529103042290"></p>
+<p>​可以看到失败了。</p>
+<p>​只要改回原样就可以进行脱壳。</p>
+<ol start="2">
+<li>修改标识</li>
+</ol>
+<p class='item-img' data-src='/assets/image-20240529103242207.png'><img src="/assets/image-20240529103242207.png" alt="image-20240529103242207"></p>
+<p>​可以看到 3.96.UPX! 特征码。我们可以修改 3.96 版本号开始24个字节的内容。都不会对程序运行产生影响。</p>
+<p>​修改标识之后，upx 脱壳工具就无法脱壳。不过可以利用 UPX Unpacker for Dummies 工具进行脱壳也可以直接手脱。</p>
+<p>后面我们会讲如何手动脱壳。</p>
+<blockquote>
+<p>例题：[LitCTF 2024]hello_upx</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>exe文件，查壳发现存在upx壳。</p>
+<p class='item-img' data-src='/assets/image-20240630175611.png'><img src="/assets/image-20240630175611.png" alt="image-20240630175611"></p>
+<p>直接使用脱壳机，脱壳失败。</p>
+<p class='item-img' data-src='/assets/image-20240630175643.png'><img src="/assets/image-20240630175643.png" alt="image-20240630175643"></p>
+<p>提示信息文件被修改，用010_Editor打开</p>
+<p>发现有四处地方被修改</p>
+<p class='item-img' data-src='/assets/image-20240630175933.png'><img src="/assets/image-20240630175933.png" alt="image-20240630175933"></p>
+<p>这里我们列出正常 upx 加壳文件的区段信息进行对比</p>
+<p class='item-img' data-src='/assets/image-20240630175910.png'><img src="/assets/image-20240630175910.png" alt="image-20240630175910"></p>
+<blockquote>
+<p><code>UPX0</code>和<code>UPX1</code>是加 UPX 壳后的两个区段名。其中 UPX1 区段包含了需要解压的数据块。<br><code>.rsrc</code>是程序资源信息区段名，这个区段含有原资源段的完整头部以及图标、Manifest、版本等未被压缩的资源，当然还有 UPX 自身需要的导入信息等（如果程序自身不含资源段，加壳后就是 UPX2）</p>
+</blockquote>
+<p>分析修改</p>
+<ol>
+<li><code>upx0</code>被改成了小写</li>
+<li><code>upx1</code>被改成了小写</li>
+<li><code>upx2</code>被改成了小写</li>
+<li><code>upx!</code>被改成了小写</li>
+</ol>
+<ul>
+<li>恢复</li>
+</ul>
+<p>将upx0、upx1、upx2和upx!全部修改为大写</p>
+<p class='item-img' data-src='/assets/image-20240630192214.png'><img src="/assets/image-20240630192214.png" alt="image-20240630192214.png"></p>
+<ul>
+<li>脱壳</li>
+</ul>
+<p class='item-img' data-src='/assets/image-20240630180900.png'><img src="/assets/image-20240630180900.png" alt="image-20240630180900"></p>
+<p>可以看到脱壳成功。</p>
+<p>分析代码逻辑</p>
+<p class='item-img' data-src='/assets/image-20240630181003.png'><img src="/assets/image-20240630181003.png" alt="image-20240630181003.png"></p>
+<ul>
+<li>exp</li>
+</ul>
+<p>根据代码逻辑构造exp</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">data=[<span class="hljs-number">0x4C</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x72</span>, <span class="hljs-number">0x40</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0x41</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x70</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x59</span>, <span class="hljs-number">0x25</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0x58</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0x1E</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x5E</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x65</span>]<br>flag=<span class="hljs-string">&quot;&quot;</span><br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(data)):<br>	flag+=<span class="hljs-built_in">chr</span>((data[i]+i))<br><span class="hljs-built_in">print</span>(flag)<br><span class="hljs-comment">#LitCTF&#123;w3lc0me_t0_l1tctf&#125;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="手脱"><a href="#手脱" class="headerlink" title="手脱"></a>手脱</h2><p>手动脱壳的目标：找到原始程序入口地址（OEP）。</p>
+<h3 id="EXE"><a href="#EXE" class="headerlink" title="EXE"></a>EXE</h3><p>自己写的文件加壳，手脱。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708115744.png'><img src="/assets/Pasted%20image%2020240708115744.png"></p>
+<p>入口不是<code>pushad</code>，只能一步一步单步步过。</p>
+<blockquote>
+<p><code>pushad</code>意味着 upx 壳解压缩代码的入口。<br>  64位程序中没有<code>puahad</code>，而是用几个<code>push</code>汇编代码替代。32位程序中存在<code>pushad</code>。</p>
+</blockquote>
+<p>遵循单步定律，向下跳转允许实现，向上跳转不允许实现。</p>
+<blockquote>
+<p>向下的红色小箭头就是向下的跳转，线为红色即是跳转成立，线为白色就是跳转不成立。<br>同理向上的红色小箭头就是向上的跳转。</p>
+</blockquote>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708120032.png'><img src="/assets/Pasted%20image%2020240708120032.png"></p>
+<p>一直单步步过，直到发现这样的多个<code>push</code>指令为止。</p>
+<p>很明显这里就是 UPX 解压缩代码的入口点。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708124304.png'><img src="/assets/Pasted%20image%2020240708124304.png"></p>
+<blockquote>
+<p>根据esp定律下断点寻找OEP</p>
+</blockquote>
+<p>f8 单步一下执行一下，让<code>rsp</code>发送变化</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163237.png'><img src="/assets/Pasted%20image%2020240708163237.png"></p>
+<p>查看寄存器窗口，发现<code>rsp</code>产生了变化</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163308.png'><img src="/assets/Pasted%20image%2020240708163308.png"></p>
+<p>右击<code>rsp</code>，选中在栈中转到。</p>
+<p>右击栈顶，选中断点，选择硬件访问断点，选择4字节。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163442.png'><img src="/assets/Pasted%20image%2020240708163442.png"></p>
+<p>设置硬件断点后 f9 运行。</p>
+<p>之后发现下面有一个比较大幅度的<code>jmp</code>跳转，并且已经显示<code>main</code>特征。</p>
+<p>判断这个特征会跳转到 OEP。</p>
+<p>选中<code>jmp</code>指令，然后 f4 运行到此处。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163540.png'><img src="/assets/Pasted%20image%2020240708163540.png"></p>
+<p>之后直接单步执行就会跳到 OEP。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163722.png'><img src="/assets/Pasted%20image%2020240708163722.png"></p>
+<p>OEP：</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708163810.png'><img src="/assets/Pasted%20image%2020240708163810.png"></p>
+<p>接下来 dump 文件</p>
+<p>点击 Scylla 插件，然后点击 dump 之后将文件保存。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241229122927.png'><img src="/assets/Pasted%20image%2020241229122927.png"></p>
+<p>但是这样 dump 后的文件是无法运行的，所以我们要修复文件。</p>
+<ul>
+<li>修复文件</li>
+</ul>
+<p>先点击 Scylla 中的 IAT Autosearch，然后点击 Get Imports 。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240715234631.png'><img src="/assets/Pasted%20image%2020240715234631.png"></p>
+<p>，在 Imports 列表中右键 delete 删掉带有红叉的。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240715234646.png'><img src="/assets/Pasted%20image%2020240715234646.png"></p>
+<p>之后点击 Fix Dump 选中之前的 Dump 文件修复即可。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240715234703.png'><img src="/assets/Pasted%20image%2020240715234703.png"></p>
+<p>脱壳之后运行程序测试。  </p>
+<p>成功执行程序，dump文件成功。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240715234734.png'><img src="/assets/Pasted%20image%2020240715234734.png"></p>
+<p>exeinfo 确认脱壳</p>
+<p>发现仍然保留特征信息</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708165237.png'><img src="/assets/Pasted%20image%2020240708165237.png"></p>
+<p>ida打开确认</p>
+<p>确认已脱壳<br class='item-img' data-src='/assets/Pasted%20image%2020240708165314.png'><img src="/assets/Pasted%20image%2020240708165314.png"></p>
+<h3 id="ELF"><a href="#ELF" class="headerlink" title="ELF"></a>ELF</h3><blockquote>
+<p>例题</p>
+</blockquote>
+<p>自己写一段代码编译加壳。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>                                                                                                            1 &#123;<br>    <span class="hljs-type">char</span> buf[<span class="hljs-number">10</span>]=&#123;<span class="hljs-number">0</span>&#125;;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;input:&quot;</span>);<br>    read(<span class="hljs-number">0</span>,buf,<span class="hljs-number">10</span>);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s&quot;</span>,buf);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译，这里需要静态编译，要不然文件太小加不了壳。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708153728.png'><img src="/assets/Pasted%20image%2020240708153728.png"></p>
+<p>加壳，可以看到加壳成功</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708153910.png'><img src="/assets/Pasted%20image%2020240708153910.png"></p>
+<p>exeinfo 扫一下，可以看到显示 upx 壳</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154013.png'><img src="/assets/Pasted%20image%2020240708154013.png"></p>
+<ul>
+<li>寻找OEP</li>
+</ul>
+<p>ida打开文件</p>
+<p>直接在<code>start</code>启动函数位置下断点，然后动态调试。</p>
+<p>发现<code>ret</code>指令直接 F4 然后 F7 进入，直到发现<code>endbr64</code>指令（即源程序代码开头）。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154204.png'><img src="/assets/Pasted%20image%2020240708154204.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154315.png'><img src="/assets/Pasted%20image%2020240708154315.png"></p>
+<p>下翻，翻到<code>ret</code>指令直接 f4 运行到这里，然后 f8 单步。</p>
+<p>重复以上过程，如果没找到<code>ret</code>指令就执行最近的<code>jmp</code>跳转。</p>
+<p>当看到下面这个<code>syscall</code>汇编中断代码时我们就快到 OEP 了。</p>
+<p>之后 f4 运行到<code>ret</code>位置，之后继续单步。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154626.png'><img src="/assets/Pasted%20image%2020240708154626.png"></p>
+<ul>
+<li>跳转到 OEP</li>
+</ul>
+<p>看起来都是数据，按快捷键 c 将数据解释为代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154734.png'><img src="/assets/Pasted%20image%2020240708154734.png"></p>
+<p>之后看到<code>endbr64</code>，elf64 位程序的入口。</p>
+<p>然后查看程序代码，发现将<code>byte_401775</code>函数地址送入<code>rdi</code>。</p>
+<p>由它来调用初始化程序，进而调用<code>main</code>函数。</p>
+<p>这里的<code>byte_401775</code>就是原程序<code>main</code>函数。<br>​</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708154815.png'><img src="/assets/Pasted%20image%2020240708154815.png"></p>
+<p>进入<code>main</code>函数查看</p>
+<p>按快捷键<code>c</code>解释为代码，然后在<code>endbr64</code>处按快捷键<code>p</code>创建函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708155624.png'><img src="/assets/Pasted%20image%2020240708155624.png"></p>
+<p>之后就可以<code>f5</code>反编译了。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708155757.png'><img src="/assets/Pasted%20image%2020240708155757.png"></p>
+<p><code>main</code>函数反编译代码</p>
+<p>CTF 中一般就可以在这里分析程序代码解题了。</p>
+<p>不过接下来我们要 dump 文件。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708155856.png'><img src="/assets/Pasted%20image%2020240708155856.png"></p>
+<ul>
+<li>dump内存到文件</li>
+</ul>
+<p>先回到 OEP 这里。</p>
+<p>确保<code>rip</code>执向<code>endbr64</code>汇编代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708160042.png'><img src="/assets/Pasted%20image%2020240708160042.png"></p>
+<p>alt+f7 快捷键打开并运行脚本（脚本放后面了）。</p>
+<p>dump64 位程序选用 64 位文件。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708160143.png'><img src="/assets/Pasted%20image%2020240708160143.png"></p>
+<p>执行，等待执行完毕。<br class='item-img' data-src='/assets/Pasted%20image%2020240708160217.png'><img src="/assets/Pasted%20image%2020240708160217.png"></p>
+<p>执行完毕<br class='item-img' data-src='/assets/Pasted%20image%2020240708160243.png'><img src="/assets/Pasted%20image%2020240708160243.png"></p>
+<p>dump 文件的存放路径在脚本中设置。</p>
+<p>执行文件</p>
+<p>可执行，dump文件成功。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708160507.png'><img src="/assets/Pasted%20image%2020240708160507.png"></p>
+<p>exeinfo扫一下，确认脱壳。</p>
+<p>显示无壳，则脱壳成功。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240708161118.png'><img src="/assets/Pasted%20image%2020240708161118.png"></p>
+<blockquote>
+<p>idc dump内存文件代码</p>
+</blockquote>
+<p>感谢大佬的代码</p>
+<ul>
+<li>64位程序dump内存代码</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;idc.idc&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PT_LOAD              1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PT_DYNAMIC           2</span><br><span class="hljs-type">static</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>         <span class="hljs-keyword">auto</span> ImageBase,StartImg,EndImg;<br>         <span class="hljs-keyword">auto</span> e_phoff;<br>         <span class="hljs-keyword">auto</span> e_phnum,p_offset;<br>         <span class="hljs-keyword">auto</span> i,dumpfile;<br>         ImageBase=<span class="hljs-number">0x400000</span>;<br>         StartImg=<span class="hljs-number">0x400000</span>;<br>         EndImg=<span class="hljs-number">0x0</span>;<br>         <span class="hljs-keyword">if</span> (Dword(ImageBase)==<span class="hljs-number">0x7f454c46</span> || Dword(ImageBase)==<span class="hljs-number">0x464c457f</span> )<br>  &#123;<br>    <span class="hljs-keyword">if</span>(dumpfile=fopen(<span class="hljs-string">&quot;G:\\dumpfile&quot;</span>,<span class="hljs-string">&quot;wb&quot;</span>)) <span class="hljs-comment">//这里可以更改路径</span><br>    &#123;<br>      e_phoff=ImageBase+Qword(ImageBase+<span class="hljs-number">0x20</span>);<br>      Message(<span class="hljs-string">&quot;e_phoff = 0x%x\n&quot;</span>, e_phoff);<br>      e_phnum=Word(ImageBase+<span class="hljs-number">0x38</span>);<br>      Message(<span class="hljs-string">&quot;e_phnum = 0x%x\n&quot;</span>, e_phnum);<br>      <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>;i&lt;e_phnum;i++)<br>      &#123;<br>         <span class="hljs-keyword">if</span> (Dword(e_phoff)==PT_LOAD || Dword(e_phoff)==PT_DYNAMIC)<br>                         &#123; <br>                                 p_offset=Qword(e_phoff+<span class="hljs-number">0x8</span>);<br>                                 StartImg=Qword(e_phoff+<span class="hljs-number">0x10</span>);<br>                                 EndImg=StartImg+Qword(e_phoff+<span class="hljs-number">0x28</span>);<br>                                 Message(<span class="hljs-string">&quot;start = 0x%x, end = 0x%x, offset = 0x%x\n&quot;</span>, StartImg, EndImg, p_offset);<br>                                 dump(dumpfile,StartImg,EndImg,p_offset);<br>                                 Message(<span class="hljs-string">&quot;dump segment %d ok.\n&quot;</span>,i);<br>                         &#125;    <br>         e_phoff=e_phoff+<span class="hljs-number">0x38</span>;<br>      &#125;<br><br>      fseek(dumpfile,<span class="hljs-number">0x3c</span>,<span class="hljs-number">0</span>);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br><br>      fseek(dumpfile,<span class="hljs-number">0x28</span>,<span class="hljs-number">0</span>);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>      fputc(<span class="hljs-number">0x00</span>,dumpfile);<br><br>      fclose(dumpfile);<br>        &#125;<span class="hljs-keyword">else</span> Message(<span class="hljs-string">&quot;dump err.&quot;</span>);<br> &#125;<br>&#125;<br><span class="hljs-type">static</span> <span class="hljs-title function_">dump</span><span class="hljs-params">(dumpfile,startimg,endimg,offset)</span> <br>&#123;<br>        <span class="hljs-keyword">auto</span> i;<br>        <span class="hljs-keyword">auto</span> size;<br>        size=endimg-startimg;<br>        fseek(dumpfile,offset,<span class="hljs-number">0</span>);<br>        <span class="hljs-keyword">for</span> ( i=<span class="hljs-number">0</span>; i &lt; size; i=i+<span class="hljs-number">1</span> ) <br>        &#123;<br>        fputc(Byte(startimg+i),dumpfile);<br>        &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>32位程序dump内存代码</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;idc.idc&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PT_LOAD              1</span><br> <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PT_DYNAMIC           2</span><br><span class="hljs-type">static</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">auto</span> ImageBase,StartImg,EndImg;	<span class="hljs-comment">//基址 08048000</span><br>    <span class="hljs-keyword">auto</span> e_phoff;<br>    <span class="hljs-keyword">auto</span> e_phnum,p_offset;	<span class="hljs-comment">//paddr 0xc 地址，pmemsz ox14大小,p_offset 0x4</span><br>    <span class="hljs-keyword">auto</span> i,dumpfile;<br>    ImageBase=<span class="hljs-number">0x08048000</span>;<br>    StartImg=<span class="hljs-number">0x08048000</span>;<br>    EndImg=<span class="hljs-number">0x0</span>;<br>    Message(<span class="hljs-string">&quot;%8x\n&quot;</span>,Dword(ImageBase));<br>    <span class="hljs-keyword">if</span> (Dword(ImageBase)==<span class="hljs-number">0x7f454c46</span> || Dword(ImageBase)==<span class="hljs-number">0x464c457f</span> )<br>    &#123;<br>        <span class="hljs-keyword">if</span>(dumpfile=fopen(<span class="hljs-string">&quot;G:\\dumpfile&quot;</span>,<span class="hljs-string">&quot;wb&quot;</span>))<span class="hljs-comment">//这里可以更改路径</span><br>        &#123;<br>            e_phoff=ImageBase+Word(ImageBase+<span class="hljs-number">0x1c</span>);<br>            e_phnum=Word(ImageBase+<span class="hljs-number">0x2c</span>);<br>            <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>;i&lt;e_phnum;i++)<br>            &#123;<br>                 <span class="hljs-keyword">if</span> (Dword(e_phoff)==PT_LOAD || Dword(e_phoff)==PT_DYNAMIC)<br>                     <br>                    &#123;   p_offset=Dword(e_phoff+<span class="hljs-number">0x4</span>);               <br>                        StartImg=Dword(e_phoff+<span class="hljs-number">0xc</span>);<br>                        EndImg=Dword(e_phoff+<span class="hljs-number">0xc</span>)+Dword(e_phoff+<span class="hljs-number">0x14</span>);<br>                             <br>                                dump(dumpfile,StartImg,EndImg,p_offset);<br>                                Message(<span class="hljs-string">&quot;dump LOAD%d ok.\n&quot;</span>,i);<br>                    &#125;      <br>                     <br>                e_phoff=e_phoff+<span class="hljs-number">0x20</span>;<br>            &#125;<br>            fseek(dumpfile,<span class="hljs-number">0x30</span>,<span class="hljs-number">0</span>);<br>            fputc(<span class="hljs-number">0x00</span>,dumpfile);      <br>            fputc(<span class="hljs-number">0x00</span>,dumpfile);      <br>            fputc(<span class="hljs-number">0x00</span>,dumpfile);      <br>            fputc(<span class="hljs-number">0x00</span>,dumpfile);<br>            fclose(dumpfile);<br>        &#125;<span class="hljs-keyword">else</span> Message(<span class="hljs-string">&quot;dump err.&quot;</span>);<br>    &#125;<br> <br>&#125;<br><span class="hljs-type">static</span> <span class="hljs-title function_">dump</span><span class="hljs-params">(dumpfile,startimg,endimg,offset)</span><br>&#123;<br>    <span class="hljs-keyword">auto</span> i;<br>    <span class="hljs-keyword">auto</span> size;<br>    size=endimg-startimg;<br>    fseek(dumpfile,offset,<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">for</span> ( i=<span class="hljs-number">0</span>; i &lt; size; i=i+<span class="hljs-number">1</span> )<br>    &#123;<br>            fputc(Byte(startimg+i),dumpfile);<br>        &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://blog.csdn.net/whatday/article/details/99709317">手动去upx特征_upx -d-CSDN博客</a><br>参考链接：<a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-79061.htm">linux 下 upx 脱壳笔记</a><br>参考链接：[三叶草二进制招新培训](<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1nL4y167Xw/?spm_id_from=333.999.0.0&vd_source=edca928f1ab30d19924c36939a858238">三叶草二进制招新培训9 - UPX脱壳_哔哩哔哩_bilibili</a>)<br>参考链接：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Pisces50002/article/details/135169522">如何用x64dbg UPX手动脱壳（64位）</a></p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/re/crypto/rc4/">← Next RC4加密算法逆向分析</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/re/tools/angr/">angr Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E8%84%B1%E5%A3%B3"><span class="toc-number">2.</span> <span class="toc-text">工具脱壳</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%84upx%E5%B7%A5%E5%85%B7%E8%84%B1%E5%A3%B3"><span class="toc-number">2.1.</span> <span class="toc-text">常规upx工具脱壳</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#upx%E9%AD%94%E6%94%B9%E5%A3%B3"><span class="toc-number">2.2.</span> <span class="toc-text">upx魔改壳</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%8B%E8%84%B1"><span class="toc-number">3.</span> <span class="toc-text">手脱</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#EXE"><span class="toc-number">3.1.</span> <span class="toc-text">EXE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ELF"><span class="toc-number">3.2.</span> <span class="toc-text">ELF</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">4.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
