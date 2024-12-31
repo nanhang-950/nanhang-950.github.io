@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SMC | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SMC 自解密代码 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
   font-family: Bender;
   src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
 }
@@ -94,4 +94,206 @@ lightGallery(document.getElementById('post-bg'), {
    }
  }
 });
-document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>SMC</h1></div><hr><div id="post-content"><div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/re/tools/z3/">← Next Z3求解方程组</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/re/protection/flower/">花指令分析 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>SMC 自解密代码</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>自修改代码（SMC, Self Modifying Code）是在程序执行过程中修改其自身指令的技术。通常，这种做法旨在通过减少指令路径长度来提高性能，或者为了避免重复代码，从而简化维护。自修改代码一般是有意进行的，目的是优化或保护程序的运行，而不是由于错误导致的意外修改。</p>
+<p>在逆向工程中，自修改代码通常表现为大量的无序代码，未被执行的部分无法直接分析。通过动态修改代码或数据，程序能够在运行时自我解密，防止静态分析工具的破解。这种技术常用于动态代码加密中，旨在通过修改代码来阻止逆向分析，直到程序执行到相应时刻才会恢复正常的可执行代码，从而达到反调试、反逆向的效果。</p>
+<h2 id="实现与破解"><a href="#实现与破解" class="headerlink" title="实现与破解"></a>实现与破解</h2><p>SMC 的实现方式有很多种，可以通过修改 PE 文件的 Section Header、使用 API Hook 实现代码加密和解密、使用 VMProtect 等第三方加密工具等。</p>
+<p>在 CTF 中常见的形式是首先对<code>.text</code>段的代码进行加密，然后通过 SMC 进行自解密修改。</p>
+<p>而一般程序的<code>.text</code>段是没有写权限的，在进行自修改之前，程序需要修改目标内存的权限。</p>
+<h3 id="内存权限修改"><a href="#内存权限修改" class="headerlink" title="内存权限修改"></a>内存权限修改</h3><p>在不同的系统中定义有不同的 API 函数来修改内存权限。</p>
+<ul>
+<li>在 Linux 系统中，可以通过<code>mprotect</code>函数修改目标内存的权限。</li>
+</ul>
+<p><code>mprotect</code>是 Linux 系统的一个 API 函数，可以改写内存权限。这个函数的原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">mprotect</span><span class="hljs-params">(<span class="hljs-type">void</span> *addr, <span class="hljs-type">size_t</span> len, <span class="hljs-type">int</span> prot)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>第一个参数：开始地址（为了页对齐，该地址必须是一个内存页的起始地址，即页大小整数倍，1 页 &#x3D; 4k &#x3D; 0x1000）</p>
+<p>第二个参数：指定长度（长度也应该是页的整倍数，即 0x1000 的整数倍）</p>
+<p>第三个参数：指定属性（r&#x3D;4（读）、w&#x3D;2（写）、x&#x3D;1（执行））</p>
+<ul>
+<li>在 Windows 系统中，调用<code>VirtualProtect</code>函数实现内存权限的修改。</li>
+</ul>
+<p><code>VirtualProtect</code>是 Windows 操作系统中的一个 API 函数，它允许应用程序改变一个内存页的保护属性。这个函数的原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs C">BOOL <span class="hljs-title function_">VirtualProtect</span><span class="hljs-params">(</span><br><span class="hljs-params">  LPCVOID lpAddress,  <span class="hljs-comment">// 要改变保护属性的内存页的起始地址</span></span><br><span class="hljs-params">  SIZE_T dwSize,      <span class="hljs-comment">// 内存页的大小</span></span><br><span class="hljs-params">  DWORD flNewProtect, <span class="hljs-comment">// 新的保护属性</span></span><br><span class="hljs-params">  PDWORD lpflOldProtect <span class="hljs-comment">// 存储旧的保护属性</span></span><br><span class="hljs-params">)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>第一个参数：起始地址，同样也必须对齐，即页大小整数倍，1页 &#x3D; 4k &#x3D; 0x1000</p>
+<p>第二个参数：指定长度（长度也应该是页的整倍数，即 0x1000 的整数倍）</p>
+<p>第三个参数：</p>
+<ul>
+<li><code>PAGE_READONLY</code>：页面为只读。</li>
+<li><code>PAGE_READWRITE</code>：页面为可读写。</li>
+<li><code>PAGE_WRITECOPY</code>：页面为写时复制（COW）模式。</li>
+<li><code>PAGE_EXECUTE</code>：页面为可执行。</li>
+<li><code>PAGE_EXECUTE_READ</code>：页面为可执行和可读。</li>
+<li><code>PAGE_EXECUTE_READWRITE</code>：页面为可执行、可读和可写。</li>
+<li><code>PAGE_NOACCESS</code>：页面无访问权限（即不可读、不可写、不可执行）。</li>
+</ul>
+<p>第四个参数：指向一个 <code>DWORD</code> 类型的变量，函数会把原先的保护标志存储在此变量中。如果不关心旧的保护属性，可以传入 <code>NULL</code>。</p>
+<p>因此我们也可以通过搜索程序是否使用了这两个函数来结合判断是否进行了 SMC。</p>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><blockquote>
+<p>环境为 Linux 系统环境 gcc 编译器</p>
+</blockquote>
+<p>下面我们通过实现简单的 SMC 代码来理解其原理。</p>
+<p>我们编写一段 C 语言代码，在其中插入汇编代码，功能为输出字符串。</p>
+<p>进行编译后，将<code>func</code>函数部分的字节码进行<code>xor 0xAA</code>加密，然后作为我们要解密的函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">func</span><span class="hljs-params">()</span>&#123;<br>    __asm__ __volatile__(<br>        <span class="hljs-string">&quot;mov $1, %rdi\n\t&quot;</span>        <br>        <span class="hljs-string">&quot;mov $0x0a434d53, %rsi\n\t&quot;</span>    <br>        <span class="hljs-string">&quot;push %rsi\n\t&quot;</span><br>        <span class="hljs-string">&quot;mov %rsp,%rsi\n\t&quot;</span><br>        <span class="hljs-string">&quot;mov $4, %rdx\n\t&quot;</span>        <br>        <span class="hljs-string">&quot;mov $1, %rax\n\t&quot;</span>  <br>        <span class="hljs-string">&quot;syscall\n\t&quot;</span>        <br>        <span class="hljs-string">&quot;mov $60, %rax\n\t&quot;</span>   <br>        <span class="hljs-string">&quot;xor %rdi, %rdi\n\t&quot;</span>    <br>        <span class="hljs-string">&quot;syscall\n\t&quot;</span>          <br>    );<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> *argv[])</span><br>&#123;<br>  func();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来我们编写 SMC 代码，将加密后的函数字节码作为数据插入到代码中。</p>
+<p>加密算法为<code>xor</code>，异或值是<code>0xAA</code>，同样解密算法也是<code>xor</code>。</p>
+<p>首先调用内存权限修改函数给加密函数内存添加可写权限，然后再通过解密算法解密函数的代码数据。</p>
+<p>这就实现了一段简单的 SMC 代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/mman.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-comment">//被加密的函数字节码</span><br><span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> code[] = &#123;<br>    <span class="hljs-number">0xff</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x4f</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0xab</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0x6c</span>, <span class="hljs-number">0xf9</span>, <span class="hljs-number">0xe7</span>, <br>    <span class="hljs-number">0xe9</span>, <span class="hljs-number">0xa0</span>, <span class="hljs-number">0xfc</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x4c</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0xae</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0x6a</span>, <br>    <span class="hljs-number">0xab</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xa5</span>, <span class="hljs-number">0xaf</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x6d</span>, <span class="hljs-number">0x6a</span>, <span class="hljs-number">0x96</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xaa</span>, <span class="hljs-number">0xe2</span>, <span class="hljs-number">0x9b</span>, <span class="hljs-number">0x55</span>, <br>    <span class="hljs-number">0xa5</span>, <span class="hljs-number">0xaf</span>, <span class="hljs-number">0x3a</span>, <span class="hljs-number">0xf7</span>, <span class="hljs-number">0x69</span><br>&#125;;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">size_t</span> page_size = sysconf(_SC_PAGE_SIZE); <br>    <span class="hljs-type">size_t</span> code_size = <span class="hljs-keyword">sizeof</span>(code);<br><br>    mprotect((<span class="hljs-type">void</span> *)((<span class="hljs-type">uintptr_t</span>)code &amp; ~(page_size - <span class="hljs-number">1</span>)), <span class="hljs-number">0x1000</span>, <span class="hljs-number">7</span>);<br><br>    <span class="hljs-comment">// 解密函数字节码</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; i &lt; code_size; i++) &#123;<br>      code[i] ^= <span class="hljs-number">0xAA</span>;<br>    &#125;<br><br>    <span class="hljs-comment">// 将解密后的字节码转换为函数指针调用</span><br>    <span class="hljs-type">void</span> (*func)() = (<span class="hljs-type">void</span> (*)())code;<br>    func();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="破解"><a href="#破解" class="headerlink" title="破解"></a>破解</h3><p>针对这样的 SMC 我们有两种破解方法：</p>
+<ul>
+<li>动态解密法：</li>
+</ul>
+<p>动态调试目标程序，待 SMC 代码运行解密后直接使用 IDA 分析。</p>
+<p>ida 反编译编译后的文件分析代码逻辑。</p>
+<p>发现这跟我们写的代码逻辑大差不差。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231232029.png'><img src="/assets/Pasted%20image%2020241231232029.png"></p>
+<p>接下来我们通过动态解密废破解这个 SMC 程序。</p>
+<p>我们在最后一行处打一个断点，然后动态调试让程序运行到这里。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231232344.png'><img src="/assets/Pasted%20image%2020241231232344.png"></p>
+<p>到了这里<code>code</code>函数已经解密完毕，我们跟进查看。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231232452.png'><img src="/assets/Pasted%20image%2020241231232452.png"></p>
+<p>在函数开始处按快捷键<code>c</code>将数据定义为代码，然后按快捷键<code>p</code>将代码定义为函数。</p>
+<p>之后<code>F5</code>反编译。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231232549.png'><img src="/assets/Pasted%20image%2020241231232549.png"></p>
+<p>可以看到反编译成功，这就是动态调试解密法。</p>
+<p>我们也可以使用 Dump 功能将解密后的 SMC 字节数据 Dump 出来，对密文进行静态替换，再使用 IDA 进行分析。</p>
+<p>不过这种方法对比上一种方法或者是下面的静态解密法来说比较麻烦，这里就不细讲了。</p>
+<ul>
+<li>静态解密法：</li>
+</ul>
+<p>找到对代码或数据加密的逻辑后，根据代码逻辑编写 idapython 逆向解密脚本解密代码。</p>
+<p>分析代码逻辑，程序对函数起始地址<code>0x404060</code>到相对偏移<code>0x35</code>处的代码进行异或解密，异或值为<code>0xAA</code></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231233004.png'><img src="/assets/Pasted%20image%2020241231233004.png"></p>
+<ul>
+<li>idapython解密脚本</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> idc<br><br>addr = <span class="hljs-number">0x404060</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0x35</span>): <br>	val = idc.get_bytes(addr + i, <span class="hljs-number">1</span>)<br>	val = <span class="hljs-built_in">ord</span>(val) <br>	val ^= <span class="hljs-number">0xAA</span> <br>	idc.patch_byte(addr + i, val)<br></code></pre></td></tr></table></figure>
+
+<p>快捷键<code>Shift+F2</code>打开运行脚本代码窗口，选择 Python。</p>
+<p>然后将代码复制进去运行即可。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231150419.png'><img src="/assets/Pasted%20image%2020241231150419.png"></p>
+<p>之后就是定义代码定义函数，然后再进行反编译了。</p>
+<p>同样，反编译成功。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231234250.png'><img src="/assets/Pasted%20image%2020241231234250.png"></p>
+<p>总之这两种方法就是哪个方便用哪个。</p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><h3 id="动态解密法"><a href="#动态解密法" class="headerlink" title="动态解密法"></a>动态解密法</h3><blockquote>
+<p>例题：2024 Newstar SMC</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>拿到附件，程序为 Linux 下的 ELF 文件，ida 反编译分析代码逻辑。</p>
+<p>一眼丁真，发现程序调用了<code>mprotect</code>修改<code>encrypt</code>函数内存权限，判断可能存在 SMC。</p>
+<p>然后程序通过<code>scanf</code>函数向变量<code>s</code>中输入字符串，长度要求必须为 28 字节。</p>
+<p>之后的代码逻辑很明显就是通过循环异或对<code>encrypt</code>函数进行解密了。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231084710.png'><img src="/assets/Pasted%20image%2020241231084710.png"></p>
+<p>这里我们对照着<code>encrypt</code>函数的情况来查看一下。</p>
+<p>很明显<code>encrypt</code>函数的汇编代码都是有问题的，这就是进行过加密的函数。</p>
+<p>接下来程序会通过上面的<code>for</code>循环逻辑对每字节进行异或解密。</p>
+<p>然后就是通过<code>encrypt</code>函数判断输入是否正确了。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231083950.png'><img src="/assets/Pasted%20image%2020241231083950.png"></p>
+<p>这里我们可以通过动态解密法来破解 SMC。</p>
+<p>在比较输入处打一个断点，然后动态调试让程序运行起来，这样可以直接让程序执行完 SMC 代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231083503.png'><img src="/assets/Pasted%20image%2020241231083503.png"></p>
+<p>运行完之后我们进入<code>encrypt</code>函数查看代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231084820.png'><img src="/assets/Pasted%20image%2020241231084820.png"></p>
+<p>可以看到代码仍然是乱序的。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231084908.png'><img src="/assets/Pasted%20image%2020241231084908.png"></p>
+<p>我们首先在<code>encrypt</code>函数处按快捷键<code>u</code>将其取消定义，然后再按快捷键<code>c</code>将其解释为代码，然后再按快捷键<code>p</code>将其解释为函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231085235.png'><img src="/assets/Pasted%20image%2020241231085235.png"></p>
+<p>然后即可<code>F5</code>反编译，反编译后我们就可以看到<code>encrypt</code>函数的代码逻辑了。</p>
+<p>可以看到是一段非常复杂的等式，我们直接通过 z3 来进行求解。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231083401.png'><img src="/assets/Pasted%20image%2020241231083401.png"></p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> z3 <span class="hljs-keyword">import</span> *<br><span class="hljs-keyword">import</span> struct<br><br>s=z3.Solver()  <br><br>v2,v3,v4,v5,v6,v7,v8=Ints(<span class="hljs-string">&quot;v2 v3 v4 v5 v6 v7 v8&quot;</span>)<br><br>s.add(<span class="hljs-number">5</span> * (v3 + v2) + <span class="hljs-number">4</span> * v4 + <span class="hljs-number">6</span> * v5 + v6 + <span class="hljs-number">9</span> * v8 + <span class="hljs-number">2</span> * v7 == <span class="hljs-number">0xD5CC7D4FF</span>)<br>s.add(<span class="hljs-number">4</span> * v8 + <span class="hljs-number">3</span> * v5 + <span class="hljs-number">6</span> * v4 + <span class="hljs-number">10</span> * v3 + <span class="hljs-number">9</span> * v2 + <span class="hljs-number">9</span> * v7 + <span class="hljs-number">3</span> * v6 == <span class="hljs-number">0x102335844B</span>)<br>s.add(<span class="hljs-number">9</span> * v6 + <span class="hljs-number">4</span> * (v5 + v4) + <span class="hljs-number">5</span> * v3 + <span class="hljs-number">4</span> * v2 + <span class="hljs-number">3</span> * v8 + <span class="hljs-number">10</span> * v7 == <span class="hljs-number">0xD55AEABB9</span>)<br>s.add(<span class="hljs-number">9</span> * v3 + <span class="hljs-number">5</span> * v2 + <span class="hljs-number">9</span> * v8 + <span class="hljs-number">2</span> * (v4 + <span class="hljs-number">2</span> * v5 + <span class="hljs-number">5</span> * v6 + v7) == <span class="hljs-number">0xF89F6B7FA</span>)<br>s.add(<span class="hljs-number">5</span> * v6 + <span class="hljs-number">9</span> * v5 + <span class="hljs-number">7</span> * v2 + <span class="hljs-number">2</span> * v3 + v4 + <span class="hljs-number">3</span> * v8 + <span class="hljs-number">9</span> * v7 == <span class="hljs-number">0xD5230B80B</span>)<br>s.add(<span class="hljs-number">8</span> * v8 + <span class="hljs-number">6</span> * v5 + <span class="hljs-number">10</span> * v4 + <span class="hljs-number">5</span> * v3 + <span class="hljs-number">6</span> * v2 + <span class="hljs-number">3</span> * v7 + <span class="hljs-number">9</span> * v6 == <span class="hljs-number">0x11E28ED873</span>)<br>s.add(v2 + <span class="hljs-number">4</span> * (v4 + v3 + <span class="hljs-number">2</span> * v5) + <span class="hljs-number">9</span> * v6 + v7 + <span class="hljs-number">3</span> * v8 == <span class="hljs-number">0xB353C03E1</span>)<br><br><span class="hljs-keyword">if</span> s.check() == sat:<br>    m=s.model()<br><br>    v=[<span class="hljs-number">0</span>]*<span class="hljs-number">7</span><br>    v[<span class="hljs-number">0</span>]=m[v2].as_long()<br>    v[<span class="hljs-number">1</span>]=m[v3].as_long()<br>    v[<span class="hljs-number">2</span>]=m[v4].as_long()<br>    v[<span class="hljs-number">3</span>]=m[v5].as_long()<br>    v[<span class="hljs-number">4</span>]=m[v6].as_long()<br>    v[<span class="hljs-number">5</span>]=m[v7].as_long()<br>    v[<span class="hljs-number">6</span>]=m[v8].as_long()<br><br>    dec = <span class="hljs-string">b&#x27;&#x27;</span>.join(struct.pack(<span class="hljs-string">&#x27;&lt;I&#x27;</span>, val) <span class="hljs-keyword">for</span> val <span class="hljs-keyword">in</span> v)<br>    result = dec.decode(<span class="hljs-string">&#x27;ascii&#x27;</span>)<br>    <span class="hljs-built_in">print</span>(result)<br><span class="hljs-comment">#flag&#123;D0_Y0u_Kn0w_sMC_4nD_Z3&#125;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="静态解密法"><a href="#静态解密法" class="headerlink" title="静态解密法"></a>静态解密法</h3><blockquote>
+<p>例题：[网鼎杯 2020 青龙组]jocker</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>ida 反编译分析，看到<code>// positive sp value has been detected, the output may be wrong!</code>。</p>
+<p>这是因为栈不平衡，ida 识别报错。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231140157.png'><img src="/assets/Pasted%20image%2020241231140157.png"></p>
+<p>点击菜单的 Options-&gt; General-&gt;Stack pointer 来打开 ida 的栈指针设置，分析栈不平衡的位置。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231141010.png'><img src="/assets/Pasted%20image%2020241231141010.png"></p>
+<p>发现异常处，程序在调用了<code>__Z7encryptPc</code>函数和<code>__Z7finallyPc</code>函数后栈帧值不断减少。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231141222.png'><img src="/assets/Pasted%20image%2020241231141222.png"></p>
+<p>按快捷键<code>alt+k</code>，将两处调用函数地方的汇编指令栈帧值修改为 0。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231141956.png'><img src="/assets/Pasted%20image%2020241231141956.png"></p>
+<p>之后再进行反编译，可以看到 ida 没有再报错了。</p>
+<p>接下来我们分析程序逻辑。</p>
+<p><code>main</code>函数调用了<code>VirtualProtect</code>函数修改<code>encrypt</code>函数的内存权限为可写。</p>
+<p>然后调用<code>scanf</code>函数向<code>Str</code>变量输入字符串，如果输入长度不等于 24 则报错退出。</p>
+<p>然后将输入的字符串复制到<code>Destination</code>变量中，将<code>Str</code>变量作为<code>wrong</code>函数和<code>omg</code>函数的参数传入处理。</p>
+<p>最后的<code>for</code>循环就是 SMC 的解密逻辑。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231142030.png'><img src="/assets/Pasted%20image%2020241231142030.png"></p>
+<p>接下来我们跟进查看<code>wrong</code>函数和<code>omg</code>函数的代码逻辑。</p>
+<p><code>wrong</code>函数是一个加密逻辑，对奇数进行偏移加密，对偶数进行异或加密。</p>
+<p>接下来分析<code>omg</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231142724.png'><img src="/assets/Pasted%20image%2020241231142724.png"></p>
+<p>可以看到<code>omg</code>函数将输入和<code>unk_4030c0</code>数据进行了按位比较，判断<code>unk_4030c0</code>应该就是密文。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231142756.png'><img src="/assets/Pasted%20image%2020241231142756.png"></p>
+<p>我们根据密文和代码逻辑，尝试写一下解密逻辑。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python">enc = [<span class="hljs-number">0x66</span>, <span class="hljs-number">0x6B</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0x7F</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0x3B</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0x6B</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0x26</span>, <span class="hljs-number">0x3B</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x5F</span>, <span class="hljs-number">0x4D</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0x0C</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0x66</span>]<br>result=<span class="hljs-string">&quot;&quot;</span><br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc)):<br>    <span class="hljs-keyword">if</span> i % <span class="hljs-number">2</span> == <span class="hljs-number">1</span>:<br>        result += <span class="hljs-built_in">chr</span>(enc[i] + i)<br>    <span class="hljs-keyword">else</span>:<br>        result += <span class="hljs-built_in">chr</span>(enc[i] ^ i)<br><span class="hljs-built_in">print</span>(result)<br><span class="hljs-comment"># flag&#123;fak3_alw35_sp_me!!&#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>试了一下，这个 flag 是假的。</p>
+<p>接下来继续逆向 SMC 部分。</p>
+<p>可以看到程序对<code>encrypt</code>函数进行了逐字节异或，解密<code>encrypt</code>函数。</p>
+<p>我们这里就使用静态解密法来编写 idapython 代码解密<code>encrypt</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231142030.png'><img src="/assets/Pasted%20image%2020241231142030.png"></p>
+<ul>
+<li>idapython解密脚本</li>
+</ul>
+<p>根据解密<code>encrypt</code>函数逻辑编写 idapython 解密脚本。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> idc<br>addr = <span class="hljs-number">0x401500</span>  <span class="hljs-comment"># encrypt函数的地址</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">187</span>):<br>	<span class="hljs-comment">#获取地址字节,1代表一个字节</span><br>    b = get_bytes(addr + i, <span class="hljs-number">1</span>)<br>    <span class="hljs-comment">#修改地址内存的字节</span><br>    <span class="hljs-comment">#第一个参数为指定地址，第二个参数为修改后的值</span><br>    idc.patch_byte(addr + i, <span class="hljs-built_in">ord</span>(b) ^ <span class="hljs-number">0x41</span>)<br></code></pre></td></tr></table></figure>
+
+<p>然后运行 idapython脚本，这里前面讲过了。</p>
+<p>接下来我们修复解密后的<code>encrypt</code>函数代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231150529.png'><img src="/assets/Pasted%20image%2020241231150529.png"></p>
+<p>从函数开始处开始按快捷键<code>u</code>将所有指令设置为无定义。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231150834.png'><img src="/assets/Pasted%20image%2020241231150834.png"></p>
+<p>然后在函数开头处按快捷键<code>c</code>将所有数据内容转换为代码。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231150856.png'><img src="/assets/Pasted%20image%2020241231150856.png"></p>
+<p>最后在函数开始处按快捷键<code>p</code>定义为函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231150938.png'><img src="/assets/Pasted%20image%2020241231150938.png"></p>
+<p>然后就可以<code>F5</code>反编译了。</p>
+<p>继续分析代码逻辑，<code>encrypt</code>函数的参数是存储输入内容的变量。</p>
+<p><code>encrypt</code>函数将输入与<code>Buffer</code>变量存储的内容进行逐字节异或，如果最后的结果不等于密文则报错。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231151005.png'><img src="/assets/Pasted%20image%2020241231151005.png"></p>
+<p>我们跟进查看<code>Buffer</code>变量的内容，可以看到是<code>wrong</code>函数中输出的字符串。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231151334.png'><img src="/assets/Pasted%20image%2020241231151334.png"></p>
+<p>我们根据代码逻辑，将密文与<code>Buffer</code>变量进行逐字节异或运算后即可得出符合的输入。</p>
+<p>根据逻辑编写解密代码。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">key=<span class="hljs-string">&#x27;hahahaha_do_you_find_me?&#x27;</span><br>enc=[<span class="hljs-number">0x0000000E</span>, <span class="hljs-number">0x0000000D</span>, <span class="hljs-number">0x00000009</span>, <span class="hljs-number">0x00000006</span>, <span class="hljs-number">0x00000013</span>, <span class="hljs-number">0x00000005</span>, <span class="hljs-number">0x00000058</span>, <span class="hljs-number">0x00000056</span>, <span class="hljs-number">0x0000003E</span>, <span class="hljs-number">0x00000006</span>, <span class="hljs-number">0x0000000C</span>, <span class="hljs-number">0x0000003C</span>, <span class="hljs-number">0x0000001F</span>, <span class="hljs-number">0x00000057</span>, <span class="hljs-number">0x00000014</span>, <span class="hljs-number">0x0000006B</span>, <span class="hljs-number">0x00000057</span>, <span class="hljs-number">0x00000059</span>, <span class="hljs-number">0x0000000D</span>]<br>flag=<span class="hljs-string">&quot;&quot;</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc)):<br>    flag+=<span class="hljs-built_in">chr</span>(<span class="hljs-built_in">ord</span>(key[i])^enc[i])<br><span class="hljs-built_in">print</span>(flag)<br><span class="hljs-comment">#flag&#123;d07abccf8a410c </span><br></code></pre></td></tr></table></figure>
+
+<p>只解出了前半部分，继续分析程序。</p>
+<p>可以看到，在<code>encrypt</code>函数调用成功之后继续调用了<code>finally</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231142030.png'><img src="/assets/Pasted%20image%2020241231142030.png"></p>
+<p>跟进分析<code>finally</code>函数代码逻辑。</p>
+<p>程序中将<code>%tp&amp;:</code>复制到了<code>v3</code>变量中，我们可以猜测这是后半部分的密文。</p>
+<p>尝试用先前逻辑进行解密，结果不行。</p>
+<p>我们知道 flag 的最后一位一定是<code>&#125;</code>，我们可以尝试将<code>&#125;</code>与密文最后一位进行异或。</p>
+<p>然后将异或结果与密文进行异或，尝试是否可以解密。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231153105.png'><img src="/assets/Pasted%20image%2020241231153105.png"></p>
+<p>尝试成功，得到flag。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python">key=<span class="hljs-string">&#x27;hahahaha_do_you_find_me?&#x27;</span><br>enc=[<span class="hljs-number">0x0000000E</span>, <span class="hljs-number">0x0000000D</span>, <span class="hljs-number">0x00000009</span>, <span class="hljs-number">0x00000006</span>, <span class="hljs-number">0x00000013</span>, <span class="hljs-number">0x00000005</span>, <span class="hljs-number">0x00000058</span>, <span class="hljs-number">0x00000056</span>, <span class="hljs-number">0x0000003E</span>, <span class="hljs-number">0x00000006</span>, <span class="hljs-number">0x0000000C</span>, <span class="hljs-number">0x0000003C</span>, <span class="hljs-number">0x0000001F</span>, <span class="hljs-number">0x00000057</span>, <span class="hljs-number">0x00000014</span>, <span class="hljs-number">0x0000006B</span>, <span class="hljs-number">0x00000057</span>, <span class="hljs-number">0x00000059</span>, <span class="hljs-number">0x0000000D</span>]<br>flag=<span class="hljs-string">&quot;&quot;</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc)):<br>    flag+=<span class="hljs-built_in">chr</span>(<span class="hljs-built_in">ord</span>(key[i])^enc[i])<br><span class="hljs-built_in">print</span>(flag)<br><br>enc_end=<span class="hljs-string">&quot;%tp&amp;:&quot;</span><br>key=<span class="hljs-built_in">ord</span>(enc_end[-<span class="hljs-number">1</span>])^<span class="hljs-built_in">ord</span>(<span class="hljs-string">&quot;&#125;&quot;</span>)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc_end)):<br>    flag+=<span class="hljs-built_in">chr</span>(<span class="hljs-built_in">ord</span>(enc_end[i])^key)<br><span class="hljs-built_in">print</span>(flag)<br><span class="hljs-comment">#flag&#123;d07abccf8a410cb37a&#125;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考：<a target="_blank" rel="noopener" href="https://gdufs-king.github.io/2020/05/22/smc%E5%8A%A0%E5%AF%86%E7%A0%94%E7%A9%B6/">smc加密研究 - V1ct0r的博客 (gdufs-king.github.io)</a><br>  参考：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/238645#h3-5">SMC自解码总结-安全客 - 安全资讯平台 (anquanke.com)</a><br>  参考：<a target="_blank" rel="noopener" href="https://www.secpulse.com/archives/197285.html">探究SMC局部代码加密技术以及在CTF中的运用 - SecPulse.COM | 安全脉搏</a></p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/re/tools/z3/">← Next Z3求解方程组</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/re/protection/flower/">花指令分析 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%A0%B4%E8%A7%A3"><span class="toc-number">2.</span> <span class="toc-text">实现与破解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%9D%83%E9%99%90%E4%BF%AE%E6%94%B9"><span class="toc-number">2.1.</span> <span class="toc-text">内存权限修改</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.</span> <span class="toc-text">实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A0%B4%E8%A7%A3"><span class="toc-number">2.3.</span> <span class="toc-text">破解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">例题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E8%A7%A3%E5%AF%86%E6%B3%95"><span class="toc-number">3.1.</span> <span class="toc-text">动态解密法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E8%A7%A3%E5%AF%86%E6%B3%95"><span class="toc-number">3.2.</span> <span class="toc-text">静态解密法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">4.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

