@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>IOT设备硬件分析 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>IOT设备硬件分析</h1></div><hr><div id="post-content"><h2 id="IOT设备硬件组成"><a href="#IOT设备硬件组成" class="headerlink" title="IOT设备硬件组成"></a>IOT设备硬件组成</h2><p>市面上 IOT 设备的类型众多，不同的 IOT 设备有着不同的功能与用途。</p>
+<p>但是，这些 IOT 设备都具有感知和通信功能，以及存储和处理能力。</p>
+<h3 id="印制电路板"><a href="#印制电路板" class="headerlink" title="印制电路板"></a>印制电路板</h3><p><strong>PCB</strong>（Printed Circuit Board，印制电路板）是重要的电子部件，是电子元器件的支撑体，是电子元器件电气连接的载体。几乎每种电子设备，小到电子手表、计算器，大到计算机、通信电子设备、武器系统，都使用了印制电路板来实现各个元器件之间的电气连接。</p>
+<p>目前，印制电路板主要由以下部分组成。</p>
+<ul>
+<li><p>线路与图面：线路是元器件之间导通的工具，在设计 PCB 时，会另外设计大铜面（即图面）作为接地及电源层。而且，线路与图面是在设计（或生产）PCB 时同时做出的。</p>
+</li>
+<li><p>介电层：俗称基材，用来保持线路及各层之间的绝缘性。</p>
+</li>
+<li><p>孔：分为导通孔和非导通孔。导通孔可以使不同之间的线路彼此导通，较大的导通孔可以用作零件插件。非导通孔通常用作表面贴装定位，在组装印制电路板时用于固定螺丝。</p>
+</li>
+<li><p>防焊油墨：并非所有的铜面都要上锡（俗称吃锡）和上零件，因此对于不需要上锡的区域，会印一层用来隔绝铜面上锡的物质（通常为环氧树脂），以免不需要吃锡的线路间短路。根据工艺的不同，防焊油墨可以分为绿油、红油、蓝油、黄油、白油等。</p>
+</li>
+<li><p>丝印：丝印为 PCB 非必要的组成结构，它的主要功能是在 PCB 上标注各零件的名称、位置框，以方便辨识以及组装后的维修。</p>
+</li>
+<li><p>表面处理：由于铜面在一般环境中很容易氧化，导致无法上锡（也就是我们说的焊锡性不良），因此需要对上锡的铜面进行保护而且通常是采用喷锡、化金、化银、化锡以及使用有机保焊剂等方法进行保护的。这些方法统称为表面处理，它们各有优缺点，这里不展开介绍。</p>
+</li>
+</ul>
+<p>根据功能与用途的不同，印制电路板可以分为单面板、双面板、多层板。</p>
+<ul>
+<li><p>单面板：指的是只使用印制电路板的一面来设计线路。传统设备（如收音机、遥控器等功能单一的设备）会较多地用到单面板。</p>
+</li>
+<li><p>双面板：指的是电路板的两面都有布线的设计。不过，要想使用这两面的导线，这两个面之间必须有适当的电路连接才行。这种电路间的 “桥梁” 称为导通孔。随着时代的进步以及消费者对于电子产品的要求（无论是功能还是体积），电子产品需要及时更新换代，而双面板可以有效解决传统设备体积过大、功能相对不足的问题。</p>
+</li>
+<li><p>多层板：指的是电子产品中的多层线路板，它是使用了更多单面板或双面板的布线板。多层板大多用于体积大小有限制且所需产品功能较多的设备。</p>
+</li>
+</ul>
+<h3 id="存储芯片"><a href="#存储芯片" class="headerlink" title="存储芯片"></a>存储芯片</h3><p>只读存储器（Read-Only Memory，ROM）是一种半导体存储器，其结构如图所示。顾名思义，只读存储器只能读出事先存储的数据。它的特性是一旦在其中存储了数据，就无法再将数据进行改变或删除，且存储的数据不会因为电源的关闭而消失。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241205125117.png'><img src="/assets/Pasted%20image%2020241205125117.png"></p>
+<p>只读存储器通常用于存储各种固化的程序和数据。</p>
+<p>根据 ROM 的工作原理，可以将其细分为 PROM、EPROM、EEPROM、FLASHROM 几类。</p>
+<ul>
+<li>可编程只读存储器（Programmable ROM，PROM）</li>
+</ul>
+<p>用户可以使用专用的编程器将自己的数据写入 PROM 但是只有一次写入机会，且数据一旦写入后无法修改。因此，若是在数据写入过程中出现错误，PROM 只能做报废处理。</p>
+<p>PROM 的成本较高，数据的写入速率较慢，一般只适用于少量需求的场合，或者用于在量产前进行验证。</p>
+<ul>
+<li>可擦除可编程只读存储器（Erasable Programmable Read-Only Memory，EPROM）</li>
+</ul>
+<p>EPROM 可重复擦除和写入，这解决了 PROM 只能写入一次的弊端。EPROM 在其正面的陶瓷封装上，有一个玻璃窗口。透过该窗口，可以看到 EPROM 内部的集成电路。使用紫外线透过该窗口照射内部的集成电路，即可擦除其上存储的数据。当然，真正的信息擦除操作需要使用 EPROM 擦除器来执行。</p>
+<p>老式计算机的 BIOS 芯片一般使用的就是 EPROM，其擦除窗口通常使用印有 BIOS 发行商名称、版本和声明的标签进行覆盖。</p>
+<ul>
+<li>电擦除可编程只读存储器（Electrically-Erasable Programmable Read-Only Memory，EEPROM）</li>
+</ul>
+<p>由于 EPROM 在操作上不是很方便，后来计算机主板上的 BIOS 芯片开始采用 EEPROM。在擦除 EEPROM 上的数据时，不需要借助于其他设备即可完成。它通过电子信号来修改其内容，而且最小的修改单位为字节。这样一来，无须将存储的数据全部擦除就可以写入新的数据，这也就摆脱了 EPROM 擦除器和编程器的束缚。</p>
+<ul>
+<li>快闪存储器（Flash Mermory，FLASHROM）</li>
+</ul>
+<p>快闪存储器又称为闪存，是一种可以通过电子方式多次复写的半导体存储设备，允许在操作期间进行多次擦除写入。闪存主要用于一般性的资料存储，以及在计算机与其他数字产品（如储存卡与 U 盘）间交换信息。</p>
+<p>闪存是 EEPROM 的一种，它结合了 ROM 和 RAM（随机存取存储器）的长处，不仅具备 EEPROM 的性能，而且在断点时不会丢失数据，同时还可以快速读取数据。</p>
+<p>内存与 EEPROM 的区别是，闪存按扇区块（block）操作，而 EEPROM 按照字节操作，而且闪存的电路结构比较简单，在同样的容量小占用的芯片面积较小，因此成本要比 EEPROM 低，更适合作为程序存储器使用。</p>
+<p>内存主要分为 NOR 内存和 NAND 闪存。其中，NOR 闪存的特点是芯片内执行（XIP，eXecute In Place），这样应用程序可以直接在内存内运行，而不必把代码读到系统 RAM 中。NOR 内存的传输效率很高，但是写入和擦除速率很低。而 NAND 闪存能提供极高的单元密度，因此存储密度很高，并且写入和擦除速度也很快。但是，NAND 闪存的一个弊端是它需要使用特殊的系统接口进行管理。</p>
+<p>闪存是非易失性的存储器。也就是说，单就信息的保存而言，它不需要消耗电力。而且与硬盘相比，内存也有更佳的抗震性，这也是内存广泛应用于移动设备的原因。</p>
+<h2 id="电子基础"><a href="#电子基础" class="headerlink" title="电子基础"></a>电子基础</h2><h3 id="电压"><a href="#电压" class="headerlink" title="电压"></a>电压</h3><p>电压（Voltage）也成为电势差、电位差，用于衡量电位电荷在静电场中由于电势不同所产生的能量差。电压的方向规定从高电位指向低电位的方向。电压的国际单位为伏特（V，简称为伏），常用的单位还有毫伏（mV）、微伏（uV）、千伏（kV）等。</p>
+<p>在测量电压的时候，我们需要一个特定位置的参考为基点。这个参考基点通常是地（Ground，GND），或者电池、供电设备的负极。GND 又分为数字地（DGND）和模拟地（AGND）。</p>
+<h3 id="电流"><a href="#电流" class="headerlink" title="电流"></a>电流</h3><p>电荷的定向移动形成电流（Current）。电流的大小称为电流强度，是指单位时间内通过导线某一截面的电荷量，其单位为安培（A，简称为安）。1 安培等于每秒通过 1 库仑的电荷量。电流分为交流电流和直流电流，如图。</p>
+<ul>
+<li>交流电流（AC）：大小和方向都发生周期性变化。</li>
+<li>直流电流（DC）：方向不随时间发生改变，大小可以改变。</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241205141938.png'><img src="/assets/Pasted%20image%2020241205141938.png"></p>
+<h3 id="电阻"><a href="#电阻" class="headerlink" title="电阻"></a>电阻</h3><p>电阻（Resistance）是一个物理量，在物理学中表示为导体对电流阻碍作用的大小。导体的电阻越大，表示对电流的阻碍作用越大。不同的导体，其电阻一般不同。导体的电阻通常用字母 R 表示，电阻的单位是 欧姆（Ω，简称为欧）。电阻上一般带有彩蛇的条码，彩色条码用来表示该电阻的电阻值。</p>
+<h3 id="电容"><a href="#电容" class="headerlink" title="电容"></a>电容</h3><p>在所有的 IOT 设备中，电容器是最常见的电子元器件之一。在物理学中，在既定的电压下，电容器存储电荷的能力称为电容（Capacitance）。电容的单位是法拉（farad，标记为 F）。在电路图中，通常以字母 C 打头的命名方式来标识电容，如 C01、C02、C03、C100 等。电容器在调谐、旁路、耦合、滤波等电路中发挥了重要的作用。</p>
+<h3 id="晶体管"><a href="#晶体管" class="headerlink" title="晶体管"></a>晶体管</h3><p>晶体管（Transistor）是一种类似于阀门的固体半导体元器件，具有检波、整流、放大、开关、稳压、信号调制等多种功能。</p>
+<p>晶体管的一种常见用途是用作电流放大器，即接受较小的电流并将其放大后进行输出。我们经常使用的音响就使用了晶体管的这个原理，即在调节输入到音响中的声波的音量大小后将其输出。</p>
+<h2 id="IOT通信接口识别与调试"><a href="#IOT通信接口识别与调试" class="headerlink" title="IOT通信接口识别与调试"></a>IOT通信接口识别与调试</h2><p>通信接口是 IOT 设备与计算机进行通信的重要接口，也是我们在进行 IOT 安全研究时最常用的接口。下面看一下常见的 IOT 通信接口都有哪些，以及如何使用 IOT 通信接口对设备进行调试。</p>
+<h3 id="通用异步接收器"><a href="#通用异步接收器" class="headerlink" title="通用异步接收器"></a>通用异步接收器</h3><h3 id="联合测试工作组"><a href="#联合测试工作组" class="headerlink" title="联合测试工作组"></a>联合测试工作组</h3><h3 id="通过通信接口对UART设备进行调试"><a href="#通过通信接口对UART设备进行调试" class="headerlink" title="通过通信接口对UART设备进行调试"></a>通过通信接口对UART设备进行调试</h3><ol>
+<li>准备工作</li>
+</ol>
+<ul>
+<li>万用表</li>
+<li>杜邦线</li>
+<li>FT232芯片</li>
+<li>JTAGulator工具</li>
+</ul>
+<ol start="2">
+<li>测试流程</li>
+</ol>
+<h2 id="IOT设备硬件防护"><a href="#IOT设备硬件防护" class="headerlink" title="IOT设备硬件防护"></a>IOT设备硬件防护</h2><h3 id="通信接口安全"><a href="#通信接口安全" class="headerlink" title="通信接口安全"></a>通信接口安全</h3><p>安全人员可以通过 PCB 的调试接口对 UART、JTAG 等通信接口进行调试。在顺利进入调试界面后，可以利用系统自带的命令获取物联网设备的固件，进而获取固件中保存的密码等敏感信息。</p>
+<p>因此，为了防止敏感信息的泄露，IOT 设备在出厂时应默认去掉 PCB 上的接口标记，并关闭 UART、JTAG 等通信接口。在提供售后服务时，如果有调试需求，则应使用飞线的方法进行调试。如果迫不得已，不得不开启设备调试接口，则需要遵循接口信息传输最小化的原则，避免大量敏感信息的传输。</p>
+<h3 id="存储芯片安全"><a href="#存储芯片安全" class="headerlink" title="存储芯片安全"></a>存储芯片安全</h3><p>存储芯片是 IOT 设备的核心，里面保存着所有 IOT 设备的信息，因此在设备出厂前向input写入数据时，应该对其中的敏感信息进行加密，加密方案可通过操作系统分区加密来实现。</p>
+<p>除了对敏感信息进行加密，还需要开启芯片保护机制，以防止通过调试接口来读取数据。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2025/01/07/re/logic/pintool/">← Next pintool CTF</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/01/05/binary/android/dj/">Android逆向环境搭建 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#IOT%E8%AE%BE%E5%A4%87%E7%A1%AC%E4%BB%B6%E7%BB%84%E6%88%90"><span class="toc-number">1.</span> <span class="toc-text">IOT设备硬件组成</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%B0%E5%88%B6%E7%94%B5%E8%B7%AF%E6%9D%BF"><span class="toc-number">1.1.</span> <span class="toc-text">印制电路板</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E8%8A%AF%E7%89%87"><span class="toc-number">1.2.</span> <span class="toc-text">存储芯片</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%B5%E5%AD%90%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text">电子基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%B5%E5%8E%8B"><span class="toc-number">2.1.</span> <span class="toc-text">电压</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%B5%E6%B5%81"><span class="toc-number">2.2.</span> <span class="toc-text">电流</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%B5%E9%98%BB"><span class="toc-number">2.3.</span> <span class="toc-text">电阻</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%B5%E5%AE%B9"><span class="toc-number">2.4.</span> <span class="toc-text">电容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%99%B6%E4%BD%93%E7%AE%A1"><span class="toc-number">2.5.</span> <span class="toc-text">晶体管</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IOT%E9%80%9A%E4%BF%A1%E6%8E%A5%E5%8F%A3%E8%AF%86%E5%88%AB%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="toc-number">3.</span> <span class="toc-text">IOT通信接口识别与调试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E5%BC%82%E6%AD%A5%E6%8E%A5%E6%94%B6%E5%99%A8"><span class="toc-number">3.1.</span> <span class="toc-text">通用异步接收器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%81%94%E5%90%88%E6%B5%8B%E8%AF%95%E5%B7%A5%E4%BD%9C%E7%BB%84"><span class="toc-number">3.2.</span> <span class="toc-text">联合测试工作组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E9%80%9A%E4%BF%A1%E6%8E%A5%E5%8F%A3%E5%AF%B9UART%E8%AE%BE%E5%A4%87%E8%BF%9B%E8%A1%8C%E8%B0%83%E8%AF%95"><span class="toc-number">3.3.</span> <span class="toc-text">通过通信接口对UART设备进行调试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IOT%E8%AE%BE%E5%A4%87%E7%A1%AC%E4%BB%B6%E9%98%B2%E6%8A%A4"><span class="toc-number">4.</span> <span class="toc-text">IOT设备硬件防护</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E4%BF%A1%E6%8E%A5%E5%8F%A3%E5%AE%89%E5%85%A8"><span class="toc-number">4.1.</span> <span class="toc-text">通信接口安全</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E8%8A%AF%E7%89%87%E5%AE%89%E5%85%A8"><span class="toc-number">4.2.</span> <span class="toc-text">存储芯片安全</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

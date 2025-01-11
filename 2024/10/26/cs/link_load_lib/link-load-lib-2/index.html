@@ -1,0 +1,277 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>《链接、装载与库》chapter2 编译和链接 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>《链接、装载与库》chapter2 编译和链接</h1></div><hr><div id="post-content"><h2 id="被隐藏了的过程"><a href="#被隐藏了的过程" class="headerlink" title="被隐藏了的过程"></a>被隐藏了的过程</h2><p>C 语言中的<code>Hello World!</code>程序所有程序员都可以写出来并用 gcc 编译程序。</p>
+<p>事实上，上述编译过程可以分解为 4 个步骤，分别是<strong>预处理（Prepressing）</strong>、<strong>编译（Compilation）</strong>、<strong>汇编（Assembly）</strong> 和<strong>链接（Linking）</strong></p>
+<p class='item-img' data-src='/assets/image-20240409185603325.png'><img src="/assets/image-20240409185603325.png" alt="image-20240409185603325"></p>
+<h3 id="预编译"><a href="#预编译" class="headerlink" title="预编译"></a>预编译</h3><p>首先是源代码文件和相关的头文件，如 stdio.h 等被预编译器 cpp 预编译成一个 .i 文件。</p>
+<p>预编译过程主要处理那些源代码文件中的以 “#” 开始的预编译指令。比如 “#include”、“define” 等，主要处理规则如下：</p>
+<ul>
+<li>将所有的 “define” 删除，并且展开所有的宏定义。</li>
+<li>处理所有条件预编译指令，比如 “#if ”、“#ifdef ”、“#elif ”、“#else ”、“#endif ”。</li>
+<li>处理 “#include” 预编译指令，将被包含的文件插入到该预编译指令的位置。注意，这个过程是递归进行的，也就是说被包含的文件可能还包含其他文件。</li>
+<li>删除所有的注释 “&#x2F;&#x2F;” 和 “&#x2F; ** &#x2F;”。</li>
+<li>添加行号和文件名标识，比如#2 “hello.c” 2，以便于编译时编译器产生调试用的行号信息及用于编译时产生编译错误或警告时能够显示行号。</li>
+<li>保留所有的 “#pragma” 编译器指令，因为编译器须要使用它们。</li>
+</ul>
+<p>经过预编译后的 .i 文件不包含任何宏定义，因为所有的宏已经被展开，并且包含的文件也已经被插入到 .i 文件中。所以当我们无法判断宏定义是否正确或头文件是否正确时，可以查看预编译后的文件来确定问题。</p>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>编译过程就是把预处理完的文件进行一系列词法分析、语法分析、语义分析及优化后生成相应的汇编代码文件，这个过程往往是我们所说的整个程序构建的核心部分，也是最复杂的部分之一。</p>
+<p>现在版本的 gcc 把预编译和编译两个步骤合并成一个步骤，使用一个叫做 ccl 的程序来完成这两个步骤。</p>
+<p><strong>编译器 cc1、汇编器 as、链接器 ld。gcc 程序只是这些后台程序的包装，它会根据不同的参数要求去调用相应的程序。</strong></p>
+<h3 id="汇编"><a href="#汇编" class="headerlink" title="汇编"></a>汇编</h3><p>汇编器是将汇编代码转变成机器可以执行的指令，每一个汇编语句几乎都对应一条机器指令。所有汇编器的汇编过程只需要根据汇编指令和机器指令的对照表一一翻译就可以了。上述过程由汇编器 as 来完成。</p>
+<h3 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h3><p>链接通常是一个让人比较费解的过程，为什么汇编器不直接输出可执行文件而是输出一个目标文件呢？链接过程到底包含了什么内容?为什么要链接？</p>
+<p>crt1.o、crti.o、crtbeginT.o、crtn.o 以 .o 为后缀的这些文件是什么？它们做什么用的？-lgcc -lgcc_en -lc这些都是什么参数？为什么要使用它们？为什么要将它们和hello.o 链接起来才可以得到可执行文件？</p>
+<p>这些问题正是本书所需要介绍的内容，它们看似简单，其实涉及了编译、链接和库，甚至是操作系统的一些很底层的内容。</p>
+<h2 id="编译器做了什么？"><a href="#编译器做了什么？" class="headerlink" title="编译器做了什么？"></a>编译器做了什么？</h2><p>从最直观的角度来讲，编译器就是将高级语言翻译成机器语言的一个工具。</p>
+<p>因为低级语言开发效率低下和局限性大的特点，所以诞生了高级语言。</p>
+<p>编译器就是高级语言和低级语言的中间层级，编译器将高级语言翻译成相应的指令集的机器语言。所以高级语言不像低级语言一样须要考虑硬件的不同，所以高级语言的可移植性更高。</p>
+<p>编译过程一般可以分为 6 步：扫描、语法分析、语义分析、源代码优化、代码生成和目标代码优化。</p>
+<p class='item-img' data-src='/assets/image-20240409211520145.png'><img src="/assets/image-20240409211520145.png" alt="image-20240409211520145"></p>
+<p>我们将结合上图来简单描述从<strong>源代码（Source Code）</strong> 到最终<strong>目标代码（Final Target Code）</strong> 的过程。以一段很简单的 C 语言的代码为例子来讲述这个过程。比如我们有一行 C 语言的源代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">array</span>[index] = (index+<span class="hljs-number">4</span>)*(<span class="hljs-number">2</span>+<span class="hljs-number">6</span>)<br>ComplierExpression.c<br></code></pre></td></tr></table></figure>
+
+<h3 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h3><p>首先源代码程序被输入到<strong>扫描器（Scanner）</strong>，扫描器的任务很简单，它只是简单地进行词法分析，运用一种类似于<strong>有限状态机（Filite StateMachine）</strong> 的算法可以很轻松地将源代码的字符序列分割成一系列的<strong>记号（Token）</strong>。</p>
+<p>以上程序总共包含了28个非空字符，经过扫描以后，产生了16个记号：	</p>
+<table>
+<thead>
+<tr>
+<th>记号</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>array</td>
+<td>标识符</td>
+</tr>
+<tr>
+<td>[</td>
+<td>左方括号</td>
+</tr>
+<tr>
+<td>index</td>
+<td>标识符</td>
+</tr>
+<tr>
+<td>]</td>
+<td>右方括号</td>
+</tr>
+<tr>
+<td>&#x3D;</td>
+<td>赋值</td>
+</tr>
+<tr>
+<td>(</td>
+<td>左圆括号</td>
+</tr>
+<tr>
+<td>index</td>
+<td>标识符</td>
+</tr>
+<tr>
+<td>+</td>
+<td>加号</td>
+</tr>
+<tr>
+<td>4</td>
+<td>数字</td>
+</tr>
+<tr>
+<td>)</td>
+<td>右圆括号</td>
+</tr>
+<tr>
+<td>*</td>
+<td>乘号</td>
+</tr>
+<tr>
+<td>(</td>
+<td>左圆括号</td>
+</tr>
+<tr>
+<td>2</td>
+<td>数字</td>
+</tr>
+<tr>
+<td>+</td>
+<td>加号</td>
+</tr>
+<tr>
+<td>6</td>
+<td>数字</td>
+</tr>
+<tr>
+<td>)</td>
+<td>右圆括号</td>
+</tr>
+</tbody></table>
+<p>词法分析产生的记号一般可以分为如下几类：关键字、标识符、字面量（包含数字、字符串等）和特殊符号（如加号、等号）。在识别记号的同时，扫描器也完成了其他工作。比如将标识符存放到符号表，将数字、字符串常量存放到文字表等，以备后面的步骤使用。</p>
+<p>有一个叫做 lex 的程序可以实现词法扫描，它会按照用户之前描述好的词法规则将输入的字符串分割成一个个记号。因为这样一个程序的存在，编译器的开发者就无须为每个编译器开发一个独立的词法扫描器，而是根据需要改变词法规则就可以了。</p>
+<p>另外对于一些有预处理的语言，比如 C 语言，它的宏替换和文件保护等工作一般不归于编译器的范围而交给一个独立的预处理器。</p>
+<h3 id="语法分析"><a href="#语法分析" class="headerlink" title="语法分析"></a>语法分析</h3><p>接下来<strong>词法分析器（Grammar Parser）</strong> 将对由扫描器产生的记号进行语法分析，从而产生<strong>语法树（Syntax Tree）</strong>。整个分析过程采用了<strong>上下文无关语法</strong>的分析手段。</p>
+<p>由语法分析生成的语法树就是以<strong>表达式（Expression）</strong> 为节点的树。</p>
+<p>我们知道C语言的一个语句是一个表达式，而复杂的语句是很多表达式的组合。</p>
+<p>上面例子中的语句就是一个由赋值表达式、加法表达式、乘法表达式、括号表达式组成的复杂语句。</p>
+<p>它在经过语法分析器以后形成如下图所示的语法树。</p>
+<p class='item-img' data-src='/assets/image-20240409213848456.png'><img src="/assets/image-20240409213848456.png" alt="image-20240409213949456"></p>
+<p>从上图我们可以看到，整个语句被看作一个赋值表达式；赋值表达式的左边是一个数组表达式，它的右边是一个乘法表达式；数组表达式又由两个符号表达式组成，等等。符号和数字是最小的表达式，它们不是由其他的表达式来组成的，所以它们通常作为整个语法树的叶节点。</p>
+<p>在语法分析的同时，很多运算符号的优先级和含义也被确定下来了。比如乘法表达式的优先级比加法高，而圆括号表达式的优先级比乘法高，等等。另外有些符号具有多重含义，比如星号 * 在C语言中可以表示乘法表达式，也可以表示对指针取内容的表达式，所以语法分析阶段必须对这些内容进行区分。如果出现了表达式不合法，比如各种括号不匹配、表达式中缺少操作符等，编译器就会报告语法分析阶段的错误。</p>
+<p>语法分析也有一个现成的工具叫做 yacc（Yet Another Compiler Compiler）。它可以根据用户给定的语法规则对输入的记号序列进行解析，从而构建出一棵语法树。对于不同的编程语言，编译器的开发者只须改变语法规则，而无须为每个编译器编写一个语法分析器，所以它又被称为 <strong>“编译器编译器（Compiler Compiler）”</strong>。</p>
+<h3 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h3><p>接下来进行的是语义分析，由<strong>语义分析器（Semantic Analyzer）</strong> 来完成。语法分析仅仅是完成了对表达式的语法层面的分析，但是它并不了解这个语句是否真正有意义。比如 C 语言里面两个指针做乘法运算是没有意义的，但是这个语句在语法上是合法的；比如同样一个指针和一个浮点数做乘法运算是否合法等。编译器所能分析的语义是<strong>静态语义（Static Semantic）</strong>，所谓静态语义是指在编译期可以确定的语义，与之对应的<strong>动态语义（Dynamic Semantic）</strong> 就是只有在运行期才能确定的语义。</p>
+<p><strong>静态语义通常包括声明和类型的匹配，类型的转换。</strong> 比如当一个浮点型的表达式赋值给一个整型的表达式时，其中隐含了一个浮点型到整型转换的过程，语义分析过程中需要完成这个步骤。比如将一个浮点型赋值给一个指针的时候，语义分析程序会发现这个类型不匹配，编译器将会报错。动态语义一般指在运行期出现的语义相关的问题，比如将 0 作为除数是一个运行期语义错误。</p>
+<p><strong>经过语义分析阶段以后，整个语法树的表达式都被标识了类型，如果有些类型需要做隐式转换，语义分析程序会在语法树中插入相应的转换节点。</strong> 上面描述的语法树在经过语义分析阶段以后成为如图所示的形式。</p>
+<p class='item-img' data-src='/assets/image-20240410081310131.png'><img src="/assets/image-20240410081310131.png" alt="image-20240409213949456"></p>
+<p>可以看到，每个表达式（包括符号和数字）都被标识了类型。我们的例子中几乎所有的表达式都是整型的，所以无须做转换，整个分析过程很顺利。语义分析器还对符号表里的符号类型也做了更新。</p>
+<h3 id="中间语言生成"><a href="#中间语言生成" class="headerlink" title="中间语言生成"></a>中间语言生成</h3><p>现代的编译器有着很多层次的优化，往往在源代码级别会有一个优化过程。我们这里所描述的<strong>源码级优化器（Source Code Optimizer）</strong> 在不同编译器中可能会有不同的定义或有一些其他的差异。</p>
+<p>源代码级优化器会在源代码级别进行优化，在上例中，细心的读者可能已经发现，（2+6）这个表达式可以被优化掉，因为它的值在编译期就可以被确定。</p>
+<p>经过优化的语法树如下：</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240805111733.png'><img src="/assets/Pasted%20image%2020240805111733.png"></p>
+<p>我们看到（2+6）这个表达式被优化成8.起始直接在语法树上作优化比较困难，所以源代码优化器往往将整个语法树转换成<strong>中间代码（Intermediate Code）</strong>，它是语法树的顺序表示，其实它已经非常接近目标代码了。但是它一般跟目标及其和运行时环境是无关的，比如它不包含数据的尺寸、变量地址和寄存器的名字等。</p>
+<p>中间代码有很多种类型，在不同的编译器中有着不同的形式，比较常见的有：<strong>三地址码（Three-address Code）</strong> 和 <strong>P-代码（P-Code）</strong>。</p>
+<p>最基本的三地址码是这样的：	</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">x = y op z<br></code></pre></td></tr></table></figure>
+
+<p>这个三地址码表示将变量 y 和 z 进行 op 操作以后，赋值给 x。这里 op 操作可以是算数运算，比如加减乘除等，也可以是其他任何可以应用到 y和 z 的操作。三地址码也得名于此，因为一个三地址码语句里面有三个变量地址。</p>
+<p>我们上面的例子中的语法树可以被翻译成三地址码后是这样的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">t1 =  <span class="hljs-number">2</span> + <span class="hljs-number">6</span><br>t2 = index + <span class="hljs-number">4</span><br>t3 = t2 * t1<br><span class="hljs-built_in">array</span>[index] = t3<br></code></pre></td></tr></table></figure>
+
+<p>我们可以看到，为了使所有的操作都符合三地址码形式，这里利用了几个临时变量：t1、t2 和 t3。在地址码的基础上进行优化时，优化程序会将2+6 的结果计算出来，得到 t1&#x3D;6。然后将后面代码中的 t1 替换成数字 6。还可以省去一个临时变量 t3，因为 t2 可以重复利用。</p>
+<p>经过优化后的代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">t2 = index + <span class="hljs-number">4</span><br>t2 =t * <span class="hljs-number">8</span><br><span class="hljs-built_in">array</span>[index] = t2<br></code></pre></td></tr></table></figure>
+
+<p><strong>中间代码使得编译器可以被分为前端和后端。编译器前端负责产生机器无关的中间代码，编译器后端将中间代码转换成目标机器代码。</strong> 这样对于一些可以跨平台的编译器而言，它们可以针对不同的平台使用同一个前端和针对不同机器平台的数个后端。</p>
+<h3 id="目标代码生成与优化"><a href="#目标代码生成与优化" class="headerlink" title="目标代码生成与优化"></a>目标代码生成与优化</h3><p><strong>源代码级优化器产生中间代码标志着下面的过程都属于编译器后端。</strong> 编译器后端主要包括<strong>代码生成器（Code Generator）</strong> 和<strong>目标代码优化器（Target Code Optimizer）</strong>。</p>
+<p>让我们先来看看代码生成器。代码生成器将中间代码转换成目标机器代码，这个过程十分依赖于目标机器，因为不同的机器有着不同的字长、寄存器、整数数据类型和浮点数数据类型等。</p>
+<p>对于上面例子中的中间代码，代码生成器可能会生成下面的代码序列（我们用 x86 的汇编语言来表示，并且假设 index 的类型为 int 型，array 的类型为 int 型数组）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">movl index, %ecx			;value of index to ecx<br>addl $<span class="hljs-number">4</span>, %ecx				;ecx = ecx + <span class="hljs-number">4</span><br>mull $<span class="hljs-number">8</span>, %ecx				;ecx = ecx * <span class="hljs-number">8</span><br>movl index, %eax			;value of index to eax<br>movl %ecx, <span class="hljs-built_in">array</span>(,eax,<span class="hljs-number">4</span>)	;<span class="hljs-built_in">array</span>[index] = ecx<br></code></pre></td></tr></table></figure>
+
+<p><strong>最后目标代码优化器对上述的目标代码进行优化，比如选择合适的寻址方式、使用位移来代替乘法运算、删除多余的指令等。</strong></p>
+<p>上面的例子中，乘法由一条相对复杂的<strong>基址比例变址寻址（Base Index Scale Addressing）</strong> 的 lea 指令完成，随后由一条 mov 指令完成最后的赋值操作，这条 mov 指令的寻址方式与 lea 是一样的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">movl index, %edx<br>leal <span class="hljs-number">32</span>(,%edx,<span class="hljs-number">8</span>), %eax<br>movl %eax, <span class="hljs-built_in">array</span>(,%edx,<span class="hljs-number">4</span>)<br></code></pre></td></tr></table></figure>
+<p>现代的编译器有着异常复杂的结构，这是因为现代高级编程语言本身非常地复杂，比如 C++ 语言的定义就极为复杂，至今没有一个编译器能够完整支持 C++ 语言标准所规定的所有语言特性（现在基本可以支持）。另外现代的计算机 CPU 相当地复杂，CPU 本身采用了诸如流水线、多发射、超标量等诸多复杂的特性，为了支持这些特性，编译器的机器指令优化过程也变得十分复杂。使得编译过程更为复杂的是有些编译器支持多种硬件平台，即允许编译器编译出多种目标 CPU 的代码。比如著名的 GCC 编译器就几乎支持所有CPU平台，这也导致了编译器的指令生成过程更为复杂。</p>
+<p>经过这些扫描、语法分析、源代码优化、代码生成和目标代码优化，编译器忙活了这么多个步骤以后，源代码终于被编译成了目标代码。但是这个目标代码中有一个问题是：<strong>index 和 array 的地址还没有确定</strong>。如果我们要把目标代码使用汇编器编译成真正能够在机器上执行的指令，那么 index 和 array 的地址应该从哪儿得到呢？如果 index 和 array 定义在跟上面的源代码同一个编译单元里面，那么编译器可以为 index 和 array 分配空间，确定它们的地址；那如果是定义在其他的程序模块呢？</p>
+<p>这个看似简单的问题引出了我们一个很大的话题：目标代码中有变量定义在其他模块，该怎么办？事实上，定义其他模块的全局变量和函数在最终运行时的绝对地址都要在最终链接的时候才能确定。所有现代的编译器可以将一个源代码文件编译成一个未链接的目标文件，然后由链接器最终将这些目标文件链接起来形成可执行文件。让我们带着这个问题，走进链接的世界。</p>
+<h2 id="链接器年龄比编译器长"><a href="#链接器年龄比编译器长" class="headerlink" title="链接器年龄比编译器长"></a>链接器年龄比编译器长</h2><p>假设有一种计算机，它的每条指令是 1 个字节，也就是 8 位。我们假设有一种跳转指令，它的高 4 位是 0001，表示这是一条跳转指令：低 4 位存放的是跳转目的地的绝对地址。我们可以从下图看到，这个程序的第一条指令就是一条跳转指令，它的目的地址是第 5 条指令（注意，第 5 条指令的绝对地址是 4）。至于 0 和 1 怎么映射到纸带上，这个应该很容易理解，比如我们可以规定纸带上每行有 8 个孔位，每个孔位代表一位，穿孔表示 0，未穿孔表示 1。</p>
+<p>现在问题来了，程序并不是一写好就永远不变的，它可能会经常被修改。比如我们在第 1 条指令之后、第 5 条指令之前插入了一条或多条指令，那么第 5 条指令及后面的指令的位置将会相应地往后移动，原先第一条指令的低 4 位的数字将需要相应地调整。在这个过程中，程序员需要人工重新计算每个子程序或跳转的目标地址。当程序修改的时候，这些位置都要重新计算，十分繁琐又耗时，并且很容易出错。这种重新计算各个目标的地址过程被叫做<strong>重定位（Relocation）</strong>。</p>
+<p class='item-img' data-src='/assets/image-20240610213228062.png'><img src="/assets/image-20240610213228062.png" alt="image-20240610213228062"></p>
+<p>如果我们有多条纸带的程序，这些程序之间可能会有类似的跨纸带之间的跳转，这种程序经常修改导致跳转目标地址变化在程序拥有多个模块的时候更为严重。人工绑定进行指令的修正以确保所有的跳转目标地址都正确，在程序规模越来越大以后变得越来越复杂和繁琐。</p>
+<p>没办法，这种黑暗的程序员生活是没有办法容忍的。先驱者发明了汇编语言，这相比机器语言来说是个很大的进步。汇编语言使用接近人类的各种符号和标记来帮助记忆，比如指令采用两个或三个字母的缩写，记住 “jmp” 比记住 0001XXXX 是跳转（jump）指令容易得多了；汇编语言还可以使用符号来标记位置，比如一个符号 “divide” 表示一个除法子程序的起始地址，比记住从某个位置开始的第几条指令是除法子程序方便得多。最重要的是，这种符号的方法使得人们从具体的指令地址中逐步解放出来。比如前面纸带程序中，我们把刚开始第 5 条指令开始的子程序命名为 “foo” ，那么第一条指令的汇编就是：</p>
+<p><code>jmp foo</code></p>
+<p>当然人们可以使用这种符号命名子程序或跳转目标以后，不管这个 “foo” 之前插入了或减少了多少条指令导致 “foo” 目标地址发生了什么变化，汇编器在每次汇编程序的时候会重新计算 “foo” 这个符号的地址，然后把所有引用到 “foo” 的指令修正到这个正确的地址。整个过程不需要人工参与，对于一个有成百上千个类似的符号的程序，程序员终于摆脱了这种低级的繁琐的调整地址的工作，用一句政治口号来说叫做 “极大地解放了生产力”。<strong>符号（Symbol）</strong> 这个概念随着汇编语言的普及迅速被使用，它用来表示一个地址，这个地址可能是一段子程序（后来发展成函数）的起始地址，也可以是一个变量的地址。</p>
+<p>有了汇编语言以后，生产力大大提高了，随之而来的是软件的规模也开始日渐庞大，这时程序的代码量也已经开始快速地膨胀，导致人们要开始考虑将不同功能的代码以一定的方式组织起来，使得更加容易阅读和理解，以便于日后修改和重复使用。自然而然，人们开始将代码按照功能或性质划分，分别形成不同的功能模块，不同的模块之间按照层次结构或其他结构来组织。这个在现代的软件源代码组织中很常见，比如在 C 语言中，最小的单位是变量和函数，若干个变量和函数组成一个模块，存放在一个 “.c” 的源代码文件里，然后这些源代码文件按照目录结构来组织。在比较高级的语言中，如 Java 中，每个类是一个基本的模块，若干个类模块组成一个<strong>包（Package）</strong>，若干个包组合成一个程序。</p>
+<p>在现代软件开发过程中，软件的规模往往都很大，动辄数百万行代码，如果都放在一个模块肯定无法想象。所以现代的大型软件往往拥有成千上万个模块，这些模块之间相互依赖又相对独立。这种按照层次化及模块化存储和组织源代码有很多好处，比如代码更容易阅读、理解、重用，每个模块可以单独开发、编译、测试、改变部分代码不需要编译整个程序等。</p>
+<p>在一个程序被分割成多个模块以后，这些模块之间最后如何组合形成一个单一的程序是须解决的问题。模块之间如何组合的问题可以归结为模块之间如何通信的问题，最常见的属于静态语言的 C&#x2F;C++ 模块之间通信有两种方式，一种是模块间的函数调用，另外一种是模块间的变量访问。函数访问须要知道目标函数的地址，变量访问也须知道目标变量的地址，所以这两种方式都可以归结为一种方式，那就是<strong>模块间符号的引用</strong>。模块间依靠符号来通信类似于拼图版，定义符号的模块多出一块区域，引用该符号的模块刚好少了那一块区域，两者一拼接刚好完美组合（下图）。这个模块的拼接过程就是本书的一个主题：<strong>链接（Linking）</strong></p>
+<p class='item-img' data-src='/assets/image-20240610222052761.png'><img src="/assets/image-20240610222052761.png" alt="image-20240610222052761"></p>
+<p>这种基于符号的模块化的一个直接结果是链接过程在整个程序开发中变得十分重要和突出。我们在本书的后面将可以看到链接器如何将这些编译后的模块链接到一起，最终产生一个可以执行的程序</p>
+<h2 id="模块拼装——静态链接"><a href="#模块拼装——静态链接" class="headerlink" title="模块拼装——静态链接"></a>模块拼装——静态链接</h2><p>程序设计的模块化是人们一直在追求的目标，因为当一个系统十分复杂的时候，我们不得不将一个复杂的系统逐步分割成小的系统以达到各个突破的目的。一个复杂的软件也如此，人们把每个源代码模块独立地编译，然后按照要将它们 “组装” 起来，这个组装模块的过程就是<strong>链接（Linking）</strong>。<strong>链接的主要内容就是把各个模块之间相互引用的部分都处理好，使得各个模块之间能够正确地衔接</strong>。链接器所要做的工作其实跟前面所描述的 “程序员人工跳转地址” 本质上没什么两样，只不过现代的高级语言的诸多特性和功能，使得编译器、链接器更为复杂，功能更为强大，但从原理上来讲，它的工作无非就是把一些指令对其他符号地址的引用加以修正。链接过程主要包括了<strong>地址和空间分配（Address and Storage Allocation）</strong>、<strong>符号决议（Symbol Resolution）</strong> 和<strong>重定位（Relocation）</strong> 等这些步骤。</p>
+<blockquote>
+<p>符号决议有时候也被叫做符号绑定（Symbol Binding）、名称绑定（Name Binding）、名称决议（Name Resolution），甚至还有叫做地址绑定（Address Binding）、指令绑定（Instruction Binding）的，大体上它们的意思都一样，但从细节角度来区分，它们之间还是存在一定区别的，比如 “决议” 更倾向于静态链接，而 “绑定” 更倾向于动态链接，即它们所使用的范围不一样。在静态链接，我们将统一称为符号决议。</p>
+</blockquote>
+<p>最基本的静态链接过程如图所示。每个模块的源代码文件（如.c）文件经过编译器编译成<strong>目标文件（Object File，一般扩展名为 .o 或 .obj）</strong>，目标文件和<strong>库（Library）</strong> 一起链接形成最终可执行文件。而最常见的库就是<strong>运行时库（Runtime Library）</strong>，它是支持程序运行的基本函数的集合。库其实是一组目标文件的包，就是一些最常用的代码编译成目标文件后打包存放。关于库本书的后面还会再详细分析<br class='item-img' data-src='/assets/Pasted%20image%2020240805115351.png'><img src="/assets/Pasted%20image%2020240805115351.png"></p>
+<blockquote>
+<p>我们认为对于 Object 文件没有一个很合适的中文名称，把它叫做<strong>中间目标文件</strong>比较合适，简称为目标文件，所以本书后面的内容都将 Object 文件为<strong>目标文件</strong>，很多时候我们也把目标文件称为模块。</p>
+</blockquote>
+<p>现代的编译和链接过程也并并非想象中的那么复杂，它还是一个比较容易理解的概念。比如我们在程序模块 main.c 中使用另外一个模块 func.c 中的函数 foo()。我们在 main.c 模块中每一处调用 foo 的时候都必须确切知道 foo 这个函数的地址，但是由于每个模块都是单独编译的，在编译器编译 main.c 的时候它并不知道 foo 函数的地址，所以它暂时把这些调用 foo 的指令的目标地址搁置，等待最后链接的时候由链接器去将这些目标地址修正。如果没有链接器，须要我们手工把每个调用 foo 的指令进行修正，则填入正确的 foo 函数地址。当 func.c 模块被重新编译，foo 函数的地址也可能改变时，那么我们 main.c 中所有使用到 foo 的地址的指令将要全部重新调整。这些繁琐的工作将成为程序员的噩梦。使用链接器，你可以直接引用其他模块的函数和全局变量而无须知道它们的地址，因为链接器在连接的时候，会根据你所引用的符号 foo，自动去相应的 func.c 模块查找 foo 的地址，然后将 main.c 模块中所有引用到 foo 的指令重新修正，让它们的目标地址为真正的 foo 函数的地址。这就是静态连接的最基本的过程和作用。</p>
+<p><strong>在链接过程中，对其他定义在目标文件中的函数调用的指令须要被重新调整，对使用其他定义在其他目标文件的变量来说，也存在同样的问题。</strong> 让我们结合具体的 CPU 指令来了解这个过程。假设我们有个全局变量叫做 var，它在目标文件 A 里面。我们在目标文件 B 里面要访问这个全局变量，比如我们在目标文件 B 里面有怎么一条指令：	</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">movl $<span class="hljs-number">0x2a</span>, var<br></code></pre></td></tr></table></figure>
+
+<p>这条指令就是给这 var 变量赋值 0x2a，相当于 C 语言里面的语句 var&#x3D;42。然后我们编译目标文件 B，得到这条指令机器码，如图。	</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240805120540.png'><img src="/assets/Pasted%20image%2020240805120540.png"></p>
+<p>由于在编译目标文件 B 的时候，编译器并不知道变量 var 的目标地址，所以编译器在没法确定地址的情况下，将这条 mov 指令的目标地址置为0，等待链接器在将目标文件 A 和 B 链接起来的时候再将其修正。我们假设 A 和 B 链接后，变量 var 的地址确定下来 0x1000，那么链接器将会把这个指令的目标地址部分修改成 0x10000。这个地址的修正的过程也被叫做<strong>重定位（Relocation）</strong>，每个要被修正的地方叫一个<strong>重定位入口（Relocation Entry）</strong>。重定位所做的就是给程序中每个这样的绝对地址引用的位置 “打补丁”，使它们指向正确的地址。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/26/cs/link_load_lib/link-load-lib-3/">← Next 《链接、装载与库》chapter3 目标文件里有什么</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/25/wp/24/moe/">2024 Moectf Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A2%AB%E9%9A%90%E8%97%8F%E4%BA%86%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">被隐藏了的过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E7%BC%96%E8%AF%91"><span class="toc-number">1.1.</span> <span class="toc-text">预编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91"><span class="toc-number">1.2.</span> <span class="toc-text">编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B1%87%E7%BC%96"><span class="toc-number">1.3.</span> <span class="toc-text">汇编</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5"><span class="toc-number">1.4.</span> <span class="toc-text">链接</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E5%99%A8%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">2.</span> <span class="toc-text">编译器做了什么？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">2.1.</span> <span class="toc-text">词法分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">2.2.</span> <span class="toc-text">语法分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E6%9E%90"><span class="toc-number">2.3.</span> <span class="toc-text">语义分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AD%E9%97%B4%E8%AF%AD%E8%A8%80%E7%94%9F%E6%88%90"><span class="toc-number">2.4.</span> <span class="toc-text">中间语言生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90%E4%B8%8E%E4%BC%98%E5%8C%96"><span class="toc-number">2.5.</span> <span class="toc-text">目标代码生成与优化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E5%99%A8%E5%B9%B4%E9%BE%84%E6%AF%94%E7%BC%96%E8%AF%91%E5%99%A8%E9%95%BF"><span class="toc-number">3.</span> <span class="toc-text">链接器年龄比编译器长</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E6%8B%BC%E8%A3%85%E2%80%94%E2%80%94%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5"><span class="toc-number">4.</span> <span class="toc-text">模块拼装——静态链接</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

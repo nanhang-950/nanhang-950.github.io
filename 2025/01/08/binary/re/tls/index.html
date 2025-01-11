@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TLS回调函数 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>TLS回调函数</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>代码逆向分析领域中，TLS（Thread Local Storage，线程局部存储）回调函数（Callback Function）常用于反调试。</p>
+<p>TLS 回调函数的调用运行要先于 EP 代码的执行，该特征使它可以作为一种反调试技术使用。</p>
+<h2 id="TLS"><a href="#TLS" class="headerlink" title="TLS"></a>TLS</h2><p>讲解 TLS 回调函数前，先简单了解一下有关 TLS 的知识。TLS 是各线程的独立的数据存储空间。使用 TLS 技术可在线程内部独立使用或修改进程的全局数据或静态数据，就像对待自身的局部变量一样。</p>
+<h3 id="IMAGE-DATA-DIRECTORY-9"><a href="#IMAGE-DATA-DIRECTORY-9" class="headerlink" title="IMAGE_DATA_DIRECTORY[9]"></a>IMAGE_DATA_DIRECTORY[9]</h3><p>若在编程中启用了 TLS 功能，PE 头文件中就会设置 TLS 表（TLS Table）项目，如下图所示（IMAGE_NT_HEADERS-IMAGE_OPTIONAL_HEADER-IMAGE_DATA_DIRECTORY[9]）。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250111104021.png'><img src="/assets/Pasted%20image%2020250111104021.png"></p>
+<h3 id="IMAGE-TLS-DIRECTORY"><a href="#IMAGE-TLS-DIRECTORY" class="headerlink" title="IMAGE_TLS_DIRECTORY"></a>IMAGE_TLS_DIRECTORY</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">IMAGE_TLS_DIRECTORY64</span> &#123;</span><br>    ULONGLONG StartAddressOfRawData;<br>    ULONGLONG EndAddressOfRawData;<br>    ULONGLONG AddressOfIndex;        <span class="hljs-comment">//PDWORD</span><br>    ULONGLONG AddressOfCallBacks;    <span class="hljs-comment">//PIMAGE_TLS_CALLBACK *;</span><br>    DWORD SizeOfZeroFill;<br>    DWORD Characteristics;<br>&#125; IMAGE_TLS_DIRECTORY64;<br><br><span class="hljs-keyword">typedef</span> _IMAGE_TLS_DIRECTORY64 * PIMAGE_TLS_DIRECTORY64;<br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">IMAGE_TLS_DIRECTORY32</span> &#123;</span><br>    DWORD StartAddressOfRawData;<br>    DWORD EndAddressOfRawData;<br>    DWORD AddressOfIndex;          <span class="hljs-comment">//PDWORD</span><br>    DWORD AddressOfCallBacks;      <span class="hljs-comment">//PIMAGE_TLS_CALLBACK *;</span><br>    DWORD SizeOfZeroFill;<br>    DWORD Characteristics;<br>&#125; IMAGE_TLS_DIRECTORY32;<br><br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> _WIN64</span><br><span class="hljs-keyword">typedef</span> IMAGE_TLS_DIRECTORY64   IMAGE_TLS_DIRECTORY;<br><span class="hljs-keyword">typedef</span> PIMAGE_TLS_DIRECTORY64  PIMAGE_TLS_DIRECTORY;<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br><span class="hljs-keyword">typedef</span> IMAGE_TLS_DIRECTORY32   IMAGE_TLS_DIRECTORY;<br><span class="hljs-keyword">typedef</span> PIMAGE_TLS_DIRECTORY32  PIMAGE_TLS_DIRECTORY;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+<p><code>IMAGE_TLS_DIRECTORY</code>结构体有 2 种版本，分别为 32 位版本与 64 位版本。</p>
+<p>DIE 会直接为我们解析<code>IMAGE_TLS_DIRECTORY</code>结构体。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250111111408.png'><img src="/assets/Pasted%20image%2020250111111408.png"></p>
+<p>代码逆向分析中涉及的主要成员为<code>AddressOfCallback6s</code>，该值指向含有 TLS 回调函数地址（VA）的数组。这意味着可以向同一程序注册多个 TLS 回调函数（数组以 NULL 值结束）。 </p>
+<h3 id="回调函数地址数组"><a href="#回调函数地址数组" class="headerlink" title="回调函数地址数组"></a>回调函数地址数组</h3><p class='item-img' data-src='/assets/Pasted%20image%2020250111112939.png'><img src="/assets/Pasted%20image%2020250111112939.png"></p>
+<p>该数组中实际存储的就是 TLS 回调函数的地址。进程启动运行时，（执行 EP 代码前）系统会逐一调用存储在该数组中的函数。请注意，虽然以上练习示例中仅注册了 1 个 TLS 函数（地址为 0x401000），但其实我们可以通过修改程序注册多个 TLS 函数。</p>
+<h2 id="TLS-回调函数"><a href="#TLS-回调函数" class="headerlink" title="TLS 回调函数"></a>TLS 回调函数</h2><p>接下来从技术层面简单整理之前介绍的 TLS 回调函数相关内容。</p>
+<p>所谓 TLS 回调函数是指，每当创建&#x2F;终止进程的线程时会自动调用执行的函数。有意思的是，创建进程的主线程时也会自动调用回调函数，且其调用执行先于 EP 代码。反调试技术利用的就是 TLS 回调函数的这一特性。</p>
+<p>请注意，创建或终止某线程时，TLS 回调函数都会自动调用执行，前后共 2 次（原意即为此）。执行进程的主线程（运行进程的 EP 代码）前，TLS 回调函数会先被调用执行，许多逆向分析人员将该进程应用于程序的反调试技术。</p>
+<p><code>IMAGE_TLS_CALLBACK</code></p>
+<p>TLS 回调函数的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">VOID</span><br><span class="hljs-params">(NTAPI * PIMAGE_TLS_CALLBACK)</span>&#123;<br>	PVOID DllHandle,<br>	DWORD Reason,<br>	PVOID Reserved<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>仔细观察 TLS 回调函数的定义可以发现，它与<code>DllMaiin()</code>函数的定义类似。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">BOOL WINAPI <span class="hljs-title function_">DllMain</span><span class="hljs-params">(</span><br><span class="hljs-params">  __in HINSTANCE hinstDLL,</span><br><span class="hljs-params">  __in DWORD fdwReason,</span><br><span class="hljs-params">  __in LPVOID lpvReserved</span><br><span class="hljs-params">)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>观察以上 2 个函数可以发现，它们的参数顺序和函数都是一样的。其中，参数<code>DllHandle</code>为模块句柄（即加载地址），参数<code>Reason</code>表示调用 TLS 回调函数的原因，具体原因有 4 种，如以下代码所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> DLL_PROCESS_ATTACH 1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DLL_THREAD_ATTACH 2</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DLL_THREAD_DETACH 3</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DLL_PROCESS_DETACH 0</span><br></code></pre></td></tr></table></figure>
+
+<p>要想准确理解 TLS 回调函数的工作原理（在哪个时间点调用哪个回调函数），最好的方法就是亲自创建。</p>
+<h2 id="调试-TLS-回调函数"><a href="#调试-TLS-回调函数" class="headerlink" title="调试 TLS 回调函数"></a>调试 TLS 回调函数</h2><h2 id="手工添加-TLS-回调函数"><a href="#手工添加-TLS-回调函数" class="headerlink" title="手工添加 TLS 回调函数"></a>手工添加 TLS 回调函数</h2><div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2025/01/08/binary/re/pe/">← Next PE文件分析</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/01/08/binary/re/jg/">TEB和PEB Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TLS"><span class="toc-number">2.</span> <span class="toc-text">TLS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IMAGE-DATA-DIRECTORY-9"><span class="toc-number">2.1.</span> <span class="toc-text">IMAGE_DATA_DIRECTORY[9]</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IMAGE-TLS-DIRECTORY"><span class="toc-number">2.2.</span> <span class="toc-text">IMAGE_TLS_DIRECTORY</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%E6%95%B0%E7%BB%84"><span class="toc-number">2.3.</span> <span class="toc-text">回调函数地址数组</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TLS-%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0"><span class="toc-number">3.</span> <span class="toc-text">TLS 回调函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B0%83%E8%AF%95-TLS-%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0"><span class="toc-number">4.</span> <span class="toc-text">调试 TLS 回调函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%8B%E5%B7%A5%E6%B7%BB%E5%8A%A0-TLS-%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">手工添加 TLS 回调函数</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

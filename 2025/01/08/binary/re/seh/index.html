@@ -1,0 +1,170 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SEH异常处理机制 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>SEH异常处理机制</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><h3 id="基本说明"><a href="#基本说明" class="headerlink" title="基本说明"></a>基本说明</h3><p>SEH 是 Windows 操作系统提供的异常处理机制，在程序源代码中使用<code>__try</code>、<code>__except</code>、<code>__finally</code>关键字来具体实现。在逆向分析中，SEH 除了基本的异常处理功能外，还大量应用于反调试程序。</p>
+<h3 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h3><p>在 C 语言中使用<code>__try</code>、<code>__except</code>、<code>__finally</code>关键字就可以很容易地向代码添加 SEH。在汇编语言中添加 SEH 的方法更加简单。</p>
+<ul>
+<li>在 C 语言中使用 SEH</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span><br><br><span class="hljs-comment">// 自定义异常函数，触发除零异常</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">div_zero</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">10</span>, b = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> result = a / b; <span class="hljs-comment">// 除零异常</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Result: &quot;</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    __try &#123;<br>        <span class="hljs-comment">// 执行除零异常处理</span><br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Trying to divide by zero...&quot;</span>);<br>        div_zero();<br>    &#125;<br>    __except (EXCEPTION_EXECUTE_HANDLER) &#123;<br>        <span class="hljs-comment">// 捕获除零异常</span><br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Exception caught: Division by zero!&quot;</span>)<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>在汇编语言中使用 SEH</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">push @MyHandler           ;异常处理器<br>push dword ptr fs:[0]     ;Head of SEH Linked List<br>mov dword ptr fs:[0],esp  ;添加链表<br></code></pre></td></tr></table></figure>
+
+<p>在程序代码中使用 SEH 就是指，将自身的异常处理器添加到已有的 SEH 链。从技术层面讲就是自身的<code>EXCEPTION_REGISTRATION_RECORD</code>结构体链接到<code>EXCEPTION_REGISTRATION_RECORD</code>结构体链表。</p>
+<h2 id="OS的异常处理方法"><a href="#OS的异常处理方法" class="headerlink" title="OS的异常处理方法"></a>OS的异常处理方法</h2><h3 id="正常运行时的异常处理方法"><a href="#正常运行时的异常处理方法" class="headerlink" title="正常运行时的异常处理方法"></a>正常运行时的异常处理方法</h3><p>进程运行过程中若发生异常，OS 会委托进程处理。若进行代码中存在具体的异常处理（如 SEH 异常处理器）代码，则能顺利处理相关异常，程序继续运行。但如果进程内部没有具体实现 SEH，那么相关异常就无法处理，OS 就会启动默认的异常处理机制，终止进程运行。</p>
+<h3 id="调试运行时的异常处理方法"><a href="#调试运行时的异常处理方法" class="headerlink" title="调试运行时的异常处理方法"></a>调试运行时的异常处理方法</h3><p>调试运行中发生异常时，处理方法与上面有些不同。若被调试进程内存发生异常，OS 会首先把异常抛给调试进程处理。调试器几乎拥有被调试者的所有权限，它不仅可以运行、终止被调试者，还拥有被调试进程的虚拟内存、寄存器的读写权限。需要特别指出的是，被调试者内部发生的所有异常（错误）都由调试器处理。所以调试过程中发生的所有异常（错误）都要先交由调试器管理（被调试者的 SEH 依据优先顺序推给调试器）。像这样，被调试者发生异常时，调试器就会暂停运行，必须采取某种措施来处理异常，完成后继续调试。</p>
+<p>遇到异常时经常采用的几种处理方法如下所示：</p>
+<ol>
+<li>直接修改异常：代码、寄存器、内存</li>
+</ol>
+<p>被调试者发生异常时，调试器会在发生异常的代码处暂停，此时可以通过调试器直接修改有问题的代码、内存、寄存器等，排除异常后，调试器继续运行程序。</p>
+<ol start="2">
+<li>将异常抛给被调试者处理</li>
+</ol>
+<p>如果被调试者内部存在 SEH （异常处理函数）能够处理异常，那么异常通知会发送给被调试者，由被调试者自行处理。这与程序正常运行时的异常处理方式是一样的。</p>
+<ol start="3">
+<li>OS 默认的异常处理机制</li>
+</ol>
+<p>若调试器与被调试器都无法处理（或故意不处理）当前发生的异常，则 OS 的默认异常处理机制会处理它，终止被调试进程，同时结束调试。</p>
+<h2 id="异常"><a href="#异常" class="headerlink" title="异常"></a>异常</h2><p>学习异常处理前，有必要了解操作系统中定义的异常。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250108143846.png'><img src="/assets/Pasted%20image%2020250108143846.png"></p>
+<p>以上异常列表中，我们调试时会经常接触 5 种最具代表性的异常，接下来分别介绍。</p>
+<h3 id="EXCEPTION-ACCESS-VIOLATION-C0000005"><a href="#EXCEPTION-ACCESS-VIOLATION-C0000005" class="headerlink" title="EXCEPTION_ACCESS_VIOLATION(C0000005)"></a>EXCEPTION_ACCESS_VIOLATION(C0000005)</h3><p>试图访问不存在或不具权限的内存区域时，就会发生<code>EXCEPTION_ACCESS_VIOLATION</code>（非法访问异常，该异常最常见）。</p>
+<ul>
+<li>例</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250108144132.png'><img src="/assets/Pasted%20image%2020250108144132.png"></p>
+<h3 id="EXCEPTION-BREAKPOINT-80000003"><a href="#EXCEPTION-BREAKPOINT-80000003" class="headerlink" title="EXCEPTION_BREAKPOINT(80000003)"></a>EXCEPTION_BREAKPOINT(80000003)</h3><p>在运行代码中设置断点后，CPU 尝试执行该地址处的指令时，将发生<code>EXCEPTION_BREAKPOINT</code>异常。调试器就是利用该异常实现断点功能的。</p>
+<p><code>INT3</code></p>
+<p>设置断点命令对应的汇编指令为 <code>INT3</code>，对应的机器指令为 <code>0xCC</code>。CPU 运行代码的过程中若遇到汇编指令 <code>INT3</code>，则会触发<code>EXCEPTION_BREAKPOINT</code>异常。</p>
+<h3 id="EXCEPTION-ILLEGAL-INSTRUCTION-C000001D"><a href="#EXCEPTION-ILLEGAL-INSTRUCTION-C000001D" class="headerlink" title="EXCEPTION_ILLEGAL_INSTRUCTION(C000001D)"></a>EXCEPTION_ILLEGAL_INSTRUCTION(C000001D)</h3><p>CPU 遇到无法解析的指令时引发该异常。比如 <code>0xFFF</code> 指令在 x86 CPU 中未定义，CPU 遇到该指令将引发 <code>EXCEPTION_ILLEGAL_INSTRUCTION</code>异常。</p>
+<h3 id="EXCEPTION-INT-DIVIDE-BY-ZERO-C0000094"><a href="#EXCEPTION-INT-DIVIDE-BY-ZERO-C0000094" class="headerlink" title="EXCEPTION_INT_DIVIDE_BY_ZERO(C0000094)"></a>EXCEPTION_INT_DIVIDE_BY_ZERO(C0000094)</h3><p>INTEGER（整数）除法运算中，若分母为 0（即被 0 除），则引发<code>EXCEPTION_INT_DIVIDE_BY_ZERO</code>异常。</p>
+<p>编写应用程序时偶尔会发生该异常，分母为变量时，该变量在某个瞬间变为 0，执行除法运算就会引发<code>EXCEPTION_INT_DIVIDE_BY_ZERO</code>异常。</p>
+<h3 id="EXCEPTION-SINGLE-STEP-80000004"><a href="#EXCEPTION-SINGLE-STEP-80000004" class="headerlink" title="EXCEPTION_SINGLE_STEP(80000004)"></a>EXCEPTION_SINGLE_STEP(80000004)</h3><p>Singel Step（单步）的含义是执行 1 条指令，然后暂停。CPU 进入单步模式后，每执行一条指令就会引发<code>EXCEPTION_SINGLE_STEP</code>异常，暂停运行。将<code>EFLAGS</code>寄存器的<code>TF</code>（陷阱标志）位设置为 1 后，CPU就会进入单步工作模式。</p>
+<h2 id="SEH-详细说明"><a href="#SEH-详细说明" class="headerlink" title="SEH 详细说明"></a>SEH 详细说明</h2><h3 id="SEH-链"><a href="#SEH-链" class="headerlink" title="SEH 链"></a>SEH 链</h3><p>SEH 以链的形式存在。第一个异常处理器中若未处理相关异常，它就会被传递到下一个异常处理器，直到得到处理。从技术层面看，SEH 是由<code>_EXCEPTION_REGISTRATION_RECORD</code>结构体组成的链表。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">EXCEPTION_REGISTRATION_RECORD</span></span><br><span class="hljs-class">&#123;</span><br>	PEXCEPTION_REGISTRATION_RECORD Next;<br>	PEXCEPTION_DISPOSITION Handler;<br>&#125; EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;<br></code></pre></td></tr></table></figure>
+
+<p><code>Next</code>成员是指向下一个<code>_EXCEPTION_REGISTRATION_RECORD</code>结构体的指针，<code>Handler</code>成员是异常处理函数（异常处理器）。若<code>Next</code>成员的值为<code>FFFFFFFF</code>，则表示它是链表的最后一个结点。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250108141157.png'><img src="/assets/Pasted%20image%2020250108141157.png"></p>
+<p>上图中共存在3个 SEH （异常处理器），发生异常时，该异常会按照（A）-&gt;（B）-&gt;（C）的顺序依次传递，直到有异常处理器处理。</p>
+<h3 id="异常处理函数的定义"><a href="#异常处理函数的定义" class="headerlink" title="异常处理函数的定义"></a>异常处理函数的定义</h3><p>SEH 异常处理函数（SEH 函数）定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">EXCEPTION_DISPOSITION _except_handler<br>(<br>	EXCEPTION_RECORD *pRecord,<br>	EXCEPTION_REGISTRATION_RECORD *pFrame,<br>	CONTEXT *pContext,<br>	PVOID   pValue<br>);<br></code></pre></td></tr></table></figure>
+
+<p>异常处理函数（异常处理器）接收 4 个参数输入，返回名为<code>EXCEPTION_DISPOSITION</code>的枚举类型（enum）。该异常处理函数由系统调用，是一个回调函数，系统调用它时会给出代码中的 4 个参数，这 4 个参数中保存着与异常相关的信息。首先，第一个参数是指向<code>EXCEPTION_RECORD</code>结构体的指针，<code>EXCEPTION_RECORD</code>结构体的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">EXCEPTION_RECORD</span></span><br><span class="hljs-class">&#123;</span><br>	DWORD     ExceptionCode;      <span class="hljs-comment">//异常代码</span><br>	DWORD     ExceptionFlags;     <br>	<span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">EXCEPTION_RECORD</span> *<span class="hljs-title">ExceptionRecord</span>;</span><br>	PVOID     ExceptionAddress;   <span class="hljs-comment">//异常发生地址</span><br>	DWORD     NumberParameters;<br>	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];<br>									<span class="hljs-comment">//15</span><br>&#125;EXCEPTION_RECORD, *PEXCEPTION_RECORD;<br></code></pre></td></tr></table></figure>
+
+<p>请注意该结构体中<code>ExceptionCode</code>与<code>ExceptionAddress</code>这 2 个成员，<code>ExceptionCode</code>成员用来指出异常类型，<code>ExceptionAddress</code>成员表示发生异常的代码地址。异常处理函数的第三个参数是指向<code>CONTEXT</code>结构体的指针。</p>
+<p><code>CONTEXT</code>结构体的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// CONTEXT_IA32</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">CONTEXT</span>&#123;</span><br>	DWORD ContextFlags;<br>	DWORD Dr0; <span class="hljs-comment">// 04h</span><br>	DWORD Dr1; <span class="hljs-comment">// 08h</span><br>	DWORD Dr2; <span class="hljs-comment">// 0Ch</span><br>	DWORD Dr3; <span class="hljs-comment">// 10h</span><br>	DWORD Dr6; <span class="hljs-comment">// 14h</span><br>	DWORD Dr7; <span class="hljs-comment">// 18h</span><br><br>	FLOATING_SAVE_AREA FloatSave;<br>	<br>	DWORD SegGS; <span class="hljs-comment">// 88h</span><br>	DWORD SegFs; <span class="hljs-comment">// 90h</span><br>	DWORD SegEs; <span class="hljs-comment">// 94h</span><br>	DWORD SegDs; <span class="hljs-comment">// 98h</span><br><br>	DWORD Edi; <span class="hljs-comment">// 9Ch</span><br>	DWORD Esi; <span class="hljs-comment">// A0h</span><br>	DWORD Ebi; <span class="hljs-comment">// A4h</span><br>	DWORD Edi; <span class="hljs-comment">// A8h</span><br>	DWORD Eci; <span class="hljs-comment">// ACh</span><br>	DWORD Eai; <span class="hljs-comment">// B0h</span><br><br>	DWORD Ebp;    <span class="hljs-comment">// B4h</span><br>	DWORD Eip;    <span class="hljs-comment">// B8h</span><br>	DWORD SegCs;  <span class="hljs-comment">// BCh (must be sanitized)</span><br>	DWORD EFlags; <span class="hljs-comment">// C0h</span><br>	DWORD Esp;    <span class="hljs-comment">// C4h</span><br>	DWORD SegSs;  <span class="hljs-comment">// C8h</span><br><br>	BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION]; <span class="hljs-comment">// 512 bytes</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>CONTEXT</code>结构体用来备份 CPU 寄存器的值，因为多线程环境下需要这样做。每个线程内部都拥有 1 个<code>CONTEXT</code>结构体。CPU 暂时离开当前线程去运行其他线程时，CPU 寄存器的值就会保存到当前线程的<code>CONTEXT</code>结构体；CPU 再次运行该线程时，会使用保存在<code>CONTEXT</code>结构体的值来覆盖 CPU 寄存器的值，然后从之前暂停的代码处继续执行。通过这种方式，OS 可以在多线程环境下安全运行各线程。</p>
+<p>异常发生时，执行异常代码的线程就会中断，转而运行 SEH（异常处理器&#x2F;异常处理函数），此时 OS 会把线程的<code>CONTEXT</code>结构体的指针传递给异常处理函数（异常处理器）的相应参数。<code>CONTENT</code>结构体成员中有 1 个<code>Eip</code>成员（偏移量：B8）。在异常处理函数中将参数传递过来的<code>CONTENT.Eip</code>设置为其他地址，然后返回异常处理函数。这样，之前暂停的线程会执行新设置的<code>EIP</code>地址处的代码。在异常函数定义中可以看到异常处理函数的返回值为<code>EXCEPTION_DISPOSITION</code>枚举类型，下面了解一下该类型。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">enum</span> _<span class="hljs-title">EXCEPTION_DISPOSITION</span></span><br><span class="hljs-class">&#123;</span><br>	ExceptionContinueExecution = <span class="hljs-number">0</span>,    <span class="hljs-comment">// 继续执行异常代码</span><br>	ExceptionContinueSearch = <span class="hljs-number">1</span>,       <span class="hljs-comment">// 运行下一个异常处理器</span><br>	ExceptionNestedException = <span class="hljs-number">2</span>,      <span class="hljs-comment">// 在 OS 内部使用</span><br>	ExceptionCollidedUnwind = <span class="hljs-number">3</span>        <span class="hljs-comment">// 在 OS 内部使用</span><br>&#125;EXCEPTION_DISPOSITION;<br></code></pre></td></tr></table></figure>
+
+<p>异常处理器处理异常后会返回<code>ExceptionContinueExecution(0)</code>，从发生异常的代码处继续运行。若当前异常处理器无法处理异常，则返回<code>ExceptionContinueSearch(1)</code>，将异常派送到 SEH 链的下一个异常处理器。</p>
+<h3 id="TEB-NtTib-ExceptionList"><a href="#TEB-NtTib-ExceptionList" class="headerlink" title="TEB.NtTib.ExceptionList"></a>TEB.NtTib.ExceptionList</h3><p>通过 TEB 结构体的<code>NtTib</code>成员可以很容易地访问进程的 SEH 链，方法非常简单。</p>
+<p>如下图所示，<code>TEB.NtTib.ExceptionList</code>成员是 TEB 结构体的第一个成员。<code>FS</code>段寄存器执行段内存的起始地址，TEB 结构体即位于此，所以通过下列公式可以轻松获取<code>TEB.NtTib.ExceptionListd</code>的地址。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">TEB.NtTib.ExceptionList=FS:[<span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+
+<p class='item-img' data-src='/assets/Pasted%20image%2020250108153315.png'><img src="/assets/Pasted%20image%2020250108153315.png"></p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2025/01/08/binary/re/jg/">← Next TEB和PEB</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/01/07/re/crypto/hash/">逆向中的Hash算法 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E8%AF%B4%E6%98%8E"><span class="toc-number">1.1.</span> <span class="toc-text">基本说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">基本使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OS%E7%9A%84%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">OS的异常处理方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A3%E5%B8%B8%E8%BF%90%E8%A1%8C%E6%97%B6%E7%9A%84%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-number">2.1.</span> <span class="toc-text">正常运行时的异常处理方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E8%BF%90%E8%A1%8C%E6%97%B6%E7%9A%84%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-number">2.2.</span> <span class="toc-text">调试运行时的异常处理方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8"><span class="toc-number">3.</span> <span class="toc-text">异常</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#EXCEPTION-ACCESS-VIOLATION-C0000005"><span class="toc-number">3.1.</span> <span class="toc-text">EXCEPTION_ACCESS_VIOLATION(C0000005)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EXCEPTION-BREAKPOINT-80000003"><span class="toc-number">3.2.</span> <span class="toc-text">EXCEPTION_BREAKPOINT(80000003)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EXCEPTION-ILLEGAL-INSTRUCTION-C000001D"><span class="toc-number">3.3.</span> <span class="toc-text">EXCEPTION_ILLEGAL_INSTRUCTION(C000001D)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EXCEPTION-INT-DIVIDE-BY-ZERO-C0000094"><span class="toc-number">3.4.</span> <span class="toc-text">EXCEPTION_INT_DIVIDE_BY_ZERO(C0000094)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EXCEPTION-SINGLE-STEP-80000004"><span class="toc-number">3.5.</span> <span class="toc-text">EXCEPTION_SINGLE_STEP(80000004)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SEH-%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E"><span class="toc-number">4.</span> <span class="toc-text">SEH 详细说明</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SEH-%E9%93%BE"><span class="toc-number">4.1.</span> <span class="toc-text">SEH 链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="toc-number">4.2.</span> <span class="toc-text">异常处理函数的定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TEB-NtTib-ExceptionList"><span class="toc-number">4.3.</span> <span class="toc-text">TEB.NtTib.ExceptionList</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

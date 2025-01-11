@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Android逆向环境搭建 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>Android逆向环境搭建</h1></div><hr><div id="post-content"><h2 id="模拟器root环境搭建"><a href="#模拟器root环境搭建" class="headerlink" title="模拟器root环境搭建"></a>模拟器root环境搭建</h2><p>选择一个安卓模拟器，如雷电、MUI等。</p>
+<p>在模拟器设置中选择root。</p>
+<h2 id="Xposed环境"><a href="#Xposed环境" class="headerlink" title="Xposed环境"></a>Xposed环境</h2><ol>
+<li>安装Magisk软件</li>
+</ol>
+<p>Magisk 是一套用于定制 Android 的开源软件，支持高于 Android 5.0 的设备。</p>
+<p>以下是一些功能亮点：</p>
+<ul>
+<li><strong>MagiskSU</strong>：为应用程序提供 root 访问权限</li>
+<li><strong>Magisk 模块</strong>：通过安装模块修改只读分区</li>
+<li><strong>MagiskHide</strong>：从根检测 &#x2F; 系统完整性检查中隐藏 Magisk(Shamiko)</li>
+<li><strong>MagiskBoot</strong> : 最完整的安卓启动镜像解包和重新打包工具</li>
+</ul>
+<ol start="2">
+<li>刷入LSPosed模块</li>
+</ol>
+<p>在Magisk中选择底部模块面板，然后选择本地安装，选择LSPosed文件。</p>
+<p>安装后如果Magisk模块面板中显示LSPosed，则安装成功。</p>
+<h2 id="Frida环境搭建"><a href="#Frida环境搭建" class="headerlink" title="Frida环境搭建"></a>Frida环境搭建</h2><h2 id="Android-Studio搭建"><a href="#Android-Studio搭建" class="headerlink" title="Android Studio搭建"></a>Android Studio搭建</h2><h2 id="真机环境搭建"><a href="#真机环境搭建" class="headerlink" title="真机环境搭建"></a>真机环境搭建</h2><p>由于有些安卓程序必须在 arm 架构上运行，所以我们必须搞一台真机来使用（当然要是有钱的话可以买mac）。</p>
+<p>拿到真机后我们需要通过刷机来刷入magisk进行root。</p>
+<p>所需软件：</p>
+<ul>
+<li>线刷包（下载对应手机版本）：<a target="_blank" rel="noopener" href="https://developers.google.com/android/images#legal">https://developers.google.com/android/images#legal</a> </li>
+<li>adb工具：<a target="_blank" rel="noopener" href="https://developer.android.com/studio/releases/platform-tools.html">https://developer.android.com/studio/releases/platform-tools.html</a> </li>
+<li>magisk：<a target="_blank" rel="noopener" href="https://github.com/topjohnwu/magisk/releases">Releases · topjohnwu&#x2F;Magisk</a></li>
+<li>Riru：<a target="_blank" rel="noopener" href="https://github.com/RikkaApps/Riru/releases">Releases · RikkaApps&#x2F;Riru</a></li>
+<li>Riru-LSPosed：<a target="_blank" rel="noopener" href="https://github.com/LSPosed/LSPosed/releases/tag/v1.9.2">Release 1.9.2 · LSPosed&#x2F;LSPosed</a></li>
+</ul>
+<p>打开手机中的开发者选项，选择开启oem锁。</p>
+<p>解压线刷包和adb工具压缩包，将adb工具文件中的内容全部复制到线刷包中。</p>
+<p>手机关机，按开机键和音量减键开机，进入bootloader模式。</p>
+<ul>
+<li>解锁</li>
+</ul>
+<p>运行powershell，执行以下命令进行解锁。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">.\fastboot.exe flashing unlock<br></code></pre></td></tr></table></figure>
+
+<p>成功后powershell窗口会显示如下内容：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs powershell">❯ .\fastboot.exe flashing unlock<br>OKAY [  <span class="hljs-number">0.139</span><span class="hljs-type">s</span>]<br>Finished. Total time: <span class="hljs-number">0.140</span>s<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>刷机</li>
+</ul>
+<p>解锁后点击运行<code>flash.bat</code>文件让系统自动刷机</p>
+<p>幸运的刷机成功！</p>
+<ul>
+<li>root</li>
+</ul>
+<p>通过数据线连接传输前面下载的软件到手机。</p>
+<p>然后安装magisk软件，然后将线刷包中的boot文件</p>
+<p>magisk软件后将线刷包中的boot文件，刷入修补Boot补丁命令 fastboot flash boot (拖动镜像回车执行） </p>
+<ul>
+<li>scrcpy</li>
+</ul>
+<p>adb 的加强版，图形化的 adb。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2025/01/05/binary/iot/yj/">← Next IOT设备硬件分析</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/01/02/sundry/linux/">Linux系统管理 Prev →</a></div></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E6%8B%9F%E5%99%A8root%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">1.</span> <span class="toc-text">模拟器root环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Xposed%E7%8E%AF%E5%A2%83"><span class="toc-number">2.</span> <span class="toc-text">Xposed环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Frida%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">3.</span> <span class="toc-text">Frida环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android-Studio%E6%90%AD%E5%BB%BA"><span class="toc-number">4.</span> <span class="toc-text">Android Studio搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E6%9C%BA%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">5.</span> <span class="toc-text">真机环境搭建</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
