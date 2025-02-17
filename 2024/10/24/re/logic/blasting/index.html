@@ -1,0 +1,170 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>迷宫解法总结 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>迷宫解法总结</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>在一些解题场合，我们需要爆破才能得到想要的数据，而目标算法又特别复杂，写出正向过程比较费时间，我们如何利用已有的代码进行爆破呢？直接调用该代码来爆破！可以节省逆向时间！</p>
+<p>系统加载方法：</p>
+<p>利用 Loadlibrary、dlopen 等函数加载可执行文件</p>
+<p>直接加载方案：</p>
+<p>直接将整个二进制文件数据加载到内存，并跳转到相应函数位置处开始执行<br>缺点：指令集必须相同、需要处理重定位信息、其它上下文信息（堆栈环境、导入表等）</p>
+<p>模拟执行方案：</p>
+<ul>
+<li>Unicorn 模拟执行：支持大部分常见的架构</li>
+<li>Qiling    模拟执行：支持大部分常见架构并提供基础系统运行时环境</li>
+</ul>
+<p>Linux爆破调用</p>
+<p>Qiling框架是高级二进制模拟执行框架，Qiling框架基于Unicorn模拟执行框架，为其添加了系统运行时以及可执行文件加载器，同时还实现了大部分外围IO例如文件系统。使用Qiling可以快速解决五环境调试的问题。</p>
+<p>Qiling比较适合沙盒、算法黑盒调用、跨平台代码执行等应用场景。</p>
+<p>Capstone框架是一款轻量、多平台、多架构的反汇编引擎。</p>
+<p>支持多架构：Arm、Arm64<br>简单易用的API（C&#x2F;C++、Python、Rust）</p>
+<p>支持指令细节反汇编</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> capstone <span class="hljs-keyword">import</span> *<br><br>CODE=<span class="hljs-string">b&quot;\x55\x48\x48\x8b\x05\xb8\x13\x00\x00&quot;</span><br>md=Cs(CS_ARCH_X86,CS_MODE_64)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> md.disasm(CODE,<span class="hljs-number">0x1000</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;0x%x:\t%s\t%s&quot;</span> %(i.address,i.mnemonic,i.op_str))<br></code></pre></td></tr></table></figure>
+
+<p>CS_ARCH_X86是告诉Capstone我们要反汇编x86指令集，你可以通过代码补全查看其它CS_ARCH_开头的常量。CS_MODE_64是告诉Capstone我们要反汇编64位的指令集。</p>
+<p>最后我们调用disasm对CODE数据反汇编，0x1000是数据对应的基地址，disasm函数返回一个由指令对象（Cslnsn）构成的迭代器。</p>
+<p>Capstone更加细致的反汇编分析</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> capstone <span class="hljs-keyword">import</span> *<br>md=<br>md.detail=<span class="hljs-literal">True</span><br></code></pre></td></tr></table></figure>
+
+<p>设置<code>detail=True</code>开启细节分析，同时也会带来更大的性能开销，如非必要，不要开启。</p>
+<p>Capstone 的 detail信息是架构独立的，每个架构都不同，这一点也需要注意。</p>
+<p>开启细节分析后，可以获得指令更多细节信息，例如：</p>
+<ul>
+<li>指令读取的寄存器列表</li>
+<li>指令修改的寄存器列表</li>
+<li>指令所属的指令组</li>
+<li>指令操作码信息</li>
+</ul>
+<h2 id="爆破调用"><a href="#爆破调用" class="headerlink" title="爆破调用"></a>爆破调用</h2><ul>
+<li><p>分析</p>
+</li>
+<li><p>exp</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;windows.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">unsigned</span> <span class="hljs-title function_">int</span><span class="hljs-params">(*test)</span><span class="hljs-params">()</span>;<br><span class="hljs-type">static</span> UINT time = <span class="hljs-number">0x5AFFE78F</span> + <span class="hljs-number">1</span>;<br>UINT <span class="hljs-title function_">myfun</span><span class="hljs-params">(<span class="hljs-type">int</span>)</span> &#123;<br>        <span class="hljs-keyword">return</span> time++;<br>&#125;<br><span class="hljs-type">char</span> e1_copy[<span class="hljs-number">256</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>        UINT64 * ptr1 = (UINT64 *)<span class="hljs-number">0x40A38C</span>;<span class="hljs-comment">//time64</span><br>        UINT64 * ptr2 = (UINT64 *)<span class="hljs-number">0x40A414</span>; <span class="hljs-comment">//srand</span><br>        UINT64 * ptr3 = (UINT64 *)<span class="hljs-number">0x40A3FC</span>;<span class="hljs-comment">//rand</span><br>        UINT64 * ptr4 = (UINT64 *)<span class="hljs-number">0x40A3DC</span>;<span class="hljs-comment">//memset</span><br>        HMODULE h = LoadLibraryA(<span class="hljs-string">&quot;magic.exe&quot;</span>);<br>        <span class="hljs-built_in">memcpy</span>(e1_copy, (<span class="hljs-type">void</span> *)<span class="hljs-number">0x405020</span>, <span class="hljs-number">256</span>); <span class="hljs-comment">//备份E1表，重新运算的时候需要还原E1表</span><br>        test test1 = (test)<span class="hljs-number">0x402268</span>;<br>        *ptr1 = (UINT64)myfun;<br>        *ptr2 = (UINT64)srand;<br>        *ptr3 = (UINT64)rand;<br>        *ptr4 = (UINT64)<span class="hljs-built_in">memset</span>;<br>        UINT val;<br>        <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>)<br>        &#123;<br>                <span class="hljs-built_in">memcpy</span>((<span class="hljs-type">void</span> *)<span class="hljs-number">0x405020</span>, e1_copy, <span class="hljs-number">256</span>); <span class="hljs-comment">// 重置E1表</span><br>                val =  test1();<br>                <span class="hljs-keyword">if</span> (val != <span class="hljs-number">0</span>)<br>                &#123;<br>                        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;time:%x\nkey:%x&quot;</span>, time <span class="hljs-number">-1</span> , val); <span class="hljs-comment">//0x322ce7a4</span><br>                        <span class="hljs-keyword">break</span>;<br>                &#125;<br>        &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Qiling框架爆破调用"><a href="#Qiling框架爆破调用" class="headerlink" title="Qiling框架爆破调用"></a>Qiling框架爆破调用</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> qiling <span class="hljs-keyword">import</span> Qiling<br><span class="hljs-keyword">from</span> qiling.const <span class="hljs-keyword">import</span> QL_VERBOSE<br><span class="hljs-keyword">import</span> sys<br>windows_status = <span class="hljs-number">1</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">windows_srand</span>(<span class="hljs-params">seed</span>):<br>    <span class="hljs-keyword">global</span> windows_status<br>    windows_status = seed<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">windows_rand</span>():<br>    <span class="hljs-keyword">global</span> windows_status<br>    windows_status = (<span class="hljs-number">214013</span> * windows_status + <span class="hljs-number">2531011</span>) &amp; <span class="hljs-number">0xffffffff</span><br>    <span class="hljs-keyword">return</span> windows_status &gt;&gt; <span class="hljs-number">16</span> &amp; ((<span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">15</span>) - <span class="hljs-number">1</span>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">mytime</span>(<span class="hljs-params">ql</span>):<br>    ql.reg.rax = <span class="hljs-number">0x5b00e398</span><br>    ql.reg.rip = ql.stack_pop()<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;mytime&quot;</span>)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">mysrand</span>(<span class="hljs-params">ql: Qiling</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;srand value:&quot;</span>, <span class="hljs-built_in">hex</span>(ql.reg.ecx))<br>    windows_srand(ql.reg.ecx)<br>    ql.reg.rip = ql.stack_pop()<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">myrand</span>(<span class="hljs-params">ql:Qiling</span>):<br>    ql.reg.eax = windows_rand()<br>    ql.reg.rip = ql.stack_pop()<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">hook_insn</span>(<span class="hljs-params">ql:Qiling</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;rip:&quot;</span>, <span class="hljs-built_in">hex</span>(ql.reg.rip))<br><br>ql = Qiling([<span class="hljs-string">&quot;magic.exe&quot;</span>], <span class="hljs-string">&quot;rootfs/x8664_windows&quot;</span>, verbose=QL_VERBOSE.OFF)<br>ql.hook_address(mytime, <span class="hljs-number">0x4047C8</span>)<br>ql.hook_address(mysrand, <span class="hljs-number">0x404748</span>)<br>ql.hook_address(myrand, <span class="hljs-number">0x404760</span>)<br>ql.emu_start(<span class="hljs-number">0x402268</span>, <span class="hljs-number">0x402356</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">hex</span>(ql.reg.eax))<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>2024 MoeCTF BlackHole</p>
+</blockquote>
+<p>LoadLibrary然后调用函数进行暴力破解</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;Windows.h&gt;</span> </span><br> <br> <br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">bruteForce</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123; <br>    HMODULE h = <span class="hljs-literal">NULL</span>; <br>    h = <span class="hljs-built_in">LoadLibraryA</span>(<span class="hljs-string">&quot;you_cannot_crack_me.vmp.dll&quot;</span>); <br>    <span class="hljs-keyword">if</span> (!h) <br>    &#123; <br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;failed to load dll...\n&quot;</span>); <br>        <span class="hljs-keyword">return</span>; <br>    &#125; <br>    <span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">int</span><span class="hljs-params">(*checkFlag)</span><span class="hljs-params">(<span class="hljs-type">char</span>*, <span class="hljs-type">size_t</span>)</span></span>; <br>    <span class="hljs-type">char</span>* cracking = (<span class="hljs-type">char</span>*)<span class="hljs-built_in">malloc</span>(<span class="hljs-number">16</span>); <br>    <span class="hljs-keyword">if</span> (!cracking) <span class="hljs-keyword">return</span>; <br>        cracking[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;m&#x27;</span>; <br>        cracking[<span class="hljs-number">1</span>] = <span class="hljs-string">&#x27;o&#x27;</span>; <br>        cracking[<span class="hljs-number">2</span>] = <span class="hljs-string">&#x27;e&#x27;</span>; <br>        cracking[<span class="hljs-number">3</span>] = <span class="hljs-string">&#x27;c&#x27;</span>; <br>        cracking[<span class="hljs-number">4</span>] = <span class="hljs-string">&#x27;t&#x27;</span>; <br>        cracking[<span class="hljs-number">5</span>] = <span class="hljs-string">&#x27;f&#x27;</span>; <br>        cracking[<span class="hljs-number">6</span>] = <span class="hljs-string">&#x27;&#123;&#x27;</span>; <br>        cracking[<span class="hljs-number">7</span>] = <span class="hljs-string">&#x27;c&#x27;</span>; <br>        cracking[<span class="hljs-number">12</span>] = <span class="hljs-string">&#x27;m&#x27;</span>; <br>        cracking[<span class="hljs-number">14</span>] = <span class="hljs-string">&#x27;&#125;&#x27;</span>; <br>        cracking[<span class="hljs-number">15</span>] = <span class="hljs-string">&#x27;\0&#x27;</span>;  checkFlag check = (checkFlag)<span class="hljs-built_in">GetProcAddress</span>(h, <span class="hljs-string">&quot;checkMyFlag&quot;</span>); <br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">char</span> b = <span class="hljs-string">&#x27;a&#x27;</span>; b &lt;= <span class="hljs-string">&#x27;z&#x27;</span>; b++) <br>        &#123; <br>            <span class="hljs-keyword">for</span> (<span class="hljs-type">char</span> c = <span class="hljs-string">&#x27;0&#x27;</span>; c &lt;= <span class="hljs-string">&#x27;9&#x27;</span>; c++) <br>            &#123; <br>                <span class="hljs-keyword">for</span> (<span class="hljs-type">char</span> d = <span class="hljs-string">&#x27;a&#x27;</span>; d &lt;= <span class="hljs-string">&#x27;z&#x27;</span>; d++) <br>                &#123; <br>                    <span class="hljs-keyword">for</span> (<span class="hljs-type">char</span> e = <span class="hljs-string">&#x27;a&#x27;</span>; e &lt;= <span class="hljs-string">&#x27;z&#x27;</span>; e++) <br>                    &#123; <br>                        <span class="hljs-keyword">for</span> (<span class="hljs-type">char</span> g = <span class="hljs-string">&#x27;0&#x27;</span>; g &lt;= <span class="hljs-string">&#x27;9&#x27;</span>; g++) <br>                        &#123; <br>                            cracking[<span class="hljs-number">8</span>] = b; <br>                            cracking[<span class="hljs-number">9</span>] = c; <br>                            cracking[<span class="hljs-number">10</span>] = d; <br>                            cracking[<span class="hljs-number">11</span>] = e; <br>                            cracking[<span class="hljs-number">13</span>] = g; <br>                            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">check</span>(cracking, <span class="hljs-number">15</span>)) <br>                            &#123; <br>                                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;found answer: %s\n&quot;</span>, cracking); <br>                                <span class="hljs-keyword">return</span>; <br>                            &#125; <br>                        &#125; <br>                    &#125; <br>                &#125; <br>            &#125; <br>        &#125; <br> <br> <br>                            <span class="hljs-built_in">CloseHandle</span>(h); <br>&#125; <br> <br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123; <br>    <span class="hljs-built_in">bruteForce</span>(); <br>    <span class="hljs-built_in">system</span>(<span class="hljs-string">&quot;pause&quot;</span>); <br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/re/logic/vm/">← Next 迷宫解法总结</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/re/protection/debug/">CTF中常见的反调试 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%88%86%E7%A0%B4%E8%B0%83%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">爆破调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Qiling%E6%A1%86%E6%9E%B6%E7%88%86%E7%A0%B4%E8%B0%83%E7%94%A8"><span class="toc-number">3.</span> <span class="toc-text">Qiling框架爆破调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">例题</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

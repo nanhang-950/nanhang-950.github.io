@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>C chapter5 基本概念 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>C chapter5 基本概念</h1></div><hr><div id="post-content"><h3 id="内存和地址"><a href="#内存和地址" class="headerlink" title="内存和地址"></a>内存和地址</h3><p>我们可以将内存看作相邻的一排房屋，每座房屋可以存储一个字符所需要的位数，也就是一个字节。</p>
+<p>为了存储更大的值，我们把两个或更多个字节合并在一起作为一个更大的内存单位。比如一个字就是两个字节。</p>
+<p>尽管一个字包含了多个字节，它仍然只有一个地址。</p>
+<p><strong>边界对齐</strong>，在要求边界对齐的机器上，整型值存储的起始位置只能是某些特定的字节，通常是2或4的倍数。</p>
+<ol>
+<li>内存中的每个位置由一个独一无二的地址标识。</li>
+<li>内存中的每个位置都包含一个值。</li>
+</ol>
+<p><strong>地址与内容</strong></p>
+<p>每个值都存储与一个地址，只要我们知道一个值的存储地址就可以根据地址获取这个值。</p>
+<p>但是要记住所有地址太繁琐了，所以高级语言所提供的特性之一就是通过名字而不是地址来访问内存的位置。这些名字就是变量。</p>
+<p>有一点非常重要，名字与内存位置之间的关联并不是硬件所提供的，它是由编译器为我们实现的。所有这些变量给了我们一种更方便的方法记住地址——<strong>硬件仍然通过地址访问内存位置</strong>。</p>
+<h3 id="值和类型"><a href="#值和类型" class="headerlink" title="值和类型"></a>值和类型</h3><p>变量所存储的是一序列内容为0或者1的位。它们可以被解释为整数，也可以被解释为浮点数，这取决于它们被使用的方式。</p>
+<p>如果使用的是整型算术指令，这个值就被解释为整数，如果使用的是浮点数指令，它就是个浮点数。</p>
+<p>这个事实引出了一个重要的结论：<strong>不能简单地通过检查一个值的位来判断它的类型</strong>。为了判断值的类型（以及它的值），你必须观察程序中这个值的使用方式。</p>
+<p>值的类型并非值本身所固有的一种特性，而是取决于它的使用方式。因此，为了得到正确的答案，对值进行正确的使用是非常重要的。</p>
+<h3 id="指针变量的内容"><a href="#指针变量的内容" class="headerlink" title="指针变量的内容"></a>指针变量的内容</h3><p>指针的初始化是用<code>&amp;</code>操作符完成的，它用于产生操作数的内存地址。</p>
+<p>指针并不会改变这些表达式的求值方式：一个变量的值就是分配给这个变量的内存位置所存储的数值。</p>
+<h3 id="间接访问操作符"><a href="#间接访问操作符" class="headerlink" title="间接访问操作符"></a>间接访问操作符</h3><p>通过一个指针访问它所指向的地址的过程称为<strong>间接访问(indirection)</strong> 或<strong>解引用指针(dereferencing the pointer)</strong> 。这个用于执行间接访问的操作符是单目操作符<code>*</code>。</p>
+<p>指针变量的值就是一个数字，一个地址，我们通过解引用来获取地址上的值。</p>
+<h3 id="未初始化和非法的指针"><a href="#未初始化和非法的指针" class="headerlink" title="未初始化和非法的指针"></a>未初始化和非法的指针</h3><p>下面这段代码说明了一个极为常见的错误。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *a<br>...<br>*a=<span class="hljs-number">12</span>;<br></code></pre></td></tr></table></figure>
+<p>我们声明了指针变量，但是并没有对其进行初始化。</p>
+<p>指针变量和其它变量并无区别。如果变量是静态的，它会被初始化为0；但如何变量是自动的，它根本不会被初始化。</p>
+<p>如果程序执行这个赋值操作就会报错。</p>
+<p>在你对指针进行间接访问之前，必须非常小心，确保它们已被初始化。</p>
+<h3 id="NULL指针"><a href="#NULL指针" class="headerlink" title="NULL指针"></a>NULL指针</h3><p>标准定义了NULL指针，它作为一个特殊的指针变量，表示不指向任何东西。</p>
+<p>要使一个指针变量为NULL，你可以给它赋一个零值。</p>
+<p>为了测试一个指针变量是否为NULL，你可以将它与零值进行比较。</p>
+<p>NULL指针的概念是非常有用的，因为它给了你一种方法，表示某个特定的指针目前并未指向任何东西。</p>
+<p>对指针进行解引用操作可以获得它所指向的值。但是对一个NULL指针进行解引用操作是非法的。</p>
+<p>在对指针进行解引用操作之前，你首先必须确保它并非NULL指针。</p>
+<h3 id="指针、间接访问和左值"><a href="#指针、间接访问和左值" class="headerlink" title="指针、间接访问和左值"></a>指针、间接访问和左值</h3><p>指针变量可以作为左值，并不是因为它们是指针，而是因为它们是变量。</p>
+<p>对指针变量进行间接访问表示我们应该访问指针所指向的位置。</p>
+<p>间接访问指定了一个特定的内存位置，这样我们可以把间接访问表达式的结果作为左值使用。</p>
+<p>把整型值转换为指针或把指针转换为整型值是极为罕见的，通常这类转换属于无意识的错误。</p>
+<h3 id="指针、间接访问和变量"><a href="#指针、间接访问和变量" class="headerlink" title="指针、间接访问和变量"></a>指针、间接访问和变量</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*&amp;a=<span class="hljs-number">25</span>;<br></code></pre></td></tr></table></figure>
+<p>首先，<code>&amp;</code>操作符产生变量a的地址，它是一个指针常量。接着，<code>*</code>操作符访问其操作数所表示的地址。在这个表达式中，操作数是a的地址，所以值就存储于a中。</p>
+<h3 id="指针常量"><a href="#指针常量" class="headerlink" title="指针常量"></a>指针常量</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*<span class="hljs-number">100</span>=<span class="hljs-number">25</span>;<br></code></pre></td></tr></table></figure>
+<p>这是一个非法语句，因为字面值100的类型是整型，而间接访问操作只能作用于指针类型</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">*(<span class="hljs-type">int</span> *)<span class="hljs-number">100</span>=<span class="hljs-number">25</span>;<br></code></pre></td></tr></table></figure>
+
+<p>强制类型转换把值100从 “整型” 转换为 “指向整型的指针”，这样对它进行间接访问就是合法的。如果a存储于位置100，</p>
+<p>但是，这种技巧的使用绝无仅有，因为我们无法预测编译器会把某个特点的变量放在内存中的什么位置。</p>
+<p>这个技巧唯一有用之处是偶尔需要通过地址访问内存中某个特定的位置，它并不是访问某个变量，而是访问硬件本身。</p>
+<h3 id="指针的指针"><a href="#指针的指针" class="headerlink" title="指针的指针"></a>指针的指针</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a=<span class="hljs-number">12</span>;<br><span class="hljs-type">int</span> *b=&amp;a;<br><span class="hljs-type">int</span> **c=&amp;b;<br></code></pre></td></tr></table></figure>
+<p>变量c是一个指向指针的指针。</p>
+<p><code>*</code>操作符具有从右向左的结合性，所以这个表达式相当于<code>*(*c)</code>，我们必须从里向外逐层求值。</p>
+<h3 id="指针表达式"><a href="#指针表达式" class="headerlink" title="指针表达式"></a>指针表达式</h3><h3 id="指针运算"><a href="#指针运算" class="headerlink" title="指针运算"></a>指针运算</h3><p>指针加上一个整数的结果是另一个指针。</p>
+<p>如果你将一个字符串指针加1，运算结果产生的指针指向内存中的下一个字符。</p>
+<p>当一个指针和一个整数量执行算术运算时，整数在执行加法运算前始终会根据合适的大小进行调整。这个 “合适的大小” 就是指针所指向类型的大小，“调整” 就是把整数值和 “合适的大小” 相乘。</p>
+<h4 id="算术运算"><a href="#算术运算" class="headerlink" title="算术运算"></a>算术运算</h4><p>C 的指针算术运算只限于两种形式。第一种形式是：</p>
+<p>指针 +- 整数</p>
+<p>标准定义这种形式只能用于指向数组中某个元素的指针。</p>
+<p>并且这类表达式的结果类型也是指针。这种形式也适用于使用<code>malloc</code>函数动态分配获得的内存，尽管翻遍标准也未见它提及这个事实。</p>
+<p>数组中的元素存储于连续的内存位置中，后面元素的地址大于前面元素的地址。因此，我们很容易看出，对一个指针加1使它指向数组中下一个元素，以此类推，把一个指针减去3使它向左移动3个元素的位置。</p>
+<p>对指针进行加法或减法运算之后如果结果指针所指的位置在数组第1个元素的前面或在数组最后一个元素的后面，那么其效果就是未定义的。让指针指向数组最后一个元素后面的那个位置是合法的，但对这个指针执行间接访问可能会失败。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> N_VALUES 5  <span class="hljs-comment">// 定义数组大小</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> *argv[])</span><br>&#123;<br>    <span class="hljs-type">float</span> values[N_VALUES];  <span class="hljs-comment">// 现在有效</span><br>    <span class="hljs-type">float</span> *vp;<br><br>    <span class="hljs-keyword">for</span>(vp = &amp;values[<span class="hljs-number">0</span>]; vp &lt; &amp;values[N_VALUES];)<br>        *vp++ = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 初始化数组为 0</span><br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;  <span class="hljs-comment">// 返回成功</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>for</code>语句的初始部分把vp指向数组的第1个元素。</p>
+<p>这个例子中的指针运算是用<code>++</code>操作符完成的。增加值1与指针类型长度相乘，其结果加到指针vp上。</p>
+<p>5次循环之后，vp就指向数组最后一个元素后面的那个内存位置。</p>
+<p><code>&amp;values[N_VALUES]</code>表示数组最后一个元素后面那个内存的位置，当vp到达这个值时，我们就知道到达了数组的末尾，故循环终止。</p>
+<p>数组最后一个元素后面的那个内存位置。指针可能可以合法地获得这个值，但对它执行间接访问时将可能意外地访问原先存储于这个位置的变量。一般不允许对指向这个位置的指针指向间接访问操作。</p>
+<p>第2种类型的指针运算具有如下形式：</p>
+<p><code>指针 - 指针</code></p>
+<p>只有当两个指针都指向同一个数组中的元素时，才允许从一个指针减去另一个指针，如下所示：</p>
+<p class='item-img' data-src='/../assets/Pasted%20image%2020240930141645.png'><img src="/../assets/Pasted%20image%2020240930141645.png"></p>
+<p>两个指针相减的结果的类型是 <code>ptrdiff_t</code>，它是一种有符号整数类型。减法运算的值是两个指针在内存中的距离（以数组元素的长度为单位，而不是以字节为单位），因为减法运算的结果将除以数组元素类型的长度。</p>
+<p>如果数组元素的类型为float，每个元素占据4个字节的内存空间。如果数组的起始位置为1000，p1的值是1004，p2的值是1024，但表达式的<code>p2-p1</code>的结果值将是5，因为两个指针的差值将除以每个元素的长度。</p>
+<p>如果两个指针所指向的不是同一个数组中的元素，那么它们之间相减的结果是未定义的。</p>
+<h4 id="关系运算"><a href="#关系运算" class="headerlink" title="关系运算"></a>关系运算</h4><p>对指针执行关系运算也是有限制的。用下列关系操作符对两个指针值进行比较是可能的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">&lt; &lt;= &gt; &gt;=<br></code></pre></td></tr></table></figure>
+<p>不过前提是它们都指向同一个数组中的元素。根据你所使用的操作符，比较表达式将告诉你哪个指针指向数组中更前或更后的元素。标准未定义如果两个任意的指针进行比较会产生什么结果。</p>
+<p>然而，你可以在两个任意的指针间指向相等或不相等测试，因为这类比较的结果和编译器选择在何处存储数据并无关系——指针要么指向同一个地址，要么指向不同的地址。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/program/c/c-ptr-1/">← Next C chapter1 基本概念</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/program/c/c-ptr-6/">C chapter6 基本概念 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%92%8C%E5%9C%B0%E5%9D%80"><span class="toc-number">1.</span> <span class="toc-text">内存和地址</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%80%BC%E5%92%8C%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">值和类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E5%8F%98%E9%87%8F%E7%9A%84%E5%86%85%E5%AE%B9"><span class="toc-number">3.</span> <span class="toc-text">指针变量的内容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%B4%E6%8E%A5%E8%AE%BF%E9%97%AE%E6%93%8D%E4%BD%9C%E7%AC%A6"><span class="toc-number">4.</span> <span class="toc-text">间接访问操作符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AA%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8C%E9%9D%9E%E6%B3%95%E7%9A%84%E6%8C%87%E9%92%88"><span class="toc-number">5.</span> <span class="toc-text">未初始化和非法的指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#NULL%E6%8C%87%E9%92%88"><span class="toc-number">6.</span> <span class="toc-text">NULL指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E3%80%81%E9%97%B4%E6%8E%A5%E8%AE%BF%E9%97%AE%E5%92%8C%E5%B7%A6%E5%80%BC"><span class="toc-number">7.</span> <span class="toc-text">指针、间接访问和左值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E3%80%81%E9%97%B4%E6%8E%A5%E8%AE%BF%E9%97%AE%E5%92%8C%E5%8F%98%E9%87%8F"><span class="toc-number">8.</span> <span class="toc-text">指针、间接访问和变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E5%B8%B8%E9%87%8F"><span class="toc-number">9.</span> <span class="toc-text">指针常量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E7%9A%84%E6%8C%87%E9%92%88"><span class="toc-number">10.</span> <span class="toc-text">指针的指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="toc-number">11.</span> <span class="toc-text">指针表达式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E8%BF%90%E7%AE%97"><span class="toc-number">12.</span> <span class="toc-text">指针运算</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%97%E6%9C%AF%E8%BF%90%E7%AE%97"><span class="toc-number">12.1.</span> <span class="toc-text">算术运算</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E7%B3%BB%E8%BF%90%E7%AE%97"><span class="toc-number">12.2.</span> <span class="toc-text">关系运算</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

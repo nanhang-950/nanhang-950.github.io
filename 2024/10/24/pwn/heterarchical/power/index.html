@@ -1,0 +1,184 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PowerPC Pwn | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>PowerPC Pwn</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>PowerPC（Performance Optimization With Enhanced RISC – PowerPC）是一种基于 RISC（精简指令集计算）设计的微处理器架构。它最初由 IBM、摩托罗拉和苹果公司于1991 年联合开发，并迅速成为当时高性能计算和嵌入式设备的重要处理器架构。PowerPC 设计的目标是提供高性能、低功耗和高效的计算能力。</p>
+<h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><p><code>PowerPC</code>架构下的函数调用约定是通过寄存器传递参数，而不是通过栈传递参数。但当参数数量过多时，会将多余的参数压入栈中，因此栈帧中也会包含函数参数。</p>
+<h2 id="指令集学习"><a href="#指令集学习" class="headerlink" title="指令集学习"></a>指令集学习</h2><h3 id="常用寄存器"><a href="#常用寄存器" class="headerlink" title="常用寄存器"></a>常用寄存器</h3><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1&#x2F;SP</td>
+<td>栈顶指针。</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>存储函数调用的第一个参数或函数的返回值。</td>
+</tr>
+<tr>
+<td>R4-R10</td>
+<td>函数或系统调用的参数，部分情况下R4寄存器也会作为函数的返回值使用。</td>
+</tr>
+<tr>
+<td>LR</td>
+<td>链接寄存器，用于存放函数调用结束处的返回地址。</td>
+</tr>
+<tr>
+<td>PC</td>
+<td>程序计数器。</td>
+</tr>
+</tbody></table>
+<h3 id="常用指令"><a href="#常用指令" class="headerlink" title="常用指令"></a>常用指令</h3><p><code>PowerPC</code> 架构的指令通常使用缩写的单词组合来表示其功能</p>
+<ul>
+<li><p><strong>STB：</strong> Store Byte（存储字节）</p>
+</li>
+<li><p><strong>STW：</strong> Store Word（存储字）</p>
+</li>
+<li><p><strong>LD：</strong> Load（加载，将数据从<strong>内存</strong>中读取到寄存器中）</p>
+</li>
+<li><p><strong>LI：</strong> Load Immediate（加载立即数）</p>
+</li>
+<li><p><strong>LIS：</strong> Load Immediate and Shift（装载一个16位立即数到目标寄存器，并将它左移16位，用零填充低位）</p>
+</li>
+<li><p><strong>LWZ：</strong> Load Word and Zero（从内存读取一个字单元到寄存器中，并将高位清零）</p>
+</li>
+<li><p><strong>BL：</strong> Branch and Link（当前程序返回地址存入寄存器 <strong>LR</strong> 并跳转）</p>
+</li>
+<li><p><strong>MTCTR：</strong> Move to Count Register（将一个32位寄存器的值存储到寄存器 <strong>CTR</strong>）</p>
+</li>
+<li><p><strong>BCTRL：</strong> Branch to Count Register and Link（用于调用函数，将当前程序返回地址存入寄存器 <strong>LR</strong> 并跳去执行寄存器 <strong>CTR</strong> 指向的指令）</p>
+</li>
+<li><p><strong>@符号</strong> 通常用于表示地址的高位和低位。<br>  下例中表示将 <code>FinishedUpload</code> 标签的高位地址加载到 r9 ，r9 左移16位，将 <code>FinishedUpload</code> 标签的低位地址与 r9 相加后的值存储到 r3。即实现了让 r3 指向 <code>FinishedUpload</code> 标签的地址。</p>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://xzfile.aliyuncs.com/media/upload/picture/20241205141626-755e4e3c-b2d0-1.jpeg" class='item-img' data-src='https://xzfile.aliyuncs.com/media/upload/picture/20241205141626-755e4e3c-b2d0-1.jpeg'><img src="https://xzfile.aliyuncs.com/media/upload/picture/20241205141626-755e4e3c-b2d0-1.jpeg"></a></p>
+<p>举点例子</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">li REG, VALUE   ;REG = VALUE<br>add REGA, REGB, REGC   ;REGA = REGB + REGC<br>addi REGA, REGB, VALUE   ;REGA = REGB + VALUE<br>mr REGA, REGB   ;REGA = REGB<br>ld REGA, 0(REGB)   ;REGA = *(REGB + 0)  以REGB为基址，偏移量为0寻址<br>lwz REGA, 0(REGB)   ;REGA = *(REGB + 0)<br>bl func   ;PC = &amp;func<br>mtctr REG   ;CTR = REG<br>bctrl   ;LR = PC,PC = CTR<br></code></pre></td></tr></table></figure>
+
+<h3 id="栈帧结构"><a href="#栈帧结构" class="headerlink" title="栈帧结构"></a>栈帧结构</h3><p>在 <code>PowerPC</code> 架构下，栈帧的结构一般遵循 ABI (Application Binary Interface，应用程序二进制接口) 规范</p>
+<p><code>PowerPC</code> 的 ABI 规范有多种，如 <code>PowerPC 32-bit ELF ABI</code> 和 <code>PowerPC 64-bit ELFv2 ABI</code> 等，不同的 ABI 规范会对栈帧的结构进行不同的定义</p>
+<h2 id="CFI-CTF-2018-powerPacked"><a href="#CFI-CTF-2018-powerPacked" class="headerlink" title="[CFI-CTF 2018]powerPacked"></a>[CFI-CTF 2018]powerPacked</h2><ul>
+<li>分析</li>
+</ul>
+<p>下载拿到附件，根据题目名称我们就可以猜测为 PowerPC 架构 pwn。</p>
+<p><code>file</code>命令查看一下文件，可以看到程序为 PowerPC 32 位架构大端序，并且是静态链接的。</p>
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><p>异架构的题目本来就比较少，PowerPc 架构的题目相对于来说就更少之又少了。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/heap/ptmalloc2/">← Next Ptmalloc2内存管理分析</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/heterarchical/arm/">ARM pwn Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">2.</span> <span class="toc-text">环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%87%E4%BB%A4%E9%9B%86%E5%AD%A6%E4%B9%A0"><span class="toc-number">3.</span> <span class="toc-text">指令集学习</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">3.1.</span> <span class="toc-text">常用寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4"><span class="toc-number">3.2.</span> <span class="toc-text">常用指令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%88%E5%B8%A7%E7%BB%93%E6%9E%84"><span class="toc-number">3.3.</span> <span class="toc-text">栈帧结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CFI-CTF-2018-powerPacked"><span class="toc-number">4.</span> <span class="toc-text">[CFI-CTF 2018]powerPacked</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">5.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

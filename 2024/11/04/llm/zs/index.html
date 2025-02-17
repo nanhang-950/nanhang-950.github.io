@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>大模型助手 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>大模型助手</h1></div><hr><div id="post-content"><h2 id="部署-Dify"><a href="#部署-Dify" class="headerlink" title="部署 Dify"></a>部署 Dify</h2><p>Dify 的部署方法有两种，Docker compose 部署或源码部署。</p>
+<p>这里就只讲 Docker 部署的内容，这要比源码部署便捷很多。</p>
+<p>计算机的硬件要求：</p>
+<ul>
+<li>CPU &gt;&#x3D; 2 核</li>
+<li>RAM &gt;&#x3D; 4 G</li>
+</ul>
+<p>软件要求：</p>
+<ul>
+<li>使用 Docker 部署在 Windows 系统下必须已安装 Docker Desktop。</li>
+</ul>
+<p>首先克隆 Dify 项目的代码仓库，亦或者直接在 Dify 项目中下载项目压缩包</p>
+<blockquote>
+<p>github：<a target="_blank" rel="noopener" href="https://github.com/langgenius/dify">langgenius&#x2F;dify：Dify 是一个开源的 LLM 应用程序开发平台。Dify 的直观界面结合了 AI 工作流程、RAG 管道、代理功能、模型管理、可观测性功能等，让您可以快速从原型到生产。</a></p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">git clone https://github.com/langgenius/dify.git<br></code></pre></td></tr></table></figure>
+
+<p>点击 “下载 ZIP”</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123165922.png'><img src="/assets/Pasted%20image%2020241123165922.png"></p>
+<p><strong>启动 Dify</strong></p>
+<ol>
+<li>进入 Dify 源代码的 Docker 目录</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cd dify/docker<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>复制环境配置文件</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cp .env.example .env<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>启动Docker容器</li>
+</ol>
+<ul>
+<li>查看 Docker Compose版本</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">docker-compose --version<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果 Docker Compose 版本是 Docker Compose V2，使用以下命令：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">docker-compose up -d<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果 Docker Compose 版本是 Docker Compose V1，使用以下命令：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">docker-compose up -d<br></code></pre></td></tr></table></figure>
+
+<p>构建成功后会看到类似以下的输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">[+] Running 11/11<br> ✔ Network docker_ssrf_proxy_network  Created                                               <br> ✔ Network docker_default             Created                                                <br> ✔ Container docker-redis-1           Started                                                <br> ✔ Container docker-ssrf_proxy-1      Started                                                <br> ✔ Container docker-sandbox-1         Started                                                <br> ✔ Container docker-web-1             Started                                                <br> ✔ Container docker-weaviate-1        Started                                                <br> ✔ Container docker-db-1              Started                                                <br> ✔ Container docker-api-1             Started                                                <br> ✔ Container docker-worker-1          Started                                                <br> ✔ Container docker-nginx-1           Started                                                <br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>发现的问题：这里发现了一些问题，在无显卡的电脑上构建的时候无法直接构建api镜像。<br>解决问题的方法：可以先尝试构建，如果构建不成功，则在有显卡的电脑上构建之后将镜像导出迁移到无显卡电脑上。</p>
+</blockquote>
+<p>运行容器时，发现<code>db</code>容器是无法启动的。这是因为它需要通过<code>/var/lib</code>进行初始化。</p>
+<p>这里我们需要给其它用户添加<code>/var/lib</code>命令可写权限。</p>
+<h2 id="访问"><a href="#访问" class="headerlink" title="访问"></a>访问</h2><p>在正式使用之前优先进行初始化，通过访问以下链接进行初始化。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">本地环境</span><br>http://localhost/install<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">服务器环境</span><br>http://your_server_ip/install<br></code></pre></td></tr></table></figure>
+
+<p>然后就可以直接通过访问<code>localhost</code>访问</p>
+<p>访问之后，我们需要先设置平台管理员账户。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123175104.png'><img src="/assets/Pasted%20image%2020241123175104.png"></p>
+<p>然后登陆即可。</p>
+<h2 id="接入模型"><a href="#接入模型" class="headerlink" title="接入模型"></a>接入模型</h2><p>Dify 部署完之后需要一个大模型的提供商，我们可以使用其它厂商的大模型的API来设置提供商。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123170619.png'><img src="/assets/Pasted%20image%2020241123170619.png"></p>
+<h3 id="接入-API"><a href="#接入-API" class="headerlink" title="接入 API"></a>接入 API</h3><h3 id="接入本地模型"><a href="#接入本地模型" class="headerlink" title="接入本地模型"></a>接入本地模型</h3><p>如果我们想要离线部署的情况下就需要在本地部署一个大模型。</p>
+<p>这里我们通过 ollama 进行本地部署大模型。</p>
+<p><strong>部署ollama：</strong></p>
+<ul>
+<li>官网下载部署</li>
+</ul>
+<p>通过在官网下载相应系统的安装包安装ollama。</p>
+<blockquote>
+<p>官网：<a target="_blank" rel="noopener" href="https://ollama.com/download">Download Ollama on Windows</a></p>
+</blockquote>
+<ul>
+<li>Docker 部署</li>
+</ul>
+<p>个人推荐 docker 部署，这样比较方便迁移。</p>
+<p>在命令行中执行<code>docker search</code>搜索ollama镜像</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker search ollama<br></code></pre></td></tr></table></figure>
+
+<p>返回的结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">NAME                    DESCRIPTION                                     STARS     OFFICIAL<br>ollama/ollama           The easiest way to get up and running with l…   876<br>ollama/quantize         Docker image to convert and quantize Pytorch…   16<br>alpine/ollama           Minimal CPU-only Ollama Docker Image            0<br>dustynv/ollama          https://github.com/dusty-nv/jetson-container…   1<br>tmvdl/ollama            An Ollama Docker Image                          1<br>litellm/ollama          An OpenAI API compatible server for local LL…   14<br>intoreal/ollama                                                         0<br>eisai/ollama            ollama for Windows with CUDA support.           0<br>dhiltgen/ollama                                                         0<br>vbehar/ollama                                                           0<br>tanisha441/ollama                                                       0<br></code></pre></td></tr></table></figure>
+
+<p>选择第一个，将他拉下来</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker pull ollama/ollama<br></code></pre></td></tr></table></figure>
+
+<p>成功拉下来后通过镜像创建容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker run -d -p 11434:11434 --name ollama --restart always ollama/ollama:latest<br></code></pre></td></tr></table></figure>
+
+<p>接入容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">docker exec -it ollama /bin/bash<br></code></pre></td></tr></table></figure>
+
+<p>进入容器后，执行以下命令下载通义千问大模型</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ollama pull qwen2.5<br></code></pre></td></tr></table></figure>
+
+<p>安装后我们在 dify 中添加 API</p>
+<p>在模型供应商中选择 Ollama 打开</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123175430.png'><img src="/assets/Pasted%20image%2020241123175430.png"></p>
+<p>模型类型选择 LLM。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123170928.png'><img src="/assets/Pasted%20image%2020241123170928.png"></p>
+<p>然后我们可以自己给模型起一个名称，这个就自定义了。</p>
+<p>接下来我们设置 URL 域名，由于 ollama 默认运行在 11434 端口，并且由于我们是使用 docker 搭建的 dify 所以我们需要使用 docker 桌面版特定的域名。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">http://host.docker.internal:11434<br></code></pre></td></tr></table></figure>
+
+<p>其它参数我们直接默认不用设置。</p>
+<h2 id="创建应用"><a href="#创建应用" class="headerlink" title="创建应用"></a>创建应用</h2><p>接下来我们就可以在工作室中创建应用了。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123173131.png'><img src="/assets/Pasted%20image%2020241123173131.png"></p>
+<p>这里我们选择创建空白应用。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241123173203.png'><img src="/assets/Pasted%20image%2020241123173203.png"></p>
+<p>这里我们可以选择使用的应用，并给它起一个名字。</p>
+<h2 id="知识库"><a href="#知识库" class="headerlink" title="知识库"></a>知识库</h2><p>知识库的构建</p>
+<p>构建 CTF 知识库。</p>
+<p>文档语料</p>
+<ul>
+<li>题目</li>
+<li>题目描述</li>
+<li>关键词</li>
+<li>解题方法及步骤</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">####题目：Peekaboo<br>####类型:misc,杂项<br>####题目描述:躲猫猫，找不到了，但是留下了一点信息，你能帮我找到flag吗<br>提问：最后一次使用的英雄是？<br>注意使用拼音全拼并小写<br>####关键字:信息检索<br>####题解:图片是王者荣耀盛世长安版本的CG图，提问：最后一个使用的英雄，试了一下那个版本出的英雄，试出来发现是百里玄策。。<br>CatCTF&#123;bailixuance&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="API-调用"><a href="#API-调用" class="headerlink" title="API 调用"></a>API 调用</h2><p>将调试好的大模型通过 API 进行开发调用。</p>
+<p>接入 Deepseek API</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/11/04/llm/llm-attack/">← Next LLM Attack</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/11/04/llm/llm-principle/">LLM原理 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2-Dify"><span class="toc-number">1.</span> <span class="toc-text">部署 Dify</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BF%E9%97%AE"><span class="toc-number">2.</span> <span class="toc-text">访问</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%85%A5%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">接入模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%85%A5-API"><span class="toc-number">3.1.</span> <span class="toc-text">接入 API</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A5%E5%85%A5%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.2.</span> <span class="toc-text">接入本地模型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">创建应用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9F%A5%E8%AF%86%E5%BA%93"><span class="toc-number">5.</span> <span class="toc-text">知识库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API-%E8%B0%83%E7%94%A8"><span class="toc-number">6.</span> <span class="toc-text">API 调用</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
