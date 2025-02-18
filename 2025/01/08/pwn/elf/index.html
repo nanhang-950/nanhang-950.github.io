@@ -1,0 +1,481 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ELF可执行文件分析 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23lirjI8VPyPCJFhM1',
+ clientSecret: '18c2fb9cad79377aa7141b21259c9f08101f2550',
+ repo: 'nanhang-950.github.io',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ELF可执行文件分析</h1></div><hr><div id="post-content"><p>ELF（Executable and Linkable Format）是 Linux 系统下的可执行文件和可链接文件格式，主要用于Linux和类Unix系统。ELF 文件可以包含不同的类型，常见的 ELF 文件类型包括：</p>
+<ul>
+<li>可执行文件（<code>ET_EXEC</code>）：这种类型的 ELF 文件是可直接执行的程序，可以在操作系统上运行。</li>
+<li>共享目标文件（<code>ET_DYN</code>）：这种类型的 ELF 文件是可被动态链接的共享库，可以在运行时与其他程序动态链接。该类型文件后缀名为 <code>.so</code> 。</li>
+<li>可重定位文件（<code>ET_REL</code>）：这种类型的 ELF 文件是编译器生成的目标文件，通常用于将多个目标文件链接到一个可执行文件或共享库中。该类型文件后缀名为 <code>.o</code> ，静态链接库（<code>.a</code>）也可以归为这一类。</li>
+<li>核心转储文件（<code>ET_CORE</code>）：这种类型的 ELF 文件是操作系统在程序崩溃或发生错误时生成的核心转储文件，用于调试和分析程序崩溃的原因。</li>
+</ul>
+<p>ELF 文件结构及相关常数被定义在 <code>/usr/include/elf.h</code> 里，因为 ELF 文件在各种平台下都通用，ELF文件有 32 位版本和 64 位版本。32 位版本与 64 位版本的 ELF 文件的格式基本是一样的（部分结构体为了优化对齐后大小调整了成员的顺序），只不过有些成员的大小不一样。</p>
+<p><code>elf.h</code> 使用 typedef 定义了一套自己的变量体系：</p>
+<table>
+<thead>
+<tr>
+<th>自定义类型</th>
+<th>描述</th>
+<th>原始类型</th>
+<th>长度（字节）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Elf32_Addr</code></td>
+<td>32 位版本程序地址</td>
+<td><code>uint32_t</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>Elf32_Half</code></td>
+<td>32 位版本的无符号短整型</td>
+<td><code>uint16_t</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>Elf32_Off</code></td>
+<td>32 位版本的偏移地址</td>
+<td><code>uint32_t</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>Elf32_Sword</code></td>
+<td>32 位版本有符号整型</td>
+<td><code>uint32_t</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>Elf32_Word</code></td>
+<td>32 位版本无符号整型</td>
+<td><code>int32_t</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>Elf64_Addr</code></td>
+<td>64 位版本程序地址</td>
+<td><code>uint64_t</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>Elf64_Half</code></td>
+<td>64 位版本的无符号短整型</td>
+<td><code>uint16_t</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>Elf64_Off</code></td>
+<td>64 位版本的偏移地址</td>
+<td><code>uint64_t</code></td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>Elf64_Sword</code></td>
+<td>64 位版本有符号整型</td>
+<td><code>uint32_t</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>Elf64_Word</code></td>
+<td>64 位版本无符号整型</td>
+<td><code>int32_t</code></td>
+<td>4</td>
+</tr>
+</tbody></table>
+<p>ELF 主要管理结构为文件头，程序头表（可重定位文件没有）和节表，其他部分有一个个节组成，多个属性相同的节构成一个段。对于节的介绍这里按照静态链接相关和动态链接相关分别介绍。<br class='item-img' data-src='https://www.kanxue.com/upload/attach/202312/202312222349_SJCSBETWFZ8HK3U.webp'><img src="https://www.kanxue.com/upload/attach/202312/202312222349_SJCSBETWFZ8HK3U.webp" alt="图片描述"></p>
+<h2 id="文件头"><a href="#文件头" class="headerlink" title="文件头"></a>文件头</h2><p>我们这里以 32 位版本的文件头结构 <code>Elf32_Ehdr</code> 作为例子来描述，它的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* The ELF file header.  This appears at the start of every ELF file.  */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EI_NIDENT (16)</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class"></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> e_ident[EI_NIDENT]; <span class="hljs-comment">/* Magic number and other info */</span><br><br>  Elf32_Half    e_type;         <span class="hljs-comment">/* Object file type */</span><br>  Elf32_Half    e_machine;      <span class="hljs-comment">/* Architecture */</span><br>  Elf32_Word    e_version;      <span class="hljs-comment">/* Object file version */</span><br>  Elf32_Addr    e_entry;        <span class="hljs-comment">/* Entry point virtual address */</span><br>  Elf32_Off e_phoff;        <span class="hljs-comment">/* Program header table file offset */</span><br>  Elf32_Off e_shoff;        <span class="hljs-comment">/* Section header table file offset */</span><br>  Elf32_Word    e_flags;        <span class="hljs-comment">/* Processor-specific flags */</span><br>  Elf32_Half    e_ehsize;       <span class="hljs-comment">/* ELF header size in bytes */</span><br>  Elf32_Half    e_phentsize;        <span class="hljs-comment">/* Program header table entry size */</span><br>  Elf32_Half    e_phnum;        <span class="hljs-comment">/* Program header table entry count */</span><br>  Elf32_Half    e_shentsize;        <span class="hljs-comment">/* Section header table entry size */</span><br>  Elf32_Half    e_shnum;        <span class="hljs-comment">/* Section header table entry count */</span><br>  Elf32_Half    e_shstrndx;     <span class="hljs-comment">/* Section header string table index */</span><br>&#125; Elf32_Ehdr;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>e_ident</code>：ELF 文件的魔数和其他信息。</strong><ul>
+<li>前 4 字节为 <code>ELFMAG</code> 即 <code>x7fELF</code> 。</li>
+<li>第 5 字节为 ELF 文件类型，值为 <code>ELFCLASS32(1)</code> 代表 32 位，值为 <code>ELFCLASS64(2)</code> 代表 64 位。</li>
+<li>第 6 字节为 ELF 的字节序，0 为无效格式，1 为小端格式，2 为大端格式。</li>
+<li>第 7 字节为 ELF 版本，一般为 1 ，即 1.2 版本。</li>
+<li>后面 9 字节没有定义一般填 0 ，有些平台会使用这 9 个字节作为扩展标志。</li>
+</ul>
+</li>
+<li><strong><code>e_type</code>：表示ELF文件类型，如可执行文件、共享对象文件（<code>.so</code>）、可重定位文件（<code>.o</code>）等。</strong></li>
+<li><code>e_machine</code>：表示目标体系结构，即程序的目标平台，如 x86、ARM 等。相关常量以 <code>EM_</code> 开头。</li>
+<li><code>e_version</code>：ELF 文件版本号，一般为常数 1 。</li>
+<li><strong><code>e_entry</code>：表示程序入口点虚拟地址。操作系统加载完程序后从这个地址开始执行进程的命令。可重定位文件一般没有入口地址，则这个值为 0 。</strong></li>
+<li><strong><code>e_phoff</code>：表示程序头表的文件偏移量。</strong></li>
+<li><strong><code>e_shoff</code>：表示节表的文件偏移量。</strong></li>
+<li><code>e_flags</code>：表示处理器特定标志。</li>
+<li><strong><code>e_ehsize</code>：表示 ELF 文件头的大小。</strong></li>
+<li><strong><code>e_phentsize</code>：表示程序头表中每个表项的大小。</strong></li>
+<li><strong><code>e_phnum</code>：表示程序头表中表项的数量。</strong></li>
+<li><strong><code>e_shentsize</code>：表示节表中每个表项的大小。</strong></li>
+<li><strong><code>e_shnum</code>：表示节表中表项的数量。</strong></li>
+<li><code>e_shstrndx</code>：<strong>表示节表中字符串表的索引。</strong></li>
+</ul>
+<h2 id="程序头表"><a href="#程序头表" class="headerlink" title="程序头表"></a>程序头表</h2><p>ELF 可执行文件中有一个专门的数据结构叫做程序头表（Program Header Table）用来保存<strong>段</strong>（<strong>注意不是节</strong>）的信息。因为 ELF <strong>目标文件</strong>不需要被装载，所以它没有程序头表，而 ELF 的<strong>可执行文件</strong>和<strong>共享库文件</strong>都有程序头表。</p>
+<p>程序头表是由 <code>Elf*_Phdr</code> 组成的数组，用于描述 ELF 文件中每个节的属性和信息。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Program segment header.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word    p_type;         <span class="hljs-comment">/* Segment type */</span><br>  Elf32_Off p_offset;       <span class="hljs-comment">/* Segment file offset */</span><br>  Elf32_Addr    p_vaddr;        <span class="hljs-comment">/* Segment virtual address */</span><br>  Elf32_Addr    p_paddr;        <span class="hljs-comment">/* Segment physical address */</span><br>  Elf32_Word    p_filesz;       <span class="hljs-comment">/* Segment size in file */</span><br>  Elf32_Word    p_memsz;        <span class="hljs-comment">/* Segment size in memory */</span><br>  Elf32_Word    p_flags;        <span class="hljs-comment">/* Segment flags */</span><br>  Elf32_Word    p_align;        <span class="hljs-comment">/* Segment alignment */</span><br>&#125; Elf32_Phdr;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>p_type</code>：段的类型，例如可执行段、数据段等。</li>
+<li><code>p_offset</code>：段在文件中的偏移量。</li>
+<li><code>p_vaddr</code>：段在虚拟内存中的起始地址。</li>
+<li><code>p_paddr</code>：段在物理内存中的起始地址。因为 ELF 还没装载不知道物理地址，所以作为保留字段。通常和 <code>p_vaddr</code> 的值是一样的。</li>
+<li><code>p_filesz</code>：段在文件中的大小。</li>
+<li><code>p_memsz</code>：段在内存中的大小。</li>
+<li><code>p_flags</code>：段的标志，例如可读、可写、可执行等。</li>
+<li><code>p_align</code>：段在文件和内存中的对齐方式。段的的加载地址要能被 2p_align2p_align 整除。</li>
+</ul>
+<h2 id="节表"><a href="#节表" class="headerlink" title="节表"></a>节表</h2><p>ELF文件里面定义一个固定长度的 <code>Elf*_Shdr</code> 结构体数组用来存放<strong>节</strong>相关信息，与 PE 文件的节表相似。</p>
+<blockquote>
+<p>在 ELF 文件中，<strong>段</strong>（Segment）和<strong>节</strong>（Section）是两个不同的概念，它们在文件结构中具有不同的作用和目的。</p>
+<p>段（Segment）是一种逻辑上的组织单位，它定义了可执行文件或共享库在内存中的一个连续区域。每个段都有自己的虚拟地址空间，可以包含多个节。常见的段类型包括代码段（<code>.text</code>），数据段（<code>.data</code>、<code>.bss</code>），只读数据段（<code>.rodata</code>）等。段在加载和执行时被操作系统用来管理内存，设置内存保护属性以及指定虚拟地址空间的起始地址和大小。</p>
+<p>节（Section）是一种更细粒度的组织单位，它包含了文件中的特定类型的数据或代码。每个节都有自己的名字、类型和内容。常见的节类型包括代码节（<code>.text</code>），数据节（<code>.data</code>、<code>.bss</code>），只读数据节（<code>.rodata</code>），符号表节（<code>.symtab</code>），字符串表节（<code>.strtab</code>）等。节不直接参与内存的加载和执行，而是用于链接器（Linker）和调试器（Debugger）等工具对文件进行处理和分析。</p>
+<p><strong>通俗的讲，在装载程序的时候为了节省内存会将 ELF 文件中属性相同的节（Section）合并成在一个段（Segment）加载到内存中。</strong></p>
+<p>段和节之间存在对应关系和映射关系：</p>
+<ul>
+<li>一个段可以包含多个节，这些节的内容和属性都属于该段。</li>
+<li>段提供了对应于虚拟内存的逻辑映射，而节则提供了对应于文件的逻辑映射。</li>
+<li>段的加载和执行涉及内存管理和地址映射，而节则用于链接和调试过程中的符号解析、重定位等操作。</li>
+</ul>
+</blockquote>
+<p>其中 <code>Elf32_Shdr</code> 定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Section header.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word    sh_name;        <span class="hljs-comment">/* Section name (string tbl index) */</span><br>  Elf32_Word    sh_type;        <span class="hljs-comment">/* Section type */</span><br>  Elf32_Word    sh_flags;       <span class="hljs-comment">/* Section flags */</span><br>  Elf32_Addr    sh_addr;        <span class="hljs-comment">/* Section virtual addr at execution */</span><br>  Elf32_Off sh_offset;      <span class="hljs-comment">/* Section file offset */</span><br>  Elf32_Word    sh_size;        <span class="hljs-comment">/* Section size in bytes */</span><br>  Elf32_Word    sh_link;        <span class="hljs-comment">/* Link to another section */</span><br>  Elf32_Word    sh_info;        <span class="hljs-comment">/* Additional section information */</span><br>  Elf32_Word    sh_addralign;       <span class="hljs-comment">/* Section alignment */</span><br>  Elf32_Word    sh_entsize;     <span class="hljs-comment">/* Entry size if section holds table */</span><br>&#125; Elf32_Shdr;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>sh_name</code>：表示节的名称在字符串表中的索引。字符串表节存储了所有节的名称，<code>sh_name</code> 指定了节的名称在字符串表中的位置。</strong></li>
+<li><strong><code>sh_type</code>：表示节的类型，指定了节的用途和属性。常见的类型包括代码段（<code>SHT_PROGBITS(1)</code>）、数据段（<code>SHT_PROGBITS(1)</code>）、符号表（<code>SHT_SYMTAB(2)</code>）、字符串表（<code>SHT_STRTAB(3)</code>）等。</strong></li>
+<li><code>sh_flags</code>：表示节的标志，用于描述节的特性和属性。标志的具体含义取决于节的类型和上下文。</li>
+<li><strong><code>sh_addr</code>：表示节的虚拟地址，只在可执行文件中有意义。对于可执行文件，<code>sh_addr</code> 指定了节在内存中的加载地址，如果该节不可被加载，则该值为 0 。</strong></li>
+<li><strong><code>sh_offset</code>：表示节在文件中的偏移量，指定了节在文件中的位置。对于 bss 段来说该值没有意义。</strong></li>
+<li><strong><code>sh_size</code>：表示节的大小，指定了节所占据的字节数。</strong></li>
+<li><code>sh_link</code>：表示链接到的其他节的索引，用于建立节之间的关联关系，具体含义依赖于节的类型。</li>
+<li><code>sh_info</code>：附加信息，具体含义依赖于节的类型。</li>
+<li><code>sh_addralign</code>：表示节的地址对齐要求，指定了节在内存中的对齐方式。即 <code>sh_addr</code> 需要满足 sh_addrsh_addr modmod 2shaddralign&#x3D;02sha​ddralign&#x3D;0 。如果 <code>sh_addralign</code> 为 0 或 1 表示该段没有对齐要求。</li>
+<li><strong><code>sh_entsize</code>：表示节中每个项的大小，如果该字段为 0 说明节中不包含固定大小的项。</strong></li>
+</ul>
+<p>ELF 中常见的节如下：</p>
+<ul>
+<li><code>.text</code>：代码段（Code Section），用于存储程序的可执行指令。</li>
+<li><code>.rodata</code>：只读数据段（Read-Only Data Section），用于存储只读的常量数据，例如字符串常量。</li>
+<li><code>.data</code>：数据段（Data Section），用于存储已初始化的全局变量和静态变量。</li>
+<li><code>.bss</code>：未初始化的数据段（Block Started by Symbol），用于存储未初始化的全局变量和静态变量。它不占用实际的文件空间，而是在运行时由系统自动初始化为零。</li>
+<li><code>.symtab</code>：符号表节（Symbol Table Section），用于存储程序的符号表信息，包括函数、变量和其他符号的名称、类型和地址等。</li>
+<li><code>.strtab</code>：字符串表节（String Table Section），用于存储字符串数据，如节名称、符号名称等。字符串表节被多个其他节引用，通过偏移量和索引来访问具体的字符串。</li>
+<li><code>.rel.text</code> 或 <code>.rela.text</code>：代码重定位节（Relocation Section），用于存储代码段中的重定位信息，以便在链接时修正代码中的符号引用。</li>
+<li><code>.rel.data</code> 或 <code>.rela.data</code>：数据重定位节（Relocation Section），用于存储数据段中的重定位信息，以便在链接时修正数据段中的符号引用。</li>
+<li><code>.dynamic</code>：动态节（Dynamic Section），用于存储程序的动态链接信息，包括动态链接器需要的重定位表、共享对象的名称、版本信息等。</li>
+<li><code>.note</code>：注释节（Note Section），用于存储与程序或库相关的注释或调试信息。</li>
+</ul>
+<h2 id="静态链接相关"><a href="#静态链接相关" class="headerlink" title="静态链接相关"></a>静态链接相关</h2><p><strong>注意：静态链接相关只在可重定位文件中存在。比如可执行文件，如果不开启 PIE 加载地址固定，不需要对自身进行重定位，而开启 PIE 后为地址无关代码，也不需要对自身进行重定位。因此不需要静态链接也就丢弃了静态链接相关的节。</strong></p>
+<h3 id="符号表（-symtab）"><a href="#符号表（-symtab）" class="headerlink" title="符号表（.symtab）"></a>符号表（.symtab）</h3><p><strong>注意：符号表除了静态链接外没有用，但是程序为了方便调试会保留符号表，我们可以通过 <code>strip + 程序名</code> 的方式将符号表去除，这就是为什么有的 pwn 题的附件没有函数和变量名而有的却有。</strong></p>
+<p>ELF 文件中的符号表往往是文件中的一个段，段名一般叫 <code>.symtab</code> 。符号表是一个 <code>Elf*_Sym</code> 结构（32 位 ELF 文件）的数组，每个 <code>Elf*_Sym</code> 结构对应一个符号。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Symbol table entry.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Word    st_name;        <span class="hljs-comment">/* Symbol name (string tbl index) */</span><br>  Elf32_Addr    st_value;       <span class="hljs-comment">/* Symbol value */</span><br>  Elf32_Word    st_size;        <span class="hljs-comment">/* Symbol size */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_info;        <span class="hljs-comment">/* Symbol type and binding */</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">char</span> st_other;       <span class="hljs-comment">/* Symbol visibility */</span><br>  Elf32_Section st_shndx;       <span class="hljs-comment">/* Section index */</span><br>&#125; Elf32_Sym;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>st_name</code>：符号名称在<strong>字符串</strong>表中的偏移量。</li>
+<li><code>st_value</code>：符号的值，即符号的地址或偏移量。<ul>
+<li>如果该符号在<strong>目标文件</strong>中，如果是符号的定义并且该符号不是 <code>COMMON</code> 块类型的则 <code>st_value</code> 表示该符号在段中的<strong>偏移</strong>。</li>
+<li>在<strong>目标文件</strong>中，如果符号是 <code>COMMON</code> 块类型的则 <code>st_value</code> 表示该符号的<strong>对齐属性</strong>。</li>
+<li>在<strong>可执行文件</strong>中，<code>st_value</code> 表示符号的<strong>虚拟地址</strong>。</li>
+</ul>
+</li>
+<li><code>st_size</code>：符号的大小，如果符号是一个函数，则表示函数的大小。如果该值为 0 表示符号的大小为 0 或未知。</li>
+<li><code>st_info</code>：该字段是一个字节，包含符号的类型和绑定信息。符号类型包括函数、数据、对象等，符号绑定包括局部符号、全局符号、弱符号等。该字段的高 4 位表示符号的类型，低 4 位表示符号的绑定信息。</li>
+<li><code>st_other</code>：保留字段，通常为 0 。</li>
+<li><code>st_shndx</code>：通常为符号所在<strong>节</strong>的索引。<ul>
+<li>如果符号是一个常量，该字段为 <code>SHN_ABS</code>（初始值不为 0 的全局变量） 或 <code>SHN_COMMON</code>（初始值为 0 的全局变量）。</li>
+<li>如果该符号未定义但是在该文件中被引用到，说明该符号可能定义在其他目标文件中，则该字段为 <code>SHN_UNDEF</code> 。</li>
+</ul>
+</li>
+</ul>
+<h3 id="重定位表（-rel-text-rel-data）"><a href="#重定位表（-rel-text-rel-data）" class="headerlink" title="重定位表（.rel.text&#x2F;.rel.data）"></a>重定位表（.rel.text&#x2F;.rel.data）</h3><p>重定位表是一个 <code>Elf*_Rel</code> 结构的数组，每个数组元素对应一个重定位入口。重定位表主要有<code>.rel.text</code> 或 <code>.rela.text</code>，即代码重定位节（Relocation Section）和 <code>.rel.data</code> 或 <code>.rela.data</code>：数据重定位节（Relocation Section）。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Relocation table entry without addend (in section of type SHT_REL).  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Addr    r_offset;       <span class="hljs-comment">/* Address */</span><br>  Elf32_Word    r_info;         <span class="hljs-comment">/* Relocation type and symbol index */</span><br>&#125; Elf32_Rel;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>r_offset</code>：需要进行重定位的位置的偏移量或地址。这个位置通常是指令中的某个操作数或数据的地址，需要在链接时进行修正，以便正确地引用目标符号。<ul>
+<li>对于可执行文件或共享库，<code>r_offset</code> 表示需要修改的位置在内存中的位置（用于动态链接）。</li>
+<li>对于<strong>可重定位文件</strong>，<code>r_offset</code> 表示需要修改的位置相对于段起始位置的偏移（用于静态链接）。</li>
+</ul>
+</li>
+<li><code>r_info</code>：低 8 位表示符号的重定位类型，重定位类型指定了进行何种类型的修正，例如绝对重定位、PC 相对重定位等。高 24 位表示该符号在<strong>符号表</strong>中的索引，用于解析重定位所引用的符号。</li>
+</ul>
+<h3 id="字符串表（-strtab）"><a href="#字符串表（-strtab）" class="headerlink" title="字符串表（.strtab）"></a>字符串表（.strtab）</h3><p>ELF 文件中用到了很多字符串，比如段名、变量名等。因为字符串的长度往往是不定的，所以用固定的结构来表示它比较困难。一种很常见的做法是把字符串集中起来存放到一个表，然后使用字符串在表中的偏移来引用字符串。</p>
+<p>通过这种方法，在ELF文件中引用字符串只须给出一个数字下标即可，不用考虑字符串长度的问题。一般字符串表在ELF文件中也以段的形式保存，常见的段名为“<code>.strtab</code>”或“<code>.shstrtab</code>”。这两个字符串表分别为字符串表（String Table）和段表字符串表（Section Header String Table）。顾名思义，字符串表用来保存普通的字符串，比如符号的名字；段表字符串表用来保存段表中用到的字符串，最常见的就是段名（<code>sh_name</code> ）。</p>
+<p>注意，在字符串表中的每个字符串的<strong>开头</strong>和<strong>结尾</strong>都有一个 <code>x00</code> 填充。</p>
+<h2 id="动态链接相关"><a href="#动态链接相关" class="headerlink" title="动态链接相关"></a>动态链接相关</h2><p class='item-img' data-src='https://www.kanxue.com/upload/attach/202312/202312222350_M5UHSN8QQKV3NGG.webp'><img src="https://www.kanxue.com/upload/attach/202312/202312222350_M5UHSN8QQKV3NGG.webp" alt="图片描述"></p>
+<h3 id="interp-段"><a href="#interp-段" class="headerlink" title=".interp 段"></a>.interp 段</h3><p>在动态链接的 ELF 可执行文件中，有一个专门的段叫做 <code>.interp</code> 段（“interp”是“interpreter”（解释器）的缩写）。</p>
+<p><code>.interp</code> 的内容很简单，里面保存的就是一个字符串 <code>/lib64/ld-linux-x86-64.so.2</code> ，这个字符串就是可执行文件所需要的动态链接器的路径。</p>
+<p>通常系统通过判断一个 ELF 程序是否有 <code>.interp</code> 来判断该 ELF 文件是否为动态链接程序。</p>
+<h3 id="dynamic-段"><a href="#dynamic-段" class="headerlink" title=".dynamic 段"></a>.dynamic 段</h3><p>动态链接 ELF 中最重要的结构是 <code>.dynamic</code> 段，这个段里面保存了动态链接器所需要的基本信息，比如依赖于哪些共享对象、动态链接符号表的位置、动态链接重定位表的位置、共享对象初始化代码的地址等。<code>.dynamic</code> 段是由<code>Elf*_Dyn</code> 构成的结构体数组。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Dynamic section entry.  */</span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  Elf32_Sword   d_tag;          <span class="hljs-comment">/* Dynamic entry type */</span><br>  <span class="hljs-class"><span class="hljs-keyword">union</span></span><br><span class="hljs-class">    &#123;</span><br>      Elf32_Word d_val;         <span class="hljs-comment">/* Integer value */</span><br>      Elf32_Addr d_ptr;         <span class="hljs-comment">/* Address value */</span><br>    &#125; d_un;<br>&#125; Elf32_Dyn;<br></code></pre></td></tr></table></figure>
+
+<p><code>Elf32_Dyn</code> 结构由一个类型值加上一个附加的数值或指针，对于不同的类型，后面附加的数值或者指针有着不同的含义。我们这里列举几个比较常见的类型值（这些值都是定义在 <code>elf.h</code> 里面的宏），</p>
+<ul>
+<li><code>DT_SYMTAB</code>：指定了符号表的地址，<code>d_ptr</code> 表示 <code>.dynsym</code> 的地址。</li>
+<li><code>DT_STRTAB</code>：指定了字符串表的地址，<code>d_ptr</code> 表示 <code>.synstr</code> 的地址。</li>
+<li><code>DT_STRSZ</code>：指定了字符串表的大小，<code>d_val</code> 表示大小。</li>
+<li><code>DT_HASH</code>：指定了符号哈希表的地址，用于加快符号查找的速度，<code>d_ptr</code> 表示 <code>.hash</code> 的地址。</li>
+<li><code>DT_SONAME</code>：指定了共享库的名称。</li>
+<li><code>DT_RPATH</code>：指定了库搜索路径（已废弃，不推荐使用）。</li>
+<li><code>DT_INIT</code>：指定了初始化函数的地址，动态链接器在加载可执行文件或共享库时会调用该函数。</li>
+<li><code>DT_FINI</code>：指定了终止函数的地址，动态链接器在程序结束时会调用该函数。</li>
+<li><code>DT_NEEDED</code>：指定了需要的共享库的名称。</li>
+<li><code>DT_REL/DT_RELA</code>：指定了重定位表的地址。</li>
+</ul>
+<h3 id="动态符号表（-dynsym）"><a href="#动态符号表（-dynsym）" class="headerlink" title="动态符号表（.dynsym）"></a>动态符号表（.dynsym）</h3><p>为了完成动态链接，最关键的还是所依赖的符号和相关文件的信息。我们知道在静态链接中，有一个专门的段叫做符号表 <code>.symtab</code>（Symbol Table），里面保存了所有关于该目标文件的符号的定义和引用。为了表示动态链接这些模块之间的符号导入导出关系，ELF 专门有一个叫做动态符号表（Dynamic Symbol Table）的段用来保存这些信息，这个段的段名通常叫做 <code>.dynsym</code>（Dynamic Symbol），同样也是由 <code>Elf*_Sym</code> 构成的结构体数组。</p>
+<p>与 <code>.symtab</code> 不同的是，<code>.dynsym</code> 只保存了与动态链接相关的符号，对于那些模块内部的符号，比如模块私有变量则不保存。很多时候动态链接的模块同时拥有 <code>.dynsym</code> 和 <code>.symtab</code> 两个表，<code>.symtab</code> 中往往保存了所有符号，包括 <code>.dynsym</code> 中的符号。</p>
+<p>与 <code>.symtab</code> 类似，动态符号表也需要一些辅助的表，比如用于保存符号名的字符串表。静态链接时叫做符号字符串表 <code>.strtab</code>（String Table），在这里就是动态符号字符串表 <code>.dynstr</code>（Dynamic String Table）；由于动态链接下，我们需要在程序运行时查找符号，为了加快符号的查找过程，往往还有辅助的符号哈希表（<code>.hash</code>）。</p>
+<h3 id="动态链接重定位表（-rel-dyn-rel-data）"><a href="#动态链接重定位表（-rel-dyn-rel-data）" class="headerlink" title="动态链接重定位表（.rel.dyn&#x2F;.rel.data）"></a>动态链接重定位表（.rel.dyn&#x2F;.rel.data）</h3><p>共享对象需要重定位的主要原因是导入符号的存在。动态链接下，无论是可执行文件或共享对象，一旦它依赖于其他共享对象，也就是说有导入的符号时，那么它的代码或数据中就会有对于导入符号的引用。在编译时这些导入符号的地址未知，在静态链接中，这些未知的地址引用在最终链接时被修正。但是在动态链接中，导入符号的地址在运行时才确定，所以需要在运行时将这些导入符号的引用修正，即需要重定位。</p>
+<p>共享对象的重定位与我们在前面“静态链接”中分析过的目标文件的重定位十分类似，唯一有区别的是目标文件的重定位是在静态链接时完成的，而共享对象的重定位是在装载时完成的。在静态链接中，目标文件里面包含有专门用于表示重定位信息的重定位表，比如 <code>.rel.text</code> 表示是代码段的重定位表，<code>.rel.data</code> 是数据段的重定位表。</p>
+<p>动态链接的文件中，也有类似的重定位表分别叫做 <code>.rel.dyn</code> 和 <code>.rel.plt</code> ，它们分别相当于 <code>.rel.data</code> 和 <code>.rel.text</code> 。<code>.rel.dyn</code> 实际上是对数据引用的修正，它所修正的位置位于 <code>.got</code> 以及数据段；而 <code>.rel.plt</code> 是对函数引用的修正，它所修正的位置位于 <code>.got.plt</code> 。</p>
+<h3 id="PLT-表（-plt）"><a href="#PLT-表（-plt）" class="headerlink" title="PLT 表（.plt）"></a>PLT 表（.plt）</h3><p>在未开启 FULL RELRO 的情况下 PLT 表的结构如下图所示， PLT 表在 <code>.plt</code>（有的还包括 <code>.plt.got</code>） 中。</p>
+<p class='item-img' data-src='https://www.kanxue.com/upload/tmp/202312251148_QD98Q6DR7N6K2C7.webp'><img src="https://www.kanxue.com/upload/tmp/202312251148_QD98Q6DR7N6K2C7.webp" alt="图片描述"></p>
+<p>PLT 表的形式如下所示：</p>
+<p>​PLT0:push∗(GOT+8)jmp∗(GOT+16)bar@PLT:jmp∗(bar@GOT)pushnjmpPLT0​​PLT0:push∗(GOT+8)jmp∗(GOT+16)⋮bar@PLT:jmp∗(bar@GOT)pushnjmpPLT0​</p>
+<p>其中 nn 为函数 <code>bar</code> 在 GOT 表中的值的索引，<code>bar@GOT</code> 中初始值为 <code>jmp *(bar@GOT)</code> 指令的下一条指令，也就是说第一次调用 <code>bar</code> 函数的时候会继续执行跳转至 <code>PLT0</code> 进行 <code>bar@GOT</code> 的重定位并调用 <code>bar</code> 函数；第二次调用 <code>bar</code> 函数的时候由于 <code>bar@GOT</code> 已完成重定位因此会直接跳转至 <code>bar</code> 函数。</p>
+<p>在开启 FULL RELRO 的情况下 PLT 表的结构如下图所示，此时的 PLT 表在 <code>.plt.sec</code> 而不是 <code>.plt</code> 中。</p>
+<p class='item-img' data-src='https://www.kanxue.com/upload/tmp/202312251150_AA7M3FSC4TQ89FK.webp'><img src="https://www.kanxue.com/upload/tmp/202312251150_AA7M3FSC4TQ89FK.webp" alt="图片描述"></p>
+<p>由于 GOT 表在装载时已经完成重定位且不可写，因此不存在延迟绑定，PLT 直接根据 GOT 表存储的函数地址进行跳转。</p>
+<h3 id="GOT-表（-got-got-plt）"><a href="#GOT-表（-got-got-plt）" class="headerlink" title="GOT 表（.got&#x2F;.got.plt）"></a>GOT 表（.got&#x2F;.got.plt）</h3><p>ELF 将 GOT 拆分成了两个表叫做 <code>.got</code> 和 <code>.got.plt</code> 。其中 <code>.got</code> 用来保存全局变量引用的地址，<code>.got.plt</code> 用来保存函数引用的地址，也就是说，所有对于外部函数的引用全部被分离出来放到了 <code>.got.plt</code> 中（当然有的 ELF 文件可能吧这两个表合并为一个 <code>.got</code> 表，结构等同于后面提到的 <code>.got.plt</code>）。另外 <code>.got.plt</code> 还有一个特殊的地方是它的前三项是有特殊意义的，分别含义如下：</p>
+<ul>
+<li>第一项保存的是 <code>.dynamic</code> 段的偏移（也有可能是 <code>.dynamic</code> 段的地址）。</li>
+<li>第二项是一个 <code>link_map</code> 的结构体指针，里面保存着动态链接的一些相关信息，是重定位函数 <code>_dl_runtime_resolve</code> 的第一个参数。</li>
+<li>第三项保存的是 <code>_dl_runtime_resolve</code> 的地址。</li>
+</ul>
+<p><code>.got.plt</code> 在内存中的状态如下图所示：</p>
+<p class='item-img' data-src='https://www.kanxue.com/upload/tmp/202312251148_53F9V52TG4AYGGY.webp'><img src="https://www.kanxue.com/upload/tmp/202312251148_53F9V52TG4AYGGY.webp" alt="图片描述"></p>
+<p><strong>静态链接程序也是有 plt 表和 got 表的，并且 plt 表也会被调用。</strong></p>
+<p class='item-img' data-src='https://www.kanxue.com/upload/tmp/202312251149_3B8Z27QHAV8FS57.webp'><img src="https://www.kanxue.com/upload/tmp/202312251149_3B8Z27QHAV8FS57.webp" alt="图片描述"></p>
+<h3 id="辅助信息数组"><a href="#辅助信息数组" class="headerlink" title="辅助信息数组"></a>辅助信息数组</h3><p><strong>无论静态还是动态链接程序都有辅助信息数组，只是动态链接程序是动态链接器使用辅助信息数组。</strong></p>
+<p>站在动态链接器的角度看，当操作系统把控制权交给它的时候，它将开始做链接工作，那么至少它需要知道关于可执行文件和本进程的一些信息，比如可执行文件有几个段（“Segment”）、每个段的属性、程序的入口地址（因为动态链接器到时候需要把控制权交给可执行文件）等。</p>
+<p>这些信息往往由操作系统传递给动态链接器，保存在进程的堆栈里面。我们在前面提到过，进程初始化的时候，事实上，堆栈里面还保存了动态链接器所需要的一些辅助信息数组（Auxiliary Vector）。辅助信息的格式也是一个结构数组，它的结构被定义在 <code>elf.h</code> ：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class"></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">uint32_t</span> a_type;      <span class="hljs-comment">/* Entry type */</span><br>  <span class="hljs-class"><span class="hljs-keyword">union</span></span><br><span class="hljs-class">    &#123;</span><br>      <span class="hljs-type">uint32_t</span> a_val;       <span class="hljs-comment">/* Integer value */</span><br>      <span class="hljs-comment">/* We use to have pointer elements added here.  We cannot do that,</span><br><span class="hljs-comment">     though, since it does not work when using 32-bit definitions</span><br><span class="hljs-comment">     on 64-bit platforms and vice versa.  */</span><br>    &#125; a_un;<br>&#125; Elf32_auxv_t;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>a_type</code> 字段表示辅助信息数组的类型。下面是一些常见的 <code>a_type</code> 值及其对应的含义：<ul>
+<li><code>AT_NULL (0)</code>：辅助向量列表的结束标志。在列表的最后一个条目中使用。</li>
+<li><code>AT_IGNORE (1)</code>：忽略的辅助向量类型。在某些情况下，可以将该类型的辅助向量忽略。</li>
+<li><code>AT_EXECFD (2)</code>：可执行文件的文件描述符。表示打开可执行文件的文件描述符。</li>
+<li><code>AT_PHDR (3)</code>：程序头表的地址。指向程序头表在内存中的起始地址。</li>
+<li><code>AT_PHENT (4)</code>：程序头表中每个条目的大小（字节）。指示每个程序头表条目的字节数。</li>
+<li><code>AT_PHNUM (5)</code>：程序头表的条目数量。指示程序头表中的条目数量。</li>
+<li><code>AT_PAGESZ (6)</code>：页面大小。表示操作系统使用的页面大小。</li>
+<li><code>AT_BASE (7)</code>：共享对象的基地址。指向主共享对象的基地址。</li>
+<li><code>AT_FLAGS (8)</code>：标志位。包含一些特定于操作系统的标志。</li>
+<li><code>AT_ENTRY (9)</code>：程序入口点的地址。指向程序的入口点地址。</li>
+<li><code>AT_NOTELF (10)</code>：不是ELF文件。指示加载程序的文件不是有效的ELF文件。</li>
+</ul>
+</li>
+<li><code>a_un</code>：该成员是一个联合体（union），用于存储辅助向量条目的值。在这段代码中，由于指针类型的元素会在 32 位和 64 位平台上产生兼容性问题，所以注释中提到不再添加指针元素。<ul>
+<li><code>a_val</code>：如果辅助向量条目的类型是一个整数值，那么该成员将存储该整数值。它也是一个 32 位的无符号整数。</li>
+</ul>
+</li>
+</ul>
+<h2 id="装载执行流程"><a href="#装载执行流程" class="headerlink" title="装载执行流程"></a>装载执行流程</h2><ul>
+<li>加载 ELF 文件</li>
+<li>解析 ELF 文件的头部信息</li>
+<li>加载程序的各个节</li>
+<li>执行前的装备工作</li>
+<li>运行时初始化</li>
+<li>执行程序的代码</li>
+</ul>
+<h3 id="动态链接"><a href="#动态链接" class="headerlink" title="动态链接"></a>动态链接</h3><h3 id="静态链接"><a href="#静态链接" class="headerlink" title="静态链接"></a>静态链接</h3><h2 id="进程栈的初始化"><a href="#进程栈的初始化" class="headerlink" title="进程栈的初始化"></a>进程栈的初始化</h2><p>我们知道进程刚开始启动的时候，须知道一些进程运行的环境，最基本的就是系统环境变量和进程的运行参数。很常见的一种做法是操作系统在进程启动前将这些信息提前保存到进程的虚拟空间的栈中。</p>
+<p>假设我们运行如下命令，即运行 <code>ls</code> 程序，传入的参数为 <code>/home</code> 。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">ls /home<br>gdb -args ls /home # 调试<br></code></pre></td></tr></table></figure>
+
+<p>在程序初始状态的栈如下图所示。<br class='item-img' data-src='https://img-blog.csdnimg.cn/5e7036d8498549c28fa3bc6c201c30f4.png'><img src="https://img-blog.csdnimg.cn/5e7036d8498549c28fa3bc6c201c30f4.png" alt="在这里插入图片描述">  </p>
+<p>栈顶寄存器 rsp 指向的位置是初始化以后堆栈的顶部，最前面的 8 个字节表示<strong>命令行参数的数量</strong>，我们的例子里面是两个，即 <code>/usr/bin/ls</code> 和 <code>/home</code> ，紧接的就是分布指向这两个参数字符串的<strong>指针</strong>；后面跟了一个0；接着是一个以 0 结尾的指向环境变量字符串的指针数组。<br class='item-img' data-src='https://img-blog.csdnimg.cn/7c474af1266945899869b241ff75477a.png'><img src="https://img-blog.csdnimg.cn/7c474af1266945899869b241ff75477a.png" alt="在这里插入图片描述" style="zoom: 33%;" /><br>进程在启动以后，程序的库部分会把堆栈里的初始化信息中的参数信息传递给 <code>main()</code> 函数，也就是我们熟知的 <code>main()</code> 函数的两个 <code>argc</code> 和 <code>argv</code> 两个参数，这两个参数分别对应这里的命令行参数数量和命令行参数字符串指针数组。</p>
+<h2 id="辅助信息数组-1"><a href="#辅助信息数组-1" class="headerlink" title="辅助信息数组"></a>辅助信息数组</h2><p><strong>无论静态还是动态链接程序都有辅助信息数组，只是动态链接程序是动态链接器使用辅助信息数组。</strong></p>
+<p>站在动态链接器的角度看，当操作系统把控制权交给它的时候，它将开始做链接工作，那么至少它需要知道关于可执行文件和本进程的一些信息，比如可执行文件有几个段（“Segment”）、每个段的属性、程序的入口地址（因为动态链接器到时候需要把控制权交给可执行文件）等。</p>
+<p>这些信息往往由操作系统传递给动态链接器，保存在进程的堆栈里面。我们在前面提到过，进程初始化的时候，事实上，堆栈里面还保存了动态链接器所需要的一些辅助信息数组（Auxiliary Vector）。辅助信息的格式也是一个结构数组，它的结构被定义在 <code>elf.h</code> ：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">uint32_t</span> a_type;      <span class="hljs-comment">/* Entry type */</span><br>  <span class="hljs-class"><span class="hljs-keyword">union</span></span><br><span class="hljs-class">    &#123;</span><br>      <span class="hljs-type">uint32_t</span> a_val;       <span class="hljs-comment">/* Integer value */</span><br>      <span class="hljs-comment">/* We use to have pointer elements added here.  We cannot do that,</span><br><span class="hljs-comment">     though, since it does not work when using 32-bit definitions</span><br><span class="hljs-comment">     on 64-bit platforms and vice versa.  */</span><br>    &#125; a_un;<br>&#125; Elf32_auxv_t;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>a_type</code> 字段表示辅助信息数组的类型。下面是一些常见的 <code>a_type</code> 值及其对应的含义：<ul>
+<li><code>AT_NULL (0)</code>：辅助向量列表的结束标志。在列表的最后一个条目中使用。</li>
+<li><code>AT_IGNORE (1)</code>：忽略的辅助向量类型。在某些情况下，可以将该类型的辅助向量忽略。</li>
+<li><code>AT_EXECFD (2)</code>：可执行文件的文件描述符。表示打开可执行文件的文件描述符。</li>
+<li><code>AT_PHDR (3)</code>：程序头表的地址。指向程序头表在内存中的起始地址。</li>
+<li><code>AT_PHENT (4)</code>：程序头表中每个条目的大小（字节）。指示每个程序头表条目的字节数。</li>
+<li><code>AT_PHNUM (5)</code>：程序头表的条目数量。指示程序头表中的条目数量。</li>
+<li><code>AT_PAGESZ (6)</code>：页面大小。表示操作系统使用的页面大小。</li>
+<li><code>AT_BASE (7)</code>：共享对象的基地址。指向主共享对象的基地址。</li>
+<li><code>AT_FLAGS (8)</code>：标志位。包含一些特定于操作系统的标志。</li>
+<li><code>AT_ENTRY (9)</code>：程序入口点的地址。指向程序的入口点地址。</li>
+<li><code>AT_NOTELF (10)</code>：不是ELF文件。指示加载程序的文件不是有效的ELF文件。</li>
+</ul>
+</li>
+<li><code>a_un</code>：该成员是一个联合体（union），用于存储辅助向量条目的值。在这段代码中，由于指针类型的元素会在 32 位和 64 位平台上产生兼容性问题，所以注释中提到不再添加指针元素。<ul>
+<li><code>a_val</code>：如果辅助向量条目的类型是一个整数值，那么该成员将存储该整数值。它也是一个 32 位的无符号整数。</li>
+</ul>
+</li>
+</ul>
+<h2 id="main-函数之前"><a href="#main-函数之前" class="headerlink" title="main 函数之前"></a>main 函数之前</h2><p class='item-img' data-src='/../../../CTF/PWN/%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/Pasted%20image%2020240920220129.png'><img src="/../../../CTF/PWN/%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/Pasted%20image%2020240920220129.png"></p>
+<p class='item-img' data-src='/../../../CTF/PWN/%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/Pasted%20image%2020240920220134.png'><img src="/../../../CTF/PWN/%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86/assets/Pasted%20image%2020240920220134.png"></p>
+<p>当运行程序时，shell 或 gui 调用 <code>execve()</code> ，它执行 linux 系统调用 <code>execve()</code> 设置一个堆栈，并将 <code>argc</code> 、 <code>argv</code> 和 <code>envp</code> 压入其中。文件描述 0、1 和 2（<code>stdin</code> 、<code>stdout</code> 、<code>stderr</code>）保留为 shell 设置的值，动态链接器完成重定位工作。当一切准备就绪后，通过调用 <code>_start()</code> 将控制权交给程序。</p>
+<p>一般情况下 ELF 的入口点为 <code>_start</code> 函数，这个函数的主要作用是设置 <code>___libc_start_main</code> 函数的所需参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">.text:08049080 endbr32<br>.text:08049084 xor     ebp, ebp                        ; 设置 ebp 为 0 表示最外层栈<br>.text:08049086 pop     esi                             ; argc<br>.text:08049087 mov     ecx, esp                        ; argv<br>.text:08049089 and     esp, 0FFFFFFF0h                 ; 栈对齐<br>.text:0804908C push    eax<br>.text:0804908D push    esp                             ; stack_end<br>.text:0804908E push    edx                             ; rtld_fini<br>.text:0804908F call    sub_80490B7<br>.text:0804908F<br>.text:08049094 add     ebx, (offset _GLOBAL_OFFSET_TABLE_ - $); ebx = offset _GLOBAL_OFFSET_TABLE_<br><br>.text:0804909A lea     eax, (__libc_csu_fini - 804C000h)[ebx] ; (__libc_csu_fini - _GLOBAL_OFFSET_TABLE_)[ebx]<br><br>.text:080490A0 push    eax                             ; fini<br><br>.text:080490A1 lea     eax, (__libc_csu_init - 804C000h)[ebx] ; (__libc_csu_init - _GLOBAL_OFFSET_TABLE_)[ebx]<br>.text:080490A7 push    eax                             ; init<br>.text:080490A8 push    ecx                             ; ubp_av<br>.text:080490A9 push    esi                             ; argc<br>.text:080490AA mov     eax, offset main`<br>.text:080490B0 push    eax                             ; main<br>.text:080490B1 call    ___libc_start_main<br>.text:080490B1<br>.text:080490B6 hlt<br>.text:080490B7 sub_80490B7 proc near                   ; CODE XREF: _start+F↑p<br>.text:080490B7 mov     ebx, [esp]<br>.text:080490BA retn<br></code></pre></td></tr></table></figure>
+
+<p>之后调用 <code>__libc_start_main</code> 函数，该函数位于 <code>csu/libc-start.c</code> 中，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta"># <span class="hljs-keyword">define</span> LIBC_START_MAIN generic_start_main</span><br><br>STATIC <span class="hljs-type">int</span><br><span class="hljs-title function_">LIBC_START_MAIN</span> <span class="hljs-params">(<span class="hljs-type">int</span> (*main) (<span class="hljs-type">int</span>, <span class="hljs-type">char</span> **, <span class="hljs-type">char</span> ** MAIN_AUXVEC_DECL),</span><br><span class="hljs-params">         <span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> **argv,</span><br><span class="hljs-params">         __typeof (main) init,</span><br><span class="hljs-params">         <span class="hljs-type">void</span> (*fini) (<span class="hljs-type">void</span>),</span><br><span class="hljs-params">         <span class="hljs-type">void</span> (*rtld_fini) (<span class="hljs-type">void</span>), <span class="hljs-type">void</span> *stack_end)</span><br></code></pre></td></tr></table></figure>
+
+<p>可见和 <code>_start</code> 函数里的调用一致，一共有 7 个参数，其中 <code>main</code> 由第一个参数传入，紧接着是 <code>argc</code> 和 <code>argv</code>（这里称为 <code>ubp_av</code> ，因为其中还包含了环境变量表）。除了 <code>main</code> 的函数指针之外，外部还要传入 3 个函数指针，分别是：</p>
+<ul>
+<li><code>init</code>：<code>main</code> 调用前的初始化工作，默认是 <code>__libc_csu_init</code> 函数指针。</li>
+<li><code>fini</code>：<code>main</code> 结束后的收尾工作，默认是 <code>__libc_csu_fini</code> 函数指针。</li>
+<li><code>rtld_fini</code>：和动态加载有关的收尾工作，<code>rtld</code> 是 runtime loader 的缩写。如果是动态链接程序默认是 <code>_dl_fini</code> 函数指针，如果是静态链接程序默认为 NULL 。</li>
+</ul>
+<p>最后的 <code>stack_end</code> 标明了栈底的地址，即最高的栈地址。</p>
+<p>首先初始化 <code>__libc_multiple_libcs</code> 为 0，之后 <code>__libc_start_main</code> 会调用 <code>__cxa_atexit</code> 将 <code>rtld_fini</code> 注册为 <code>main</code> 函数结束后的回调函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (__glibc_likely (rtld_fini != <span class="hljs-literal">NULL</span>))<br>  __cxa_atexit ((<span class="hljs-type">void</span> (*) (<span class="hljs-type">void</span> *)) rtld_fini, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);<br></code></pre></td></tr></table></figure>
+
+<p>当然如果是静态链接程序还会做一些额外的初始化，在动态链接程序中这些初始化是在动态连接器中完成的。</p>
+<ul>
+<li>如果是开启 PIE 的程序会调用 <code>_dl_relocate_static_pie</code> 函数初始化 <code>link_map</code> 并且进行重定位。</li>
+<li>初始化 <code>__environ</code> 。</li>
+<li>初始化 <code>__libc_stack_end</code> 。</li>
+<li>调用 <code>dl_aux_init</code> 根据栈上的<strong>辅助信息数组</strong>做相关的初始化工作。</li>
+<li>如果<strong>程序头表</strong>指针 <code>dl_phdr</code> 没有初始化，就通过 ELF 文件头的 <code>e_phoff</code> 初始化 <code>dl_phdr</code>（程序头表地址），通过 <code>e_phnum</code> 初始化 <code>dl_phnum</code>（程序头表中的项数）。不过这个一般在上一步根据栈上的<strong>辅助信息数组</strong>做相关的初始化工作时就已经初始化过了。</li>
+<li>调用 <code>_libc_init_secure</code> 函数，如果 <code>_libc_enable_secure_decided</code> 为 0 则初始化 <code>_libc_enable_secure</code> 为 <code>(__geteuid() != __getuid() || __getegid() != __getgid())</code> 。<ul>
+<li><code>__geteuid() != __getuid()</code>：比较有效用户 ID（effective user ID）和实际用户 ID（real user ID）。如果它们不相等，表示当前进程以特权用户身份运行（比如以 root 用户权限运行）。</li>
+<li><code>__getegid() != __getgid()</code>：比较有效组 ID（effective group ID）和实际组 ID（real group ID）。如果它们不相等，表示当前进程以特权用户组身份运行。</li>
+<li>这段代码的目的是判断当前进程是否以特权用户或特权用户组身份运行。这在某些情况下可能需要采取不同的安全措施或限制特权操作。</li>
+</ul>
+</li>
+<li>调用 <code>__tunables_init</code> 函数从环境变量中提取信息，并用于初始化可调节项列表，以便在程序运行时可以根据这些可调节项来进行相应的配置或调整。</li>
+<li>使用 <code>ARCH_INIT_CPU_FEATURES</code> 宏初始化 CPU 的相关参数到 <code>cpu_features</code> 类型的结构体 <code>_dl_x86_cpu_features</code> 中。</li>
+<li>重定位代码中的绝对地址引用 。</li>
+<li>调用 <code>__libc_setup_tls</code> 函数初始化 tls 。</li>
+<li>初始化 <code>__stack_chk_guard</code> 。</li>
+<li>如果 <code>__libc_multiple_libcs</code> 为 0 则调用 <code>DL_SYSDEP_OSCHECK</code> 宏来初始化 <code>dl_osversion</code> 为内核版本号。</li>
+<li>调用 <code>__pthread_initialize_minimal</code> 函数初始化线程库 。</li>
+<li>初始化 <code>pointer_chk_guard</code> 。</li>
+<li>调用 <code>_libc_init_first</code> 函数初始化 <code>_libc_argc</code> ，<code>_libc_argv</code> 和 <code>environ</code> 等。</li>
+<li>调用 <code>__cxa_atexit</code> 函数将 <code>fini</code> 注册为 <code>main</code> 函数结束后的回调函数 。</li>
+</ul>
+<p>之后判断函数指针 <code>init</code> 是否为空，如果不为空则调用该函数指针，也就是 <code>__libc_csu_init</code> 函数。</p>
+<p><code>__libc_csu_init</code> 函数定义在 <code>csu/elf-init.c</code> 中，内容如下：</p>
+<ul>
+<li>如果是<strong>静态链接程序</strong>会依次调用函数指针数组 <code>__preinit_array_start</code> 中的所有函数。</li>
+<li>调用 <code>_init</code> 函数。</li>
+<li>依次调用函数指针数组 <code>__init_array_start</code>（<code>.init_array</code>）中的所有函数。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span><br>__libc_csu_init (<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> **argv, <span class="hljs-type">char</span> **envp)<br>&#123;<br>  <span class="hljs-comment">/* For dynamically linked executables the preinit array is executed by</span><br><span class="hljs-comment">     the dynamic linker (before initializing any shared object).  */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> LIBC_NONSHARED</span><br>  <span class="hljs-comment">/* For static executables, preinit happens right before init.  */</span><br>  &#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">size_t</span> size = __preinit_array_end - __preinit_array_start;<br>    <span class="hljs-type">size_t</span> i;<br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; size; i++)<br>      (*__preinit_array_start [i]) (argc, argv, envp);<br>  &#125;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> NO_INITFINI</span><br>  _init ();<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br>  <span class="hljs-type">const</span> <span class="hljs-type">size_t</span> size = __init_array_end - __init_array_start;<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; i &lt; size; i++)<br>      (*__init_array_start [i]) (argc, argv, envp);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>其中调用的 <code>init</code> 函数如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c">.init:<span class="hljs-number">0000037</span>C push    ebx                             ; _init<br>.init:<span class="hljs-number">0000037</span>D sub     esp, <span class="hljs-number">8</span><br>.init:<span class="hljs-number">00000380</span> call    __x86_get_pc_thunk_bx<br>.init:<span class="hljs-number">00000380</span><br>.init:<span class="hljs-number">00000385</span> add     ebx, (offset _GLOBAL_OFFSET_TABLE_ - $)<br>.init:<span class="hljs-number">0000038B</span> mov     eax, ds:(__gmon_start___ptr - <span class="hljs-number">1F</span>D8h)[ebx]<br>.init:<span class="hljs-number">00000391</span> test    eax, eax<br>.init:<span class="hljs-number">00000393</span> jz      <span class="hljs-type">short</span> loc_39A<br>.init:<span class="hljs-number">00000393</span><br>.init:<span class="hljs-number">00000395</span> call    ___gmon_start__<br>.init:<span class="hljs-number">00000395</span><br>.init:<span class="hljs-number">0000039</span>A<br>.init:<span class="hljs-number">0000039</span>A loc_39A:                                ; CODE XREF: _init_proc+<span class="hljs-number">17</span>↑j<br>.init:<span class="hljs-number">0000039</span>A add     esp, <span class="hljs-number">8</span><br>.init:<span class="hljs-number">0000039</span>D pop     ebx<br>.init:<span class="hljs-number">0000039</span>E retn<br></code></pre></td></tr></table></figure>
+
+<p>在静态链接程序中直接 <code>mov eax, 0; test eax, eax;</code> ，因此这个函数什么也不做。而动态链接程序中由于此时 <code>__gmon_start___@got</code> 为 NULL ，因此同样什么也不做。</p>
+<p>从 <code>__libc_csu_init</code> 函数返回后会调用 <code>main</code> 函数和 <code>exit</code> 函数。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2025/01/15/re/advanced/cpp-base/">← Next C&amp;C++逆向基础</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/01/08/re/win/jg/">TEB&amp;PEB Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E5%A4%B4"><span class="toc-number">1.</span> <span class="toc-text">文件头</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F%E5%A4%B4%E8%A1%A8"><span class="toc-number">2.</span> <span class="toc-text">程序头表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8A%82%E8%A1%A8"><span class="toc-number">3.</span> <span class="toc-text">节表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E7%9B%B8%E5%85%B3"><span class="toc-number">4.</span> <span class="toc-text">静态链接相关</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%A6%E5%8F%B7%E8%A1%A8%EF%BC%88-symtab%EF%BC%89"><span class="toc-number">4.1.</span> <span class="toc-text">符号表（.symtab）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8%EF%BC%88-rel-text-rel-data%EF%BC%89"><span class="toc-number">4.2.</span> <span class="toc-text">重定位表（.rel.text&#x2F;.rel.data）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%A1%A8%EF%BC%88-strtab%EF%BC%89"><span class="toc-number">4.3.</span> <span class="toc-text">字符串表（.strtab）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E7%9B%B8%E5%85%B3"><span class="toc-number">5.</span> <span class="toc-text">动态链接相关</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#interp-%E6%AE%B5"><span class="toc-number">5.1.</span> <span class="toc-text">.interp 段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dynamic-%E6%AE%B5"><span class="toc-number">5.2.</span> <span class="toc-text">.dynamic 段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E7%AC%A6%E5%8F%B7%E8%A1%A8%EF%BC%88-dynsym%EF%BC%89"><span class="toc-number">5.3.</span> <span class="toc-text">动态符号表（.dynsym）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8%EF%BC%88-rel-dyn-rel-data%EF%BC%89"><span class="toc-number">5.4.</span> <span class="toc-text">动态链接重定位表（.rel.dyn&#x2F;.rel.data）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PLT-%E8%A1%A8%EF%BC%88-plt%EF%BC%89"><span class="toc-number">5.5.</span> <span class="toc-text">PLT 表（.plt）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GOT-%E8%A1%A8%EF%BC%88-got-got-plt%EF%BC%89"><span class="toc-number">5.6.</span> <span class="toc-text">GOT 表（.got&#x2F;.got.plt）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BE%85%E5%8A%A9%E4%BF%A1%E6%81%AF%E6%95%B0%E7%BB%84"><span class="toc-number">5.7.</span> <span class="toc-text">辅助信息数组</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A3%85%E8%BD%BD%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">6.</span> <span class="toc-text">装载执行流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5"><span class="toc-number">6.1.</span> <span class="toc-text">动态链接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5"><span class="toc-number">6.2.</span> <span class="toc-text">静态链接</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E6%A0%88%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">7.</span> <span class="toc-text">进程栈的初始化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%85%E5%8A%A9%E4%BF%A1%E6%81%AF%E6%95%B0%E7%BB%84-1"><span class="toc-number">8.</span> <span class="toc-text">辅助信息数组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#main-%E5%87%BD%E6%95%B0%E4%B9%8B%E5%89%8D"><span class="toc-number">9.</span> <span class="toc-text">main 函数之前</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
