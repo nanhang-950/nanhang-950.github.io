@@ -205,13 +205,8 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <td>LONG_MAX</td>
 <td>ULONG_MAX</td>
 </tr>
-<tr>
-<td>尽管设计<code>char</code>类型变量的目的是为了让它们容纳字符型值，但字符在本质上是小整型值。缺省的<code>char</code>要么是<code>signed char</code>，要么是 <code>unsigned char</code>，这取决于编译器。这意味着不同机器上的<code>char</code>可能拥有不同范围的值。所以，只有当程序所使用的<code>char</code>型变量的值位于<code>signed char</code>和<code>unsigned char</code>的交集中，这个程序才是可移植的。</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
 </tbody></table>
+<p>尽管设计<code>char</code>类型变量的目的是为了让它们容纳字符型值，但字符在本质上是小整型值。缺省的<code>char</code>要么是<code>signed char</code>，要么是 <code>unsigned char</code>，这取决于编译器。这意味着不同机器上的<code>char</code>可能拥有不同范围的值。所以，只有当程序所使用的<code>char</code>型变量的值位于<code>signed char</code>和<code>unsigned char</code>的交集中，这个程序才是可移植的。</p>
 <p>在一个把字符当作小整型值的程序中，如果显式地把这类变量声明为<code>signed</code>或<code>unsigned</code>，可以提高这类程序的可移植性。这类做法可以确保不同的机器中在字符是否为有符号值方面保持一致。</p>
 <blockquote>
 <p>提示：当可移植问题比较重要时，字符是否为有符号数就会带来两难的境地。最佳妥协方案就是把存储于 <code>char</code> 型变量的值限制在<code>signed char</code>和 <code>unsigned char</code>的交集内，这可以获得最大程度的可移植性，同时又不牺牲效率。</p>
@@ -220,17 +215,23 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>当程序中出现整型字面值时，它是属于所有整型不同类型中的哪一个？答案取决于字面值是如何书写的，但是你可以在有些字面值的后面添加一个后缀来改变缺省的规则。在整数字面值后面添加字符 L 或 l，可以使这个整数倍解释为<code>long</code>整型值，字符 U 或 u 则用于把数值指定为 <code>unsigned</code>整型值。如果在一个字面值后面添加这两组字符中的各一个，那么它就被解释为<code>unsigned long整型值</code>。</p>
 <p>在源代码中，用于表示整型字面值的方法有很多。其中最自然的方式是十进制整型值，诸如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">123</span> <span class="hljs-number">355</span> <span class="hljs-number">-234</span><br></code></pre></td></tr></table></figure>
+
 <p>十进制整型字面值可能是<code>int</code>、<code>long</code>或<code>unsigned long</code>。在缺省情况下，它是最短类型但能完整容纳这个值。</p>
 <p>整型也可以用八进制来表示，只要在数值前面以 0 开头。整数也可以用十六进制来表示，它以 0x 开头。</p>
-<p>例：</p>
+<ul>
+<li>例：</li>
+</ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">0123</span> <span class="hljs-number">012345</span> <span class="hljs-number">00342</span><br><span class="hljs-number">0x32</span> <span class="hljs-number">0xffff</span> <span class="hljs-number">0xab2342</span><br></code></pre></td></tr></table></figure>
+
 <p>在八进制字面值中，数字 8 和 9 是非法的。在十六进制字面值中，可以使用字母 ABCDEF 或 abcdef。八进制和十六进制字面值可能的类型是<code>int</code>、<code>unsigned int</code>、<code>long</code>或<code>unsigned long</code>。在缺省情况下，字面值的类型就是上诉类型中最短但足以容纳整个值的类型。</p>
 <p>另外还有字符常量。它们的类型总是<code>int</code>。你不能在它们后面添加<code>unsigned</code>或<code>long</code>后缀。字符常量就是一个用单引号包围起来的单个字符（或字符转义序列或三字母词），如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">&#x27;M&#x27;</span>  <span class="hljs-string">&#x27;\n&#x27;</span>  <span class="hljs-string">&#x27;??(&#x27;</span>  <span class="hljs-string">&#x27;\377&#x27;</span><br></code></pre></td></tr></table></figure>
+
 <p>标准也允许诸如 ‘abc’ 这类的多字节字符常量，但它们的实现在不同的环境中可能不一样，所以不鼓励使用。</p>
 <p>最后，如果一个多字节字符常量的前面有一个 L，那么他就是宽字符常量（wide characterliteral）。</p>
-<p>如：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">L&#x27;X&#x27;</span> <span class="hljs-string">L&#x27;e^&#x27;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>如：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">L&#x27;X&#x27;</span> <span class="hljs-string">L&#x27;e^&#x27;</span><br></code></pre></td></tr></table></figure></li>
+</ul>
 <p>当运行时环境支持一种宽字符集时，就有可能使用它们。</p>
 <blockquote>
 <p>提示：整型字面值采用何种书写方式，应该取决于这个字面值使用时的上下文环境</p>
@@ -238,11 +239,14 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>当一个字面值用于确定一个字中某些特定位的位置时，将它写成十六进制或八进制更为合适，因为这种写法更清晰地显示了这个值的特殊本质。</p>
 <p>例如，983040 这个值在第 16~19 位都是1，如果它采用十进制写法，你绝对看不出这一点。但是，如果将它写成十六进制的形式，它的值就是 0XF00，清晰地显示出那几位都是 1 而剩余的位都是 0。如果在某种上下文环境中，这些特定的位非常重要时，那么把字面值写成十六进制形式可以使操作的含义对于读者而言更为清晰。</p>
 <p>如果一个值被当作字符使用，那么把这个值表示为字符常量可以使这个值的意思更为清晰。</p>
-<p>例如：</p>
+<ul>
+<li>例如：</li>
+</ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">value=value<span class="hljs-number">-48</span>;<br>value=value-\<span class="hljs-number">60</span>;<br></code></pre></td></tr></table></figure>
-<p>和下面这条语句</p>
+
+<p>和下面这条语句的含义完全一样，但最后一条语句的含义更为清晰，它用于表示把一个字符转换为二进制值。更为重要的是，不管你所采用的是何种字符集，使用字符常量所产生的总是正确的值，所以它能提高程序的可移植性。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">value=value-<span class="hljs-string">&#x27;0&#x27;</span>;<br></code></pre></td></tr></table></figure>
-<p>的含义完全一样，但最后一条语句的含义更为清晰，它用于表示把一个字符转换为二进制值。更为重要的是，不管你所采用的是何种字符集，使用字符常量所产生的总是正确的值，所以它能提高程序的可移植性。</p>
+
 <h4 id="枚举类型"><a href="#枚举类型" class="headerlink" title="枚举类型"></a>枚举类型</h4><p><strong>枚举（enumerated）</strong> 类型就是指它的值为符号常量而不是字面值的类型，它们以下面这个形式声明：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">JSJ</span>&#123;</span> CUP,PINT,QUART&#125;<br></code></pre></td></tr></table></figure>
 
@@ -251,14 +255,17 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 
 <p>如果某种特别的枚举类型的变量只使用一个声明，你可以把上面两条语句组合成下面的样子：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">ecum&#123;CPU,PINT,QUART&#125;<br>	jug,can,bottle;<br></code></pre></td></tr></table></figure>
+
 <p>这种类型的变量实际上以整型的方式存储，这些符号名的实际值都是整型值。这里 CPU 是 0，PINT 是 1，以此类推。</p>
 <p>适当的时候你可以为这些符号名指定特定的整型值，如下所示：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> &#123;</span>CPU=<span class="hljs-number">1</span>,PINT=<span class="hljs-number">2</span>,CALLON=<span class="hljs-number">3</span>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>只对部分符号名用这种方式进行赋值也是合法的。如果某个符号名未显示指定一个值，那么它的值就比前面一个符号名的值大 1。</p>
 <blockquote>
 <p>提示：符号名被当作整型常量处理，声明为枚举类型的变量实际上是整数类型。这个事实意味着你可以给 Jar_Type 类型的变量赋诸如 -623这样的字面值，你也可以把 CPU 这个值赋给任何整型变量。但是你要避免以这种方式使用枚举，因为把枚举变量同整数无差别地混合在一起使用，会削弱它们值的含义。</p>
 </blockquote>
-<h3 id="浮点型"><a href="#浮点型" class="headerlink" title="浮点型"></a>浮点型</h3><p>诸如 3.14159 和 6.324x10^2 这样的数值无法按照整数存储。第一个数并非整数，而第二个数远远超出了计算机整数所能表达的范围。但是，它们可以用浮点数的形式存储。它们通常以一个小数以及一个以某个假定数为基数的指数组成，例如：</p>
+<h3 id="浮点型"><a href="#浮点型" class="headerlink" title="浮点型"></a>浮点型</h3><p>诸如 3.14159 和 6.324x10^2 这样的数值无法按照整数存储。第一个数并非整数，而第二个数远远超出了计算机整数所能表达的范围。但是，它们可以用浮点数的形式存储。它们通常以一个小数以及一个以某个假定数为基数的指数组成，</p>
+<p>例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">.3243</span>fx16  <span class="hljs-number">.110010010000111111</span>x2^<span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
 
 <p>浮点数包括<code>float</code>、<code>double</code>和<code>long double</code>类型。通常，这些类型分别提供单精度、双精度以及在某些支持扩展精度的机器上提供扩展精度。C 标准仅仅规定<code>long double</code>至少和<code>double</code>一样长，而<code>double</code>至少和<code>float</code>一样长。标准同时规定了一个最小范围：所有浮点数类型至少能够容纳从 10^-37 到 10^37 之间的任何值。</p>
@@ -266,14 +273,16 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>浮点数字面值重视写成十进制的形式，它必须有一个小数点或一个指数，也可以两者都有。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-number">3.14159</span>  <span class="hljs-number">1E10</span> <span class="hljs-number">25.</span>  <span class="hljs-number">.5</span>  <span class="hljs-number">6.023e23</span><br></code></pre></td></tr></table></figure>
+
 <p>浮点数字面值在缺省情况下都是<code>double</code>类型的，除非它的后面跟一个 L 或 l 表示它是一个<code>long double</code>类型的值，或者跟一个 F 或 f 表示它是一个<code>float</code>类型的值。</p>
 <h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>指针是 C 语言如此流行的一个重要原因。指针可以有效地实现诸如树和表这类高级数据结构。</p>
 <p>变量的值存储与计算机的内存中，每个变量都占据一个特定的位置。每个内存位置都由<strong>地址</strong>唯一确定并引用，就像一条街道上的房子由它们的门牌号码标识一样。指针只是地址的另一个名字罢了。指针变量就是一个其值为另外一个（一些）内存地址的变量。C语言拥有一些操作符，你可以获得一个变量的地址，也可以通过一个指针变量取得它所指向的值或数据结构。</p>
 <h4 id="指针常量（pointer-constant）"><a href="#指针常量（pointer-constant）" class="headerlink" title="指针常量（pointer constant）"></a>指针常量（pointer constant）</h4><p>指针常量与非指针常量在本质上是不同的，因为编译器负责把变量赋值给计算机内存中的位置，程序员实现无法指定某个特定的变量将存储到内存中的哪个位置。因此，你通过操作符获得一个变量的地址而不是之间把它的地址写成字面值常量的形式。</p>
-<p>例如，如果我们希望指定变量 xyz 的地址，我们无法书写一个类似<code>0xff2044ec</code>这样的值，因为我们不知道这是不是编译器实际存放这个变量的内存位置。事实上，当一个函数每次被调用时，它的自动变量（局部变量）可能每次分配的内存位置都不相同。因此，把指针常量表达式数值字面值的形式几乎没有用处，所以 C 语言内部并没有特地定义这个概念。</p>
-<h4 id="字符串常量（string-literal）"><a href="#字符串常量（string-literal）" class="headerlink" title="字符串常量（string literal）"></a>字符串常量（string literal）</h4><p>字符串常量就是一串以<code>NUL</code>字节结尾的零个或多个字符。字符串通常存储在字符数组中，这也是 C 语言没有显示的字符串类型的原因。由于 NUL 字节是用于终结字符串的，所以在字符串内部不能有<code>NUL</code>字节。不过，在一般情况下，这个限制并不会造成问题。之所以选择<code>NUL</code>作为字符串的终止符，是因为它不是一个可打印的字符。</p>
+<p>例如，如果我们希望指定变量<code>xyz</code>的地址，我们无法书写一个类似<code>0xff2044ec</code>这样的值，因为我们不知道这是不是编译器实际存放这个变量的内存位置。事实上，当一个函数每次被调用时，它的自动变量（局部变量）可能每次分配的内存位置都不相同。因此，把指针常量表达式数值字面值的形式几乎没有用处，所以 C 语言内部并没有特地定义这个概念。</p>
+<h4 id="字符串常量（string-literal）"><a href="#字符串常量（string-literal）" class="headerlink" title="字符串常量（string literal）"></a>字符串常量（string literal）</h4><p>字符串常量就是一串以<code>NULL</code>字节结尾的零个或多个字符。字符串通常存储在字符数组中，这也是 C 语言没有显示的字符串类型的原因。由于 NUL 字节是用于终结字符串的，所以在字符串内部不能有<code>NULL</code>字节。不过，在一般情况下，这个限制并不会造成问题。之所以选择<code>NULL</code>作为字符串的终止符，是因为它不是一个可打印的字符。</p>
 <p>字符串常量的书写方式是用一对双引号包围一串字符，如下所示：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-string">&quot;Hello&quot;</span>  <span class="hljs-string">&quot;\aWarning\a&quot;</span>  <span class="hljs-string">&quot;Line 1\nLine2&quot;</span> <span class="hljs-string">&quot;&quot;</span><br></code></pre></td></tr></table></figure>
+
 <p>最后一个例子说明字符串常量（不像字符常量）可以是空的。尽管如此，即使是空字符串，依然存在作为终止符的 NUL 字节。</p>
 <blockquote>
 <p>如果在使用字符串时需要修改字符串，请把它存储于数组中。</p>
@@ -282,6 +291,7 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <h2 id="基本声明"><a href="#基本声明" class="headerlink" title="基本声明"></a>基本声明</h2><p>基本的数据类型已经知道了，接下来就要学习如何声明变量了。</p>
 <p>变量声明的基本格式：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">说明符 声明表达式列表<br></code></pre></td></tr></table></figure>
+
 <p>对于简单的类型，声明表达式列表就是被声明的标识符的列表。对于更为复杂的类型，声明表达式列表种的每个条目实际上是一个表达式，显示被声明的名字的可能用途。</p>
 <p><strong>说明符（specifier）</strong> 包含了一些关键字，用于描述被声明的标识符的基本类型。说明符也可以用于改变标识符的缺省存储类型和作用域。</p>
 <p><strong>相等的整型声明：</strong></p>
@@ -308,10 +318,12 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>在一个声明中，你可以给一个标量变量指定一个初始值，方法是在变量名后面跟一个等号（赋值号），后面是你想要赋给变量的值。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> i=<span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+
 <p>这条语句声明 i 为一个整型变量，其初始值为 15。</p>
 <h3 id="声明简单数组"><a href="#声明简单数组" class="headerlink" title="声明简单数组"></a>声明简单数组</h3><p>声明一个一维数组，在数组名后面要跟一对方括号，方括号里面是一个整数，指定数组中元素的个数。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> values[<span class="hljs-number">10</span>];<br></code></pre></td></tr></table></figure>
+
 <p>上述代码中我们声明了一个整型数组，数组包含 10 个整型元素。</p>
 <p>我们可以从另一个角度理解上述代码，我们利用 名字 values 加一个下标，产生一个类型为 <code>int</code> 的值（共有 10 个整型值）。</p>
 <p>数组的下标总是从 0 开始，最后一个元素的下标是元素的数目减 1。</p>
@@ -321,6 +333,7 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <h3 id="声明指针"><a href="#声明指针" class="headerlink" title="声明指针"></a>声明指针</h3><p>声明表达式也可用于声明指针。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *a;<br></code></pre></td></tr></table></figure>
+
 <p>这条语句表示 <code>*a</code> 产生的结果类型是<code>int</code>。知道了<code>*</code>操作符执行的是间接访问操作以后，我们可以推断 a 肯定是一个指向<code>int</code>的指针。</p>
 <blockquote>
 <p>警告：C 在本质上是一种自由形式的语言，这很容易诱使你把星号写在靠近类型的一侧，如：int * a；<br>这个声明与前面一个声明具有相同的意思，而且看上去更为清楚，a 被声明为类型为 int* 的指针。</p>
@@ -333,6 +346,7 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>这个声明把标识符 string 作为指向字符的指针类型的新名字。你可以像使用基本类型一样在下面的声明中使用这个新名字。</p>
 <p>例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">string</span> name;<br></code></pre></td></tr></table></figure>
+
 <p>声明 name 是一个指向字符的指针。</p>
 <p>使用<code>typedef</code>声明类型可以减少使声明变得又臭又长的危险，尤其是那些复杂的声明。而且，如果你以后觉得应该修改程序所使用的一些数据的类型时，修改一个<code>typedef</code>声明比修改程序中与这种类型的所有变量（和函数）的所有声明要容易得多。</p>
 <blockquote>
@@ -340,32 +354,41 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 </blockquote>
 <p>例如：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> d_ptr_to_char char *</span><br>d_ptr_to_char a,b;<br></code></pre></td></tr></table></figure>
+
 <p>正确地声明了 a，但是 b 却被声明为一个字符。在定义更为复杂的类型名字时，如函数指针或指向数组的指针，使用<code>typedef</code>更为合适。</p>
 <h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><p>通过使用 <code>const</code> 关键字来声明常量。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-type">const</span> a;<br><span class="hljs-type">const</span> <span class="hljs-type">int</span> a;<br></code></pre></td></tr></table></figure>
+
 <p>这两条语句都把 a 声明为一个整数，它的值不能被修改。</p>
 <p>当然，由于 a 的值无法被修改，所以你无法把任何东西赋值给它。如此一来，你怎样才能让它在一开始拥有一个值呢？</p>
 <p>有两种办法：首先，你可以在声明时对它进行初始化，如下所示：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-type">const</span> a =<span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
+
 <p>其次，在函数中声明为 <code>const</code> 的形参在函数被调用时会得到实参的值。</p>
 <p>当涉及到指针变量时，情况就变得更加有趣，因为有两样东西都有可能成为常量——指针变量和它所指向的实体。</p>
 <p>例：</p>
+<p>pi 是一个普通的指向整型的指针。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> *pi;<br></code></pre></td></tr></table></figure>
-<p>pi 是一个普通的指向整型的指针。而变量</p>
+
+<p>下面这个这是指向整型常量的指针，你可以修改指针的值，但你不能修改它所指向的值。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-type">const</span> *pci;<br></code></pre></td></tr></table></figure>
-<p>则是一个指向整型常量的指针。你可以修改指针的值，但你不能修改它所指向的值。相比之下：</p>
+
+<p>相比之下，下面这个则声明 cpi 为一个指向整型的常量指针。此时指针是常量，它的值无法修改，但你可以修改它所指向的整型的值。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> * <span class="hljs-type">const</span> cpi;<br></code></pre></td></tr></table></figure>
-<p>则声明 cpi 为一个指向整型的常量指针。此时指针是常量，它的值无法修改，但你可以修改它所指向的整型的值。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-type">const</span> * <span class="hljs-type">const</span> cpci;<br></code></pre></td></tr></table></figure>
+
 <p>最后，在 cpci 这个例子里，无论是指针本身还是它所指向的值都是常量，不允许修改。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-type">const</span> * <span class="hljs-type">const</span> cpci;<br></code></pre></td></tr></table></figure>
+
+
 <blockquote>
 <p>当你声明变量时，如果变量的值不会被修改，你应当在声明中使用 <code>const</code> 关键字。</p>
 </blockquote>
 <p><code>#define</code>指令是另一种创建名字常量的机制。</p>
 <p>例：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> PI=3.1415926535</span><br><span class="hljs-type">const</span> <span class="hljs-type">double</span> pi=PI;<br></code></pre></td></tr></table></figure>
-<p>在这种情况下，使用<code>#define</code>比使用 const 变量更好。因为只要允许使用字面值常量的地方都可以使用前者，比如声明数组的长度。 <code>const</code> 变量只能用于允许使用变量的地方。</p>
+
+<p>在这种情况下，使用<code>#define</code>比使用<code>const</code>变量更好。因为只要允许使用字面值常量的地方都可以使用前者，比如声明数组的长度。 <code>const</code> 变量只能用于允许使用变量的地方。</p>
 <blockquote>
 <p>提示：名字常量非常有用，因为它们可以给数值起符号名，否则它们就只能写成字面值的形式</p>
 </blockquote>
@@ -378,13 +401,13 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 </blockquote>
 <h3 id="文件作用域"><a href="#文件作用域" class="headerlink" title="文件作用域"></a>文件作用域</h3><p>任何在代码块之外声明的标识符都具有文件<strong>作用域（file scope）</strong>，它表示这些标识符从它们的声明之处知道它所在的源文件结尾处都是可以访问的。在文件中定义的函数名也具有文件作用域，因为函数名本身并不属于任何代码块。我应该指出，在头文件中编写并通过<code>#include</code>指令包含到其他文件中的声明就好像它们是直接写在那些文件中一样。它们的作用域并不局限于头文件的文件尾。</p>
 <h3 id="原型作用域"><a href="#原型作用域" class="headerlink" title="原型作用域"></a>原型作用域</h3><p><strong>原型作用域（prototype scope）</strong> 只适用于在函数原型中声明的参数名。在原型中（与函数的定义不同），参数的名字并非必需。但是，如果出现参数名，你可以随你所愿给它们取任何名字，它们不必与函数定义中的形参名匹配，也不必与函数实际调用时所传递的实参匹配。原型作用域防止这些参数名与程序其他部分的名字冲突。事实上，唯一可能出现的冲突就是在同一个原型中不止一次地使用同一个名字。</p>
-<h3 id="函数作用域"><a href="#函数作用域" class="headerlink" title="函数作用域"></a>函数作用域</h3><p>最后一种作用域的类型是<strong>函数作用域（function scope）</strong>。它只适用于语句标签，语句标签用于 goto 语句。基本上，函数作用域可以简化为一条规则——一个函数中的所有语句标签必须唯一。</p>
+<h3 id="函数作用域"><a href="#函数作用域" class="headerlink" title="函数作用域"></a>函数作用域</h3><p>最后一种作用域的类型是<strong>函数作用域（function scope）</strong>。它只适用于语句标签，语句标签用于<code>goto</code>语句。基本上，函数作用域可以简化为一条规则——一个函数中的所有语句标签必须唯一。</p>
 <h2 id="链接属性"><a href="#链接属性" class="headerlink" title="链接属性"></a>链接属性</h2><p>当组成一个程序的各个源文件分布被编译之后，所有的目标文件以及那些从一个或多个函数库中引用的函数链接在一起，形成可执行程序。</p>
 <p>标识符的<strong>链接属性（linkage）</strong> 决定如何处理在不同文件中出现的标识符。标识符的作用域与它的链接属性有关，但这两个属性并不相同；</p>
-<p>链接属性一共有 3 种——external（外部）、internal（内部）和 none（无）。没有链接属性的标识符（none）总是被当作单独的个体，也就是说该标识符的多个声明被当作独立不同的实体。</p>
+<p>链接属性一共有 3 种——<code>external</code>（外部）、<code>internal</code>（内部）和 <code>none</code>（无）。没有链接属性的标识符（<code>none</code>）总是被当作单独的个体，也就是说该标识符的多个声明被当作独立不同的实体。</p>
 <h2 id="存储类型"><a href="#存储类型" class="headerlink" title="存储类型"></a>存储类型</h2><p>变量的存储类型（storage class）是指存储变量值的内存类型。变量的存储类型决定变量何时创建</p>
-<p>变量的缺省存储类型取决于它的声明位置。凡是在任何代码块之外声明的变量总是存储于静态内存中，也就是不属于堆栈的内存，这类变量称为静态（static）变量。对于这类变量，你无法为它们指定其他存储类型。静态变量在程序运行之前创建，在程序的整个指向期间始终存在。它始终保持原先的值，除法给它赋一个不同的值或者程序结束。</p>
-<h2 id="static关键字"><a href="#static关键字" class="headerlink" title="static关键字"></a>static关键字</h2><p>当用于不同的上下文环境时，static 关键字具有不同的意思。</p>
-<p>当它用于函数声明时，或用于代码块之外的变量声明时，static 关键字用于修改标识符的链接属性，从 external 改为 internal，但标识符的存储类型和作用域不受影响。用这种方式声明的函数或变量只能在声明它们的源文件种访问。</p>
-<p>当它用于代码块内部的变量声明时，static 关键字用于修改变量的存储类型，从自动变量修改为静态变量，但变量的链接属性和作用域不受影响。用这种方式声明的变量在程序执行之前创建，并在程序的整个执行期间一直存在，而不是每次在代码块开始执行时创建，在代码块执行完毕后销毁。即存储在数据段而不是堆栈。</p>
+<p>变量的缺省存储类型取决于它的声明位置。凡是在任何代码块之外声明的变量总是存储于静态内存中，也就是不属于堆栈的内存，这类变量称为静态（<code>static</code>）变量。对于这类变量，你无法为它们指定其他存储类型。静态变量在程序运行之前创建，在程序的整个指向期间始终存在。它始终保持原先的值，除法给它赋一个不同的值或者程序结束。</p>
+<h2 id="static关键字"><a href="#static关键字" class="headerlink" title="static关键字"></a>static关键字</h2><p>当用于不同的上下文环境时，<code>static</code>关键字具有不同的意思。</p>
+<p>当它用于函数声明时，或用于代码块之外的变量声明时，<code>static</code>关键字用于修改标识符的链接属性，从<code>external</code>改为<code>internal</code>，但标识符的存储类型和作用域不受影响。用这种方式声明的函数或变量只能在声明它们的源文件种访问。</p>
+<p>当它用于代码块内部的变量声明时，<code>static</code>关键字用于修改变量的存储类型，从自动变量修改为静态变量，但变量的链接属性和作用域不受影响。用这种方式声明的变量在程序执行之前创建，并在程序的整个执行期间一直存在，而不是每次在代码块开始执行时创建，在代码块执行完毕后销毁。即存储在数据段而不是堆栈。</p>
 <div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/27/program/cpp/cpp-3/">← Next C++ chapter3 标准库类型</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/26/cs/data/">数据结构和算法 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">基本数据类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B4%E5%9E%8B"><span class="toc-number">1.1.</span> <span class="toc-text">整型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B4%E5%9E%8B%E5%AD%97%E9%9D%A2%E5%80%BC"><span class="toc-number">1.1.1.</span> <span class="toc-text">整型字面值</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.1.2.</span> <span class="toc-text">枚举类型</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E5%9E%8B"><span class="toc-number">1.2.</span> <span class="toc-text">浮点型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E9%92%88"><span class="toc-number">1.3.</span> <span class="toc-text">指针</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E5%B8%B8%E9%87%8F%EF%BC%88pointer-constant%EF%BC%89"><span class="toc-number">1.3.1.</span> <span class="toc-text">指针常量（pointer constant）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%B8%B8%E9%87%8F%EF%BC%88string-literal%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">字符串常量（string literal）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E5%A3%B0%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">基本声明</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">2.1.</span> <span class="toc-text">初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E%E7%AE%80%E5%8D%95%E6%95%B0%E7%BB%84"><span class="toc-number">2.2.</span> <span class="toc-text">声明简单数组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A3%B0%E6%98%8E%E6%8C%87%E9%92%88"><span class="toc-number">2.3.</span> <span class="toc-text">声明指针</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%90%E5%BC%8F%E5%A3%B0%E6%98%8E"><span class="toc-number">2.4.</span> <span class="toc-text">隐式声明</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#typedef"><span class="toc-number">3.</span> <span class="toc-text">typedef</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F"><span class="toc-number">4.</span> <span class="toc-text">常量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.</span> <span class="toc-text">作用域</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%9D%97%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.1.</span> <span class="toc-text">代码块作用域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.2.</span> <span class="toc-text">文件作用域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%9E%8B%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.3.</span> <span class="toc-text">原型作用域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">5.4.</span> <span class="toc-text">函数作用域</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E5%B1%9E%E6%80%A7"><span class="toc-number">6.</span> <span class="toc-text">链接属性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E7%B1%BB%E5%9E%8B"><span class="toc-number">7.</span> <span class="toc-text">存储类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#static%E5%85%B3%E9%94%AE%E5%AD%97"><span class="toc-number">8.</span> <span class="toc-text">static关键字</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>

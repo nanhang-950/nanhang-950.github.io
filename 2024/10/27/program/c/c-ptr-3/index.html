@@ -119,6 +119,7 @@ lightGallery(document.getElementById('post-bg'), {
 document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>C chapter3 语句</h1></div><hr><div id="post-content"><h2 id="空语句"><a href="#空语句" class="headerlink" title="空语句"></a>空语句</h2><p>C 最简单的语句就是<strong>空语句</strong>，它本身只包含一个分号。空语句本身并不执行任何任务，但有时还是有用的。它所适用的场合就是语法要求出现一条完整的语句，但并不需要它执行任何任务。</p>
 <h2 id="表达式语句"><a href="#表达式语句" class="headerlink" title="表达式语句"></a>表达式语句</h2><p>C 并不存在专门的 “赋值语句”，它通过表达式进行赋值。<br>只需要在表达式后面加上一个分号，就可以把表达式转变为语句。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">x=y+<span class="hljs-number">3</span>;<br>ch=getchar();<br></code></pre></td></tr></table></figure>
+
 <p>实际上是表达式语句，而不是赋值语句。</p>
 <blockquote>
 <p>警告：理解这点很重要，因为像下面这样的语句也是完全合法的：</p>
@@ -130,13 +131,15 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">&#123;<br>	declarations<br>	statemente<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="if语句"><a href="#if语句" class="headerlink" title="if语句"></a>if语句</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(expression)&#123;<br>	statement<br>&#125;<span class="hljs-keyword">else</span><br>	statement<br></code></pre></td></tr></table></figure>
-<p>括号是if语句的一部分，而不是表达式的一部分，因此它是必须出现的，即使是那些极为简单的表达式也是如此。</p>
+
+<p>括号是<code>if</code>语句的一部分，而不是表达式的一部分，因此它是必须出现的，即使是那些极为简单的表达式也是如此。</p>
 <h2 id="while语句"><a href="#while语句" class="headerlink" title="while语句"></a>while语句</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">while</span>(expression)&#123;<br>	statement<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>循环的测试在循环体开始执行之前开始，所以如果测试的结构一开始就是假，循环体就根本不会执行。同样，当循环体需要多条语句来完成任务时，可以使用代码块来实现。</p>
 <h3 id="break和continue语句"><a href="#break和continue语句" class="headerlink" title="break和continue语句"></a>break和continue语句</h3><p>在<code>while</code>循环中可以使用<code>break</code>语句，用于永久终止循环。在执行完<code>break</code>语句之后，执行流下一条执行的语句就是循环正常结束后应该执行的那条语句。</p>
 <p>在<code>while</code>循环中也可以使用<code>continue</code>语句，它用于永久终止当前的那次循环。在执行完<code>continue</code>语句之后，执行流接下来就是重新测试表达式的值，决定是否继续执行循环。</p>
 <p>这两条语句的任何一条如果出现于嵌套的循环内部，它只对最外层的循环起作用，你无法使用<code>break</code>或<code>continue</code>语句影响外层循环的执行。</p>
-<h3 id="while语句的执行过程"><a href="#while语句的执行过程" class="headerlink" title="while语句的执行过程"></a>while语句的执行过程</h3><p class='item-img' data-src='/assets/Pasted%20image%2020240928215613.png'><img src="/assets/Pasted%20image%2020240928215613.png"></p>
+<h3 id="while语句的执行过程"><a href="#while语句的执行过程" class="headerlink" title="while语句的执行过程"></a>while语句的执行过程</h3><p class='item-img' data-src='/../assets/Pasted%20image%2020240928215613.png'><img src="/../assets/Pasted%20image%2020240928215613.png"></p>
 <blockquote>
 <p>提示：偶尔，while语句在表达式中就可以完成整个语句的任务，于是循环体就无事可做。在这种情况下，循环体就用空语句来表示。单独用一行来表示一条空语句是比较好的做法，如下面的循环所示，它丢弃当前输入行的剩余字符。</p>
 </blockquote>
@@ -147,17 +150,21 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 
 <p>在<code>for</code>语句中也可以使用<code>break</code>语句和<code>continue</code>语句。<code>break</code>语句立即退出循环，而<code>continue</code>语句把控制流直接转移到调整部分。</p>
 <p><strong>for语句的执行过程</strong></p>
-<p><code>for</code>语句和<code>while</code>语句执行过程的区别在于出现<code>continue</code>语句时。在<code>for</code>语句中，<code>continue</code>语句跳过循环体的剩余部分，直接回到调整部分。在<code>while</code>语句中，调整部分是循环体的一部分，所以<code>continue</code>将会把它也跳过。<br class='item-img' data-src='/assets/Pasted%20image%2020240928220057.png'><img src="/assets/Pasted%20image%2020240928220057.png"></p>
+<p><code>for</code>语句和<code>while</code>语句执行过程的区别在于出现<code>continue</code>语句时。在<code>for</code>语句中，<code>continue</code>语句跳过循环体的剩余部分，直接回到调整部分。在<code>while</code>语句中，调整部分是循环体的一部分，所以<code>continue</code>将会把它也跳过。<br class='item-img' data-src='/../assets/Pasted%20image%2020240928220057.png'><img src="/../assets/Pasted%20image%2020240928220057.png"></p>
 <h2 id="do语句"><a href="#do语句" class="headerlink" title="do语句"></a>do语句</h2><p>C语言的<code>do</code>语句非常像其他语言的<code>repeat</code>语句。它很像<code>while</code>语句，只是它的测试在循环体执行之后才进行，而不是先于循环体执行。所以，这种循环的循环体至少执行一次。下面是它的语法。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">do</span> <br>	statement<br><span class="hljs-title function_">while</span><span class="hljs-params">(expression)</span><br></code></pre></td></tr></table></figure>
+
 <p>当你需要循环体至少执行一次时，选择<code>do</code>。</p>
 <h2 id="switch语句"><a href="#switch语句" class="headerlink" title="switch语句"></a>switch语句</h2><p>C的<code>switch</code>语句颇不寻常。它类似于其他语言的<code>case</code>语句，但在有一个方法存在重要的区别。首先让我们来看看它的语法，其中<code>expression</code>的结果必须是整型值。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">switch</span>(expression)<br>	statement<br></code></pre></td></tr></table></figure>
+
 <p>尽管在<code>switch</code>语句体内只使用一条单一的语句也是合法的，但这样做毫无意义。</p>
 <p>实际使用中的<code>switch</code>语句一般如下所示：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">switch</span>(expression)&#123;<br>	statement-<span class="hljs-built_in">list</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>贯穿于语句列表之间的是一个或多个<code>case</code>标签，形式如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">case</span> constant-expression:<br></code></pre></td></tr></table></figure>
+
 <p>每个<code>case</code>标签必须有一个唯一的值。<strong>常量表达式</strong>(constant-expression)是指在编译期间进行求值的表达式，它不能是任何变量。这里不同寻常之处是<code>case</code>标签并不把语句列表划分为几个部分，它们只是确定语句列表的进入点。</p>
 <p>首先计算expression的值，然后执行流跳转到匹配的语句。之后执行到底部。</p>
 <h3 id="switch中的break语句"><a href="#switch中的break语句" class="headerlink" title="switch中的break语句"></a><code>switch</code>中的<code>break</code>语句</h3><p>如果在<code>switch</code>语句的执行中遇到了<code>break</code>语句，执行流就会立即跳到语句列表的末尾。</p>
@@ -173,7 +180,9 @@ document.addEventListener("pjax:complete", reset);reset()})</script><meta name="
 <p>提示：在每个<code>switch</code>语句中都放上一条<code>default</code>子句是个好习惯。</p>
 </blockquote>
 <h3 id="switch语句的执行过程"><a href="#switch语句的执行过程" class="headerlink" title="switch语句的执行过程"></a><code>switch</code>语句的执行过程</h3><p>在处理四个以上分支时，<code>switch</code>语句就是查找表。</p>
-<h2 id="goto语句"><a href="#goto语句" class="headerlink" title="goto语句"></a>goto语句</h2><p>语法：</p>
+<h2 id="goto语句"><a href="#goto语句" class="headerlink" title="goto语句"></a>goto语句</h2><ul>
+<li>语法：</li>
+</ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">goto</span> 语句标签;<br></code></pre></td></tr></table></figure>
 
 <p>要使用<code>goto</code>语句，你必须在你希望调跳转的语句前面加上语句标签。语句标签就是标识符后面加个冒号。包含这些标签的<code>goto</code>语句可以出现在同一个函数中的任何位置。</p>
