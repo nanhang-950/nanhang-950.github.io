@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Android逆向开发基础 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>Android逆向开发基础</h1></div><hr><div id="post-content"><blockquote>
+<p>第一行代码读书笔记</p>
+</blockquote>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><h3 id="Android系统架构"><a href="#Android系统架构" class="headerlink" title="Android系统架构"></a>Android系统架构</h3><p>Android大概可以分为四层架构：Linux内核层、系统运行库层、应用框架层和应用层。</p>
+<ol>
+<li>Linux内核层</li>
+</ol>
+<p>Android 系统是基于 Linux 内核的，这一层位 Android 设备的各种硬件提供了底层的驱动，如显示驱动、音频驱动、照相机驱动、蓝牙驱动、Wi-Fi驱动、电源管理等。</p>
+<ol start="2">
+<li>系统运行库层</li>
+</ol>
+<p>这一层通过一些C&#x2F;C++库来为 Android 系统提供了主要的特性支持。如 SQLite 库提供了数据库的支持，OpenGL|ES 库提供了 3D 绘图的支持，Webkit 库提供了浏览器内核的支持等。</p>
+<p>同样在这一层还有 Android 运行时库，它主要提供了一些核心库，能够运行开发者使用 Java 语言来编写 Android 应用。另外 Android 运行时库中还包含了 Dalvik 虚拟机（5.0 系统之后改为 ART 运行环境），它使得每一个 Android 应用都能运行在独立的进程当中，并且拥有一个自己的 Dalvik 虚拟机实例。相较于 Java 虚拟机，Dalvik 是专门为移动设备定制的，它针对手机内存、CPU 性能有限等情况做了优化。</p>
+<ol start="3">
+<li>应用框架层</li>
+</ol>
+<p>这一层主要提供了构建应用程序时可能用到的各种 API，Android 自带的一些核心应用就是使用这些 API 完成的，开发者也可以通过使用这些 API 来构建自己的应用程序。</p>
+<ol start="4">
+<li>应用层</li>
+</ol>
+<p>所有安装在手机上的应用都是属于这一层的，比如系统自带的联系人、短信等程序，也包括你自己开发的程序。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020240827230342.png'><img src="/assets/Pasted%20image%2020240827230342.png"></p>
+<h3 id="Android已发布的版本"><a href="#Android已发布的版本" class="headerlink" title="Android已发布的版本"></a>Android已发布的版本</h3><ul>
+<li><p>2011年2月，谷歌发布了 Android 3.0系统，是专门为平板电脑设计的，但也是 Android 位数不多的比较失败的版本。</p>
+</li>
+<li><p>2011年10月，谷歌发布了 Android 4.0系统，这个版本不再对手机和平板进行差异化区分。</p>
+</li>
+<li><p>2015年 Google I&#x2F;O 大会上推出了号称史上版本改动最大的 Android 5.0 系统，其中使用了 ART 运行环境替代了 Dalvik 虚拟机，大大提升了应用的运行速度，还提出了 Material Design 的概念来优化应用的界面设计。除此之外，还推出了 Android Wear、Android Auto、Android TV 系统，从而进军可穿戴设备、汽车、电视等全新领域。</p>
+</li>
+<li><p>2015年 Google I&#x2F;O 大会上推出了 Android 6.0系统，加入运行时权限功能。</p>
+</li>
+<li><p>2016年 Google I&#x2F;O 大会上推出了 Android 7.0系统，加入多窗口模式功能。</p>
+</li>
+</ul>
+<h3 id="Android应用开发特色"><a href="#Android应用开发特色" class="headerlink" title="Android应用开发特色"></a>Android应用开发特色</h3><ol>
+<li>四大组件</li>
+</ol>
+<p>Android 系统四大组件分别是活动（Activity）、服务（Service）、广播接收器（Broadcast Receiver）和内容提供器（Content Provider）。其中活动是所有 Android 应用程序的门面，凡是在应用中你看到的东西，都是放在活动中的。而服务就比较低调了，你无法看到它，但它会一直在后台默默地运行，即使用户退出了应用，服务仍然是可以继续运行的。广播接收器允许你的应用接收来自各处的广播消息，比如电话、短信等，当然你的应用同样也可以向外发出广播消息。内容提供器则为应用程序之间共享数据提供了可能，比如你想要读取系统电话本中的联系人，就需要通过内容提供器来实现。</p>
+<ol start="2">
+<li>丰富的系统控件</li>
+</ol>
+<p>Android 系统为开发者提供了丰富的系统控件，使得我们可以很轻松地编写出漂亮的界面。当如如果你品位高，不满足于系统自带的控件效果，也完全可以定制属于自己的控件。</p>
+<ol start="3">
+<li>SQLite数据库</li>
+</ol>
+<p>Android 系统还自带了这种轻量级、运算速度极快的嵌入式关系型数据库。它不仅支持标准的 SQL 语法，还可以通过 Android 封装好的 API 进行操作，让存储和读取数据变得非常方便。</p>
+<ol start="4">
+<li>强大的多媒体</li>
+</ol>
+<p>Android 系统还提供了丰富的多媒体服务，如音乐、视频、录音、拍照、闹铃，等等，这一切你都可以在程序中通过代码进行控制，让你的应用变得更加丰富多彩。</p>
+<ol start="5">
+<li>地址位置定位</li>
+</ol>
+<p>移动设备和 PC 相比起来，地理位置定位功能应该可以算术很大的一个亮点。现在的 Android 手机都内置有 GPS，走到哪儿都可以定位到自己的位置，发挥你的想象既可以做出创意十足的应用，如果再结合功能强大的地图功能，LBS 这一领域潜力无限。</p>
+<h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><h3 id="需要准备的工具"><a href="#需要准备的工具" class="headerlink" title="需要准备的工具"></a>需要准备的工具</h3><ul>
+<li><p>JDK。JDK是 Java 语言的软件开发工具包，它包含了 Java 的运行环境、工具集合、基础类库等内容。</p>
+</li>
+<li><p>Android SDK。Android SDK 是谷歌提供的 Android 开发工具包，在开发 Android 程序时，我们需要通过引入该工具包，来使用 Android 相关的 API。</p>
+</li>
+<li><p>Android Studio。在很早之前，Android 项目都是用 Eclipse 来开发的，相信所有 Java 开发者都一定会对这个工具非常熟悉，它是 Java 开发神器，安装 ADT 插件后就可以用来开发 Android 程序了。而在 2013 年的时候，谷歌推出了一款官方的 IDE 工具 Android Studio，由于不再是以插件的形式存在，Android Studio 在开发 Android 程序方面远比 Eclipse 强大和方便得多。</p>
+</li>
+</ul>
+<h3 id="搭建开发环境"><a href="#搭建开发环境" class="headerlink" title="搭建开发环境"></a>搭建开发环境</h3><p>上述软件我们并不需要一个一个的进行安装，谷歌为了简化搭建开发环境的过程，将大量需要用到的工具都帮我们集成好了，到 Android 官网就可以下载最新的开发工具 Android Studio，下载地址是：</p>
+<p>在安装 Android Studio 之前，我们需要先安装 JDK，因为 Android Studio 和 Android 应用开发都依赖于 Java。安装完 JDK 后，我们再安装 Android Studio，安装过程中可以选择安装 SDK。</p>
+<p>安装完 JDK 和 Android Studio后我们也就搭建好了基本的开发环境。</p>
+<h2 id="项目创建"><a href="#项目创建" class="headerlink" title="项目创建"></a>项目创建</h2><h3 id="创建第一个项目"><a href="#创建第一个项目" class="headerlink" title="创建第一个项目"></a>创建第一个项目</h3><blockquote>
+<p>目前，大量 Android 程序采用 Kotlin 开发。相比 Java，Kotlin 在 Android 开发中更为强大，但严格来说它是 Java 的超集，具备与 Java 的高度兼容性。因此，在学习 Kotlin 之前，掌握 Java 基础是必要的。</p>
+</blockquote>
+<ol>
+<li>在最新的 Android Studio 中创建 Java 项目。</li>
+</ol>
+<p>选择 <code>new project</code>新建一个Java项目，然后选择<code>No Activity</code>，给项目起一个名称为<code>Hello World</code>。</p>
+<p>其中<code>Package name</code>表示项目的包名，然后选择<code>Finish</code>即可。</p>
+<ol start="2">
+<li>APP目录结构</li>
+</ol>
+<ul>
+<li>manifests</li>
+</ul>
+<p>这个目录用于存放<code>AndroidManifest.xml</code>文件，<code>AndroidManifest.xml</code>文件是整个项目的配置文件，程序中定义的所有四大组件都需要在这个文件里注册。</p>
+<ul>
+<li>java</li>
+</ul>
+<p>Java目录是防止我们所有代码的地方。</p>
+<ul>
+<li>res</li>
+</ul>
+<p>项目中使用到的所有图片、布局、字符串等资源都要存放在这个目录下。当然这个目录下还有许多子目录，图片放在<code>drawable</code>目录下，布局放在<code>layout</code>目录下，字符串放在<code>values</code>目录下。</p>
+<ol start="3">
+<li>给项目创建<code>Activity</code>。</li>
+</ol>
+<p>右击项目中的<code>com.example.helloworld</code>，选择<code>New</code>，然后选择<code>Activity</code>，最后选择<code>Empty Views Activity</code>。</p>
+<p>之后<code>com.example.helloworld</code>下就会多一个<code>MainActivity</code>，接下来我们需要修改<code>activity_main.xml</code>与<code>AndroidMaiifest.xml</code>文件。</p>
+<blockquote>
+<p><code>activity_main.xml</code>文件位于<code>res/layout</code>文件夹中，用于定义主界面的布局。它描述了界面上的 UI 元素（如按钮、文本视图等）以及它们的排列方式，是在运行时展现给用户的界面内容。<br><code>AndroidManifest.xml</code>是应用的配置文件，定义了应用的基本信息（如包名、应用组件、权限等）。它位于<code>mainifests</code>目录下，告诉系统应用包含的组件以及如何与系统和其他应用交互。</p>
+</blockquote>
+<p>找到<code>activity_main.xml</code>文件，然后点击右上角的<code>CODE</code>，然后添加以下代码。</p>
+<p>下面这段<code>xml</code>代码定义了一个<code>TextView</code>控件，它使用<code>ConstraintLayout</code>的约束方式，将控件居中于父布局中。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">TextView</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/helloTextView&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;wrap_content&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:text</span>=<span class="hljs-string">&quot;Hello, World!&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:textSize</span>=<span class="hljs-string">&quot;24sp&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">app:layout_constraintBottom_toBottomOf</span>=<span class="hljs-string">&quot;parent&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">app:layout_constraintTop_toTopOf</span>=<span class="hljs-string">&quot;parent&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">app:layout_constraintStart_toStartOf</span>=<span class="hljs-string">&quot;parent&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">app:layout_constraintEnd_toEndOf</span>=<span class="hljs-string">&quot;parent&quot;</span>/&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>我们用它来显示<code>Hello World!</code></p>
+<p>之后我们再修改<code>AndroidManifest.xml</code>文件，插入下面的代码。</p>
+<p>下面的代码表示对<code>MainActivity</code>这个活动进行注册，没有在<code>AndroidManifest.xml</code>里注册的活动是不能使用的。</p>
+<p>下面代码中的<code>android.intent.action.MAIN</code>与<code>android.intent.category.LAUNCHER</code>表示<code>MainActivity</code>是这个项目的主活动，在手机上点击应用图标，首先启动的就是这个活动。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">activity</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;com.example.helloworld.MainActivity&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:exported</span>=<span class="hljs-string">&quot;true&quot;</span>&gt;</span>  <br>    <span class="hljs-tag">&lt;<span class="hljs-name">intent-filter</span>&gt;</span>        <br>        <span class="hljs-tag">&lt;<span class="hljs-name">action</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;android.intent.action.MAIN&quot;</span> /&gt;</span>  <br>        <span class="hljs-tag">&lt;<span class="hljs-name">category</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;android.intent.category.LAUNCHER&quot;</span> /&gt;</span>  <br>    <span class="hljs-tag">&lt;/<span class="hljs-name">intent-filter</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">activity</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>接下来我们分析一下<code>MainActivity</code>这个主活动的代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">AppCompatActivity</span> &#123;  <br>  <br>    <span class="hljs-meta">@Override</span>  <br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> &#123;  <br>        <span class="hljs-built_in">super</span>.onCreate(savedInstanceState);  <br>        EdgeToEdge.enable(<span class="hljs-built_in">this</span>);  <br>        setContentView(R.layout.activity_main);  <br>        &#125;);  <br>    &#125;  <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>首先可以看到<code>MainActivity</code>是继承自<code>AppCompatActivity</code>的，这是一种向下兼容的<code>Activity</code>，<code>Activity</code>是<code>Android</code>系统提供的一个活动基类，我们项目中的所有活动都必须继承它或者它的子类才能拥有活动的特性（<code>AppCompatActivity</code>是<code>Activity</code>的子类）。然后可以看到，<code>MainActivity</code>中有一个<code>onCreate()</code>方法，这个方法是一个活动被创建时必定要执行的方法，其中只有两行代码，并没有<code>Hello World！</code>。</p>
+<p>因为Android程序的设计讲究逻辑和视图分离，因此是不直接在活动中直接编写界面的，更加通用的方法是在布局文件中编写界面，然后在活动中引入进来，可以看到，在<code>onCreate</code>方法的第二行调用了<code>setContentView()</code>方法，就是这个方法给当前的活动引入了一个<code>activity_main</code>的布局。</p>
+<p>布局文件都是定义在<code>res/layout</code>目录下的，当你展开<code>layout</code>目录，你好看到<code>activity_main.xml</code>这个文件。</p>
+<p>这个文件中有一个我们上面插入的<code>TextView</code>，这是Android系统提供的一个控件，用于在布局中显示文字的。</p>
+<h3 id="详解项目中的资源"><a href="#详解项目中的资源" class="headerlink" title="详解项目中的资源"></a>详解项目中的资源</h3><p><code>res</code>目录</p>
+<ul>
+<li>所有以<code>drawable</code>开头的文件夹都是用来放图片的</li>
+<li>所有以<code>mipmap</code>开头的文件夹都是用来放应用图标的</li>
+<li>所有以<code>values</code>开头的文件夹都是用来放字符串、样式、颜色等配置的</li>
+<li><code>layout</code>文件夹是用来放布局文件的。</li>
+</ul>
+<p>程序中一般会有很多<code>mipmap</code>开头的文件夹，起始主要是为了让程序能够更好地兼容各种设备。</p>
+<p>知道了<code>res</code>目录下每个文件夹的含义，我们来看一下如何去使用这些资源。</p>
+<p>打开<code>res/values/strings.xml</code>文件，内容如下所示：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">resources</span>&gt;</span>  <br>    <span class="hljs-tag">&lt;<span class="hljs-name">string</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;app_name&quot;</span>&gt;</span>Hello World<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span>  <br><span class="hljs-tag">&lt;/<span class="hljs-name">resources</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>可以看到，这里定义了一个应用程序名的字符串，我们有如下两种方式来引用它</p>
+<ul>
+<li>在代码中通过<code>R.string.hello_world</code>可以获得该字符串的引用</li>
+<li>在<code>XML</code>中通过<code>@string/hello_world</code>可以获得该字符串的引用</li>
+</ul>
+<p>基本的语法就是上面这两种方式，其中<code>string</code>部分是可以替换的，如果是引用的图片资源就可以替换成<code>drawable</code>，如果是引用的应用图标就可以替换成<code>mipmap</code>，如果是引用的布局文件就可以替换成<code>layout</code>，以此类推。</p>
+<p>下面举一个简单的例子来帮助理解，打开<code>AndroidManifest.xml</code>文件，查看。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">application</span>        <span class="hljs-attr">android:allowBackup</span>=<span class="hljs-string">&quot;true&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:dataExtractionRules</span>=<span class="hljs-string">&quot;@xml/data_extraction_rules&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:fullBackupContent</span>=<span class="hljs-string">&quot;@xml/backup_rules&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:icon</span>=<span class="hljs-string">&quot;@mipmap/ic_launcher&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:label</span>=<span class="hljs-string">&quot;@string/app_name&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:roundIcon</span>=<span class="hljs-string">&quot;@mipmap/ic_launcher_round&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:supportsRtl</span>=<span class="hljs-string">&quot;true&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">android:theme</span>=<span class="hljs-string">&quot;@style/Theme.HelloWorld&quot;</span>  </span><br><span class="hljs-tag">    <span class="hljs-attr">tools:targetApi</span>=<span class="hljs-string">&quot;31&quot;</span>&gt;</span>  <br>    <span class="hljs-tag">&lt;<span class="hljs-name">activity</span>            <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;com.example.helloworld.MainActivity&quot;</span>  </span><br><span class="hljs-tag">        <span class="hljs-attr">android:exported</span>=<span class="hljs-string">&quot;true&quot;</span>&gt;</span>  <br>        <span class="hljs-tag">&lt;<span class="hljs-name">intent-filter</span>&gt;</span>        <span class="hljs-tag">&lt;<span class="hljs-name">action</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;android.intent.action.MAIN&quot;</span> /&gt;</span>  <br>            <span class="hljs-tag">&lt;<span class="hljs-name">category</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;android.intent.category.LAUNCHER&quot;</span> /&gt;</span>  <br>        <span class="hljs-tag">&lt;/<span class="hljs-name">intent-filter</span>&gt;</span>        <br>    <span class="hljs-tag">&lt;/<span class="hljs-name">activity</span>&gt;</span>    <br><span class="hljs-tag">&lt;/<span class="hljs-name">application</span>&gt;</span>  <br><br></code></pre></td></tr></table></figure>
+
+<p>其中项目的应用图标就是通过<code>android:icon</code>属性来指定的，应用的名称则是通过<code>android:label</code>属性指定的。</p>
+<h3 id="启动模拟器运行"><a href="#启动模拟器运行" class="headerlink" title="启动模拟器运行"></a>启动模拟器运行</h3><p>但是我们使用电脑开发并无法直接运行 Android程序，Android程序是要运行在Android系统上的，Android Studio提供了内置模拟器，我们可以通过模拟器运行 Android 程序。</p>
+<p>创建模拟器后我们只需要点击右上角的运行，既可运行Android程序。</p>
+<h2 id="日志工具的使用"><a href="#日志工具的使用" class="headerlink" title="日志工具的使用"></a>日志工具的使用</h2><h3 id="使用Android的日志工具Log"><a href="#使用Android的日志工具Log" class="headerlink" title="使用Android的日志工具Log"></a>使用Android的日志工具Log</h3><p>Android 中的日志工具类是 Log（<code>android.uril.Log</code>），这个类中提供了如下 5 个方法来供我们打印日志。</p>
+<ul>
+<li><code>Log.v()</code>。用于打印那些最为琐碎的、意义最小的日志信息。对应级别 verbose，是 Android 日志里面级别最低的一种。</li>
+<li><code>Log.d()</code>。用于打印一些调试信息，这些信息对你调试程序和分析问题应该是有帮助的。对应级别 debug，比 verbose 高一级。</li>
+<li><code>Log.i()</code>。用于打印一些比较重要的数据，这些数据应该是你非常想看到的、可以帮你分析用户行为数据。对应级别 info，比 debug 高一级。</li>
+<li><code>Log.w()</code>。用于打印一些警告信息，提示程序在这个地方可能会有潜在的风险，最好区修复一下这些出现警告的地方。对应级别 warn，比 info 高一级。</li>
+<li><code>Log.e()</code>。用于打印程序中的错误信息，比如程序进入到了 catch 语句当中。当有错误信息打印出来的时候，一般都代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比 warn 高一级。</li>
+</ul>
+<p>起始很简单，一共就 5 个方法，当然每个方法还会有不同的重载，但那对你来说</p>
+<h3 id="为什么使用Log而不使用System-out"><a href="#为什么使用Log而不使用System-out" class="headerlink" title="为什么使用Log而不使用System.out"></a>为什么使用Log而不使用System.out</h3><p>为什么在Android中会偏向于使用Log而不是使用<code>System.out.println</code>，这是因为<code>Log</code>和<code>System.out</code>相比，可以控制日志打印、可以设定打印时间、可以添加过滤器，并且对日志有所区分比如<code>Eroor</code>信息和<code>Debug</code>信息，总结就是功能更加强大。</p>
+<p>我们可以通过快捷输入的方式在Android Studio中快速使用<code>Log</code>，比如在代码中输入<code>logd</code>然后按tab补全会自动补全一条完整的打印语句，同理输入<code>logi</code>对应<code>info</code>级别的日志，<code>logw</code>对应<code>warn</code>级别的日志，以此类推。</p>
+<p>另外，由于<code>Log</code>的所有方法都要求传入一个<code>tag</code>参数，每次写一遍显然太过麻烦，我们可以在<code>onCreate()</code>方法的外面输入<code>logt</code>，然后按下tab键，这时就会以当前的类名作为值自动生成一个<code>tag</code>常量。</p>
+<p>除了快捷输入之外，logcat中还能很轻松地添加过滤器。</p>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/28/pwn/heap/unlink/">← Next Unlink</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/26/cs/data/">数据结构和算法 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">Android系统架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Android%E5%B7%B2%E5%8F%91%E5%B8%83%E7%9A%84%E7%89%88%E6%9C%AC"><span class="toc-number">1.2.</span> <span class="toc-text">Android已发布的版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Android%E5%BA%94%E7%94%A8%E5%BC%80%E5%8F%91%E7%89%B9%E8%89%B2"><span class="toc-number">1.3.</span> <span class="toc-text">Android应用开发特色</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">2.</span> <span class="toc-text">环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E5%87%86%E5%A4%87%E7%9A%84%E5%B7%A5%E5%85%B7"><span class="toc-number">2.1.</span> <span class="toc-text">需要准备的工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%90%AD%E5%BB%BA%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83"><span class="toc-number">2.2.</span> <span class="toc-text">搭建开发环境</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E5%88%9B%E5%BB%BA"><span class="toc-number">3.</span> <span class="toc-text">项目创建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E7%AC%AC%E4%B8%80%E4%B8%AA%E9%A1%B9%E7%9B%AE"><span class="toc-number">3.1.</span> <span class="toc-text">创建第一个项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%A6%E8%A7%A3%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84%E8%B5%84%E6%BA%90"><span class="toc-number">3.2.</span> <span class="toc-text">详解项目中的资源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E6%A8%A1%E6%8B%9F%E5%99%A8%E8%BF%90%E8%A1%8C"><span class="toc-number">3.3.</span> <span class="toc-text">启动模拟器运行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E5%B7%A5%E5%85%B7%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">日志工具的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8Android%E7%9A%84%E6%97%A5%E5%BF%97%E5%B7%A5%E5%85%B7Log"><span class="toc-number">4.1.</span> <span class="toc-text">使用Android的日志工具Log</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8Log%E8%80%8C%E4%B8%8D%E4%BD%BF%E7%94%A8System-out"><span class="toc-number">4.2.</span> <span class="toc-text">为什么使用Log而不使用System.out</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
