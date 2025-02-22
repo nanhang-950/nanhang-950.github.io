@@ -116,4 +116,203 @@ lightGallery(document.getElementById('post-bg'), {
    }
  }
 });
-document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ARM Pwn</h1></div><hr><div id="post-content"><div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/heterarchical/power/">← Next PowerPC Pwn</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/heap/ptmalloc2/">Ptmalloc2内存管理分析 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>ARM Pwn</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>arm 是一种广泛支持嵌入式、移动设备和服务器上的处理器架构，它支持 32 位和 64 位模式。arm 汇编有不同的指令集，针对不同的架构（ARMv7、ARMv8等）有不同的语法和特性。</p>
+<p>ARM 架构，曾称进阶精简指令集机器（Advanced RISC Machine）更早称作Acorn RISC Machine，是一个32位精简指令集（RISC）处理器架构。</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://xz.aliyun.com/news/15999#toc-8">文章 - 深入异构 PWN：PowerPC&amp;ARM&amp;MIPS - 先知社区</a></p>
+<h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><h3 id="编译环境"><a href="#编译环境" class="headerlink" title="编译环境"></a>编译环境</h3><ul>
+<li>安装编译工具</li>
+</ul>
+<p>安装 ARM 架构交叉编译工具</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo apt update<br>sudo apt install gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi <br>sudo apt install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>编译流程</li>
+</ul>
+<p>将 arm 汇编文件编译为可执行文件，这里我们先要确定需要编译的目标文件端序，然后选择相应的编译工具。</p>
+<p>这里我们以 arm 32 位架构小端序为例。</p>
+<ol>
+<li>将汇编文件编译为目标文件</li>
+</ol>
+<p>因为我们需要将汇编文件编译为 arm 架构小端序的可执行文件，所以这里选择 arm 即 arm 架构小端序编译工具，默认为 32 位。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">arm-linux-gnueabi-as demo.s -o demo.o<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>链接目标文件</li>
+</ol>
+<p>同样选择相应架构的链接器进行链接。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">mipsel-linux-gnu-ld example.o -o example<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="运行和调试环境"><a href="#运行和调试环境" class="headerlink" title="运行和调试环境"></a>运行和调试环境</h3><ul>
+<li>安装 qemu</li>
+</ul>
+<p>我们通过 qemu 来模拟运行。qemu 是一个模拟器，可以模拟多种处理器架构的计算机系统，这是我们实现跨平台运行二进制文件（如在 x86 的机子上跑其它架构程序）的工具</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sudo apt update<br>sudo apt install qemu qemu-user qemu-system-arm <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>远行流程</li>
+</ul>
+<p>根据可执行文件架构，选择对应的 qemu 来运行。</p>
+<p>例如 arm 32位小端序架构，我们可以选择 <code>qemu-arm</code> 来运行</p>
+<p>这里还要区分链接方式，如果动态链接则需要指定动态链接库。</p>
+<p><strong>静态链接：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">qemu-arm-static ./demo<br></code></pre></td></tr></table></figure>
+
+<p><strong>动态链接：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">qemu-arm -L /usr/arm-linux-gnu ./demo<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>调试流程</li>
+</ul>
+<p>安装<code>gdb-multiarch</code>来调试异架构程序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">sudo apt install  gdb-multiarch<br></code></pre></td></tr></table></figure>
+
+<p>首先我们通过 qemu 以调试模式运行程序，<code>-g</code>参数表示设置为调试模式，<code>1234</code>表示程序映射的端口。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">qemu-arm-static -g 1234 ./demo<br></code></pre></td></tr></table></figure>
+
+<p>然后运行<code>gdb-multiarch</code>，并根据架构和端序设置参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">gdb-multiarch<br>set architecture arm<br>set endian little<br></code></pre></td></tr></table></figure>
+
+<p>然后连接映射程序的端口</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">target remote localhost:1234<br></code></pre></td></tr></table></figure>
+
+<h2 id="运行调试"><a href="#运行调试" class="headerlink" title="运行调试"></a>运行调试</h2><ul>
+<li>运行 arm 动态链接程序</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-arm -L /usr/arm-linux-gnueabi ./pwn<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>运行 aarch64 动态链接程序</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-aarch64 -L /usr/aarch64-linux-gnu ./pwn<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>运行静态链接程序</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">qemu-arm-static ./pwn<br>qemu-aarch64-static ./pwn<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>调试程序</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">gdb-multiarch pwn -q<br>set architecture arm<br>set architecture aarch64<br>target remote localhost:1234<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="ARM-架构知识"><a href="#ARM-架构知识" class="headerlink" title="ARM 架构知识"></a>ARM 架构知识</h2><p>ARM 32 位和 Aarch 64 位架构的基本区别</p>
+<p> ARM 32 位（ARMv7 或之前版本）</p>
+<ul>
+<li><strong>寄存器数量</strong>：ARM 32 位架构通常有 16 个通用寄存器（R0 到 R15）。</li>
+<li><strong>指令集</strong>：支持 ARM 和 THUMB 两种模式：<ul>
+<li><strong>ARM 模式</strong>：32 位指令，通常每个指令长度为 32 位。</li>
+<li><strong>THUMB 模式</strong>：16 位指令，减少了指令长度，通常适用于资源受限的系统。</li>
+</ul>
+</li>
+<li><strong>堆栈和内存</strong>：一般情况下，内存寻址范围为 4GB。</li>
+<li><strong>系统调用</strong>：通过寄存器和中断向内核请求服务。</li>
+</ul>
+<p> ARM 64 位（ARMv8 或之后版本）</p>
+<ul>
+<li><strong>寄存器数量</strong>：ARM 64 位架构提供 31 个通用寄存器（X0 到 X30），其中 <code>X30</code> 用作链接寄存器（LR）。</li>
+<li><strong>指令集</strong>：ARMv8 引入了 AArch64 模式，完全不同于 32 位的 AArch32 模式。64 位架构的指令集与 32 位相比更加简洁，优化了指令长度和功能。<ul>
+<li><strong>AArch64 模式</strong>：所有指令都是 64 位。</li>
+<li><strong>AArch32 模式</strong>：向后兼容 ARMv7 等 32 位模式，支持 32 位指令。</li>
+</ul>
+</li>
+<li><strong>内存寻址</strong>：支持更大内存寻址空间（最高支持 16 EB 的地址空间）。</li>
+</ul>
+<p class='item-img' data-src='/../../RE/assets/Pasted%20image%2020241125212837.png'><img src="/../../RE/assets/Pasted%20image%2020241125212837.png"></p>
+<p class='item-img' data-src='/../../RE/assets/Pasted%20image%2020241125212844.png'><img src="/../../RE/assets/Pasted%20image%2020241125212844.png"></p>
+<p>arm 运行模式</p>
+<ul>
+<li>用户模式（USR）：ARM处理器正常程序执行状态。</li>
+<li>快速中断模式（FIQ）：高速数据传输或通道处理。</li>
+<li>外部中断模式（IRQ）：通用的中断模式。</li>
+<li>管理模式（SVC）：操作系统使用的保护模式。</li>
+<li>数据访问终止模式（ABT）：当数据或指令预取终止时进入该模式，可用于虚拟存储及存储保护。</li>
+<li>系统模式（SYS）：运行具有特权的操作系统任务。</li>
+<li>未定义指定终止模式（UND）：未定义的指令执行是进入该模式</li>
+</ul>
+<h2 id="汇编基础"><a href="#汇编基础" class="headerlink" title="汇编基础"></a>汇编基础</h2><h3 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h3><table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>X0 寄存器</td>
+<td>用来保存返回值（或传参）</td>
+</tr>
+<tr>
+<td>X1 ~ X7 寄存器</td>
+<td>用来保存函数的传参</td>
+</tr>
+<tr>
+<td>X8寄存器</td>
+<td>也可以用来保存返回值</td>
+</tr>
+<tr>
+<td>X9 ~ X28寄存器</td>
+<td>一般寄存器，无特殊用途</td>
+</tr>
+<tr>
+<td>x29(FP)寄存器</td>
+<td>用来保存栈底地址</td>
+</tr>
+<tr>
+<td>X30 (LR)寄存器</td>
+<td>用来保存返回地址</td>
+</tr>
+<tr>
+<td>X31(SP) 寄存器</td>
+<td>用来保存栈顶地址</td>
+</tr>
+<tr>
+<td>X31(ZR)寄存器</td>
+<td>零寄存器，恒为0</td>
+</tr>
+<tr>
+<td>X32(PC)寄存器</td>
+<td>用来保存当前执行的指令的地址</td>
+</tr>
+</tbody></table>
+<h3 id="指令格式"><a href="#指令格式" class="headerlink" title="指令格式"></a>指令格式</h3><ol>
+<li>LDMIA R0,{R1,R2,R3,R4}</li>
+</ol>
+<p>LDM为：多寄存器 “内存取” 指令 IA 表示每次 LDM 指令结束之后 R0 增加 1 个字 最终结果为<code>R1=[R0],R1=[R0+#4],R1=[R0+#8],R1=[R0+#0xC]</code></p>
+<ol start="2">
+<li>堆栈寻址（FA、EA、FD、ED）</li>
+</ol>
+<p>STMFD SP！，{R1-R7,LR}@将 R1-R7 以及 LR 入栈 LDMFD SP!，{}</p>
+<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><h3 id="常用指令"><a href="#常用指令" class="headerlink" title="常用指令"></a>常用指令</h3><h2 id="函数调用约定"><a href="#函数调用约定" class="headerlink" title="函数调用约定"></a>函数调用约定</h2><p>arm 的函数调用约定</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><h2 id="shellcode编写"><a href="#shellcode编写" class="headerlink" title="shellcode编写"></a>shellcode编写</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">.section .text<br>.globl _start<br><br>_start:<br>movw r5,#0x732f<br>movt r5,0x68<br>push &#123;r5&#125;<br>movw r5,#0x622f<br>movt r5,#0x6e69<br>push &#123;r5&#125;<br>mov r0,sp<br>mov r7,#0xb<br>mov r1,#0<br>mov r2,#0<br>svc #0<br></code></pre></td></tr></table></figure>
+
+<p>先看一下 arm 的函数调用约定，函数的第 1<del>4 个参数分别保存在&#96;r0</del>r3<code>寄存器中，剩下的参数从右往左依次入栈，被调用者实现栈平衡，函数的返回值保存在</code>r0&#96;中。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241126225847.png'><img src="/assets/Pasted%20image%2020241126225847.png"></p>
+<p>除此之外，arm 的<code>b/bl</code>等指令实现跳转；<code>pc</code>寄存器相当于x86的<code>eip</code>，保存下一条指令的地址，也是我们要控制的目标。</p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><h3 id="jarvisoj-typo"><a href="#jarvisoj-typo" class="headerlink" title="jarvisoj_typo"></a>jarvisoj_typo</h3><ul>
+<li>分析</li>
+</ul>
+<p><code>file</code>查看程序发现为 arm32 位架构，并且是静态链接的。</p>
+<p><code>checksec</code>查保护发现程序没有栈溢出和 PIE 保护，我们只需要进行栈溢出攻击即可。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250106092650.png'><img src="/assets/Pasted%20image%2020250106092650.png"></p>
+<p>我们可以在文件中找到<code>system</code>等危险函数和<code>/bin/sh</code>字符串。</p>
+<p>我们通过 ROPgadget 来搜索程序中的onegadget。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>  <br>cli_script()<br>io=gift[<span class="hljs-string">&quot;io&quot;</span>]<br>elf=gift[<span class="hljs-string">&quot;elf&quot;</span>]<br>  <br>sh=<span class="hljs-number">0x00064384</span><br>r0_r4_pc=<span class="hljs-number">0x00020904</span><br>  <br>ia()<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="shanghai2018-baby-arm"><a href="#shanghai2018-baby-arm" class="headerlink" title="shanghai2018_baby_arm"></a>shanghai2018_baby_arm</h3><p>编译代码<code>arm-linux-guneabi-gcc vuln.c -o vuln</code>动态调试分析</p>
+<p>利用qemu运行程序</p>
+<p><code>qemu-arm -L /usr/arm-linux-gnueabi -g 8888 ./vuln aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa gdb-multiarch ./vuln</code></p>
+<h3 id="骇极杯-2018-babyarm"><a href="#骇极杯-2018-babyarm" class="headerlink" title="骇极杯_2018_babyarm"></a>骇极杯_2018_babyarm</h3><ul>
+<li>ret2text</li>
+<li>ret2libc</li>
+<li>ret2syscall</li>
+<li>ret2shellcode</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/388683540">ARM汇编入门指南 - 知乎</a><br><a target="_blank" rel="noopener" href="https://chan-shaw.github.io/2020/03/20/arm%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">arm汇编语言学习笔记 | 安和桥南丶的博客</a></p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/24/pwn/heterarchical/mips/">← Next MIPS Pwn</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/pwn/heap/ptmalloc2/">Ptmalloc2内存管理分析 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">2.</span> <span class="toc-text">环境搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E7%8E%AF%E5%A2%83"><span class="toc-number">2.1.</span> <span class="toc-text">编译环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E5%92%8C%E8%B0%83%E8%AF%95%E7%8E%AF%E5%A2%83"><span class="toc-number">2.2.</span> <span class="toc-text">运行和调试环境</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E8%B0%83%E8%AF%95"><span class="toc-number">3.</span> <span class="toc-text">运行调试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ARM-%E6%9E%B6%E6%9E%84%E7%9F%A5%E8%AF%86"><span class="toc-number">4.</span> <span class="toc-text">ARM 架构知识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80"><span class="toc-number">5.</span> <span class="toc-text">汇编基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">5.1.</span> <span class="toc-text">寄存器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="toc-number">5.2.</span> <span class="toc-text">指令格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E5%9D%80%E6%96%B9%E5%BC%8F"><span class="toc-number">5.3.</span> <span class="toc-text">寻址方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%8C%87%E4%BB%A4"><span class="toc-number">5.4.</span> <span class="toc-text">常用指令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%BA%A6%E5%AE%9A"><span class="toc-number">6.</span> <span class="toc-text">函数调用约定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="toc-number">7.</span> <span class="toc-text">系统调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#shellcode%E7%BC%96%E5%86%99"><span class="toc-number">8.</span> <span class="toc-text">shellcode编写</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">9.</span> <span class="toc-text">例题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jarvisoj-typo"><span class="toc-number">9.1.</span> <span class="toc-text">jarvisoj_typo</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#shanghai2018-baby-arm"><span class="toc-number">9.2.</span> <span class="toc-text">shanghai2018_baby_arm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AA%87%E6%9E%81%E6%9D%AF-2018-babyarm"><span class="toc-number">9.3.</span> <span class="toc-text">骇极杯_2018_babyarm</span></a></li></ol></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
