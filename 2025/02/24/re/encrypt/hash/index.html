@@ -1,0 +1,283 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>逆向中的Hash算法 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>逆向中的Hash算法</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Hash 类算法是一种摘要算法，摘要结果是不可逆的。所以一般在逆向中我们通常碰到 Hash 算法要通过它给出的一些信息来进行碰撞爆破。</p>
+<p>下面我们首先了解一下常见的 Hash 算法。</p>
+<h2 id="算法特征"><a href="#算法特征" class="headerlink" title="算法特征"></a>算法特征</h2><h3 id="MD5"><a href="#MD5" class="headerlink" title="MD5"></a>MD5</h3><p>MD5（Message-Digest Algorithm 5）是信息学中使用广泛的哈希算法</p>
+<p>这个算法具有很多性质：</p>
+<ol>
+<li>压缩性：对于任意长度的输入，输出长度总是相同的</li>
+<li>抗修改性：对原数据的一点点修改都会导致最终结果的最大变化。</li>
+<li>抗碰撞性：已知原数据和 MD5 值很难生成与原数据不同但 MD5 值相同的数据。</li>
+</ol>
+<p>可以理解为：生成任意一段数据的 “数字指纹”，对文件或数据的微小改动都会之间导致数字指纹的巨大变化。</p>
+<p>Hash 算法常见一般有两种形式的调用：</p>
+<ul>
+<li>封装成函数</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint8_t</span> digest[<span class="hljs-number">16</span>];<br><span class="hljs-type">uint8_t</span> input[]=<span class="hljs-string">&quot;xxxxxx&quot;</span>;<br><br>MD5_hash(input,<span class="hljs-keyword">sizeof</span>(input)<span class="hljs-number">-1</span>,digest);<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>分三步完成哈希</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">MD5_CTX ctx;<br><span class="hljs-type">uint8_t</span> digest[<span class="hljs-number">16</span>];<br><span class="hljs-type">uint8_t</span> input[]=<span class="hljs-string">&quot;xxxxxx&quot;</span>;<br><br>MD5_Init(&amp;ctx);<br>MD5_Update(&amp;ctx,input,<span class="hljs-keyword">sizeof</span>(input)<span class="hljs-number">-1</span>);<br>MD5_Final(&amp;ctx,digest);<br></code></pre></td></tr></table></figure>
+
+<p>在<code>openssl</code>源码的函数实现中，可以在靠近开头的位置看到四个固定常量。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">A = <span class="hljs-number">0x67452301</span><br>B = <span class="hljs-number">0xEFCDAB89</span><br>C = <span class="hljs-number">0x98BADCFE</span><br>D = <span class="hljs-number">0X10325476</span><br></code></pre></td></tr></table></figure>
+
+<p>识别特征：</p>
+<ul>
+<li>四个固定的常量（初始化向量）</li>
+<li>不论输入是多长，输出永远是16字节</li>
+<li>符合上述两种调用方式之一</li>
+</ul>
+<h3 id="SHA1"><a href="#SHA1" class="headerlink" title="SHA1"></a>SHA1</h3><p>SHA1 算法与 MD5 类似，只不过 SHA1 有五个常量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">H0 = <span class="hljs-number">0x67452301</span><br>H1 = <span class="hljs-number">0xEFCDAB89</span><br>H2 = <span class="hljs-number">0X98BADCFE</span><br>H3 = <span class="hljs-number">0X10325476</span><br>H4 = <span class="hljs-number">0XC3D2E1F0</span><br></code></pre></td></tr></table></figure>
+
+<p>识别特征：</p>
+<ul>
+<li>五个固定的常量（初始化向量）</li>
+<li>不论输入是多长，输出永远是 20 字节</li>
+<li>符合上述两种调用方式之一</li>
+</ul>
+<h3 id="SHA256"><a href="#SHA256" class="headerlink" title="SHA256"></a>SHA256</h3><p>SHA256 则有八个常量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">H0 = <span class="hljs-number">0x67452301</span><br>H1 = <span class="hljs-number">0xEFCDAB89</span><br>H2 = <span class="hljs-number">0x98BADCFE</span><br>H3 = <span class="hljs-number">0x10325476</span><br>H4 = <span class="hljs-number">0xC3D2E1F0</span><br>H5 = <span class="hljs-number">0x9b05688c</span><br>H6 = <span class="hljs-number">0x1f83d9ab</span><br>H7 = <span class="hljs-number">0x5be0cd19</span><br></code></pre></td></tr></table></figure>
+
+<p>识别特征：</p>
+<ul>
+<li>八个固定的常量（初始化向量）</li>
+<li>不论输入是多长，输出永远是32字节</li>
+<li>符合上述两种调用方式之一</li>
+</ul>
+<h2 id="逆向方式"><a href="#逆向方式" class="headerlink" title="逆向方式"></a>逆向方式</h2><h3 id="算法分析"><a href="#算法分析" class="headerlink" title="算法分析"></a>算法分析</h3><p>通过 ida 的 findcrypt 插件我们可以直接查找到程序中的 Hash 常量来判断加密算法，但是这通常只对自己实现或静态链接<code>openssl</code>库才有作用。如果使用<code>openssl</code>链接库编译动态链接，那么 findcrypt 是找不到的。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224171440.png'><img src="/assets/Pasted%20image%2020250224171440.png"></p>
+<p>也不能说找不到，当动态调试程序的时候使用 findcrypt 插件进行查找可以找到整个<code>openssl</code>链接库的常量。这样我们根本无法分析程序是哪个加密算法。</p>
+<p>在使用动态链接的情况下，通常可以通过 ida 函数窗口的函数分析出加密算法。</p>
+<p>看到下例中的<code>md5</code>字样，我们可以判断程序为<code>md5</code>加密算法。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224174412.png'><img src="/assets/Pasted%20image%2020250224174412.png"></p>
+<h3 id="网站查询"><a href="#网站查询" class="headerlink" title="网站查询"></a>网站查询</h3><p>通过在线网站数据库查询并 “解密” Hash值。</p>
+<blockquote>
+<p>md5：<a target="_blank" rel="noopener" href="https://www.cmd5.com/default.aspx">md5在线解密破解,md5解密加密</a></p>
+</blockquote>
+<h3 id="脚本爆破"><a href="#脚本爆破" class="headerlink" title="脚本爆破"></a>脚本爆破</h3><p>通过编写脚本进行碰撞爆破。</p>
+<p>通用脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> string<br><span class="hljs-keyword">import</span> hashlib<br><span class="hljs-keyword">import</span> itertools<br><br><span class="hljs-comment">#设置目标哈希值</span><br>target = <span class="hljs-built_in">bytes</span>.fromhex(<span class="hljs-string">&quot;&quot;</span>)  <br><br><span class="hljs-comment">#设置字符集（可以根据需要修改，以下为大小写字母和数字）</span><br>charset = (string.ascii_letters + string.digits).encode()<br><br><span class="hljs-comment">#根据选择的哈希算法创建哈希对象</span><br>hash_type = <span class="hljs-string">&#x27;sha256&#x27;</span><br><br><span class="hljs-keyword">if</span> hash_type == <span class="hljs-string">&#x27;md5&#x27;</span>:<br>    hash_func = hashlib.md5<br><span class="hljs-keyword">elif</span> hash_type == <span class="hljs-string">&#x27;sha1&#x27;</span>:<br>    hash_func = hashlib.sha1<br><span class="hljs-keyword">elif</span> hash_type == <span class="hljs-string">&#x27;sha256&#x27;</span>:<br>    hash_func = hashlib.sha256<br><span class="hljs-keyword">else</span>:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Unsupported hash type&quot;</span>)<br>    exit()<br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> itertools.product(charset, repeat=<span class="hljs-number">6</span>): <span class="hljs-comment">#这里的6是字符的长度，可以修改为任何你想要的长度</span><br>    guess = <span class="hljs-built_in">bytes</span>(i)<br>    hashed = hash_func(guess).digest()<br>    <span class="hljs-keyword">if</span> hashed == target:<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Found match: <span class="hljs-subst">&#123;guess.decode()&#125;</span>&quot;</span>)<br>        <span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+
+
+<h3 id="hashcat"><a href="#hashcat" class="headerlink" title="hashcat"></a>hashcat</h3><p>使用 hashcat 这个工具进行碰撞爆破。</p>
+<p>常用参数：</p>
+<ul>
+<li>-m 指定哈希类型</li>
+<li>-a 指定破解模式</li>
+<li>-V  查看版本信息</li>
+<li>-o  将输出结果储存到指定文件</li>
+<li>–force 忽略警告</li>
+<li>–show 仅显示破解的 hash 密码和对应的明文</li>
+<li>–remove 从源文件中删除破解成功的 hash</li>
+<li>–username 忽略 hash表 中的用户名</li>
+<li>-b 测试计算机破解速度和相关硬件信息</li>
+<li>-O 限制密码长度</li>
+<li>-T 设置线程数</li>
+<li>-r 使用规则文件</li>
+<li>-1 自定义字符集  -1 0123asd     ?1&#x3D;{0123asd}</li>
+<li>-2 自定义字符集  -2 0123asd    ?2&#x3D;{0123asd}</li>
+<li>-3 自定义字符集  -3 0123asd    ?3&#x3D;{0123asd}</li>
+<li>-i 启用增量破解模式</li>
+<li>–increment-min 设置密码最小长度</li>
+<li>–increment-max 设置密码最大长度</li>
+</ul>
+<p>破解模式介绍：</p>
+<ul>
+<li>0    straight                                           字典破解</li>
+<li>1    combination                                    将字典中密码进行组合（1 2&gt;11 22 12 21）</li>
+<li>3    brute-force                                      使用指定掩码破解</li>
+<li>6    Hybrid Wordlist + Mask                  字典+掩码破解</li>
+<li>7    Hybrid Mask  + Wordlist                 掩码+字典破解</li>
+</ul>
+<p>集成的字符集：</p>
+<ul>
+<li>?l                代表小写字母</li>
+<li>?u              代表大写字母</li>
+<li>?d              代表数字</li>
+<li>?s              代表特殊字符</li>
+<li>?a              代表大小写字母、数字以及特殊字符  </li>
+<li>?b               0x00-0xff</li>
+</ul>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>[SUCTF 2018 招新赛]hash</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>ida 反编译分析。看到了主函数中的 flag 前缀，下面使用 findcrypt 分析算法。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224180228.png'><img src="/assets/Pasted%20image%2020250224180228.png"></p>
+<p>使用 findcrypt 后我们搜索到了程序中的 MD5 常量，可以判断程序使用的是 MD5 算法。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224180336.png'><img src="/assets/Pasted%20image%2020250224180336.png"></p>
+<p>结合上面信息分析程序代码逻辑。</p>
+<p>程序要求输入字符的前 6 个字符为<code>SUCTF&#123;</code>，最后一个字符为<code>&#125;</code>。<code>sub_4011A0</code>函数使用了 MD5 的常量，应该是加密函数。最后将结果存到<code>v18</code>，因为下面的代码疑似以两位十六进制打印了<code>v18</code>变量，这可能是存在函数返回值的变量。</p>
+<p>下面有一个用于判断的 MD5 值，与其判断的<code>Buffer</code>在与其判断之前。将符合<code>i&amp;1==0</code>条件的字符跟 1 进行了异或，<code>i&amp;1</code>即结果是偶数位的字符，所以我们爆破它之前需要跟 1 再次进行异或。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224180543.png'><img src="/assets/Pasted%20image%2020250224180543.png"></p>
+<p>写出逆向脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python">md5=<span class="hljs-string">&quot;bf772f6ed89838b9gb9f7abf3cc09413&quot;</span><br>md5=<span class="hljs-built_in">list</span>(md5)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(md5)):<br>	<span class="hljs-keyword">if</span> i&amp;<span class="hljs-number">1</span> == <span class="hljs-number">0</span>:<br>		md5[i]=<span class="hljs-built_in">chr</span>(<span class="hljs-built_in">ord</span>(md5[i])^<span class="hljs-number">1</span>)<br>result=<span class="hljs-string">&quot;&quot;</span>.join(md5)<br><span class="hljs-built_in">print</span>(result)<br><span class="hljs-comment">#cf673f7ee88828c9fb8f6acf2cb08403</span><br></code></pre></td></tr></table></figure>
+
+<p>然后我们可以先在 md5 查询网站查询。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224220110.png'><img src="/assets/Pasted%20image%2020250224220110.png"></p>
+<p>查询结果为：<code>birthday</code>。</p>
+<p>接下来我们继续逆向剩下的代码程序。</p>
+<p>将加密后的<code>buffer</code>与 md5 密文进行比较，如果相等则执行第二个<code>if</code>语句部分的代码。</p>
+<p>下面我们跟进分析<code>sub_401A90</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224220212.png'><img src="/assets/Pasted%20image%2020250224220212.png"></p>
+<p>分析函数代码，首先将取输入的长度。然后以输入长度为界限进行迭代处理。将每个字符根据下标进行<code>i*2+1</code>偏移。<code>i</code>就是字符串的下标。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224220659.png'><img src="/assets/Pasted%20image%2020250224220659.png"></p>
+<p>根据代码逻辑，对比较的字符串进行逆向处理。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">enc=<span class="hljs-string">&quot;`ut9t;&quot;</span><br>result=<span class="hljs-string">&quot;&quot;</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc)):<br>	n=i*<span class="hljs-number">2</span>+<span class="hljs-number">1</span><br>	result+=<span class="hljs-built_in">chr</span>(<span class="hljs-built_in">ord</span>(enc[i])-n)<br><span class="hljs-built_in">print</span>(result)<br><span class="hljs-comment">#_ro2k0</span><br></code></pre></td></tr></table></figure>
+
+<p>将第一段 flag 和 第二段 flag 拼接起来得：<code>SUCTF&#123;birthday_ro2k0&#125;</code></p>
+<blockquote>
+<p>2024极客大挑战 blasting_master</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>分析主函数代码，发现读取了输入并去除换行符。然后由<code>byte_42DE</code>作为标志决定是否执行<code>sub_1464</code>函数，函数参数为我们输入的内容。然后再对指定大小内存进行比较检查对错。</p>
+<p>根据以上逻辑我们可以判断程序默认是执行<code>sub_1464</code>函数的，这个函数极可能就是加密函数。而<code>unk_2020</code>以及<code>unk_4060</code>可能就是存储密文的变量以及存储加密结果的变量。<code>dword_4040</code>很明显就是比较长度了。</p>
+<p>我们先根据代码逻辑进行函数及变量重命名方便理解。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224223634.png'><img src="/assets/Pasted%20image%2020250224223634.png"></p>
+<p>重命名后：</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224224134.png'><img src="/assets/Pasted%20image%2020250224224134.png"></p>
+<p>接下来我们首先使用 findcrypt 进行算法特征查找，但是最后 findcrypt 并没有找到算法特征。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224224246.png'><img src="/assets/Pasted%20image%2020250224224246.png"></p>
+<p>但是我们在函数窗口发现了算法特征，可以看到动态链接函数中的 MD5 字样。我们可以由此判断<code>encrypt</code>加密算法是 MD5 算法。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224224401.png'><img src="/assets/Pasted%20image%2020250224224401.png"></p>
+<p>进入<code>encrypt</code>函数分析，可以看到代码逻辑非常乱。</p>
+<p>我们先根据代码逻辑修改变量和函数类型。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224224545.png'><img src="/assets/Pasted%20image%2020250224224545.png"></p>
+<p>修改后的：</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224225239.png'><img src="/assets/Pasted%20image%2020250224225239.png"></p>
+<p>这里<code>v3</code>变量获取了我们的输入，之后将<code>v3</code>作为参数传入了<code>sub_13E2</code>参数，并且将<code>dec</code>数组作为第二个参数传入函数。</p>
+<p>这里根据前面的逻辑判断，<code>sub_13E2</code>大概就是封装的 MD5 加密函数。<code>dec</code>是存放结果的数组。</p>
+<p>下面的逻辑就是对加密结果进行混淆的逻辑了。</p>
+<p>跟进<code>sub_13E2</code>函数查看，验证我们的判断是正确的。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224225906.png'><img src="/assets/Pasted%20image%2020250224225906.png"></p>
+<p>我们接下来分析函数中对加密结果进行混淆的逻辑。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250224232906.png'><img src="/assets/Pasted%20image%2020250224232906.png"></p>
+<p>以上代码循环执行了十六次，即混淆了十六次。而混淆的数据以及存储的位置每次又都是不同的。我们可以判断这里我们的 md5 加密同样进行了十六次，而我们的 flag 前缀确定的是<code>SYS&#123;</code>，所以我们可以将密文数据分为 16 组进行爆破。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> hashlib <br><br>cipher = [<span class="hljs-number">0xB2</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0xA0</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0x7F</span>, <span class="hljs-number">0x54</span>, <span class="hljs-number">0x6D</span>, <span class="hljs-number">0x96</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0x0F</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0x9A</span>, <span class="hljs-number">0x72</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0xA0</span>, <span class="hljs-number">0xB5</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0xA4</span>, <span class="hljs-number">0x6A</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0xFA</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x31</span>, <span class="hljs-number">0xC3</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0x54</span>, <span class="hljs-number">0x29</span>, <span class="hljs-number">0xA7</span>, <span class="hljs-number">0x59</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x13</span>, <span class="hljs-number">0x21</span>, <span class="hljs-number">0xBD</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0x5F</span>, <span class="hljs-number">0x8D</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x27</span>, <span class="hljs-number">0x08</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x92</span>, <span class="hljs-number">0x9C</span>, <span class="hljs-number">0xB5</span>, <span class="hljs-number">0x7C</span>, <span class="hljs-number">0xDF</span>, <span class="hljs-number">0x69</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xF6</span>, <span class="hljs-number">0xCA</span>, <span class="hljs-number">0x7A</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0x98</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x2A</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x97</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0xF8</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x1F</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0xA6</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0xA9</span>, <span class="hljs-number">0x0D</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0xAC</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0xF9</span>, <span class="hljs-number">0xF5</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xB1</span>, <span class="hljs-number">0x91</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0xD5</span>, <span class="hljs-number">0x76</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0xAC</span>, <span class="hljs-number">0x2E</span>, <span class="hljs-number">0x69</span>, <span class="hljs-number">0x32</span>, <span class="hljs-number">0xD5</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0x1D</span>, <span class="hljs-number">0xC1</span>, <span class="hljs-number">0x3C</span>, <span class="hljs-number">0xEC</span>, <span class="hljs-number">0xF5</span>, <span class="hljs-number">0x2C</span>, <span class="hljs-number">0x90</span>, <span class="hljs-number">0xED</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0x17</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x6C</span>, <span class="hljs-number">0x3B</span>, <span class="hljs-number">0xB3</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0x29</span>, <span class="hljs-number">0xC0</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0xDF</span>, <span class="hljs-number">0x92</span>, <span class="hljs-number">0x73</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0xC2</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x9B</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x73</span>, <span class="hljs-number">0x2A</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0xD3</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0x2E</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0xF1</span>, <span class="hljs-number">0x85</span>, <span class="hljs-number">0xED</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0x8F</span>, <span class="hljs-number">0x62</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0x79</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0xAC</span>, <span class="hljs-number">0x80</span>, <span class="hljs-number">0xCE</span>, <span class="hljs-number">0xF5</span>, <span class="hljs-number">0xB2</span>, <span class="hljs-number">0xA0</span>, <span class="hljs-number">0x0C</span>, <span class="hljs-number">0xF7</span>, <span class="hljs-number">0xE1</span>, <span class="hljs-number">0xC5</span>, <span class="hljs-number">0x0E</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x27</span>, <span class="hljs-number">0xD1</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0xEA</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0x1C</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x0B</span>, <span class="hljs-number">0x32</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x1F</span>, <span class="hljs-number">0xE5</span>, <span class="hljs-number">0xC7</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0xEA</span>, <span class="hljs-number">0x5B</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0xAB</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">0xB6</span>, <span class="hljs-number">0xDF</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0xF7</span>, <span class="hljs-number">0x6D</span>, <span class="hljs-number">0x93</span>, <span class="hljs-number">0xEC</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0xE0</span>, <span class="hljs-number">0xD1</span>, <span class="hljs-number">0x1A</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x2E</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0xBB</span>, <span class="hljs-number">0xAE</span>, <span class="hljs-number">0x08</span>, <span class="hljs-number">0x40</span>, <span class="hljs-number">0xD8</span>, <span class="hljs-number">0x5B</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0xB5</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0x15</span>, <span class="hljs-number">0x35</span>, <span class="hljs-number">0x7F</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x49</span>, <span class="hljs-number">0x3E</span>, <span class="hljs-number">0x5B</span>, <span class="hljs-number">0x9C</span>, <span class="hljs-number">0x0D</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0x0D</span>, <span class="hljs-number">0xB6</span>, <span class="hljs-number">0x80</span>, <span class="hljs-number">0xB7</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0xEF</span>, <span class="hljs-number">0x3C</span>, <span class="hljs-number">0x0C</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0x74</span>, <span class="hljs-number">0x9E</span>, <span class="hljs-number">0x5F</span>, <span class="hljs-number">0x1F</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0xA1</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0xF1</span>, <span class="hljs-number">0xD8</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0x92</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x6F</span>, <span class="hljs-number">0x85</span>, <span class="hljs-number">0xD2</span>, <span class="hljs-number">0x15</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x1F</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0xD1</span>, <span class="hljs-number">0xAB</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0x9A</span>, <span class="hljs-number">0xB6</span>, <span class="hljs-number">0xC4</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0xFB</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0x8D</span>, <span class="hljs-number">0xE6</span>, <span class="hljs-number">0x8C</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0x19</span>, <span class="hljs-number">0x5E</span>, <span class="hljs-number">0x94</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0xCC</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0xB9</span>, <span class="hljs-number">0x0A</span>, <span class="hljs-number">0x4A</span>, <span class="hljs-number">0x17</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xC5</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x4B</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0xE5</span>, <span class="hljs-number">0x3E</span>, <span class="hljs-number">0xFA</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0x0A</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0xB4</span>, <span class="hljs-number">0x8E</span>, <span class="hljs-number">0x7F</span>, <span class="hljs-number">0x25</span>, <span class="hljs-number">0x84</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x90</span>, <span class="hljs-number">0xCD</span>, <span class="hljs-number">0x35</span>, <span class="hljs-number">0x87</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0xC3</span>, <span class="hljs-number">0xCE</span>, <span class="hljs-number">0x81</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x16</span>, <span class="hljs-number">0x7E</span>, <span class="hljs-number">0x85</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xF1</span>, <span class="hljs-number">0xDB</span>, <span class="hljs-number">0x8E</span>, <span class="hljs-number">0x74</span>, <span class="hljs-number">0x15</span>, <span class="hljs-number">0xCF</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x5E</span>, <span class="hljs-number">0x1B</span>, <span class="hljs-number">0xE9</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x5B</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0x10</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0x6E</span>, <span class="hljs-number">0xCD</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0xAD</span>, <span class="hljs-number">0x09</span>, <span class="hljs-number">0x74</span>, <span class="hljs-number">0x58</span>, <span class="hljs-number">0x49</span>, <span class="hljs-number">0xA3</span>, <span class="hljs-number">0xF5</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x1B</span>, <span class="hljs-number">0xE3</span>, <span class="hljs-number">0x3C</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0x5C</span>, <span class="hljs-number">0xAD</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0x6B</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0x41</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0xAF</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x28</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0x5E</span>, <span class="hljs-number">0xCF</span>, <span class="hljs-number">0x36</span>, <span class="hljs-number">0xAE</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0xCE</span>, <span class="hljs-number">0x93</span>, <span class="hljs-number">0xF2</span>, <span class="hljs-number">0x70</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x9D</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0x4A</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0xE7</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0xB0</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x96</span>, <span class="hljs-number">0x0C</span>, <span class="hljs-number">0xAB</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0x4B</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x92</span>, <span class="hljs-number">0xDE</span>, <span class="hljs-number">0x6C</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0xCE</span>, <span class="hljs-number">0x32</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0xE2</span>, <span class="hljs-number">0x52</span>, <span class="hljs-number">0x59</span>, <span class="hljs-number">0xCA</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x4A</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0xD8</span>, <span class="hljs-number">0x30</span>, <span class="hljs-number">0xA2</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0xD5</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0xE6</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0x4A</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0x26</span>, <span class="hljs-number">0xD2</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0xED</span>, <span class="hljs-number">0xBD</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x87</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x47</span>, <span class="hljs-number">0x25</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0x3D</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x6A</span>, <span class="hljs-number">0xAD</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0xDD</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0xB1</span>, <span class="hljs-number">0xBD</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0x7C</span>, <span class="hljs-number">0x53</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x3C</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x3D</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x28</span>, <span class="hljs-number">0xC8</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0x82</span>, <span class="hljs-number">0xA0</span>, <span class="hljs-number">0xC8</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0xDE</span>, <span class="hljs-number">0x29</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0xC1</span>, <span class="hljs-number">0x53</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0xB0</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0x04</span>, <span class="hljs-number">0xEE</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x35</span>, <span class="hljs-number">0x8A</span>, <span class="hljs-number">0xA8</span>, <span class="hljs-number">0xA2</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x6F</span>, <span class="hljs-number">0x24</span>, <span class="hljs-number">0xB6</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0x62</span>, <span class="hljs-number">0x41</span>, <span class="hljs-number">0x6D</span>, <span class="hljs-number">0x10</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0xCB</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0x0E</span>, <span class="hljs-number">0xF9</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0x19</span>, <span class="hljs-number">0xA7</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0xC0</span>, <span class="hljs-number">0x40</span>, <span class="hljs-number">0xBE</span>, <span class="hljs-number">0xF6</span>, <span class="hljs-number">0x99</span>, <span class="hljs-number">0x9A</span>, <span class="hljs-number">0xAF</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x16</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0x4D</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x4C</span>, <span class="hljs-number">0x42</span>, <span class="hljs-number">0x4B</span>, <span class="hljs-number">0x1A</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0x52</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0xF3</span>, <span class="hljs-number">0x6B</span>, <span class="hljs-number">0xA9</span>, <span class="hljs-number">0x1A</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0xFA</span>, <span class="hljs-number">0x80</span>, <span class="hljs-number">0xB0</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">0xB1</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0x73</span>, <span class="hljs-number">0x7B</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0x62</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0x26</span>, <span class="hljs-number">0xBF</span>, <span class="hljs-number">0x16</span>, <span class="hljs-number">0x33</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0x79</span>, <span class="hljs-number">0x6F</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0xE9</span>, <span class="hljs-number">0xA7</span>, <span class="hljs-number">0xBB</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0xD6</span>, <span class="hljs-number">0x8F</span>, <span class="hljs-number">0xF6</span>, <span class="hljs-number">0x21</span>, <span class="hljs-number">0x7E</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x12</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0x6B</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x70</span>, <span class="hljs-number">0x7A</span>, <span class="hljs-number">0x74</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0x8F</span>, <span class="hljs-number">0x6E</span>, <span class="hljs-number">0x0B</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0x42</span>, <span class="hljs-number">0x6F</span>, <span class="hljs-number">0x5C</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0xF7</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x27</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0xFE</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0xE6</span>, <span class="hljs-number">0xC8</span>, <span class="hljs-number">0x62</span>, <span class="hljs-number">0x47</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xD5</span>, <span class="hljs-number">0x6C</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x5C</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0x29</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0x73</span>, <span class="hljs-number">0xAE</span>, <span class="hljs-number">0xC3</span>, <span class="hljs-number">0x8F</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x95</span>, <span class="hljs-number">0x32</span>, <span class="hljs-number">0x42</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xD0</span>]<br><br>md5_list = <span class="hljs-keyword">lambda</span> input_str: <span class="hljs-built_in">list</span>(hashlib.md5(input_str.encode()).digest())<br><br>cip = [cipher[<span class="hljs-number">16</span> * i: <span class="hljs-number">16</span> * (i + <span class="hljs-number">1</span>)] <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>)]<br><br>data1 = <span class="hljs-string">&#x27;S&#x27;</span>  <span class="hljs-comment"># 初始化 data1 为 &#x27;S&#x27;</span><br>data2 = <span class="hljs-string">&#x27;Y&#x27;</span>  <span class="hljs-comment"># 初始化 data2 为 &#x27;Y&#x27;</span><br>data3 = <span class="hljs-string">&#x27;C&#x27;</span>  <span class="hljs-comment"># 初始化 data3 为 &#x27;C&#x27;</span><br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;SYC&quot;</span>, end=<span class="hljs-string">&#x27;&#x27;</span>)  <span class="hljs-comment"># 打印 &quot;SYC&quot;</span><br><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>): <br>    <span class="hljs-comment"># x 从 32 到 127，表示所有字符的 ASCII 码</span><br>    <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">32</span>, <span class="hljs-number">128</span>): <br>        input_str = data1 + data2 + data3 + <span class="hljs-built_in">chr</span>(x)<br>        md5_lis = md5_list(input_str) <br><br>        <span class="hljs-comment"># 检查 cip[i][j] 是否符合解密条件</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">all</span>(cip[i][j] == ((md5_lis[j] ^ (j + <span class="hljs-number">42</span>)) * <span class="hljs-number">7</span> + (j % <span class="hljs-number">15</span>) * <span class="hljs-number">82</span>) % <span class="hljs-number">256</span> <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">16</span>)): <br>            <span class="hljs-comment"># 如果所有字节都匹配，打印字符 x，并更新 data1, data2 和 data3</span><br>            <span class="hljs-built_in">print</span>(<span class="hljs-built_in">chr</span>(x), end=<span class="hljs-string">&#x27;&#x27;</span>) <br>            data1 = data2 <br>            data2 = data3 <br>            data3 = <span class="hljs-built_in">chr</span>(x)<br><br>            <span class="hljs-keyword">if</span> data3 == <span class="hljs-string">&#x27;&#125;&#x27;</span>: <br>                exit(<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure><div id="paginator"></div></div><div id="post-footer"><div id="pages" style="justify-content: flex-end"><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2025/02/23/pwn/other/race/">条件竞争 Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%97%E6%B3%95%E7%89%B9%E5%BE%81"><span class="toc-number">2.</span> <span class="toc-text">算法特征</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MD5"><span class="toc-number">2.1.</span> <span class="toc-text">MD5</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SHA1"><span class="toc-number">2.2.</span> <span class="toc-text">SHA1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SHA256"><span class="toc-number">2.3.</span> <span class="toc-text">SHA256</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%86%E5%90%91%E6%96%B9%E5%BC%8F"><span class="toc-number">3.</span> <span class="toc-text">逆向方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%97%E6%B3%95%E5%88%86%E6%9E%90"><span class="toc-number">3.1.</span> <span class="toc-text">算法分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BD%91%E7%AB%99%E6%9F%A5%E8%AF%A2"><span class="toc-number">3.2.</span> <span class="toc-text">网站查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%84%9A%E6%9C%AC%E7%88%86%E7%A0%B4"><span class="toc-number">3.3.</span> <span class="toc-text">脚本爆破</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#hashcat"><span class="toc-number">3.4.</span> <span class="toc-text">hashcat</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">例题</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
