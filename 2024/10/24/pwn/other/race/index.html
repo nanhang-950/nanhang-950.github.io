@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="en" theme-mode="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>条件竞争 | 南行</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="preload" as="font" crossorigin="anonymous" href="/font/Bender.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/BenderLight.ttf"><link rel="preload" as="font" crossorigin="anonymous" href="/font/JetBrainsMono-Regular.woff2"><link rel="stylesheet" href="/css/arknights.css"><style>@font-face {
+  font-family: Bender;
+  src: local('Bender'), url("/font/Bender.ttf"), url("/font/Bender.otf");
+}
+@font-face {
+  font-family: BenderLight;
+  src: local('BenderLight'), url("/font/BenderLight.ttf");
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}
+</style><script>var config = {"root":"/","search":{"preload":false,"activeHolder":"Enter here","blurHolder":"Search","noResult":"Data \"$0\" not found"},"code":{"codeInfo":"$0 - $1 lines","copy":"copy"}}</script><link type="text/css" rel="stylesheet" href="/lib/encrypt/hbe.style.css"><script src="/js/gitalk.js"></script><script src="//unpkg.com/mermaid@10.5.0/dist/mermaid.min.js"></script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+ menuSettings: {
+   zoom: "None"
+ },
+ showMathMenu: false,
+ jax: ["input/TeX","output/CommonHTML"],
+ extensions: ["tex2jax.js"],
+ TeX: {
+   extensions: ["AMSmath.js","AMSsymbols.js"],
+   equationNumbers: {
+     autoNumber: "AMS"
+   }
+ },
+ tex2jax: {
+   inlineMath: [["\\(", "\\)"]],
+   displayMath: [["\\[", "\\]"]]
+ }
+});</script><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lightgallery.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-zoom.css"><link type="text/css" rel="stylesheet" href="//unpkg.com/lightgallery@2.7.1/css/lg-thumbnail.css"><link type="text/css" rel="stylesheet" href="/lib/fontawesome/css/all.min.css"><script>if (window.localStorage.getItem('theme-mode') === 'light')
+ document.documentElement.setAttribute('theme-mode', 'light')
+if (window.localStorage.getItem('theme-mode') === 'dark')
+ document.documentElement.setAttribute('theme-mode', 'dark')</script><style>@font-face {
+ font-family: BenderLight;
+ src: local('Bender'), url("/font/BenderLight.woff2") format('woff2');
+}
+@font-face {
+ font-family: 'JetBrains Mono';
+ src: local('JetBrains Mono'), url('/font/JetBrainsMono-Regular.woff2') format('woff2');
+}</style><style>:root {
+ --dark-background: url('https://ak.hypergryph.com/assets/index/images/ak/pc/bk.jpg');
+ --light-background: url('/img/bk.jpg');
+ --theme-encrypt-confirm: 'confirm'
+}</style><script defer src="/js/arknights.js"></script><script defer src="/js/search.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async src="/js/gitalk.js"></script><script defer type="module">import mermaid from '//unpkg.com/mermaid@10.5.0/dist/mermaid.esm.mjs';
+window.mermaid = mermaid;
+code.paintMermaid();
+</script><script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.1/MathJax.js"></script><script>MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "None"
+  },
+  showMathMenu: false,
+  jax: ["input/TeX","output/CommonHTML"],
+  extensions: ["tex2jax.js"],
+  TeX: {
+    extensions: ["AMSmath.js","AMSsymbols.js"],
+    equationNumbers: {
+      autoNumber: "AMS"
+    }
+  },
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  }
+});
+</script><script async src="//unpkg.com/lightgallery@2.7.1/lightgallery.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/zoom/lg-zoom.min.js"></script><script async src="//unpkg.com/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.min.js"></script><script async src="/lib/encrypt/hbe.js"></script><script async src="/js/pjax.js"></script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js','data-pjax','.busuanzi'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);document.addEventListener('pjax:success', _ => bszCaller.fetch(
+ "//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback", a => {
+  bszTag.texts(a),
+  bszTag.shows()
+}));reset()})</script><script class="pjax-js">reset= () => {gitalk = new Gitalk({
+ clientID: 'Ov23liT8HsyBtpQyPuha',
+ clientSecret: '7d95208fc5b6a9e01d52fa5eccd6e7b5fb90602e',
+ repo: 'https://github.com/nanhang-950/gitalk-comments.git',
+ owner: 'nanhang-950',
+ admin: ['nanhang-950'],
+ distractionFreeMode: false,
+ id: location.pathname
+});
+if (document.querySelector("#gitalk")) gitalk.render("gitalk");document.querySelector('.lg-container')?.remove()
+lightGallery(document.getElementById('post-bg'), {
+  plugins: [lgZoom,lgThumbnail],
+  selector: '.item-img'})}</script><script>window.addEventListener("load",() => {pjax = new Pjax({
+ cacheBust: false,
+ selectors: ['title','article','#aside-block','.pjax-js'],
+ switches: {'article': Pjax.switches.sideBySide},
+ switchesOptions: {
+   'article': {
+     classNames: {
+       remove: "pjax-out",
+       add: "pjax-in"
+     }
+   }
+ }
+});
+document.addEventListener("pjax:complete", reset);reset()})</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="loading" style="opacity: 0;"><div class="loadingBar left"></div><div class="loadingBar right"></div></div><main><header class="closed"><div class="navBtn"><i class="navBtnIcon"><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span><span class="navBtnIconBar"></span></i></div><nav><div class="navItem" id="search-header"><span class="navItemTitle"><input autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Search" spellcheck="false" maxlength="50" type="text" id="search-input"></span></div><div class="navItem" id="search-holder"></div><div class="search-popup" tabindex="0"><div id="search-result"></div></div><ol class="navContent"><li class="navItem"><a class="navBlock" href="/"><span class="navItemTitle">Home</span></a></li><li class="navItem" matchdata="categories,tags"><a class="navBlock" href="/archives/"><span class="navItemTitle">Archives</span></a></li><li class="navItem"><a class="navBlock" href="/about/"><span class="navItemTitle">About</span></a></li></ol></nav></header><article><div id="post-bg"><div id="post-title"><h1>条件竞争</h1></div><hr><div id="post-content"><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>条件竞争是指一个相同的运行结果依赖于不受控制的事件的先后顺序。当这些不受控制的事件并没有按照开发者想要的方式运行时，就可能会出现 bug。这个术语最初来自于两个电信号互相竞争来影响输出结果。</p>
+<p>在现代的计算机程序中，由于广泛采用并发编程和频繁共享资源，往往会产生条件竞争漏洞。条件竞争漏洞发生的主要场景是程序中多个进程或线程并发地访问共享资源，而程序的行为依赖于这些并发操作的执行顺序。如果没有有效的同步机制时，这些并发操作的执行顺序不可预测，导致资源的访问冲突，从而可能引发程序的错误行为或安全漏洞。</p>
+<p>总之，条件竞争漏洞是由于并发操作的执行顺序不可控所导致的资源冲突问题，攻击者可利用这一点造成程序异常或安全漏洞，特别是在实际生产环境中。</p>
+<p>条件竞争造成的影响也是多样的，轻则程序异常执行，重则程序崩溃。如果条件竞争漏洞被攻击者利用的话，很有可能会使得攻击者获得相应系统的特权。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>条件竞争漏洞通常发生在以下场景中：</p>
+<ul>
+<li><p>两个或多个进程&#x2F;线程同时访问共享资源（如内存、文件、数据库等），并且程序的行为取决于访问的顺序。</p>
+</li>
+<li><p>程序对共享资源的访问顺序没有有效的同步机制控制（如锁、信号量等），因此资源访问的顺序会变得不可预测。</p>
+</li>
+<li><p>攻击者可以利用这一点，通过控制进程&#x2F;线程的执行顺序来干扰程序的正常行为，从而导致漏洞的产生。</p>
+</li>
+<li><p>例</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span> </span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span> </span><br><br><span class="hljs-type">int</span> counter; <br><span class="hljs-type">void</span> *<span class="hljs-title function_">IncreaseCounter</span><span class="hljs-params">(<span class="hljs-type">void</span> *args)</span> &#123; <br>	counter += <span class="hljs-number">1</span>; <br>	sleep(<span class="hljs-number">0.1</span>); <br>	<span class="hljs-comment">//打印当前线程id和counter变量的值</span><br>	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Thread %d has counter value %d\n&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)pthread_self(), counter); <br>&#125; <br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123; <br>	<span class="hljs-type">pthread_t</span> p[<span class="hljs-number">10</span>]; <br>	<span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i) &#123; <br>		<span class="hljs-comment">//创建线程执行IncreaseCounter函数</span><br>		pthread_create(&amp;p[i], <span class="hljs-literal">NULL</span>, IncreaseCounter, <span class="hljs-literal">NULL</span>); <br>	&#125; <br>	<span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i) &#123; <br>	<span class="hljs-comment">//等待线程执行结束</span><br>	pthread_join(p[i], <span class="hljs-literal">NULL</span>); <br>	&#125; <br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<p>一般来说，我们希望程序按以下方式输出。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs shell">Thread 1859024640 has counter value 1 <br>Thread 1841583872 has counter value 2 <br>Thread 1832863488 has counter value 3 <br>Thread 1824143104 has counter value 4 <br>Thread 1744828160 has counter value 5 <br>Thread 1736107776 has counter value 6 <br>Thread 1727387392 has counter value 7 <br>Thread 1850304256 has counter value 8 <br>Thread 1709946624 has counter value 9 <br>Thread 1718667008 has counter value 10<br></code></pre></td></tr></table></figure>
+
+<p>但是，由于条件竞争的存在，输出结果往往不尽人意。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">Thread <span class="hljs-number">-554797504</span> has counter value <span class="hljs-number">3</span><br>Thread <span class="hljs-number">-563190208</span> has counter value <span class="hljs-number">5</span><br>Thread <span class="hljs-number">-579975616</span> has counter value <span class="hljs-number">5</span><br>Thread <span class="hljs-number">-571582912</span> has counter value <span class="hljs-number">5</span><br>Thread <span class="hljs-number">-588368320</span> has counter value <span class="hljs-number">5</span><br>Thread <span class="hljs-number">-671091136</span> has counter value <span class="hljs-number">8</span><br>Thread <span class="hljs-number">-687876544</span> has counter value <span class="hljs-number">10</span><br>Thread <span class="hljs-number">-696269248</span> has counter value <span class="hljs-number">10</span><br>Thread <span class="hljs-number">-704661952</span> has counter value <span class="hljs-number">10</span><br>Thread <span class="hljs-number">-679483840</span> has counter value <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
+
+
+<p>仔细思考一下条件竞争为什么可能会发生呢？以下面的为具体的例子</p>
+<ul>
+<li>程序首先执行了<code>action1</code>，然后执行了<code>action2</code>。其中<code>action</code>可能是应用级别的，也可能是操作系统级别的。正常来说，我们希望程序在执行<code>action2</code>时，<code>action1</code>所产生的条件仍然是满足的。</li>
+<li>但是由于程序的并发性，攻击者很有可能可以在<code>action2</code>执行之前的这个短暂的时间窗口中破坏<code>action1</code>所产生的条件。这时候攻击者的操作与<code>action2</code>产生了条件竞争，所以可能会影响程序的执行效果。</li>
+</ul>
+<p class='item-img' data-src='/assets/Pasted%20image%2020241003193208.png'><img src="/assets/Pasted%20image%2020241003193208.png"></p>
+<h2 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h2><p>防范条件竞争这里我们介绍两个方法，一是通过互斥锁来确保每次只有一个线程能够访问和修改共享资源。二是通过原子操作来保证每次线程操作的原子性。</p>
+<p><strong>使用互斥锁：</strong></p>
+<p>我们修改上面有漏洞的代码。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> counter; <br><span class="hljs-type">pthread_mutex_t</span> mutex;  <span class="hljs-comment">// 创建一个互斥锁</span><br><br><span class="hljs-type">void</span> *<span class="hljs-title function_">IncreaseCounter</span><span class="hljs-params">(<span class="hljs-type">void</span> *args)</span> &#123; <br>    <span class="hljs-comment">// 在修改counter之前先加锁</span><br>    pthread_mutex_lock(&amp;mutex);<br><br>    <span class="hljs-comment">// 修改共享资源counter</span><br>    counter += <span class="hljs-number">1</span>;<br><br>    <span class="hljs-comment">// 模拟一定的延迟</span><br>    sleep(<span class="hljs-number">0.1</span>); <br><br>    <span class="hljs-comment">// 打印当前线程id和counter变量的值</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Thread %u has counter value %d\n&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)pthread_self(), counter);<br><br>    <span class="hljs-comment">// 修改完毕后解锁</span><br>    pthread_mutex_unlock(&amp;mutex);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123; <br>    <span class="hljs-type">pthread_t</span> p[<span class="hljs-number">10</span>]; <br><br>    <span class="hljs-comment">// 初始化互斥锁</span><br>    pthread_mutex_init(&amp;mutex, <span class="hljs-literal">NULL</span>);<br><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i) &#123; <br>        <span class="hljs-comment">// 创建线程并执行IncreaseCounter函数</span><br>        pthread_create(&amp;p[i], <span class="hljs-literal">NULL</span>, IncreaseCounter, <span class="hljs-literal">NULL</span>); <br>    &#125;<br><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; ++i) &#123; <br>        <span class="hljs-comment">// 等待线程执行结束</span><br>        pthread_join(p[i], <span class="hljs-literal">NULL</span>); <br>    &#125;<br><br>    <span class="hljs-comment">// 销毁互斥锁</span><br>    pthread_mutex_destroy(&amp;mutex);<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用原子操作：</strong></p>
+<p>原子操作是指在执行过程中不会被其他线程打断的操作。C语言提供了一些原子操作接口，例如<code>atomic</code>库中的原子类型和操作。对于简单的变量增减操作，使用原子操作可以避免条件竞争。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdatomic.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">atomic_int</span> counter = <span class="hljs-number">0</span>;<br><br><span class="hljs-type">void</span> *<span class="hljs-title function_">IncreaseCounter</span><span class="hljs-params">(<span class="hljs-type">void</span> *args)</span> &#123;<br>    atomic_fetch_add(&amp;counter, <span class="hljs-number">1</span>);  <span class="hljs-comment">// 原子操作，增加 counter</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">pthread_t</span> threads[<span class="hljs-number">10</span>];<br><br>    <span class="hljs-comment">// 创建线程</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++) &#123;<br>        pthread_create(&amp;threads[i], <span class="hljs-literal">NULL</span>, IncreaseCounter, <span class="hljs-literal">NULL</span>);<br>    &#125;<br><br>    <span class="hljs-comment">// 等待线程执行结束</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++) &#123;<br>        pthread_join(threads[i], <span class="hljs-literal">NULL</span>);<br>    &#125;<br><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Final counter value: %d\n&quot;</span>, counter);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="检测"><a href="#检测" class="headerlink" title="检测"></a>检测</h2><p>我们也可以通过工具来检测条件竞争漏洞，主要是从静态分析和动态分析两个方面来检测。</p>
+<p><strong>静态分析：</strong></p>
+<p>静态分析是通过不运行程序、直接分析源代码或二进制代码的方式来检测潜在的条件竞争漏洞。此方法不需要实际执行程序，但能够识别潜在的并发问题。</p>
+<ul>
+<li>Coverity：一个静态分析工具，能够检测并发问题以及其他类型的编程错误。</li>
+<li>Clang Thread Safety Analyzer：一个针对 C&#x2F;C++ 的静态分析工具，能够帮助检测潜在的线程安全问题。</li>
+<li>Flawfinder：静态分析工具，能够识别潜在的安全问题。</li>
+</ul>
+<p><strong>动态检测：</strong></p>
+<ul>
+<li>ThreadSanitizer (TSan)：Google 提供的一个动态分析工具，能够检测 C&#x2F;C++ 程序中的数据竞争（数据共享引发的条件竞争问题）。TSan 基于 LLVM，可与 Clang 编译器结合使用，运行时会自动检测潜在的条件竞争漏洞。</li>
+<li>Helgrind：Valgrind 的一个插件，用于检测多线程程序中的竞争条件。它可以动态监控程序并分析多个线程的共享数据访问，从而帮助发现潜在的竞争问题。</li>
+<li>RaceCheck：一个动态检测工具，专门用于检测并发程序中的条件竞争漏洞，适用于 Java、C++ 等语言。</li>
+</ul>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>[NISACTF 2022]shop_pwn</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>运行程序，发现是一个物品购买界面。我们首先输入 1 来查看一下。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250223110021.png'><img src="/assets/Pasted%20image%2020250223110021.png"></p>
+<p>可以看到我们有一只笔，并且还有 100 元钱。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250223232618.png'><img src="/assets/Pasted%20image%2020250223232618.png"></p>
+<p>程序中存储着 flag，并且架构为 200 元，数量为 100。我们卖了笔之后的钱仍然是 100，不足购买 flag。</p>
+<p>分析卖函数，如果<code>bags</code>全局变量即我们的物品不为空则创建线程执行<code>to_sale</code>函数。跟进分析<code>to_sale</code>函数。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250223233418.png'><img src="/assets/Pasted%20image%2020250223233418.png"></p>
+<p>可以看到<code>to_sale</code>中首先将<code>bags</code>中的对应物品清零，然后加了<code>money</code>全局变量，即我们的钱。并且函数中是没有做条件竞争防范的。所以我们可以尝试利用条件竞争漏洞。</p>
+<p class='item-img' data-src='/assets/Pasted%20image%2020250223233520.png'><img src="/assets/Pasted%20image%2020250223233520.png"></p>
+<p>通过条件竞争漏洞将我们有的笔卖两次，然后我们的钱就足够买 flag 了。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br><span class="hljs-comment">#卖第1次</span><br>sl(<span class="hljs-string">b&#x27;3&#x27;</span>)<br>sl(<span class="hljs-string">b&#x27;0&#x27;</span>)<br><span class="hljs-comment">#卖第2次</span><br>sl(<span class="hljs-string">b&#x27;3&#x27;</span>)<br>sl(<span class="hljs-string">b&#x27;0&#x27;</span>)<br><br><span class="hljs-comment">#购买flag</span><br>sla(<span class="hljs-string">b&#x27;&gt; &#x27;</span>, <span class="hljs-string">b&#x27;2&#x27;</span>)<br>sla(<span class="hljs-string">b&#x27;&gt; &#x27;</span>, <span class="hljs-string">b&#x27;1&#x27;</span>)<br>r()<br><br><span class="hljs-comment">#查看物品</span><br>sla(<span class="hljs-string">b&#x27;&gt; &#x27;</span>, <span class="hljs-string">b&#x27;1&#x27;</span>)<br>r()<br><br>ia()<br></code></pre></td></tr></table></figure>
+
+<h2 id="后言"><a href="#后言" class="headerlink" title="后言"></a>后言</h2><blockquote>
+<p>参考：ctf-wiki</p>
+</blockquote>
+<div id="paginator"></div></div><div id="post-footer"><div id="pages"><div class="footer-link" style="width: 50%;text-align:right;border-right:1px #fe2 solid"><a href="/2024/10/25/program/c-oop/">← Next C 面向对象编程</a></div><div class="footer-link" style="width: 50%;right:1px;border-left:1px #fe2 solid"><a href="/2024/10/24/program/dx/">C++ 面向对象&amp;泛型&amp;STL Prev →</a></div></div></div><div id="comments"><div id="gitalk"></div></div></div><div class="bottom-btn"><div><a class="i-top" id="to-top" onClick="scrolls.scrolltop();" title="To Top" style="opacity: 0; display: none;">∧ </a><a class="i-index" id="to-index" href="#toc-div" title="To Catalog">≡</a><a class="i-color" id="color-mode" onClick="colorMode.change()" title="Change Theme"></a></div></div></article><aside><div id="about"><a href="/" id="logo"><img src="/img/faction/1.png" alt="Logo"></a><h1 id="Dr"><a href="/">南行</a></h1><div id="description"><p></p></div><div id="social-links"><a class="social" target="_blank" rel="noopener" href="https://github.com/nanhang-950"><i class="fab fa-github" alt="GitHub"></i></a><a class="social" href="mailto:2122295973@qq.com"><i class="fa fa-envelope" alt="E-Mail"></i></a></div></div><div id="aside-block"><div id="toc-div"><h1>Catalog</h1><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%98%B2%E8%8C%83"><span class="toc-number">3.</span> <span class="toc-text">防范</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A3%80%E6%B5%8B"><span class="toc-number">4.</span> <span class="toc-text">检测</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">例题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8E%E8%A8%80"><span class="toc-number">6.</span> <span class="toc-text">后言</span></a></li></ol></div></div><footer><nobr>Published with <a target="_blank" rel="noopener" href="http://hexo.io">Hexo</a></nobr><wbr><nobr> Theme <a target="_blank" rel="noopener" href="https://github.com/Yue-plus/hexo-theme-arknights">Arknights</a></nobr><wbr><nobr> by <a target="_blank" rel="noopener" href="https://github.com/Yue-plus">Yue_plus</a></nobr></footer></aside></main><canvas id="canvas-dust"></canvas></body></html>
