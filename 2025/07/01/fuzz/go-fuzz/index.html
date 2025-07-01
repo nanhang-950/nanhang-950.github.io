@@ -1,0 +1,937 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go Fuzz">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/fuzz/go-fuzz/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250531230716.png">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250601212322.png">
+<meta property="article:published_time" content="2025-07-01T01:48:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:04:02.235Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="fuzzers">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250531230716.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Go Fuzz - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Go Fuzz"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:48" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          16 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Go Fuzz</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。</p>
+<p>对 Go 程序的 Fuzz 工具有官方提供的<code>go test -fuzz</code>和第三方的<code>go-fuzz</code>。</p>
+<p>Go官方团队的Fuzzing实现借鉴了go-fuzz的设计思想。</p>
+<p>Go 1.18把Fuzzing整合到了<code>go test</code>工具链和<code>testing</code>包里。</p>
+<p>go-fuzz 基于 AFL&#x2F;libFuzzer的变异策略，而 go test 使用的是自研的变异算法。</p>
+<p>Go-fuzz 是一个用于Go语言包的覆盖率引导模糊测试解决方案。它主要用于测试处理复杂输入（文本或二进制）的包，特别适合强化处理潜在恶意用户输入的系统（如网络服务）。</p>
+<p>下面是一个模糊测试的示例，突出显示了其主要的组件。</p>
+<p><img src="/Linux/assets/Pasted%20image%2020250531230716.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="官方Fuzz"><a href="#官方Fuzz" class="headerlink" title="官方Fuzz"></a>官方Fuzz</h2><p>和 go-fuzz 不同，go test fuzz 是官方 test 工具的集成。也有很多地方参考了 go-fuzz。</p>
+<h3 id="前期工作"><a href="#前期工作" class="headerlink" title="前期工作"></a>前期工作</h3><p>创建一个以<code>_test.go</code>结尾的测试文件。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 官方模糊测试示例</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">FuzzParseURL</span><span class="hljs-params">(f *testing.F)</span></span> &#123;<br>    f.Add(<span class="hljs-string">&quot;https://example.com&quot;</span>) <span class="hljs-comment">// 种子输入</span><br>    f.Fuzz(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(t *testing.T, s <span class="hljs-type">string</span>)</span></span> &#123;<br>        <span class="hljs-keyword">if</span> _, err := url.Parse(s); err != <span class="hljs-literal">nil</span> &#123;<br>            t.Skip() <span class="hljs-comment">// 忽略无效输入</span><br>        &#125;<br>    &#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>初始化 Go 模块</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">mkdir fuzz_test<br><br>go mod init fuzz_test     <br></code></pre></td></tr></table></figure>
+
+<p>模糊测试必须遵循以下规则：</p>
+<ol>
+<li>测试函数必须命名为<code>FuzzXxx</code>格式，仅接受<code>*testing.F</code>参数，无返回值</li>
+<li>模糊测试必须位于<code>*_test.go</code>文件中才能执行</li>
+<li>模糊目标必须是通过<code>(*testing.F).Fuzz</code>调用的方法，第一个参数为<code>*testing.T</code>，后接模糊参数，无返回值</li>
+<li>每个模糊测试只能有一个模糊目标</li>
+<li>所有种子语料条目必须与模糊参数类型完全匹配且顺序一致（适用于<code>(*testing.F).Add</code>调用和testdata&#x2F;fuzz目录中的语料文件）</li>
+</ol>
+<p>零配置：只需在测试函数前添加<code>func FuzzXxx(f *testing.F)</code></p>
+<p>自动生成种子：基于<code>f.Add()</code>提供的初始输入进行变异。</p>
+<p>与<code>go test</code>无缝集成：支持并行测试、覆盖率报告等。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 官方模糊测试示例</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">FuzzParseURL</span><span class="hljs-params">(f *testing.F)</span></span> &#123;<br>    f.Add(<span class="hljs-string">&quot;https://example.com&quot;</span>) <span class="hljs-comment">// 种子输入</span><br>    f.Fuzz(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(t *testing.T, s <span class="hljs-type">string</span>)</span></span> &#123;<br>        <span class="hljs-keyword">if</span> _, err := url.Parse(s); err != <span class="hljs-literal">nil</span> &#123;<br>            t.Skip() <span class="hljs-comment">// 忽略无效输入</span><br>        &#125;<br>    &#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>种子语料库：</p>
+<ul>
+<li>使用 <code>f.Add()</code> 添加初始测试用例</li>
+<li>这些用例会被保存到 <code>testdata/fuzz/FuzzTestName</code> 目录</li>
+<li>后续运行会自动使用这些用例作为起点</li>
+</ul>
+<h3 id="开始Fuzz"><a href="#开始Fuzz" class="headerlink" title="开始Fuzz"></a>开始Fuzz</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">运行模糊测试（默认会无限运行）</span><br>go test -fuzz=FuzzReverse<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">限制运行时间（10秒）</span><br>go test -fuzz=FuzzReverse -fuzztime=10s<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">只运行种子语料库不进行模糊测试</span><br>go test -run=FuzzReverse<br></code></pre></td></tr></table></figure>
+
+<p>有两种运行模式：</p>
+<ul>
+<li>单元测试模式（默认<code>go test</code>）</li>
+<li>模糊测试模式（<code>go test -fuzz=FuzzTestName</code>）</li>
+</ul>
+<p>默认情况下，每个种子语料条目都会作为单元测试执行。启用模糊测试后，匹配的测试会持续运行直到发现错误。</p>
+<p><img src="/Linux/assets/Pasted%20image%2020250601212322.png" srcset="/img/loading.gif" lazyload></p>
+<p>我们的上述 Fuzz 中在处理<code>\xde</code>字节时出现了一个问题，</p>
+<h3 id="失败处理"><a href="#失败处理" class="headerlink" title="失败处理"></a>失败处理</h3><p>当出现以下情况会触发失败：</p>
+<ol>
+<li>代码或测试发生panic</li>
+<li>调用<code>t.Fail</code>等失败方法</li>
+<li>不可恢复错误（如os.Exit）</li>
+<li>执行超时（默认1秒）</li>
+</ol>
+<p>失败时会自动最小化输入并保存到<code>testdata/fuzz/</code>目录，可作为回归测试用例。</p>
+<h3 id="自定义设置"><a href="#自定义设置" class="headerlink" title="自定义设置"></a>自定义设置</h3><p>常用参数：</p>
+<ul>
+<li><code>-fuzztime</code>：运行时长&#x2F;次数（默认无限）</li>
+<li><code>-fuzzminimizetime</code>：最小化尝试时长（默认60秒，0表示禁用）</li>
+<li><code>-parallel</code>：并行进程数（默认GOMAXPROCS）</li>
+</ul>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p>当发现崩溃时：</p>
+<ul>
+<li>查看 <code>testdata/fuzz/FuzzTestName/</code> 中的崩溃用例</li>
+<li>使用 <code>-run</code> 参数单独运行崩溃用例：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go test -run=FuzzReverse/058293736f23eabc<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>使用调试器分析</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">dlv test -- -run=FuzzReverse/058293736f23eabc<br></code></pre></td></tr></table></figure>
+
+
+
+<p>模糊测试参数：</p>
+<ul>
+<li><code>-fuzz</code>: 指定要运行的模糊测试函数名</li>
+<li><code>-fuzztime</code>: 设置运行持续时间（如 “10s”、”1h”）</li>
+<li><code>-fuzzminimizetime</code>: 最小化崩溃用例的时间（默认60秒）</li>
+<li><code>-parallel</code>: 并行运行的模糊测试数量</li>
+</ul>
+<ol>
+<li>目前仅支持 <code>[]byte</code> 和 <code>string</code> 作为模糊测试输入类型</li>
+<li>相比go-fuzz缺少一些高级功能（如自定义变异策略）</li>
+<li>性能可能不如编译为二进制的go-fuzz</li>
+</ol>
+<h2 id="go-fuzz"><a href="#go-fuzz" class="headerlink" title="go-fuzz"></a>go-fuzz</h2><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><ul>
+<li>安装工具</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">go</span> install github.com/dvyukov/<span class="hljs-keyword">go</span>-fuzz/<span class="hljs-keyword">go</span>-fuzz@latest github.com/dvyukov/<span class="hljs-keyword">go</span>-fuzz/<span class="hljs-keyword">go</span>-fuzz-build@latest<br></code></pre></td></tr></table></figure>
+
+<h3 id="基础实例"><a href="#基础实例" class="headerlink" title="基础实例"></a>基础实例</h3><p>我们使用 go-fuzz 首先需要编写以下形式的测试函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Fuzz</span><span class="hljs-params">(data []<span class="hljs-type">byte</span>)</span></span> <span class="hljs-type">int</span><br></code></pre></td></tr></table></figure>
+
+<p>参数：字节切片</p>
+<p>返回值说明：</p>
+<ul>
+<li><code>1</code>表示应优先考虑类似输入。</li>
+<li><code>0</code>表示中性。</li>
+<li><code>-1</code>表示从语料库中排除。</li>
+</ul>
+<p>官方文档的示例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">//测试PNG包</span><br><span class="hljs-keyword">package</span> png<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;bytes&quot;</span><br>	<span class="hljs-string">&quot;image/png&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Fuzz</span><span class="hljs-params">(data []<span class="hljs-type">byte</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>	img, err := png.Decode(bytes.NewReader(data))<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">if</span> img != <span class="hljs-literal">nil</span> &#123;<br>			<span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;解码出错但img不为nil&quot;</span>)<br>		&#125;<br>		<span class="hljs-keyword">return</span> <span class="hljs-number">0</span><br>	&#125;<br>	<br>	<span class="hljs-keyword">var</span> w bytes.Buffer<br>	err = png.Encode(&amp;w, img)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">1</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>构建测试程序</li>
+</ul>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">go</span>-fuzz-build -o <span class="hljs-built_in">image</span>-fuzz.zip<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>构建语料库</li>
+</ul>
+<p>构建一个供 go-fuzz 使用的语料库，语料库存放在工作目录下。</p>
+<blockquote>
+<p>语料库：<a target="_blank" rel="noopener" href="https://github.com/dvyukov/go-fuzz-corpus">dvyukov&#x2F;go-fuzz-corpus：github.com&#x2F;dvyukov&#x2F;go-fuzz 示例的语料库</a></p>
+</blockquote>
+<ul>
+<li>开始Fuzz</li>
+</ul>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">go-fuzz <span class="hljs-attribute">-bin</span>=image-fuzz.zip <span class="hljs-attribute">-workdir</span>=.<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>workers 表示并行运行的测试数（使用 -procs 标志设置）。</li>
+<li>corpus 是模糊测试程序发现的有趣输入的当前数量，括号中的时间表示发现最后一个有趣输入的时间</li>
+<li>crashers 是发现的 bug 的数量（查看 workdir&#x2F;crashers 目录）。</li>
+<li>restarts 是模糊测试程序重新启动测试进程的速率。</li>
+<li>cover 是在经过哈希处理的覆盖率位图中设置的位数</li>
+</ul>
+<p>.quoted 文件包含以字符串形式引用的输入，.output 文件包含故障转储</p>
+<p>go-fuzz初步支持Go Modules，会遵循<code>GO111MODULE</code>环境变量设置：</p>
+<ul>
+<li><code>on</code>：启用模块</li>
+<li><code>off</code>：禁用模块</li>
+<li><code>auto</code>：自动判断</li>
+</ul>
+<h3 id="libFuzzer-集成"><a href="#libFuzzer-集成" class="headerlink" title="libFuzzer 集成"></a>libFuzzer 集成</h3><p>在 Linux  系统上，go-fuzz可以生成与 libFuzzer 兼容的存档文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs shell">go-fuzz-build -libfuzzer  # 生成.a文件<br>clang -fsanitize=fuzzer fmt.a -o fmt.libfuzzer<br>./fmt.libfuzzer<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">构建libfuzzer目标</span><br>go-fuzz-build -libfuzzer -o fuzz.a .<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">使用clang编译</span><br>clang -fsanitize=fuzzer fuzz.a -o fuzz_binary<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">运行模糊测试</span><br>mkdir -p corpus<br>./fuzz_binary corpus<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">或者最小化复现崩溃</span><br>./fuzz_binary -minimize_crash=1 -runs=100 crash_input<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><p>这里我们使用 go-fuzz 来进行 CVE 漏洞的复现。</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">go</span>-fuzz-build github.<span class="hljs-keyword">com</span>/JoshVarga/svgparser<br></code></pre></td></tr></table></figure>
+
+
+
+<p>编写 Fuzz 函数</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> go_mp4_fuzz<br><br><span class="hljs-keyword">import</span> (<br>    <span class="hljs-string">&quot;github.com/Eyevinn/mp4ff/mp4&quot;</span><br>    <span class="hljs-string">&quot;bytes&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Fuzz</span><span class="hljs-params">(data []<span class="hljs-type">byte</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>    r := bytes.NewReader(data)<br>    _, err := mp4.DecodeFile(r)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span><br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">1</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>构建 Fuzz 程序：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go-fuzz-build -o mp4fuzz.zip<br></code></pre></td></tr></table></figure>
+
+<p>启动 go-fuzz</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go-fuzz -bin=mp4fuzz.zip -workdir=corpus<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>workers 表示并行运行的测试数（使用 -procs 标志设置）。</li>
+<li>corpus 是模糊测试程序发现的有趣输入的当前数量，括号中的时间表示发现最后一个有趣输入的时间</li>
+<li>crashers 是发现的 bug 的数量（查看 workdir&#x2F;crashers 目录）。</li>
+<li>restarts 是模糊测试程序重新启动测试进程的速率。</li>
+<li>cover 是在经过哈希处理的覆盖率位图中设置的位数</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/dvyukov/go-fuzz">dvyukov&#x2F;go-fuzz：Go 的随机测试</a><br><a target="_blank" rel="noopener" href="https://snoopysecurity.github.io/posts/fuzzing-wit-go-fuzz/">使用 Go-Fuzz 进行模糊测试 |💻 |博客</a><br><a target="_blank" rel="noopener" href="https://go.dev/doc/tutorial/fuzz">教程：模糊测试入门 - Go 编程语言</a><br><a target="_blank" rel="noopener" href="https://parsiya.net/blog/2018-05-05-learning-go-fuzz-2-goexif2/">Learning Go-Fuzz 2: goexif2</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/fuzzers/" class="print-no-link">#fuzzers</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Go Fuzz</div>
+      <div>http://nanhang.top/2025/07/01/fuzz/go-fuzz/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/ctf/heap/io-file/" title="IO_FILE利用入门">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">IO_FILE利用入门</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/honggfuzz/" title="Honggfuzz浅探">
+                        <span class="hidden-mobile">Honggfuzz浅探</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,1185 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统，对其它系统的支持都不同程度差一点。 有研究">
+<meta property="og:type" content="article">
+<meta property="og:title" content="syzkaller初探">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/fuzz/syzkaller/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="简介Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统，对其它系统的支持都不同程度差一点。 有研究">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250521160056.png">
+<meta property="og:image" content="http://nanhang.top/Linux/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/assets/26-1.png">
+<meta property="article:published_time" content="2025-07-01T01:48:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:08:10.761Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="fuzzers">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250521160056.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>syzkaller初探 - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="syzkaller初探"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:48" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          64 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">syzkaller初探</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 <a target="_blank" rel="noopener" href="https://github.com/dvyukov">dvyukov</a> 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统，对其它系统的支持都不同程度差一点。</p>
+<p>有研究人员做过移植syzkaller fuzz windows WSL[2]和Darwin&#x2F;XNU[1][5]的尝试，也都取得了较好的成果。可以说，syzkaller是当今宇宙最强大的内核fuzz工具了。我们将从整体架构开始，介绍syzkaller一些实现的细节。目前在github上syzkaller除了master分支之外还有一个long-line分支和usb-fuzzer分支，usb-fuzzer分支是xairy用来挖掘USB驱动漏洞的一个分支，在OffensiveCon2019上讲过[7]。</p>
+<p>我们本文的学习就是以 fuzzing Linux 为主。</p>
+<p>什么是覆盖引导（<strong>coverage-guided</strong>）？</p>
+<ul>
+<li><p>覆盖引导，即<strong>通过向目标程序插桩，统计代码覆盖，反馈给模糊测试引擎（fuzzer，即模糊测试工具），反馈信息用于变异种子，生成更高质量的输入，使得 fuzzer 能够用更好的输入让被测程序达到更高的代码覆盖率。</strong></p>
+</li>
+<li><p>对于每个目标，fuzzer 都会构建一个输入的语料库，随着 fuzzer 通过变异语料库发现新的输入，覆盖率会不断增长。常见的模糊测试引擎（fuzzer，即模糊测试工具）有 afl、honggfuzz、libfuzzer 以及本次所说的 syzkaller，这些都是经典的 fuzzing 工具。</p>
+</li>
+</ul>
+<p>之前提到过 <a target="_blank" rel="noopener" href="https://github.com/google/syzkaller">syzkaller</a>，它可以说是目前最广泛使用的 OS fuzzer。它不仅提供了简单的部署流程，只需要几个命令，还允许用户自定义执行环境，像是可以设置允许的 syscall、VM 实例数、自定义 syscall 以及调用依赖等。而且它有清晰的用户界面，让用户能够看到当前执行的状态，包括发生崩溃的位置和错误报告、当前尚未执行的 seed，甚至可以查看源代码中各个 basic block 的执行次数。</p>
+<p>如果你对用户界面提供的功能感兴趣，这里提供了一个外部开设的 <a target="_blank" rel="noopener" href="https://elisa-builder-00.iol.unh.edu/syzkaller/">syzkaller server</a> 供你参考。同时，syzkaller 也有官方维护，并不断对最新版本的内核进行 fuzzing 的 <a target="_blank" rel="noopener" href="https://syzkaller.appspot.com/">syzbot</a>，研究人员可以通过分析 syzbot 所报告的漏洞，了解某个操作系统中常见的漏洞发生区域。</p>
+<p>下面是 syzkaller 的架构图，主要分为三个组件，分别是 <strong>syz-manager</strong>、<strong>syz-fuzzer</strong> 和 <strong>syz-executor</strong>：</p>
+<p><img src="/Linux/assets/Pasted%20image%2020250521160056.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><strong>syz-manager</strong> - 运行在 host 上，主要用于管理 VM 实例和用户界面<ul>
+<li>一开始会初始化整个环境，之后负责管理系统和输出结果，涉及 fuzzer 机制较少。</li>
+</ul>
+</li>
+<li><strong>syz-executor</strong> - 执行 syscall sequence<ul>
+<li>不断等待 syz-fuzzer 传来的 “program”，即一组 syscall 组合</li>
+<li>不断重复执行这些程序</li>
+</ul>
+</li>
+</ul>
+<p>此外，syzkaller 还提供了许多可用的工具，比如复现崩溃输入或对输入做最小化等，但这些工具不一定会用到，所以没有列在架构图中。编译内核时所使用的 kernel config 只需要满足 syzkaller 所使用的功能，其他部分可以根据需要调整。</p>
+<h3 id="KASAN"><a href="#KASAN" class="headerlink" title="KASAN"></a><strong>KASAN</strong></h3><h3 id="KCOV"><a href="#KCOV" class="headerlink" title="KCOV"></a>KCOV</h3><p>收集 coverage 的方式是 syzkaller 的一个重要特点，之前在 Day22 提到过 kAFL 时也稍微介绍过，syzkaller 使用 <code>KCOV</code> 来收集 coverage，而 <code>KCOV</code> 的开发人员之一就是 syzkaller 的维护者。这里将稍微介绍一下 <code>KCOV</code>，详细内容可以参考 <a target="_blank" rel="noopener" href="https://docs.kernel.org/dev-tools/kcov.html">KCOV documentation</a>。</p>
+<p>以下是使用 <code>KCOV</code> 的示例代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> KCOV_INIT_TRACE  _IOR(<span class="hljs-string">&#x27;c&#x27;</span>, 1, unsigned long)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> KCOV_ENABLE      _IO(<span class="hljs-string">&#x27;c&#x27;</span>, 100)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> KCOV_DISABLE     _IO(<span class="hljs-string">&#x27;c&#x27;</span>, 101)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> COVER_SIZE       (64&lt;&lt;10) <span class="hljs-comment">// 0x10000</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> KCOV_TRACE_PC  0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> KCOV_TRACE_CMP 1</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> **argv)</span><br>&#123;<br>    <span class="hljs-comment">// 用来收集 coverage 的接口</span><br>    fd = open(<span class="hljs-string">&quot;/sys/kernel/debug/kcov&quot;</span>, O_RDWR);<br>    <span class="hljs-comment">// 初始化 trace 模式，设置 trace 大小</span><br>    ioctl(fd, KCOV_INIT_TRACE, COVER_SIZE);<br>    <span class="hljs-comment">// 创建一块内核和用户空间共享的内存</span><br>    cover = (<span class="hljs-type">unsigned</span> <span class="hljs-type">long</span>*)mmap(<span class="hljs-literal">NULL</span>, COVER_SIZE * <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">unsigned</span> <span class="hljs-type">long</span>),<br>                                 PROT_READ | PROT_WRITE, MAP_SHARED, fd, <span class="hljs-number">0</span>);<br>    <span class="hljs-comment">// 开启当前线程的 coverage 收集</span><br>    ioctl(fd, KCOV_ENABLE, KCOV_TRACE_PC);<br><br>    <span class="hljs-comment">// 重置 coverage</span><br>    __atomic_store_n(&amp;cover[<span class="hljs-number">0</span>], <span class="hljs-number">0</span>, __ATOMIC_RELAXED);<br>    <br>    <span class="hljs-comment">// 目标 syscall</span><br>    read(<span class="hljs-number">-1</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-number">0</span>);<br>    <br>    <span class="hljs-comment">// 获取记录的地址数量</span><br>    n = __atomic_load_n(&amp;cover[<span class="hljs-number">0</span>], __ATOMIC_RELAXED);<br>    <span class="hljs-comment">// 遍历整个 buffer，打印访问的地址</span><br>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; n; i++)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;0x%lx\n&quot;</span>, cover[i + <span class="hljs-number">1</span>]);<br><br>    <span class="hljs-comment">// 关闭当前线程的 coverage 收集</span><br>    ioctl(fd, KCOV_DISABLE, <span class="hljs-number">0</span>);<br>    <span class="hljs-comment">// 释放资源</span><br>    munmap(cover, COVER_SIZE * <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">unsigned</span> <span class="hljs-type">long</span>)));<br>    close(fd);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>背后的原理是之前在 Day11 介绍的 <code>__sanitizer_cov_trace_pc()</code> 插桩，也就是每个 basic block 执行前都会调用一次，<code>KCOV</code> 所做的插桩内容如下，参考 Linux 内核的 <a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/latest/source/kernel/kcov.c#L192">kcov.c</a>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> notrace __sanitizer_cov_trace_pc(<span class="hljs-type">void</span>)<br>&#123;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> ip = canonicalize_ip(_RET_IP_);<br><br>    t = current;<br>    <span class="hljs-keyword">if</span> (!check_kcov_mode(KCOV_MODE_TRACE_PC, t))<br>        <span class="hljs-keyword">return</span>;<br>    <br>    area = t-&gt;kcov_area;<br>    pos = READ_ONCE(area[<span class="hljs-number">0</span>]) + <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">if</span> (likely(pos &lt; t-&gt;kcov_size)) &#123;<br>        WRITE_ONCE(area[<span class="hljs-number">0</span>], pos);<br>        barrier();<br>        area[pos] = ip;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h3><p>Syzkaller是一种Linux内核模糊测试工具，具有覆盖引导模糊测试的特点。以下是Syzkaller的基本工作流程及其组成部分的描述。</p>
+<p>Syzkaller的过程结构如下图所示；红色标签指示相应的配置选项。</p>
+<p>Syzkaller的进程结构：</p>
+<p><strong>syz-manager</strong> 负责以下任务：</p>
+<ul>
+<li><p>启动&#x2F;重启&#x2F;监控虚拟机实例（VM）。</p>
+</li>
+<li><p>进行实际的模糊测试过程（输入生成、突变、最小化等）。</p>
+</li>
+<li><p>持久化语料库和崩溃报告存储。</p>
+</li>
+<li><p>它运行在主机上，主机有一个稳定的内核，不会受到白噪声模糊测试负载的影响。</p>
+</li>
+</ul>
+<p><strong>syz-manager</strong> 启动进程（每个虚拟机一个）。这些进程通过RPC通信来接收必须执行的程序，并报告执行结果（错误状态、覆盖率等）。</p>
+<p><strong>syz-executor</strong>：执行程序的进程，负责启动临时子进程。每个临时子进程执行一个单一的输入（即一系列的系统调用）。它被设计为尽可能简单，以避免干扰模糊测试过程，使用C++编写并编译为静态二进制文件，使用共享内存进行通信。</p>
+<ul>
+<li>系统调用描述</li>
+</ul>
+<p>进程基于这里描述的系统调用（syscall）生成程序。</p>
+<ul>
+<li>覆盖率</li>
+</ul>
+<p>Syzkaller是一个覆盖引导模糊测试工具，关于覆盖率收集的详细信息可以在此处找到。</p>
+<ul>
+<li>崩溃报告</li>
+</ul>
+<p>当Syzkaller发现崩溃时，它会将相关信息保存在一个目录中。该目录包含一个子目录，每种独特的崩溃类型对应一个子目录。每个子目录中包含一个文件，该文件包含一个唯一的字符串标识符，用于崩溃的标识和去重。该子目录还包含最多100个文件，每个文件包含一对用于测试机器崩溃的日志文件和报告文件。</p>
+<p>例如：</p>
+<figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs elm"><span class="hljs-title">syzkaller_workdir</span>/crashes/<br>   ├── <span class="hljs-number">6e512290</span>efa36515a7a27e53623304d20d1c3e<br>   │   ├── description<br>   │   ├── log0<br>   │   ├── report0<br>   │   ├── log1<br>   │   ├── report1<br>   │   └── ...<br>   ├── <span class="hljs-number">77</span>c578906abe311d06227b9dc3bffa4c52676f<br>   │   ├── description<br>   │   ├── log0<br>   │   ├── report0<br>   │   └── ...<br></code></pre></td></tr></table></figure>
+
+<p>描述信息通过一组正则表达式提取。这些表达式可能需要扩展，尤其是当使用不同的内核架构时，或者遇到之前未见过的内核错误信息时。</p>
+<ul>
+<li><p><strong>logN</strong> 文件包含原始日志，包括内核控制台输出以及在崩溃前执行的程序。可以将这些日志文件馈送给崩溃位置和最小化工具，或者用于手动定位。</p>
+</li>
+<li><p><strong>reportN</strong> 文件包含后处理和符号化的内核崩溃报告（例如KASAN报告）。通常你只需要一对这些文件（即log0和report0），因为它们通常描述相同的内核漏洞。但为了应对崩溃不容易重现的情况，Syzkaller最多会保存100对文件。</p>
+</li>
+<li><p>三种特殊的崩溃类型：</p>
+</li>
+</ul>
+<ol>
+<li><p><strong>测试机器没有输出</strong>：测试机器完全没有输出。</p>
+</li>
+<li><p><strong>与测试机器丢失连接</strong>：与机器的SSH连接意外断开。</p>
+</li>
+<li><p><strong>测试机器没有执行程序</strong>：机器看起来正常，但长时间没有执行测试程序。</p>
+</li>
+</ol>
+<p>通常，您不会看到这些崩溃类型的文件（例如，如果测试机器没有输出，报告中没有数据）。有时这些崩溃本身可能是一个漏洞的指示（特别是如果在日志中看到Go的panic消息）。但通常，它们可能意味着内核死锁或类似的严重问题（例如：1、2、3等）。</p>
+<h3 id="syz-manager"><a href="#syz-manager" class="headerlink" title="syz-manager"></a>syz-manager</h3><p><code>syz-manager</code> 是整个 syzkaller 系统的入口。以下是程序代码 <code>syz-manager/manager.go</code> 的一部分：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">RunManager</span><span class="hljs-params">(cfg *mgrconfig.Config)</span></span> &#123;<br>	<span class="hljs-comment">// 创建 VM</span><br>    vmPool, err = vm.Create(cfg, *flagDebug)<br>    <span class="hljs-comment">// ... 目录相关的处理</span><br>    <br>    <span class="hljs-comment">// 初始化各个子组件，名字比较自解释</span><br>	reporter, err := report.NewReporter(cfg)<br>	mgr := &amp;Manager&#123;...&#125;<br>	mgr.preloadCorpus()<br>	mgr.initStats()<br>	mgr.initHTTP()<br>	mgr.collectUsedFiles()<br>	mgr.serv, err = startRPCServer(mgr)<br>    mgr.dash, err = dashapi.New(cfg.DashboardClient, cfg.DashboardAddr, cfg.DashboardKey)<br><br>    <span class="hljs-comment">// 每 10 秒在终端打印执行状态</span><br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		<span class="hljs-keyword">for</span> lastTime := time.Now(); ; &#123;<br>			time.Sleep(<span class="hljs-number">10</span> * time.Second)<br>            <span class="hljs-comment">// ... 一些统计数据</span><br>			corpusCover := mgr.stats.corpusCover.get()<br>			log.Logf(<span class="hljs-number">0</span>, <span class="hljs-string">&quot;VMs %v, executed %v, cover %v, ...&quot;</span>, numFuzzing, executed, corpusCover, ...)<br>		&#125;<br>	&#125;()<br>    <span class="hljs-comment">// 定期更新 dashboard 的线程</span><br>    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>        <span class="hljs-keyword">for</span> &#123;<br>            time.Sleep(<span class="hljs-number">10</span> * time.Second)<br>            <span class="hljs-comment">// 更新数据</span><br>            mgr.dash.UpdateStats(&amp;mgr.stats)<br>        &#125;<br>    &#125;()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>RunManager</code> 函数负责初始化整个系统，包括创建虚拟机、收集统计数据、启动 HTTP 服务和管理状态更新。主要组件包括：</p>
+<ul>
+<li>VM池管理（创建和销毁虚拟机）</li>
+<li>报告生成和数据展示</li>
+<li>统计信息收集</li>
+<li>HTTP 接口</li>
+</ul>
+<p>当 syscalls 和数据源被配置好后，<code>syz-manager</code> 会启动一个 <code>RunManager</code> 过程来初始化所有资源并开始工作。</p>
+<hr>
+<p>这只是 <code>syzkaller</code> 工具链的一个简要介绍。如果你希望更详细地学习，可以逐步研究 syzlang 的具体用法以及如何配置与管理你的 fuzz 测试环境。</p>
+<h3 id="syz-executor"><a href="#syz-executor" class="headerlink" title="syz-executor"></a>syz-executor</h3><p>Syzkaller使用一种特殊的数据结构来存储程序，各个组件之间都使用这种结构来传递程序，这种结构能够将程序序列化成类似C语言函数调用的形式：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stylus">r0 = <span class="hljs-built_in">open</span>(&amp;(<span class="hljs-number">0</span>x7f0000000000)=<span class="hljs-string">&quot;./file0&quot;</span>, <span class="hljs-number">0</span>x3, <span class="hljs-number">0</span>x9)<br><span class="hljs-function"><span class="hljs-title">read</span><span class="hljs-params">(r0, &amp;(<span class="hljs-number">0</span>x7f0000000000)</span></span>, <span class="hljs-number">42</span>)<br><span class="hljs-function"><span class="hljs-title">close</span><span class="hljs-params">(r0)</span></span><br></code></pre></td></tr></table></figure>
+
+<p>程序传给<code>syz-executor</code>后，<code>syz-executor</code>内部会将程序解析成系统调用的形式来执行。</p>
+<p><code>syz-executor</code>的源代码路径为<code>executor/executor.cc</code>，它是用C++编写的程序，实际上大部分代码是C语言实现的，只有</p>
+<p>少数是用C++实现的。</p>
+<p><code>syz-manager</code>负责：</p>
+<ul>
+<li>启动&#x2F;重启&#x2F;监控 VM 实例</li>
+<li>实际的模糊测试过程（输入生成、更改、最小化等）</li>
+<li>持久语料库和崩溃存储</li>
+</ul>
+<p>它在具有稳定内核的主机上运行，该内核不会遇到白噪声模糊测试程序负载。</p>
+<p><code>syz-manager</code>启动进程（每个 VM 内一个）。与 RPC 合并以接收必须执行的程序并报告结果（错误状态、收集的覆盖率等）。<code>syz-executor</code> <code>syz-executor</code> <code>syz-manager</code></p>
+<p>要执行程序，请启动瞬态子进程。<code>syz-executor</code></p>
+<p>每个瞬态子进程执行单个输入（一系列系统调用）。它被设计得尽可能简单（不干扰模糊测试过程），用 C++ 编写，编译为静态二进制文件，并使用共享内存进行通信。</p>
+<p><strong>syscall描述</strong></p>
+<p><strong>覆盖</strong></p>
+<p>syzkaller 是一种覆盖率引导的模糊测试程序。</p>
+<p><strong>崩溃报告</strong></p>
+<p>找到崩溃程序时，它会将有关它的信息保存到目录中。该目录包含每个唯一崩溃类型的一个子目录。每个子目录都包含一个文件，该文件带有标识崩溃的唯一字符串（用于错误识别和重复数据删除）;以及最多 100 个文件，每个测试机器崩溃一对：</p>
+<p><code>syzkaller``workdir/crashes``description``logN``reportN</code></p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-bullet">-</span> <span class="hljs-string">crashes/</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">6e512290efa36515a7a27e53623304d20d1c3e</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">description</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">log0</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">report0</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">log1</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">report1</span><br>    ...<br>  <span class="hljs-bullet">-</span> <span class="hljs-string">77c578906abe311d06227b9dc3bffa4c52676f</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">description</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">log0</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">report0</span><br>    ...<br></code></pre></td></tr></table></figure>
+
+<p>描述是使用一组<a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/blob/master/pkg/report">正则表达式</a>提取的。如果您使用的是不同的内核架构，或者只是看到以前未见过的内核错误消息，则可能需要扩展此集合。</p>
+<p><code>logN</code>文件包含原始日志，包括内核控制台输出以及崩溃前执行的程序。这些日志可以馈送到工具以进行<a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/blob/master/docs/reproducing_crashes.md">崩溃定位和最小化</a>，或用于<a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/blob/master/docs/reproducing_crashes.md#from-execution-logs">手动定位</a>的工具。文件包含经过后处理和符号化的内核崩溃报告（例如 KASAN 报告）。通常，您只需要 1 对这些文件（即和 ），因为它们可能都描述了相同的内核错误。但是，当崩溃的可重复性不佳时，或者如果您只想查看一组崩溃报告来推断一些相似之处或不同之处，最多可保存 100 个文件。<code>syzkaller``syz-repro``syz-execprog``reportN``log0``report0``syzkaller</code></p>
+<p>有 3 种特殊类型的崩溃：</p>
+<ul>
+<li><code>no output from test machine</code>：测试机器不产生任何输出</li>
+<li><code>lost connection to test machine</code>：与本机的 SSH 连接意外关闭</li>
+<li><code>test machine is not executing programs</code>：计算机看起来处于活动状态，但长时间没有执行任何测试程序</li>
+</ul>
+<p>很可能你不会看到这些崩溃的文件（例如，如果测试机器没有输出，则没有什么可以放入报告中）。 有时，这些崩溃本身表明存在错误（尤其是当您在日志中看到 Go panic 消息时）。 然而，它们通常意味着内核锁定或类似的坏情况（以下是以这种方式发现的 bug 的几个示例：<a target="_blank" rel="noopener" href="https://groups.google.com/d/msg/syzkaller/zfuHHRXL7Zg/Tc5rK8bdCAAJ">1</a>、<a target="_blank" rel="noopener" href="https://groups.google.com/d/msg/syzkaller/kY_ml6TCm9A/wDd5fYFXBQAJ">2</a>、<a target="_blank" rel="noopener" href="https://groups.google.com/d/msg/syzkaller/OM7CXieBCoY/etzvFPX3AQAJ">3</a>）。<code>reportN``syzkaller</code></p>
+<h3 id="Syzkaller-架构"><a href="#Syzkaller-架构" class="headerlink" title="Syzkaller 架构"></a>Syzkaller 架构</h3><ol>
+<li>syz-manager</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs vim">启动，控制，重启<span class="hljs-keyword">vm</span><br>通过ssh将syz-manager复制到<span class="hljs-keyword">vm</span>，并运行<br>保存语料库<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>sys-fuzzer</li>
+</ol>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs protobuf">变异输入数据<br>运行syz-executor<br>通过<span class="hljs-function"><span class="hljs-keyword">rpc</span>将触发新路径的数据传回syz-manager</span><br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>syz-executor</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs">运行系统调用<br></code></pre></td></tr></table></figure>
+
+<h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><p>我们要使用 Syzkaller 进行 Linux 内核的 Fuzz 需要以下环境：</p>
+<ul>
+<li>编译 Syzkaller 项目</li>
+<li>Linux 内核</li>
+<li>一台物理&#x2F;虚拟机</li>
+</ul>
+<h3 id="编译Syzkaller"><a href="#编译Syzkaller" class="headerlink" title="编译Syzkaller"></a>编译Syzkaller</h3><p>安装 Go 编译器和 C 编译器。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 下载 Go 1.23.7</span><br>wget https://go.dev/dl/go1.23.7.linux-amd64.tar.gz<br><br><span class="hljs-comment"># 解压到 /usr/local（需要 sudo 权限）</span><br><span class="hljs-built_in">sudo</span> tar -C /usr/local -xzf go1.23.7.linux-amd64.tar.gz<br><br><span class="hljs-comment"># 设置环境变量（只在当前 shell 有效）,建议添加进.bashrc文件</span><br><span class="hljs-built_in">export</span> GOROOT=/usr/local/go<br><span class="hljs-built_in">export</span> GOPATH=<span class="hljs-variable">$HOME</span>/go<br><span class="hljs-built_in">export</span> PATH=<span class="hljs-variable">$GOROOT</span>/bin:<span class="hljs-variable">$GOPATH</span>/bin:<span class="hljs-variable">$PATH</span><br><br><span class="hljs-built_in">sudo</span> apt install gcc<br><br><span class="hljs-comment"># 不开代理建议配置Go国内代理</span><br><span class="hljs-built_in">export</span> GOPROXY=https://goproxy.cn,direct<br></code></pre></td></tr></table></figure>
+
+<p>安装所需的依赖：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">安装所需的依赖</span><br>sudo apt update<br>sudo apt install build-essential clang llvm libncurses5-dev libssl-dev libelf-dev bc<br>sudo apt install make flex bison libncurses-dev libelf-dev libssl-dev<br></code></pre></td></tr></table></figure>
+
+<p>编译syzkaller：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/google/syzkaller<br><span class="hljs-built_in">cd</span> syzkaller<br>make<br></code></pre></td></tr></table></figure>
+
+<p>如果我们需要对其它架构下的目标进行 Fuzz，那么我们需要进行交叉编译。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">如 arm 架构的目标</span><br>make CC=aarch64-linux-gnu-g++ TARGETARCH=arm64<br></code></pre></td></tr></table></figure>
+
+<p>编译完成后，生成的执行文件会放在<code>syzkaller/bin/</code>目录中。</p>
+<h3 id="编译-Linux-内核"><a href="#编译-Linux-内核" class="headerlink" title="编译 Linux 内核"></a>编译 Linux 内核</h3><p>以内核版本 5.14 为例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> --branch v5.15 git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git<br><br><span class="hljs-built_in">cd</span> linux-5.15<br>make defconfig         <span class="hljs-comment"># 生成默认配置（根据架构）</span><br>make kvm_guest.config  <br></code></pre></td></tr></table></figure>
+
+<p>syzkaller 所需的功能主要是启用 <code>KCOV</code> 来收集内核 coverage，并启用 <code>KASAN</code> 来检测内存错误：</p>
+<p>修改配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">vim .config<br></code></pre></td></tr></table></figure>
+
+<p>添加以下选项，这些都是为了让内核更好的被 Fuzz。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">Coverage collection.</span>  <br>CONFIG_KCOV=y  <br><span class="hljs-meta prompt_">  </span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">显示覆盖率图像</span><br>CONFIG_DEBUG_INFO=y  <br><span class="hljs-meta prompt_">  </span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">Memory bug detector</span>  <br>CONFIG_KASAN=y  <br>CONFIG_KASAN_INLINE=y  <br><span class="hljs-meta prompt_">  </span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">Required <span class="hljs-keyword">for</span> Debian Stretch</span>  <br>CONFIG_CONFIGFS_FS=y  <br>CONFIG_SECURITYFS=y<br></code></pre></td></tr></table></figure>
+
+<p>重新生成配置文件并编译：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">修改完成后更新配置</span><br>make olddefconfig<br><span class="hljs-meta prompt_">#</span><span class="language-bash">编译</span><br>make -j$(nproc)<br></code></pre></td></tr></table></figure>
+
+<p>编译后：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs"><br></code></pre></td></tr></table></figure>
+
+<h3 id="Qemu-配置"><a href="#Qemu-配置" class="headerlink" title="Qemu 配置"></a>Qemu 配置</h3><p>我们通过 Qemu 来运行 Linux 内核。</p>
+<ul>
+<li>安装 qemu</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo apt install qemu-system-x86<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>创建 Image</li>
+</ul>
+<p>创建一个 Debian Stretch Linux 镜像，作为 VM 的文件系统：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt install debootstrap<br><br><span class="hljs-comment">#设置 IMAGE 为 Linux 项目路径</span><br><span class="hljs-built_in">export</span> IMAGE=<span class="hljs-string">&quot;/linux&quot;</span><br><span class="hljs-built_in">mkdir</span> <span class="hljs-variable">$IMAGE</span><br><span class="hljs-built_in">cd</span> <span class="hljs-variable">$IMAGE</span>/<br><span class="hljs-comment">#复制syzkaller项目tools目录下的create-image.sh文件</span><br>wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh -O create-image.sh  <br><span class="hljs-built_in">chmod</span> +x create-image.sh<br><span class="hljs-comment">#Linux 项目不能存在于挂载目录上，否则会报错</span><br>./create-image.sh<br></code></pre></td></tr></table></figure>
+
+<p>当前目录下多了几个文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">❯ ls<br>bullseye  bullseye.id_rsa  bullseye.id_rsa.pub  bullseye.img  create-image.sh<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>启动虚拟机</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-system-x86_64 \  <br>  -m 2G \  <br>  -smp 2 \  <br>  -kernel /usr/class/linux/arch/x86/boot/bzImage \  <br>  -append &quot;console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0&quot; \  <br>  -drive file=/usr/class/linux/image/stretch.img,format=raw \  <br>  -net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22 \  <br>  -net nic,model=e1000 \  <br>  -enable-kvm \  <br>  -nographic \  <br>  -pidfile vm.pid \  <br><span class="hljs-meta prompt_">  2&gt;</span><span class="language-bash">&amp;1 | <span class="hljs-built_in">tee</span> vm.log</span><br></code></pre></td></tr></table></figure>
+
+<p>如果成功的话，就会出现 syzkaller login。用户名键入<code>root</code>，无需输入密码，即可进入终端：</p>
+<p>我们测试 ssh 是否正常工作，因为我们的 syzkaller 是通过 ssh 传输文件的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ssh -i /root/linux/image/bullseye.id_rsa -p 10021 -o &quot;StrictHostKeyChecking no&quot; root@localhost<br></code></pre></td></tr></table></figure>
+
+<p>通过<code>poweroff</code>我们可以退出模拟的系统。</p>
+<h2 id="基础使用"><a href="#基础使用" class="headerlink" title="基础使用"></a>基础使用</h2><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><ul>
+<li>设置配置文件</li>
+</ul>
+<p>为  Syzkaller 创建一个配置文件<code>my.cfg</code>，这个配置文件将指定一些参数，如目标内核、内核调试符号、执行的测试类型等。</p>
+<p>当以上环境搭建完成后，就可以开始编写 syzkaller 的配置文件。以下是官方的配置示例：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># my.cfg</span><br>&#123;<br>  <span class="hljs-attr">&quot;target&quot;:</span> <span class="hljs-string">&quot;linux/amd64&quot;</span>,<br>  <span class="hljs-attr">&quot;http&quot;:</span> <span class="hljs-string">&quot;127.0.0.1:56741&quot;</span>,<br>  <span class="hljs-attr">&quot;workdir&quot;:</span> <span class="hljs-string">&quot;/root/linux/workdir/&quot;</span>,<br>  <span class="hljs-attr">&quot;kernel_obj&quot;:</span> <span class="hljs-string">&quot;/root/linux/&quot;</span>,<br>  <span class="hljs-attr">&quot;image&quot;:</span> <span class="hljs-string">&quot;/root/linux/image/bullseye.img&quot;</span>,<br>  <span class="hljs-attr">&quot;sshkey&quot;:</span> <span class="hljs-string">&quot;/root/linux/image/bullseye.id_rsa&quot;</span>,<br>  <span class="hljs-attr">&quot;syzkaller&quot;:</span> <span class="hljs-string">&quot;/tools/binary/syzkaller/&quot;</span>,<br>  <span class="hljs-attr">&quot;procs&quot;:</span> <span class="hljs-number">8</span>,<br>  <span class="hljs-attr">&quot;type&quot;:</span> <span class="hljs-string">&quot;qemu&quot;</span>,<br>  <span class="hljs-attr">&quot;vm&quot;:</span> &#123;<br>    <span class="hljs-attr">&quot;count&quot;:</span> <span class="hljs-number">4</span>,<br>    <span class="hljs-attr">&quot;kernel&quot;:</span> <span class="hljs-string">&quot;/root/linux/arch/x86/boot/bzImage&quot;</span>,<br>    <span class="hljs-attr">&quot;cmdline&quot;:</span> <span class="hljs-string">&quot;net.ifnames=0&quot;</span>,<br>    <span class="hljs-attr">&quot;cpu&quot;:</span> <span class="hljs-number">2</span>,<br>    <span class="hljs-attr">&quot;mem&quot;:</span> <span class="hljs-number">2048</span><br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">syz-manager -config=my.cfg<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>http</strong> - 用户界面开放在本地的 56741 端口</li>
+<li><strong>image</strong> - 先前生成的镜像路径</li>
+<li><strong>syzkaller</strong> - syzkaller 项目的根目录，这里会根据安装 syzkaller 的方式有所不同</li>
+</ul>
+<p>接下来是一些 VM 配置，比如 VM 使用 QEMU 运行、启用四台 VM，每台的硬件资源和 kernel image 路径等。</p>
+<p>一但 syzkaller 在其中一个 VM 中检测到内核崩溃，它将自动重现此崩溃的过程。默认情况下，它将使用 4 个 VM 来重新崩溃，然后最小化导致崩溃的重新。</p>
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>执行以下命令来运行 syzkaller：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">syz-manager -config=my.cfg<br></code></pre></td></tr></table></figure>
+
+<p>执行后访问用户界面 <a target="_blank" rel="noopener" href="http://localhost:56741/">http://localhost:56741</a> (默认)，你将看到以下界面，代表执行成功：</p>
+<p><img src="/Linux/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/assets/26-1.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>通过加上<code>-debug</code>参数可以排查 syzkaller 运行失败的问题，参数会展示<code>syz-executor</code>的执行情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">syz-manager -config configure.json --debug<br></code></pre></td></tr></table></figure>
+
+<p>在宿主机运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ps -aux | grep qemu<br></code></pre></td></tr></table></figure>
+
+<p>该命令会显示<code>syz-manager</code>传给 qemu 的选项，一些不合适的参数可能会导致<code>syz-manager</code>报错。你可以修改这些参数并手动运行 qemu 进行排查。一部分参数来自配置文件，另一部分为默认值，位于 <code>syzkaller/vm/qemu/qemu.go</code>。你可以修改源码并重新构建以适配你的机器环境。</p>
+<p>检查是否可以 ssh 连接到虚拟机</p>
+<p>扩展系统调用（syscall）</p>
+<p>我主要在 Linux&#x2F;X86_64 平台上使用 syzkaller。将你新增的 syscall 描述写入 <code>$(SYZKALLER)/sys/linux/*.txt</code>，然后运行：</p>
+<p>make HOSTOS&#x3D;linux HOSTARCH&#x3D;amd64 TARGETOS&#x3D;linux TARGETARCH&#x3D;amd64 SOURCEDIR&#x3D;$(YOUR_KERNEL_SOURCE_DIR) extract<br>make HOSTOS&#x3D;linux HOSTARCH&#x3D;amd64 TARGETOS&#x3D;linux TARGETARCH&#x3D;amd64 SOURCEDIR&#x3D;$(YOUR_KERNEL_SOURCE_DIR) generate<br>make HOSTOS&#x3D;linux HOSTARCH&#x3D;amd64 TARGETOS&#x3D;linux TARGETARCH&#x3D;amd64 SOURCEDIR&#x3D;$(YOUR_KERNEL_SOURCE_DIR) -jN</p>
+<p>这会使用你自定义的 syscall 重建 syzkaller。然后用 <code>scp</code> 将编译后的二进制文件拷贝到 VM 中。</p>
+<h4 id="使用-systemtap-监控远程-VM"><a href="#使用-systemtap-监控远程-VM" class="headerlink" title="使用 systemtap 监控远程 VM"></a>使用 systemtap 监控远程 VM</h4><p>我使用 systemtap 来验证 fuzzer 执行后代码是否可达。你可以通过编写自己的 <code>.stap</code> 脚本来扩展功能。 <a target="_blank" rel="noopener" href="https://github.com/hardenedlinux/Debian-GNU-Linux-Profiles/blob/master/docs/harbian_qa/systemtap.md">这是一个使用 systemtap 监控远程 VM 的教程</a>，<a target="_blank" rel="noopener" href="https://chatgpt.com/c/6829fdb6-008c-8003-aec2-7b77b5b0f522">这是一个示例</a>展示了 fuzzer 触发某个内核处理函数的次数。</p>
+<h4 id="KCOV（覆盖率）"><a href="#KCOV（覆盖率）" class="headerlink" title="KCOV（覆盖率）"></a>KCOV（覆盖率）</h4><p>syzkaller 使用 KCOV 收集覆盖信息。每个实例都会初始化 KCOV 接口，接口位于 <code>/sys/kernel/debug/kcov</code>，通过 <code>ioctl</code> 启用&#x2F;禁用。实现代码在 <code>executor/executor_linux.cc</code> 中，一系列 <code>cover_*</code> 函数负责处理。</p>
+<p>注意：为了获得完整的调试信息，<code>syz-manager</code> 的配置文件中必须指定正确的 vmlinux 文件。你可以通过访问 syzkaller 的 Web 服务查看覆盖信息：</p>
+<p><a href="http://127.0.0.1:$(PORT)/cover">http://127.0.0.1:$(PORT)/cover</a></p>
+<p>KCOV 会用不同颜色显示已覆盖的分支。内核模块的覆盖信息未包含在内。</p>
+<h4 id="故障注入（Fault-injection）"><a href="#故障注入（Fault-injection）" class="headerlink" title="故障注入（Fault-injection）"></a>故障注入（Fault-injection）</h4><p>syzkaller 在运行时使用内存管理相关的失败注入机制。另一种有用的注入方式是向指定的内核函数注入错误返回值。这是通过 kprobe + sysfs 实现的，对用户空间暴露了 <code>/sys/kernel/debug/fail_function</code> 接口。</p>
+<p>syzkaller 使用的故障注入代码位于： <code>$SYZ_SRC/pkg/host/host_linux.go</code></p>
+<h3 id="模板"><a href="#模板" class="headerlink" title="模板"></a>模板</h3><p>模板语法：</p>
+<p>内核fuzz模型：</p>
+<ul>
+<li>制导</li>
+<li>崩溃重启 我们通过虚拟机来运行内核，如果内核崩溃即重新启动虚拟机</li>
+<li>交互 fuzz &lt;&#x3D;&gt; 目标程序 获取目标进程运行状态 syzkaller通过ssh与内核交互</li>
+<li>样本什么格式，如何让内核解析它？生成二进制文件</li>
+<li>投喂样本 执行二进制</li>
+</ul>
+<p>内核态如何插桩？kcov</p>
+<p>如何将内核的代码覆盖率情况反馈给主 fuzz程序。</p>
+<p>被 kcov 编译的内核运行起来后，会生成一个 kcov 文件，通过这个文件我们可以知道当前内核的代码执行情况。</p>
+<p>目标：未授权写特权文件</p>
+<p>特征：普通用户+只读文件 &#x3D;&gt; 文件内容发生变化</p>
+<p>解决：普通用户执行+自建只读文件</p>
+<p>syzkaller 通过生成二进制文件然后通过 ssh 服务传输到目标内核中运行来 fuzz</p>
+<h2 id="syzlang"><a href="#syzlang" class="headerlink" title="syzlang"></a>syzlang</h2><p>syzkaller 自己定义了一套描述系统调用模板的声明式语言，我们称之为描述文件。</p>
+<p>为了提高 fuzz 的效率，我们必须为目标系统量身定制这种声明文件。通常一个设备节点对应一个声明文件。</p>
+<p>所谓的声明文件就是一个 txt，根据syzkaller定义的语法，在这个txt文档中描述设备节点的接口信息以及参数格式。</p>
+<h3 id="syzlang-1"><a href="#syzlang-1" class="headerlink" title="syzlang"></a>syzlang</h3><p>syzkaller 自定义了一种语言 syzlang 来描述系统调用（syscall）的格式，比如 syscall 编号、参数、返回类型等，<a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/blob/master/docs/syscall_descriptions.md">官方文档</a>已经详细说明了格式，这里提供一个简洁的中文懒人包。</p>
+<p>首先，我们可以参考现成的文件 <code>sys/linux/sys.txt</code>，该文件开头会包含一些 kernel header 文件，表示该文件中使用的常量或定义值来自哪些文件。实际上，syzkaller 在解析完 kernel header 文件后，会将其存储到 <code>sys.txt.const</code> 文件中，可以随意添加 <code>include &lt;hello/world&gt;</code> 并编译观察，编译后并不会报错，因为 syzlang 解析器根本不会处理这一部分：</p>
+<figure class="highlight openscad"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs openscad"><span class="hljs-meta"><span class="hljs-keyword">include</span> &lt;linux/socket.h&gt;</span><br><span class="hljs-meta"><span class="hljs-keyword">include</span> &lt;linux/ptrace.h&gt;</span><br><span class="hljs-meta"><span class="hljs-keyword">include</span> &lt;linux/resource.h&gt;</span><br><span class="hljs-meta"><span class="hljs-keyword">include</span> &lt;linux/stat.h&gt;</span><br>...<br><span class="hljs-meta"><span class="hljs-keyword">include</span> &lt;hello/world&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>解析 header 文件后生成的 <code>sys.txt.const</code> 文件可能包含如下内容，这是一些宏展开的值或常量：</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs abnf">ADDR_COMPAT_LAYOUT <span class="hljs-operator">=</span> <span class="hljs-number">2097152</span><br>ADDR_LIMIT_32BIT <span class="hljs-operator">=</span> <span class="hljs-number">8388608</span><br>ADDR_LIMIT_3GB <span class="hljs-operator">=</span> <span class="hljs-number">134217728</span><br>ADDR_NO_RANDOMIZE <span class="hljs-operator">=</span> <span class="hljs-number">262144</span><br>ADJ_ESTERROR <span class="hljs-operator">=</span> <span class="hljs-number">8</span><br>...<br></code></pre></td></tr></table></figure>
+
+<p>接下来会定义一些类型，比如 <code>alignptr</code>、<code>align32</code> 和 <code>align64</code>，这些类型会接收另一个类型 <code>T</code> 并自动对齐到特定字节：</p>
+<figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs elm"><span class="hljs-keyword">type</span> alignptr[<span class="hljs-type">T</span>] &#123;<br>	v	<span class="hljs-type">T</span><br>&#125; [align[<span class="hljs-type">PTR_SIZE</span>]]<br><br><span class="hljs-keyword">type</span> align32[<span class="hljs-type">T</span>] &#123;<br>	v	<span class="hljs-type">T</span><br>&#125; [align[4]]<br><br><span class="hljs-keyword">type</span> align64[<span class="hljs-type">T</span>] &#123;<br>	v	<span class="hljs-type">T</span><br>&#125; [align[8]]<br></code></pre></td></tr></table></figure>
+
+<p>类型定义语法类似于 C 的 <code>typedef</code>，而 <code>[0:65]</code> 表示该类型的值范围是 0 到 65：</p>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ada"><span class="hljs-keyword">type</span> <span class="hljs-type">signalno </span>int32[<span class="hljs-number">0</span>:<span class="hljs-number">65</span>]<br><span class="hljs-keyword">type</span> <span class="hljs-type">signalnoptr </span>intptr[<span class="hljs-number">0</span>:<span class="hljs-number">65</span>]<br>...<br></code></pre></td></tr></table></figure>
+
+<p>接着是定义 syscall 格式的部分，包括 <code>open()</code> 和 <code>openat()</code> 的参数与返回值。<code>$dir</code> 表示 <code>open()</code> 的一个特定格式，<code>sock_fprog</code> 定义了一个新的结构体，<code>open_flags</code> 定义了一个值集合。参数部分以 <code>open()</code> 为例：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">open</span><span class="hljs-params">(file ptr[in, filename], flags flags[open_flags], mode flags[open_mode])</span></span> fd<br>open<span class="hljs-variable">$dir</span>(file ptr<span class="hljs-selector-attr">[in, filename]</span>, flags flags<span class="hljs-selector-attr">[open_flags]</span>, mode flags<span class="hljs-selector-attr">[open_mode]</span>) fd_dir<br><br>openat<span class="hljs-variable">$dir</span>(...) fd_dir<br><span class="hljs-function"><span class="hljs-title">openat</span><span class="hljs-params">(...)</span></span> fd<br><br>sock_fprog &#123;<br>	len	len<span class="hljs-selector-attr">[filter, int16]</span><br>	<span class="hljs-attribute">filter</span>	ptr[in, array[sock_filter]]<br>&#125;<br><br>open_flags = O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>file</code>、<code>flags</code> 和 <code>mode</code> 是参数的名称，<code>fd</code> 是返回值的名称。</li>
+<li><code>in</code> 和 <code>out</code> 用来定义数据流的顺序，<code>in</code> 表示输入数据，<code>out</code> 表示输出结果。</li>
+<li><code>ptr</code> 和 <code>flags</code> 则是参数类型，<code>ptr</code> 表示指向某对象（如 <code>filename</code>）的指针，可以额外定义指针属性，而 <code>flags</code> 则表示一组数值，在变异时会从中选择一个或多个作为 <code>flags</code> 参数。</li>
+<li><code>filename</code> 是 <code>string</code> 类型的特例，表示可以在执行时产生合法的文件名。</li>
+</ul>
+<p>在 <code>sys.txt.const</code> 文件中，还定义了不同指令集下的 syscall 编号：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs makefile">__NR_acct = 51, amd64:163, arm64:riscv64:89, mips64le:5158<br>__NR_alarm = 27, amd64:37, arm64:riscv64:???, mips64le:5037<br>__NR_brk = 45, amd64:12, arm64:riscv64:214, mips64le:5012<br>...<br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>除了 <code>sys.txt</code> 文件外，<code>sys/linux/</code> 目录下还有许多 <code>*.txt</code> 文件，<code>sys.txt</code> 定义了更多通用的 syscall 格式，而其他 <code>*.txt</code> 文件则定义了与子系统通信的 syscall。例如，<code>bpf.txt</code> 定义了与 Linux eBPF 系统交互的 syscall。</p>
+<p>修改完这些文件后，可以执行以下命令来更新：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">bin/syz-sysgen<br></code></pre></td></tr></table></figure>
+
+<p>实际上，<code>syz-sysgen</code> 就是 syzlang 的解析器，它会读取这些 “源代码”，并生成 “输出文件”，例如 <code>sys/linux/gen/amd64.go</code>。不同指令集与操作系统的格式会生成对应的文件，如 <code>sys/$OS/gen/$INSN.go</code>。下面是 <code>amd64.go</code> 的一部分，可以清楚看到 syzlang 解析器（即 <code>syz-sysgen</code>）所做的操作：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs golang"><span class="hljs-keyword">package</span> gen<br><br><span class="hljs-keyword">import</span> . <span class="hljs-string">&quot;github.com/google/syzkaller/prog&quot;</span><br><span class="hljs-keyword">import</span> . <span class="hljs-string">&quot;github.com/google/syzkaller/sys/linux&quot;</span><br><br><span class="hljs-comment">// RegisterTarget() 会向 fuzzer 注册 Linux AMD64 的 syscall 格式、规则以及常数</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">init</span><span class="hljs-params">()</span></span> &#123;<br>    RegisterTarget(&amp;Target&#123;OS: <span class="hljs-string">&quot;linux&quot;</span>, Arch: <span class="hljs-string">&quot;amd64&quot;</span>, Revision: revision_amd64, PtrSize: <span class="hljs-number">8</span>, PageSize: <span class="hljs-number">4096</span>, NumPages: <span class="hljs-number">4096</span>, DataOffset: <span class="hljs-number">536870912</span>, LittleEndian: <span class="hljs-literal">true</span>, ExecutorUsesShmem: <span class="hljs-literal">true</span>, Syscalls: syscalls_amd64, Resources: resources_amd64, Consts: consts_amd64&#125;, types_amd64, InitTarget)<br>&#125;<br><br><span class="hljs-comment">// resource，像是 value 范围</span><br><span class="hljs-keyword">var</span> resources_amd64 = []*ResourceDesc&#123;<br>    &#123;Name:<span class="hljs-string">&quot;ANYRES16&quot;</span>,Kind:[]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;ANYRES16&quot;</span>&#125;,Values:[]<span class="hljs-type">uint64</span>&#123;<span class="hljs-number">18446744073709551615</span>,<span class="hljs-number">0</span>&#125;&#125;,<br>    &#123;Name:<span class="hljs-string">&quot;ANYRES32&quot;</span>,Kind:[]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;ANYRES32&quot;</span>&#125;,Values:[]<span class="hljs-type">uint64</span>&#123;<span class="hljs-number">18446744073709551615</span>,<span class="hljs-number">0</span>&#125;&#125;,<br>    &#123;Name:<span class="hljs-string">&quot;ANYRES64&quot;</span>,Kind:[]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;ANYRES64&quot;</span>&#125;,Values:[]<span class="hljs-type">uint64</span>&#123;<span class="hljs-number">18446744073709551615</span>,<span class="hljs-number">0</span>&#125;&#125;,<br>    &#123;Name:<span class="hljs-string">&quot;ANYRES8&quot;</span>,Kind:[]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;ANYRES8&quot;</span>&#125;,Values:[]<span class="hljs-type">uint64</span>&#123;<span class="hljs-number">18446744073709551615</span>,<span class="hljs-number">0</span>&#125;&#125;,<br>    &#123;Name:<span class="hljs-string">&quot;IMG_DEV_VIRTADDR&quot;</span>,Kind:[]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;IMG_DEV_VIRTADDR&quot;</span>&#125;,Values:[]<span class="hljs-type">uint64</span>&#123;<span class="hljs-number">0</span>&#125;&#125;,<br>    ...<br>&#125;<br><br><span class="hljs-comment">// syscall，包含 number 以及传入的参数</span><br><span class="hljs-keyword">var</span> syscalls_amd64 = []*Syscall&#123;<br>    &#123;NR:<span class="hljs-number">43</span>,Name:<span class="hljs-string">&quot;accept&quot;</span>,CallName:<span class="hljs-string">&quot;accept&quot;</span>,Args:[]Field&#123;<br>        &#123;Name:<span class="hljs-string">&quot;fd&quot;</span>,Type:Ref(<span class="hljs-number">11387</span>)&#125;,<br>        &#123;Name:<span class="hljs-string">&quot;peer&quot;</span>,Type:Ref(<span class="hljs-number">10173</span>)&#125;,<br>        &#123;Name:<span class="hljs-string">&quot;peerlen&quot;</span>,Type:Ref(<span class="hljs-number">10453</span>)&#125;,<br>    &#125;,Ret:Ref(<span class="hljs-number">11387</span>)&#125;,<br>    &#123;NR:<span class="hljs-number">43</span>,Name:<span class="hljs-string">&quot;accept$alg&quot;</span>,CallName:<span class="hljs-string">&quot;accept&quot;</span>,Args:[]Field&#123;<br>        &#123;Name:<span class="hljs-string">&quot;fd&quot;</span>,Type:Ref(<span class="hljs-number">11390</span>)&#125;,<br>        &#123;Name:<span class="hljs-string">&quot;peer&quot;</span>,Type:Ref(<span class="hljs-number">5022</span>)&#125;,<br>        &#123;Name:<span class="hljs-string">&quot;peerlen&quot;</span>,Type:Ref(<span class="hljs-number">5022</span>)&#125;,<br>    &#125;,Ret:Ref(<span class="hljs-number">11391</span>)&#125;,<br>    ...<br>&#125;<br><br><span class="hljs-comment">// consts，也就是常数</span><br><span class="hljs-keyword">var</span> consts_amd64 = []ConstValue&#123;<br>    &#123;<span class="hljs-string">&quot;ABS_CNT&quot;</span>,<span class="hljs-number">64</span>&#125;,<br>    &#123;<span class="hljs-string">&quot;ABS_MAX&quot;</span>,<span class="hljs-number">63</span>&#125;,<br>    &#123;<span class="hljs-string">&quot;ACL_EXECUTE&quot;</span>,<span class="hljs-number">1</span>&#125;,<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过 <code>RegisterTarget()</code> 函数，fuzzer 注册了用户定义的 Linux AMD64 目标的 syscall 格式。</p>
+<h3 id="描述系统调用"><a href="#描述系统调用" class="headerlink" title="描述系统调用"></a>描述系统调用</h3><p>定制（即对新的内核接口，增加系统调用描述文件）是一个比较繁琐的国产，官方给了如下文档用作参考：</p>
+<ul>
+<li>txt声明文件的方法： <a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/blob/master/docs/syscall_descriptions_syntax.md">syscall description语法</a></li>
+<li>一些Linux下的 syscall description：<a target="_blank" rel="noopener" href="https://github.com/google/syzkaller/tree/master/sys/linux">现有可参考的声明文件</a></li>
+</ul>
+<p>以下为例，从系统调用<code>open</code>函数开始，它的函数定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">open</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">int</span> flags, <span class="hljs-type">mode_t</span> mode)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>flags：<code>O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE</code></li>
+<li>mode：<code>S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH</code></li>
+</ul>
+<p>用syzlang来描述它：</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs inform7">resource fd_test<span class="hljs-comment">[fd]</span>  <br><span class="hljs-keyword">open</span>(file ptr<span class="hljs-comment">[in, filename]</span>, flags flags<span class="hljs-comment">[open_flags]</span>, mode flags<span class="hljs-comment">[open_mode]</span>) fd_test  <br># 或  <br># <span class="hljs-keyword">open</span>(file ptr<span class="hljs-comment">[in, string<span class="hljs-comment">[&quot;/dev/xxx&quot;]</span>]</span>, flags flags<span class="hljs-comment">[open_flags]</span>, mode flags<span class="hljs-comment">[open_mode]</span>) fd_test<br></code></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs vim">include &lt;linux/fs.h&gt;<br><br><span class="hljs-keyword">open</span>$proc(<span class="hljs-keyword">file</span> <span class="hljs-keyword">ptr</span>[in, <span class="hljs-built_in">string</span>[<span class="hljs-string">&quot;/proc/test&quot;</span>]], flags flags[proc_open_flags], <span class="hljs-keyword">mode</span> flags[proc_open_mode]) fd<br><span class="hljs-keyword">read</span>$proc(fd fd, buf <span class="hljs-keyword">buffer</span>[out], <span class="hljs-built_in">count</span> <span class="hljs-built_in">len</span>[buf]) <span class="hljs-built_in">len</span>[buf]<br><span class="hljs-keyword">write</span>$proc(fd fd, buf <span class="hljs-keyword">buffer</span>[in], <span class="hljs-built_in">count</span> <span class="hljs-built_in">len</span>[buf]) <span class="hljs-built_in">len</span>[buf]<br><span class="hljs-keyword">close</span>$proc(fd fd)<br><br>proc_open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE<br>proc_open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH<br></code></pre></td></tr></table></figure>
+
+<p>系统调用的声明包含调用名、参数和返回值。格式如下：</p>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ada">SyscallName$<span class="hljs-keyword">Type</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><ul>
+<li><code>$</code> 前是系统调用名（如 <code>open</code>）；</li>
+</ul>
+</li>
+<li><ul>
+<li><code>$</code> 后是自定义的调用类型（如 <code>proc</code>），名称可以自定义，用于限制调用行为；</li>
+</ul>
+</li>
+<li><ul>
+<li>参数格式如下：</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">参数名 类型<span class="hljs-selector-attr">[限制]</span><br></code></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">mode flags<span class="hljs-selector-attr">[proc_open_mode]</span><br></code></pre></td></tr></table></figure>
+
+<p>表示 <code>mode</code> 是一个 <code>flags</code> 类型，限制为 <code>proc_open_mode</code> 中的值。</p>
+<p>在我们的例子中，堆溢出是通过向 <code>/proc/test</code> 写入数据触发的，所以需要将 <code>open</code> 的 <code>file</code> 参数限定为 <code>&quot;/proc/test&quot;</code>。</p>
+<p>然后重新编译syzkaller</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">make clean<br>make bin/syz-extract<br>bin/syz-extract -os linux -arch amd64 -sourcedir /PATH/TO/LINUX/SOURCE sys/YOUR_SYSCALL.txt<br>make all<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><ul>
+<li><code>-arch</code>：目标架构（如 amd64）</li>
+</ul>
+</li>
+<li><ul>
+<li><code>-sourcedir</code>：Linux 内核源码所在路径</li>
+</ul>
+</li>
+</ul>
+<h4 id="拷贝binary到测试机"><a href="#拷贝binary到测试机" class="headerlink" title="拷贝binary到测试机"></a>拷贝binary到测试机</h4><p>启动你的虚拟机后，在宿主机 syzkaller 目录下执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">scp -P $(YOUR_PORT) -i ~/.ssh/rsa -r syzkaller/bin root@127.0.0.1:$(YOUR_PATH)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>$(YOUR_PORT)</code> 是你启动 QEMU 时指定的端口；</li>
+<li><code>$(YOUR_PATH)</code> 是 VM 内配置的目录路径。</li>
+</ul>
+<h3 id="将描述信息编译进行内核"><a href="#将描述信息编译进行内核" class="headerlink" title="将描述信息编译进行内核"></a>将描述信息编译进行内核</h3><h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>这里我们使用一个漏洞驱动来测试我们的 syzkaller 是否开源 fuzz 出来。</p>
+<ul>
+<li>初始加载驱动时，会在<code>/proc</code>文件夹下创建文件proc。而针对于 proc 的读写操作，内核实际会调用<code>proc_*</code>系列函数俩进行处理。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/init.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/module.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/proc_fs.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/uaccess.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/slab.h&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MY_DEV_NAME <span class="hljs-string">&quot;test&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DEBUG_FLAG <span class="hljs-string">&quot;PROC_DEV&quot;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title function_">proc_read</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> file *proc_file, <span class="hljs-type">char</span> __user *proc_user, <span class="hljs-type">size_t</span> n, <span class="hljs-type">loff_t</span> *loff)</span>;<br><span class="hljs-type">static</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title function_">proc_write</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> file *proc_file, <span class="hljs-type">const</span> <span class="hljs-type">char</span> __user *proc_user, <span class="hljs-type">size_t</span> n, <span class="hljs-type">loff_t</span> *loff)</span>;<br><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">proc_open</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> inode *proc_inode, <span class="hljs-keyword">struct</span> file *proc_file)</span>;<br><span class="hljs-type">static</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">file_operations</span> <span class="hljs-title">a</span> =</span> &#123;<br>                                .open = proc_open,<br>                                .read = proc_read,<br>                                .write = proc_write,<br>&#125;;<br><br><br><span class="hljs-type">static</span> <span class="hljs-type">int</span> __init <span class="hljs-title function_">mod_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc_dir_entry</span> *<span class="hljs-title">test_entry</span>;</span><br>    <span class="hljs-type">const</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">file_operations</span> *<span class="hljs-title">proc_fops</span> =</span> &amp;a;<br>    printk(DEBUG_FLAG<span class="hljs-string">&quot;:proc init start!\n&quot;</span>);<br><br>	<span class="hljs-comment">//创建 proc</span><br>    test_entry = proc_create(MY_DEV_NAME, S_IRUGO|S_IWUGO, <span class="hljs-literal">NULL</span>, proc_fops);<br>    <span class="hljs-keyword">if</span>(!test_entry)<br>       printk(DEBUG_FLAG<span class="hljs-string">&quot;:there is somethings wrong!\n&quot;</span>);<br>    <br>    printk(DEBUG_FLAG<span class="hljs-string">&quot;:proc init over!\n&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title function_">proc_read</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> file *proc_file, <span class="hljs-type">char</span> __user *proc_user, <span class="hljs-type">size_t</span> n, <span class="hljs-type">loff_t</span> *loff)</span><br>&#123;<br>    printk(DEBUG_FLAG<span class="hljs-string">&quot;:finish copy_from_use,the string of newbuf is&quot;</span>);<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><br><span class="hljs-type">static</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title function_">proc_write</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> file *proc_file, <span class="hljs-type">const</span> <span class="hljs-type">char</span> __user *proc_user, <span class="hljs-type">size_t</span> n, <span class="hljs-type">loff_t</span> *loff)</span>  <br>&#123;  <br>    <span class="hljs-type">char</span> *c = kmalloc(n + <span class="hljs-number">512</span>, GFP_KERNEL);  <br>    <br>	<span class="hljs-comment">//溢出，原先只有 512 字节，但是复制了 4096</span><br>    <span class="hljs-type">size_t</span> size = copy_from_user(c, proc_user, n + <span class="hljs-number">4096</span>);  <br>    printk(DEBUG_FLAG<span class="hljs-string">&quot;:into write %ld!\n&quot;</span>, size);  <br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;  <br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">proc_open</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> inode *proc_inode, <span class="hljs-keyword">struct</span> file *proc_file)</span><br>&#123;<br>    printk(DEBUG_FLAG<span class="hljs-string">&quot;:into open!\n&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br>module_init(mod_init);<br></code></pre></td></tr></table></figure>
+
+<h3 id="编译进内核"><a href="#编译进内核" class="headerlink" title="编译进内核"></a>编译进内核</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">下载源代码至 linux/drivers/char/test.c</span>  <br>proxychains wget -v https://github.com/hardenedlinux/Debian-GNU-Linux-Profiles/raw/master/docs/harbian_qa/fuzz_testing/test.c -O linux/drivers/char/test.c  <br><span class="hljs-meta prompt_"># </span><span class="language-bash">修改 Makefile</span>   <br>echo &quot;obj-y += test.o&quot; &gt;&gt; linux/drivers/char/Makefile  <br><span class="hljs-meta prompt_"># </span><span class="language-bash">尝试编译</span>  <br>make<br></code></pre></td></tr></table></figure>
+
+<p>在<code>/proc/test</code>下可以找到目标</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">ls</span> -al /proc/test<br></code></pre></td></tr></table></figure>
+
+<h3 id="配置-syzkaller规则"><a href="#配置-syzkaller规则" class="headerlink" title="配置 syzkaller规则"></a>配置 syzkaller规则</h3><p>在<code>syzkaller/sys/linux/</code>创建一个对应于这个漏洞驱动的处理规则<code>test.txt</code>，内容如下：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs vim">include &lt;linux/fs.h&gt;  <br>   <br><span class="hljs-keyword">open</span>$proc(<span class="hljs-keyword">file</span> <span class="hljs-keyword">ptr</span>[in, <span class="hljs-built_in">string</span>[<span class="hljs-string">&quot;/proc/test&quot;</span>]], flags flags[proc_open_flags], <span class="hljs-keyword">mode</span> flags[proc_open_mode]) fd  <br><span class="hljs-keyword">read</span>$proc(fd fd, buf <span class="hljs-keyword">buffer</span>[out], <span class="hljs-built_in">count</span> <span class="hljs-built_in">len</span>[buf])  <br><span class="hljs-keyword">write</span>$proc(fd fd, buf <span class="hljs-keyword">buffer</span>[in], <span class="hljs-built_in">count</span> <span class="hljs-built_in">len</span>[buf])  <br><span class="hljs-keyword">close</span>$proc(fd fd)  <br>   <br>proc_open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE  <br>proc_open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH<br></code></pre></td></tr></table></figure>
+
+<p>在 syzkaller 项目根目录下执行以下命令以创建对应的.const文件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">bin/syz-extract -os linux -sourcedir &quot;/usr/class/linux&quot; -arch amd64 test.txt<br></code></pre></td></tr></table></figure>
+
+<p>重建 syzkaller</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">bin/syz-sysgen<br>make all<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="Fuzz"><a href="#Fuzz" class="headerlink" title="Fuzz"></a>Fuzz</h3><p>在开始 Fuzz 之前我们需要修改 syzkaller 的运行配置启用这些系统调用。修改my.cfg，添加以下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-string">&quot;enable_syscalls&quot;</span>: [  <br>    <span class="hljs-string">&quot;open<span class="hljs-variable">$proc</span>&quot;</span>,  <br>    <span class="hljs-string">&quot;read<span class="hljs-variable">$proc</span>&quot;</span>,  <br>    <span class="hljs-string">&quot;write<span class="hljs-variable">$proc</span>&quot;</span>,  <br>    <span class="hljs-string">&quot;close<span class="hljs-variable">$proc</span>&quot;</span>  <br>],<br></code></pre></td></tr></table></figure>
+
+<p>开始 Fuzz：</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">bin/syz-manager </span>-<span class="hljs-built_in">config</span> my.cfg -vv <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
+
+<p>过一段时间我们就可以得到：</p>
+<p>然后 syzkaller 就会复现 crash。</p>
+<h3 id="分析crash"><a href="#分析crash" class="headerlink" title="分析crash"></a>分析crash</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-system-x86_64 \<br>  -kernel arch/x86/boot/bzImage \<br>  -append &quot;console=ttyS0 nokaslr&quot; \<br>  -nographic \<br>  -s -S<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">gdb</span> ./vmlinux<br><span class="hljs-attribute">target</span> remote :<span class="hljs-number">1234</span><br></code></pre></td></tr></table></figure>
+
+<p>使用 gdb 进行单步调试需要修改配置文件</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-attr">&quot;vm&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><br>  ...<br>  <span class="hljs-attr">&quot;count&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;qemu_args&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;-gdb tcp::1234&quot;</span><br><span class="hljs-punctuation">]</span><br></code></pre></td></tr></table></figure>
+
+<p>然后在宿主机运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">gdb -q build_tree/vmlinux <br>Reading symbols from build_tree/vmlinux...done.<br>(gdb) target remote :1234<br></code></pre></td></tr></table></figure>
+
+<p>如果你需要调试内核模块，首先 SSH 到 VM，打印模块段地址：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">cat <span class="hljs-regexp">/sys/m</span>odule<span class="hljs-regexp">/$(YOUR_MODULE)/</span>sections<span class="hljs-regexp">/.text /</span>sys<span class="hljs-regexp">/module/</span>$(YOUR_MODULE)<span class="hljs-regexp">/sections/</span>.data <span class="hljs-regexp">/sys/m</span>odule<span class="hljs-regexp">/$(YOUR_MODULE)/</span>sections/.bss<br></code></pre></td></tr></table></figure>
+
+<p>添加符号文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">add-symbol-file /$(YOUR_BUILD_TREE)/$(YOUR_MODULE)/$(YOUR_MODULE).ko $(ADDR_OF_TEXT) -s data $(ADDR_OF_DATA) -s bss $(ADDR_OF_BSS)<br></code></pre></td></tr></table></figure>
+
+<p>现在你就可以在模块中下断点了。 我使用 KGDB 来分析 syzkaller 触发的内核代码路径。注意：<code>-gdb</code> 选项可能会影响 VM 实例数量，因此建议仅在调试自定义 syscall 时使用。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/news/2394">文章 - linux下fuzz初试 - 先知社区</a><br><a target="_blank" rel="noopener" href="https://www.freebuf.com/sectool/323886.html">Syzkaller入门知识总结 - FreeBuf网络安全行业门户</a><br>  <a target="_blank" rel="noopener" href="https://blingblingxuanxuan.github.io/2019/10/26/syzkaller/#x86-64-linux%E8%99%9A%E6%8B%9F%E6%9C%BA">syzkaller fuzz 工具的使用方法及实践实例 | blingbling’s blog</a><br>  <a target="_blank" rel="noopener" href="https://kiprey.github.io/2021/11/syzkaller_1/#1-%E5%B0%86%E6%BC%8F%E6%B4%9E%E9%A9%B1%E5%8A%A8%E7%BC%96%E8%AF%91%E8%BF%9B-kernel">syzkaller 环境搭建 | Kiprey’s Blog</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/fuzzers/" class="print-no-link">#fuzzers</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>syzkaller初探</div>
+      <div>http://nanhang.top/2025/07/01/fuzz/syzkaller/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/honggfuzz/" title="Honggfuzz浅探">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Honggfuzz浅探</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/paper/roadmap/" title="论文笔记：Fuzzing: A Survey for Roadmap">
+                        <span class="hidden-mobile">论文笔记：Fuzzing: A Survey for Roadmap</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

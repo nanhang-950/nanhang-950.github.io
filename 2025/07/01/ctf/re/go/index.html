@@ -1,0 +1,1025 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介Go 语言类似于 C 语言，目标是一个二进制文件，逆向的也是 native 代码它有如下特性  强类型检查的编译型语言，接近 C 但拥有原生的包管理，内建的网络包，协程等使其成为一款开发效率更高的工程级语言。 作为编译型语言它有开发速度快的优点，但是它又能通过内置的运行时符号信息实现反射这种动态特性。 Go语言作为一种内存安全的语言，他不仅有内建的垃圾回收，还在编译与运行时提供了大量的安全检查">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go逆向分析">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/ctf/re/go/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="简介Go 语言类似于 C 语言，目标是一个二进制文件，逆向的也是 native 代码它有如下特性  强类型检查的编译型语言，接近 C 但拥有原生的包管理，内建的网络包，协程等使其成为一款开发效率更高的工程级语言。 作为编译型语言它有开发速度快的优点，但是它又能通过内置的运行时符号信息实现反射这种动态特性。 Go语言作为一种内存安全的语言，他不仅有内建的垃圾回收，还在编译与运行时提供了大量的安全检查">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250108090404.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250108093459.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250403005153.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250108113935.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417142443.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417142956.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417150023.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250405112850.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417171222.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417171307.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417171317.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417171413.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417171629.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417170822.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250417170947.png">
+<meta property="article:published_time" content="2025-07-01T01:53:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:02:22.400Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="高级语言逆向">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/assets/Pasted%20image%2020250108090404.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Go逆向分析 - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Go逆向分析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:53" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          36 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Go逆向分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Go 语言类似于 C 语言，目标是一个二进制文件，逆向的也是 native 代码它有如下特性</p>
+<ul>
+<li>强类型检查的编译型语言，接近 C 但拥有原生的包管理，内建的网络包，协程等使其成为一款开发效率更高的工程级语言。</li>
+<li>作为编译型语言它有开发速度快的优点，但是它又能通过内置的运行时符号信息实现反射这种动态特性。</li>
+<li>Go语言作为一种内存安全的语言，他不仅有内建的垃圾回收，还在编译与运行时提供了大量的安全检查。</li>
+</ul>
+<p>Go通常使用静态链接程序，所以它会直接将库打包链接进来，因此程序体积会比较大。而且第三方库、标准库与用户代码混在一起，需要区分。</p>
+<p>在分析 Go 语言编写的二进制程序前，需要弄清楚某一操作是发生在编译期间还是运行期间，能在编译时做的事就在编译时做，这能实现错误前移并提高运行效率等，而为了语言的灵活性引入的某些功能又必须在运行时才能确定，在这时就需要想到运行时它应该怎么做，又需要为它提供哪些数据，例如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	s:=[...]<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;hello&quot;</span>,<span class="hljs-string">&quot;world&quot;</span>&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;%s %s\n&quot;</span>,s[<span class="hljs-number">0</span>],s[<span class="hljs-number">1</span>])<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在第二行定义了一个字符串数组，第三行将其输出，编译阶段就能确定元素访问的指令以及下标访问是否越界，于是就可以去除 s 的类型信息。但是由于 Printf 的输入是<code>interface&#123;&#125;</code>类型，因此在编译时它无法得知传入的数据实际为什么类型。但是作为一个输出函数，希望传入数字时直接输出，传入数组时遍历输出每个元素，那么在传入参数时，就需要在编译时把实际参数的类型与参数绑定后再传入<code>Printf</code>，在运行时它就能跟进参数绑定的信息确定是什么类型了。</p>
+<p>其实在编译时，编译器做的事还很多，从逆向看只需要注意它会将很多操作转换为<code>runtime</code>的内建函数调用，例如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go">a:=<span class="hljs-string">&quot;123&quot;</span><br>s:=<span class="hljs-string">&quot;abc&quot;</span>+a+<span class="hljs-string">&quot;cba&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>将被转换为<code>concatstring3</code>函数调用：</p>
+<p><img src="/assets/Pasted%20image%2020250108090404.png" srcset="/img/loading.gif" lazyload></p>
+<p>若需要观察某语法最终生成的汇编代码，出了使用 ida 还可以使用 Go 自带的工具。</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">go</span> tool <span class="hljs-built_in">compile</span> -N -l -S <span class="hljs-built_in">demo</span>.<span class="hljs-built_in">go</span>       <br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>编译</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">#</span><span class="language-bash">编译</span><br>go build demo.go<br><span class="hljs-meta prompt_">#</span><span class="language-bash">禁止优化</span><br>go build -gcflags=&quot;-N -l&quot; demo.go<br><span class="hljs-meta prompt_">#</span><span class="language-bash">去掉调试信息和符号</span><br>go build -ldflags=&quot;-w -s&quot; demo.go<br></code></pre></td></tr></table></figure>
+
+<h2 id="调用约定与传参"><a href="#调用约定与传参" class="headerlink" title="调用约定与传参"></a>调用约定与传参</h2><p>Go 使用独特的调用约定。</p>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>32位</th>
+<th>64位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bool、int8、uint8</td>
+<td>8bit</td>
+<td>8bit</td>
+</tr>
+<tr>
+<td>int16、uint16</td>
+<td>16bit</td>
+<td>16bit</td>
+</tr>
+<tr>
+<td>int32、uint32、float32</td>
+<td>32bit</td>
+<td>32bit</td>
+</tr>
+<tr>
+<td>int64、uint64、float64、complex64</td>
+<td>64bit</td>
+<td>64bit</td>
+</tr>
+<tr>
+<td>int、uint、uintptr</td>
+<td>32bit</td>
+<td>64bit</td>
+</tr>
+<tr>
+<td>cpmplex128</td>
+<td>128bit</td>
+<td>128bit</td>
+</tr>
+</tbody></table>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="string"><a href="#string" class="headerlink" title="string"></a>string</h3><p>传统的 C 是通过<code>\0</code>结束符来表示字符串结束位置，而 Go 语言则不同它通过存储字符串长度来确定字符串结束位置。</p>
+<p>在 Go 中声明字符串是声明了一个字符串对象，一个字符串对象结构在内存中分为两部分，结构中使用两个字段存储字符串信息，分别存储字符串指针以及字符串长度。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> StringHeader <span class="hljs-keyword">struct</span>&#123;<br>	Data <span class="hljs-type">uintptr</span> <span class="hljs-comment">//字符串首地址</span><br>	Len <span class="hljs-type">int</span>  <span class="hljs-comment">//字符串长度</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>字符串的大小由存储字符串长度的字段决定，程序通过访问字符串指针字段来使用字符串。</p>
+<p>在逆向中重点关注的是如上结构，因此说一个<code>string</code>对象占两个字长，其它结构也按这种约定。</p>
+<p>例如输出一个字符串，它会将上述结构入栈，由于没有终止符 IDA 无法正常识别字符串结束符因此输出了很多信息，我们需要依靠它的第二个域决定它的结束位置：</p>
+<ul>
+<li>字符串拼接</li>
+</ul>
+<p>字符串的常见操作是字符串拼接，若拼接的字符串个数不超过 5，则调用<code>concatstringN</code>，否则会调用<code>concatstrings</code>，函数声明如下，可见在多个字符串拼接时参数形式不同：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 两个字符串拼接</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">concatstring2</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>)</span></span><span class="hljs-type">string</span><br><span class="hljs-comment">// 三个字符串拼接，依此类推</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">concatstring3</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>)</span></span><span class="hljs-type">string</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">concatstring4</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>)</span></span><span class="hljs-type">string</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">concatstring5</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>,<span class="hljs-type">string</span>)</span></span><span class="hljs-type">string</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">concatstrings</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>,[]<span class="hljs-type">string</span>)</span></span><span class="hljs-type">string</span><br></code></pre></td></tr></table></figure>
+
+<p>因此在遇到<code>concatstringN</code>时可以跳过第一个参数，随后入栈的参数即为字符串，而遇到<code>concatstringN</code>时，跳过第一个参数后汇编层面还剩三个参数，其它后两个一般相同且指明字符串个数，第一个参数则指明字符串数组的首地址。</p>
+<p><img src="/assets/Pasted%20image%2020250108093459.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="array"><a href="#array" class="headerlink" title="array"></a>array</h3><p>类似 C 把字符串看作 char 数组，array 和 string 的结构类似，其真实数据也是在内存里连续存放，而使用如下结构索引数据，对数组里的元素访问其地址偏移在编译时就能确定，总之逆向角度看它也是占两个字长：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> arrayHeader <span class="hljs-keyword">struct</span>&#123;<br>	Data <span class="hljs-type">uintptr</span> <span class="hljs-comment">//首元素地址</span><br>	Len <span class="hljs-type">int</span> <span class="hljs-comment">//数组长度</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>数组有三种存储位置，当数组内元素较少时可以直接存于栈上，较多时存于数据区，而当数据会被返回时会存于堆上。如下定义了三个局部变量，但是它们将在底层表现出不同的形态：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Getarray</span><span class="hljs-params">()</span></span> *[<span class="hljs-number">3</span>]<span class="hljs-type">int</span> &#123;<br>	a:=[...]<span class="hljs-type">int</span>&#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>&#125;<br>	b:=[...]<span class="hljs-type">int</span>&#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>,<span class="hljs-number">7</span>,<span class="hljs-number">8</span>,<span class="hljs-number">9</span>&#125;<br>	c:=[...]<span class="hljs-type">int</span>&#123;<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>&#125;<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(a)&lt;<span class="hljs-built_in">len</span>(b)&#123;<br>		<span class="hljs-keyword">return</span> &amp;c<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>变量 a 的汇编如下，它直接在栈上定义并初始化：</p>
+<p><img src="/assets/Pasted%20image%2020250403005153.png" srcset="/img/loading.gif" lazyload></p>
+<p>变量 b 的汇编如下，它的初始值被定义在了数据段</p>
+<p>其中loc_4668a6 是数据拷贝函数，若符号信息完整遇到无法识别出的函数一般也就是数据拷贝函数。</p>
+<p>变量 c 的汇编如下，尽管它和a的值一样，但是 Go 作为内存安全的语言，其通过runtime.newobject在堆上申请空间来释放该对象，返回的是新的对象指针。</p>
+<p>golang的返回值通过栈传递</p>
+<h3 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h3><p>类似数组，切片的实例对象数据结构如下，可知它占用了三个字长，与它相关的函数是<code>growslice</code>，表示扩容，逆向时可忽略：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> SliceHeader <span class="hljs-keyword">struct</span> &#123;<br>	Data <span class="hljs-type">uintptr</span> <span class="hljs-comment">//数据指针</span><br>	Len  <span class="hljs-type">int</span>     <span class="hljs-comment">//当前长度</span><br>	Cap  <span class="hljs-type">int</span>     <span class="hljs-comment">//可容纳的长度</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>更常见的函数是与字符串相关的转换，它们在底层调用的是如下函数，此处我们依然不必关注第一个参数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">slicebytetostring</span><span class="hljs-params">(buf*[32]<span class="hljs-type">byte</span>, ptr *<span class="hljs-type">byte</span>, n <span class="hljs-type">int</span>)</span></span> <span class="hljs-type">string</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">stringtoslicebyte</span><span class="hljs-params">(*[32]<span class="hljs-type">byte</span>, <span class="hljs-type">string</span>)</span></span> []<span class="hljs-type">byte</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-keyword">var</span> a <span class="hljs-type">string</span> = <span class="hljs-string">&quot;hello world&quot;</span><br>	<span class="hljs-keyword">var</span> b []<span class="hljs-type">byte</span> = []<span class="hljs-type">byte</span>(a)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="map"><a href="#map" class="headerlink" title="map"></a>map</h3><p>字典实现比较复杂，不过在逆向中会涉及到的内容很简单，字典操作常见的会转换为如下函数</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">fastrand</span><span class="hljs-params">()</span></span> <span class="hljs-type">uint32</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">makemap</span><span class="hljs-params">(mapType *<span class="hljs-type">byte</span>, hint <span class="hljs-type">int</span>, mapbuf *any)</span></span> (hmap <span class="hljs-keyword">map</span>[any]any)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">mapaccess1</span><span class="hljs-params">(mapType *<span class="hljs-type">byte</span>, hmap <span class="hljs-keyword">map</span>[any]any, key *any)</span></span> (val *any)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">mapaccess2</span><span class="hljs-params">(mapType *<span class="hljs-type">byte</span>, hmap <span class="hljs-keyword">map</span>[any]any, key *any)</span></span> (val *any, pres <span class="hljs-type">bool</span>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">mapassign</span><span class="hljs-params">(mapType *<span class="hljs-type">byte</span>, hmap <span class="hljs-keyword">map</span>[any]any, key *any)</span></span> (val *any)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">mapiterinit</span><span class="hljs-params">(mapType *<span class="hljs-type">byte</span>, hmap <span class="hljs-keyword">map</span>[any]any, hiter *any)</span></span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">mapiternext</span><span class="hljs-params">(hiter *any)</span></span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>创建：一般<code>fastrand</code>和<code>makemap</code>连用返回一个<code>map</code>指针。</li>
+<li>读取：读字典时使用<code>mapaccess1</code>和<code>mapaccess2</code>。</li>
+<li>写入：写字典时会使用<code>mapassign</code>函数，它返回一个地址，将<code>value</code>写入该地址。</li>
+</ul>
+<p>另外比较常见的是对字典进行遍历，会使用<code>mapiterinit</code>和<code>mapiternext</code>配合。</p>
+<p>事实上更常见的是上面这些函数的同类函数，它们的后缀代表了对特定类型的优化，例如如下代码：</p>
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	a := <span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-type">int</span>&#123;<br>		<span class="hljs-string">&quot;id&quot;</span>:<span class="hljs-number">1</span>,<br>		<span class="hljs-string">&quot;age&quot;</span>:<span class="hljs-number">32</span>,<br>	&#125;<br>	a[<span class="hljs-string">&quot;age&quot;</span>] = <span class="hljs-number">19</span><br>	fmt.Println(a[<span class="hljs-string">&quot;id&quot;</span>])<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h3><p>类似 C 语言，Go 的结构体也是由其它类型组成的符号结构，它里面域的顺序也是定义的顺序，里面的数据对齐规则和 C 一致不过我们可以直接从其类型信息获得，不必自己算。在分析结构体变量时必须要了解结构体的类型结构了，其定义如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> rtype <span class="hljs-keyword">struct</span>&#123;<br>	size      <span class="hljs-type">uintptr</span>  <span class="hljs-comment">//该类型对象实例的大小</span><br>	ptrdata   <span class="hljs-type">uintptr</span>  <span class="hljs-comment">//rtype 可以包含指针的字节数</span><br>	hash      <span class="hljs-type">uint32</span>   <span class="hljs-comment">//rtype 哈希值：避免哈希表中的计算</span><br>	tflag     tflag    <span class="hljs-comment">//额外的类型信息标识</span><br>	align     <span class="hljs-type">uint8</span>    <span class="hljs-comment">//当前具体类型变量的内存对齐</span><br>	kind      <span class="hljs-type">uint8</span>    <span class="hljs-comment">//具体 kind 的枚举值</span><br>	alg       *typeAlg <span class="hljs-comment">//算法表</span><br>	gcdata    *<span class="hljs-type">byte</span>    <span class="hljs-comment">//垃圾回收数据</span><br>	str       nameoff  <span class="hljs-comment">//字符串格式</span><br>	ptrToThis typeoff  <span class="hljs-comment">//指向该类型的指针 </span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> structField <span class="hljs-keyword">struct</span> &#123;<br>	name        name    <span class="hljs-comment">//属性名称</span><br>	typ         *rtype  <span class="hljs-comment">//该域的类型</span><br>	offsetEmbed <span class="hljs-type">uintptr</span> <span class="hljs-comment">//offsetEmbed&gt;&gt;1 得到该属性在对象中的偏移</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> structType <span class="hljs-keyword">struct</span> &#123;<br>	typ     _type<br>	pkgPath name           <span class="hljs-comment">//包名</span><br>	fields  []structField  <span class="hljs-comment">//域数组</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> uncommonType <span class="hljs-keyword">struct</span>&#123;<br>	pkgPath nameoff <span class="hljs-comment">//包路径</span><br>	mcount  <span class="hljs-type">uint16</span>  <span class="hljs-comment">//方法数</span><br>	xcount  <span class="hljs-type">uint16</span>  <span class="hljs-comment">//导出的方法数</span><br>	moff    <span class="hljs-type">uint32</span>  <span class="hljs-comment">//方法数组的偏移</span><br>	-       <span class="hljs-type">uint32</span>  <span class="hljs-comment">//unused</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> structTypeUncommon <span class="hljs-keyword">struct</span> &#123;<br>	structType<br>	u uncommonType<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如下为 macaron 的 Context 结构体的类型信息，可见它的实例对象占了 0x90 字节，这实际上会和下面 fields 中对象所占空间对应：</p>
+<h2 id="语法特性"><a href="#语法特性" class="headerlink" title="语法特性"></a>语法特性</h2><h3 id="新建对象"><a href="#新建对象" class="headerlink" title="新建对象"></a>新建对象</h3><p>Go 不是面向对象的语言，此处将 Go 的变量当作对象来描述。</p>
+<p>动态创建时会在堆区创建对象，这里涉及<code>make</code>和<code>new</code>两个关键词，不过在汇编层面它们分别对应着<code>makechan</code>、<code>makemap</code>、<code>makeslice</code>与<code>newobject</code>，如<code>makeslice</code>，它的定义如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">makeslice</span><span class="hljs-params">(et *_type,<span class="hljs-built_in">len</span>,<span class="hljs-built_in">cap</span> <span class="hljs-type">int</span>)</span></span> unsafe.Pointer<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>例</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	a := <span class="hljs-built_in">make</span>([]<span class="hljs-type">uint8</span>,<span class="hljs-number">5</span>,<span class="hljs-number">10</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>调用<code>make([]uint8,5,10)</code>创建一个<code>slice</code>后，会生成此代码：</p>
+<p><img src="/assets/Pasted%20image%2020250108113935.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="函数与方法"><a href="#函数与方法" class="headerlink" title="函数与方法"></a>函数与方法</h3><ul>
+<li>栈空间</li>
+</ul>
+<p>栈可以分为两个区域，在栈底部存放局部变量，栈顶部做函数调用相关的参数与返回值传递。</p>
+<p>因此在分析时不能对顶部的<code>var</code>命名，因为它不特质某具体变量而是随时在变化的，错误的命名容易造成混淆，如下图，0xE60 距 0xEC0 足够远，因此此处很大概率是局部变量可重命名，而 0xEB8 距栈顶很近，很大改了是用于传参的，不要重命名：</p>
+<p><img src="/assets/Pasted%20image%2020250417142443.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>可变参数</li>
+</ul>
+<p>类似 Python 的一般变参实际被转化为一个 tuple，Go 变参也被转换为了一个 slice。因此一个变参在汇编级别占 3 个 参数位，如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">VarArgDemo</span><span class="hljs-params">(args ...<span class="hljs-type">int</span>)</span></span>(sum <span class="hljs-type">int</span>)&#123;&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>&#123;<br>	varArgDemo(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>它会被编译为如下形式：</p>
+<p><img src="/assets/Pasted%20image%2020250417142956.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>方法</li>
+</ul>
+<p>Go 可以为任意自定义类型绑定方法，方法将会被转换为普通函数，并且将方法的接收者转化为第一个参数，再看看上文结构体的图：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-keyword">type</span> demo <span class="hljs-keyword">struct</span> &#123;<br>	size <span class="hljs-type">int</span><br>	data <span class="hljs-type">int</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(d *demo)</span></span> <span class="hljs-built_in">len</span>() <span class="hljs-type">int</span> &#123;<br>	<span class="hljs-keyword">return</span> d.size<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br><br>	d := &amp;demo&#123;size: <span class="hljs-number">10</span>, data: <span class="hljs-number">100</span>&#125;<br><br>	fmt.Println(<span class="hljs-string">&quot;Size of demo:&quot;</span>, d.<span class="hljs-built_in">len</span>())<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在逆向时工具会将其解析为<code>类型名__方法名</code>或<code>类型名_方法名</code>，因此遇到此类名称时我们需要注意他的第一个参数是隐含参数，类似 C++ 的<code>this</code>指针，但 Go 的方法定义不仅支持传引用，也支持传值，因此第一个参数可能在汇编层面不只占一个机器字，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>    name   <span class="hljs-type">string</span><br>    age    <span class="hljs-type">int</span><br>    weight <span class="hljs-type">uint16</span><br>    height <span class="hljs-type">uint16</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p Person)</span></span> Print() &#123;<br>    fmt.Printf(<span class="hljs-string">&quot;%t\n&quot;</span>, p)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p *Person)</span></span> PPrint() &#123;<br>    fmt.Printf(<span class="hljs-string">&quot;%t\n&quot;</span>, p)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>    lihua := Person&#123;<br>        name:   <span class="hljs-string">&quot;lihua&quot;</span>,<br>        age:    <span class="hljs-number">18</span>,<br>        weight: <span class="hljs-number">60</span>,<br>        height: <span class="hljs-number">170</span>,<br>    &#125;<br>    lihua.Print()<br>    lihua.PPrint()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><img src="/assets/Pasted%20image%2020250417150023.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="伸缩栈"><a href="#伸缩栈" class="headerlink" title="伸缩栈"></a>伸缩栈</h3><p>由于 Go 可以拥有大量的协程，若使用固定大小的栈将会造成内存空间浪费，因此它使用伸缩栈。</p>
+<p>初始时一个普通携程只分配几 kb 的栈，并在函数执行前先判断栈空间是否足够，若不够则通过一些方式扩展栈，这在汇编上的表现形式如下：</p>
+<p>在调用<code>runtime.morestack*</code>函数扩展栈后会重新进入函数并进入左侧分支，因此在分析时直接忽略右侧分支即可。</p>
+<h3 id="调用约定"><a href="#调用约定" class="headerlink" title="调用约定"></a>调用约定</h3><p>Go 统一通过栈传递参数和返回值（较新版本可能通过寄存器），这些空间由调用者维护，返回值内存会在调用者前选择性的被初始化。</p>
+<p>参数传递是从左到右顺序，在内存中从下到上写入栈，因此看到<code>mov [rsp+0xXX+var_xx]</code>，<code>reg</code>（栈顶）时就代表开始为函数调用准备参数了，继续向下就能确定函数的参数个数及内容：</p>
+<p>如图，<code>mov [rsp+108h+v_108],rdx</code>，<code>rdx</code>即标识开始向栈上传递第一个参数了，从此处到<code>call</code>指令前都是传参，此处可见在汇编层面传了 3 个参数，<code>call</code>指令之后为返回值，不过可能存在返回值未使用的情况，因此返回值的个数和含义需要从函数内部分析，即分析函数<code>retn</code>指令前的指令来确定返回值大小。</p>
+<h3 id="写屏障"><a href="#写屏障" class="headerlink" title="写屏障"></a>写屏障</h3><p>Go 拥有垃圾回收机制，其三色标记使用了写屏障的方法保证一致性，在垃圾收集过程中会将写屏障标志置位，此时会进入另一条逻辑，但是我们在逆向过程中可以认为该位未置位而直接分析无保护的情况。</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">runtime_gcWriteBarrier</span><br></code></pre></td></tr></table></figure>
+
+<p>先判断标志，再决定是否进入，在分析时可以直接认为其永假并走左侧分支。</p>
+<h3 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h3><p>在代码中使用 go 关键词可以创建并运行协程，它在汇编上会被表现为<code>runtime_newproc(fn,args?)</code>，它会被封装函数与参数并创建携程执行信息，并在适当时候被执行。</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">runtime_newproc</span><br></code></pre></td></tr></table></figure>
+
+<p>这里执行了<code>go loop</code>，由于没有参数此处<code>newproc</code>只被传入了函数指针这一个参数，否则会传入继续传入函数所需的参数，在分析时直接将函数作为在新的线程里执行即可。</p>
+<h3 id="defer"><a href="#defer" class="headerlink" title="defer"></a>defer</h3><p>往往用于资源释放。</p>
+<h2 id="逆向实战"><a href="#逆向实战" class="headerlink" title="逆向实战"></a>逆向实战</h2><p>总结一下，Go 语言逆向的难点主要分为三点：</p>
+<ul>
+<li>独特而复杂的数据类型</li>
+<li>独特的调用约定和栈结构，多返回值机制</li>
+<li>全静态链接构建</li>
+</ul>
+<p>尽管是编译型语言，Go 仍然提供了一定的动态能力，这主要表现在接口与反射上，而这些能力离不开类型系统，它需要保留必要的类型定义以及对象和类型之间的关联，这部分内容无法在二进制文件中被去除，否则会影响重新运行，因此在 Go 逆向时能获取到大量的符号信息，大大简化了逆向的难度，对此类信息已有许多优秀的工具可供使用，例如go_parser与redress。</p>
+<p><img src="/assets/Pasted%20image%2020250405112850.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> idaapi<br><span class="hljs-keyword">import</span> idc<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">scan_strings</span>(<span class="hljs-params">start,end</span>):<br>	r=[]<br>	<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(start,end,<span class="hljs-number">16</span>):<br>		addr=idaapi.get_qword(i)<br>		size=idaapi.get_qword(i+<span class="hljs-number">8</span>)<br>		<span class="hljs-built_in">print</span>(<span class="hljs-built_in">hex</span>(size))<br>		<span class="hljs-keyword">if</span> size&gt;<span class="hljs-number">100</span>:<br>			<span class="hljs-keyword">break</span><br>		s=idc.get_bytes(addr,size)<br>		r.append((i,s))<br>	<span class="hljs-keyword">return</span> r<br>strings=scan_strings(<span class="hljs-number">0x1c16990</span>,<span class="hljs-number">0x01c19430</span>)<br>f=<span class="hljs-built_in">open</span>(<span class="hljs-string">&quot;strings.txt&quot;</span>,<span class="hljs-string">&quot;w&quot;</span>)<br><span class="hljs-keyword">for</span> i,s <span class="hljs-keyword">in</span> strings:<br>	f.write(<span class="hljs-string">&quot;%x:%s\n&quot;</span>%(i,s))<br>f.close()<br></code></pre></td></tr></table></figure>
+
+<h2 id="符号还原"><a href="#符号还原" class="headerlink" title="符号还原"></a>符号还原</h2><blockquote>
+<p>go_praser符号恢复工具：<a target="_blank" rel="noopener" href="https://github.com/0xjiayu/go_parser?tab=readme-ov-file">0xjiayu&#x2F;go_parser: Yet Another Golang binary parser for IDAPro</a></p>
+</blockquote>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><blockquote>
+<p>2024 YLCTF ezgo</p>
+</blockquote>
+<ul>
+<li><p>分析</p>
+</li>
+<li><p>exp</p>
+</li>
+</ul>
+<blockquote>
+<p>2023 安洵杯 gowhere</p>
+</blockquote>
+<blockquote>
+<p>强网拟态 2022 comeongo</p>
+</blockquote>
+<blockquote>
+<p>2024羊城杯 pic</p>
+</blockquote>
+<ul>
+<li>分析</li>
+</ul>
+<p>我们拿到附件，有一个<code>pic.exe</code>文件和一个<code>flag.png</code>文件，<code>flag.png</code>文件应该是加密后的 flag 文件。</p>
+<p><img src="/assets/Pasted%20image%2020250417171222.png" srcset="/img/loading.gif" lazyload></p>
+<p>运行程序，要求我们输入密钥。</p>
+<p>ida反编译分析，通过字符串定位</p>
+<p><img src="/assets/Pasted%20image%2020250417171307.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里<code>off_4DD470</code>变量就是输入字符串，我们将它重命名。</p>
+<p><img src="/assets/Pasted%20image%2020250417171317.png" srcset="/img/loading.gif" lazyload></p>
+<p>根据下面的<code>flag.png</code>字样可以判断，程序应该是对 flag 文件进行加密或解密。</p>
+<p>这里可以猜测<code>p_string</code>变量是接收输入密钥的变量，我们根据逻辑重命名代码。</p>
+<p><img src="/assets/Pasted%20image%2020250417171413.png" srcset="/img/loading.gif" lazyload></p>
+<p>可以看到密钥在几个变量间传递，并且限制密钥的长度为 5 ，否则便退出。</p>
+<p><img src="/assets/Pasted%20image%2020250417171629.png" srcset="/img/loading.gif" lazyload></p>
+<p>下面我们观察函数表，发现很明显的反调试函数，以及<code>SeySize</code>和<code>NewCipher</code>的加密相关函数。我们首先分析加密相关的函数。</p>
+<p><img src="/assets/Pasted%20image%2020250417170822.png" srcset="/img/loading.gif" lazyload></p>
+<p>根据<code>main_KeySizeError_Error</code>函数，我们可以判断程序使用的是 rc4 加密算法。</p>
+<p><img src="/assets/Pasted%20image%2020250417170947.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里程序要求我们输入密钥，但是我们完全不知道密钥。但是我们知道密钥的长度是 5 ，所以我们可以采取爆破的方法。这里我们加密的 flag 是一个 png 文件，所以我们可以知道 png 未被加密前的文件头，然后通过爆破加密直到加密后的文件头与我们 flag.png 的文件头相等。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">rc4</span>(<span class="hljs-params">enc,key</span>):    <br>  s=[]    <br>  <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">256</span>):        <br>    s.append(i)    <br>  t=[]    <br>  <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">256</span>):        <br>    t.append(<span class="hljs-built_in">ord</span>(key[i%<span class="hljs-built_in">len</span>(key)]))    <br>  j=<span class="hljs-number">0</span>    <br>  <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">256</span>):        <br>    j=(j+s[i]+t[i])%<span class="hljs-number">256</span>        <br>    s[i],s[j]=s[j],s[i]    <br>  i=<span class="hljs-number">0</span>    <br>  j=<span class="hljs-number">0</span>    <br>  result=[]    <br>  <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(enc)):        <br>    i=(i+<span class="hljs-number">1</span>)%<span class="hljs-number">256</span>        <br>    j=(j+s[i])%<span class="hljs-number">256</span>        <br>    s[i], s[j] = s[j], s[i]        <br>    x=(s[i]+s[j])%<span class="hljs-number">256</span>        <br>    result.append(enc[k]^s[x]^<span class="hljs-built_in">ord</span>(key[<span class="hljs-number">1</span>])^<span class="hljs-number">17</span>)<br><span class="hljs-keyword">return</span> result<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> tqdm(product(Map,repeat=<span class="hljs-number">5</span>)):    <br>  key = <span class="hljs-string">&quot;&quot;</span>.join(<span class="hljs-built_in">list</span>(i))    <br>  enc = [<span class="hljs-number">0x85</span>,<span class="hljs-number">0x43</span>,<span class="hljs-number">0x72</span>,<span class="hljs-number">0x78</span>]    <br>  flag=rc4(enc,key)    <br>  <span class="hljs-keyword">if</span> flag==[<span class="hljs-number">137</span>, <span class="hljs-number">80</span>, <span class="hljs-number">78</span>, <span class="hljs-number">71</span>]:        <br>    <span class="hljs-built_in">print</span>(key)        <br>    exit()<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><blockquote>
+<p>CTF 从 0 到 1<br><a target="_blank" rel="noopener" href="https://xz.aliyun.com/news/8569?time__1311=n4Ix0D2GD=DtGQDkDlOIY0=L5AKR4d4wBggbD&u_atoken=354161e2892fae430db293c849bfedaa&u_asig=1a0c39d417425347684577622e0048">文章 - 【技术推荐】正向角度看Go逆向 - 先知社区</a><br><a target="_blank" rel="noopener" href="https://forum.butian.net/share/1874">奇安信攻防社区-2022网鼎杯go逆向拾遗之路</a><br><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/218674#h2-11">Go二进制文件逆向分析从基础到进阶——Tips与实战案例-安全KER - 安全资讯平台</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91/" class="print-no-link">#高级语言逆向</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Go逆向分析</div>
+      <div>http://nanhang.top/2025/07/01/ctf/re/go/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/ctf/re/vm/" title="VM指令虚拟化分析">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">VM指令虚拟化分析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/ctf/heter/mips/" title="MIPS Pwn">
+                        <span class="hidden-mobile">MIPS Pwn</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

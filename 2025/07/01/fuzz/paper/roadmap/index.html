@@ -1,0 +1,911 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0x00 前言Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。  fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文笔记：Fuzzing: A Survey for Roadmap">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/fuzz/paper/roadmap/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="0x00 前言Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。  fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250621145238.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250628152009.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250628153048.png">
+<meta property="article:published_time" content="2025-07-01T01:48:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:03:39.360Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="Paper">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/assets/Pasted%20image%2020250621145238.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>论文笔记：Fuzzing: A Survey for Roadmap - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="论文笔记：Fuzzing: A Survey for Roadmap"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:48" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          39 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">论文笔记：Fuzzing: A Survey for Roadmap</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。</p>
+<ul>
+<li>fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞（defects）的存在是分散的（spare），这意味着 defects space 要比 input space 小得多。</li>
+<li>fuzzing 生成大量的测试用例进行重复测试——这需要一种自动化的方法；由于查询与漏洞的复杂性，自动化地执行不同的程序会是一个挑战。</li>
+</ul>
+<h2 id="0x01-简介"><a href="#0x01-简介" class="headerlink" title="0x01 简介"></a>0x01 简介</h2><p>软件漏洞是计算机系统中的一个严重的问题，而 Fuzz testing 已经成为最成功的检测程序漏洞的方法之一，其通过生成大量的测试用例来重复测试目标程序并观察其异常（exception）——安全漏洞的标志（indicator）</p>
+<p>Fuzzing 通常有着一组种子（seeds）：interesting inputs，新的输入的生成则基于这组种子进行无限的变异（mutate）</p>
+<p>虽然 fuzzing 在发现安全漏洞上获得了巨大的成功，在开发高效的漏洞检测方案上仍存在着缺陷，如 Fig.1 所示，三个主要的缺陷是：输入中分散的漏洞空间，严格的有效输入空间，多目标的自动化执行。</p>
+<p><img src="/assets/Pasted%20image%2020250621145238.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><strong>Gap 1: spare defect space of inputs.</strong> 在应用程序中的漏洞分布是分散的，而仅有部分特定的输入能够触发漏洞；浅显的漏洞可以在短时间内被 fuzz 到，但许多安全漏洞需要测试复杂的执行路径并解决严格的路径约束，因此一个高效的 fuzzing 算法需要同时对 <em>待测试程序</em> （program under test， <strong>PUTs</strong>）与 <em>安全缺陷</em> （security flaws）足够精通，以在一个更有可能存在漏洞的代码区域驱动计算资源</li>
+<li><strong>Gap 2: strict valid input space.</strong> 大部分程序有着自己的输入空间，而现代程序都相当复杂，需要更复杂的特化输入空间，因此如何生成有效输入同样是个挑战；此外，为了提高 fuzzing 的效率，生成的输入应当使用不同的执行状态（例如 <em>代码覆盖率</em> ），这需要更先进的方案来生成有效输入；若缺乏对 PUTs 的系统化分析，几乎不可能精确地限制输入空间（例如 PDF 文件的变异生成可能会违反 PDF 规范）</li>
+<li><strong>Gap 3: various target.</strong> 由于 fuzzing 大量重复地测试 PUTs，这需要高效的自动化方法。PUTs 与漏洞都是多种多样的，有的程序可以简单直接地被自动化地 fuzz（例如命令行程序），但许多程序在自动化测试前都需要做大量的工作（例如硬件）；此外，安全缺陷同样需要自动化的 indicator 以记录潜在的真正漏洞，<strong>程序崩溃</strong>是一个常用的 indicator 因为其可以被 OS 自动捕获，但有的安全缺陷<strong>并不会表现出崩溃</strong>（例如条件竞争），这需要精心设计的 indicator</li>
+</ul>
+<p>业界在缩小这些缺陷上做出了许多努力。在本篇论文中，研究者系统化地回顾与分析了 fuzzing 的缺陷与解决方案，同时考虑了广度与深度。</p>
+<h2 id="0x02-Fuzzing-概述"><a href="#0x02-Fuzzing-概述" class="headerlink" title="0x02 Fuzzing 概述"></a>0x02 Fuzzing 概述</h2><p><img src="/assets/Pasted%20image%2020250628152009.png" srcset="/img/loading.gif" lazyload></p>
+<p>首先介绍一些术语（<strong>Terminologies</strong>），如 Fig2 所示：</p>
+<ul>
+<li><strong>seed</strong>：被保留的能完成更好的 fitness 的输入（例如提供新的覆盖率）</li>
+<li><strong>fitness</strong>：对一个 input&#x2F;seed 的质量的测量</li>
+<li><strong>power schedule</strong>：决定了分配给 seeds 的 energy</li>
+<li><strong>energy</strong>：分配给当前 fuzzing round 的变异数量</li>
+<li><strong>fuzzer</strong>：fuzzing 算法的实现</li>
+</ul>
+<p>如 Fig2 所示，fuzzing 由三部分组成：</p>
+<ul>
+<li><strong>input generator</strong>：负责向 executor 提供输入</li>
+<li><strong>executor</strong>：负责执行输入</li>
+<li><strong>defect monitor</strong>：负责检查是否发现了新的执行状态或缺陷（例如crashes）</li>
+</ul>
+<p>基于输入的生成方式，fuzzing 可以分为：</p>
+<ul>
+<li><strong>基于生成的</strong>（generation-based）：基于 <em>文法</em> （grammars）或 <em>有效语料库</em> （valid corpus）从头开始生成；如 Fig2 所示，其从一组种子中直接获得输入</li>
+<li><strong>基于变异的</strong>（mutation-based）：对现有的种子进行 <em>变异</em> （mutate）以获得新的输入；对给定的一组种子，基于变异的模糊测试通过 seed schedule、byte schedule、mutation schedule 以获得输入</li>
+</ul>
+<blockquote>
+<p>需要注意的是，fuzzing 并不需要经历 Fig2 中的所有步骤，例如基于生成的模糊测试并不执行 byte schedule 或 mutation schedule，但关注于从初始输入文件中选择最优的种子组。</p>
+</blockquote>
+<p>基于执行时观测到的信息量，fuzzing 可以分为：</p>
+<ul>
+<li><strong>黑盒</strong>（blackbox）：黑盒模糊测试并不知道每次执行的内部状态，通过使用输入格式化或不同的输入状态来进行优化</li>
+<li><strong>白盒</strong>（whitebox）：白盒模糊测试对每次执行的内部状态是全部得知的，这使其能系统化地探索目标程序的状态空间；其通常使用 concolic execution（例如 dynamic symbolic execution，即动态符号执行）来分析目标程序</li>
+<li><strong>灰盒</strong>（greybox）：灰盒模糊测试获得的执行状态信息在黑盒与白盒之间，例如许多 fuzzer 都使用<strong>边界覆盖率</strong>（edge coverage）作为内部执行状态。</li>
+</ul>
+<p>最通用的执行状态便是代码覆盖率（code coverage，例如 CFGs）</p>
+<h2 id="0x03-Fuzzing-理论"><a href="#0x03-Fuzzing-理论" class="headerlink" title="0x03 Fuzzing 理论"></a>0x03 Fuzzing 理论</h2><p>为了提高发现漏洞的概率，fuzzer 在执行过程中使用反馈（feedback）机制，例如以执行状态或结果作为 fitnes，一个典型的 fitness 便是基于代码覆盖率（例如基本块或边）进行输入生成，但仅有代码覆盖率<strong>并非一直都是可靠的</strong>，就算可靠也可能收益不高（例如指数型数量的输入生成可能只带来线性的漏洞发现），因此一种常见的改进方法是优化模糊测试的过程或是为 fitness 丰富信息，Table 1 展示了不同的 fuzzer 的优化方法：</p>
+<p><img src="/assets/Pasted%20image%2020250628153048.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="3-1-种子集选择"><a href="#3-1-种子集选择" class="headerlink" title="3.1 种子集选择"></a>3.1 种子集选择</h3><p>对种子集的优化关注于<strong>最小化种子集的大小</strong>，例如选择能覆盖所有已发现代码覆盖的一组最少的种子，因为过于富集的种子会在检验已探测代码区域上浪费计算资源</p>
+<blockquote>
+<p>在 <a target="_blank" rel="noopener" href="https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/rebert">UESIX 的一篇论文</a> 中其被表述为 <em>最小覆盖集问题</em> （minimal set coverage problem，MSCP）</p>
+</blockquote>
+<h3 id="3-2-种子调度"><a href="#3-2-种子调度" class="headerlink" title="3.2 种子调度"></a>3.2 种子调度</h3><p><strong>种子调度</strong>（Seed Schedule）期望解决如下问题：</p>
+<ul>
+<li>在下一轮中选择哪个种子</li>
+<li>为该种子分配的时间预算（time budget）；大部分 fuzzer 实际上选择优化对被选取种子的变异次数</li>
+</ul>
+<p>由于 PUTs 与漏洞的复杂性，未发现代码覆盖率与未发现漏洞是不可知的，我们无法知道一个输入是否能触发漏洞，类似地在检索代码之前我们也不能获得程序行为的概率分布，因此数学上我们几乎不可能找到一个全面的优化解法，因此研究人员基于多种优化方法来近似地解决这个问题</p>
+<h4 id="3-2-1-Fitness-by-Bugs"><a href="#3-2-1-Fitness-by-Bugs" class="headerlink" title="3.2.1 Fitness by Bugs"></a>3.2.1 Fitness by Bugs</h4><h4 id="3-2-2-Fitness-by-State-Transition（Markov-Chain）"><a href="#3-2-2-Fitness-by-State-Transition（Markov-Chain）" class="headerlink" title="3.2.2 Fitness by State Transition（Markov Chain）"></a>3.2.2 <em>Fitness by State Transition（Markov Chain）</em></h4><h3 id="3-3-字节调度"><a href="#3-3-字节调度" class="headerlink" title="3.3 字节调度"></a>3.3 字节调度</h3><p><strong>字节调度</strong>（Byte Schedule）决定了 <em>选择种子中一个字节来变异</em> 的频率。大部分 fuzzer 基于执行信息来试探性地或随机地选择字节，这需要比 seed schedule 对程序行为有着更深刻的了解（例如路径约束或数据流），由此 fuzzer 可以关注于一个不那么复杂的问题——字节如何影响模糊测试的过程，称为字节的<strong>重要性</strong>（importance）</p>
+<h3 id="3-4-Mutation-Operator-Schedule"><a href="#3-4-Mutation-Operator-Schedule" class="headerlink" title="3.4 Mutation Operator Schedule"></a>3.4 Mutation Operator Schedule</h3><h3 id="3-5-Diverse-Information-For-Fitness"><a href="#3-5-Diverse-Information-For-Fitness" class="headerlink" title="3.5 Diverse Information For Fitness"></a>3.5 Diverse Information For Fitness</h3><h3 id="3-6-Evaluation-Theory"><a href="#3-6-Evaluation-Theory" class="headerlink" title="3.6 Evaluation Theory"></a>3.6 Evaluation Theory</h3><h2 id="0x04-搜索输入空间"><a href="#0x04-搜索输入空间" class="headerlink" title="0x04 搜索输入空间"></a>0x04 搜索输入空间</h2><p>为了缩小输入空间、提升模糊测试的性能，fuzzers 将一个输入中的关联字节分组并为每一组使用特定的变异器（包括字节变异与块变异）</p>
+<p>在路径约束求解中，对关联字节的关注同样能缩小搜索空间。</p>
+<h3 id="4-1-Byte-constraint-Relation"><a href="#4-1-Byte-constraint-Relation" class="headerlink" title="4.1 Byte-constraint Relation"></a>4.1 Byte-constraint Relation</h3><h3 id="4-2-Concolic-Execution"><a href="#4-2-Concolic-Execution" class="headerlink" title="4.2 Concolic Execution"></a>4.2 Concolic Execution</h3><h3 id="4-3-程序转换"><a href="#4-3-程序转换" class="headerlink" title="4.3 程序转换"></a>4.3 程序转换</h3><p>对模糊测试而言，程序转换（Program Transformation）的目的是移除防止模糊测试发现更多执行状态的完整性检查，通过移除这些检查，模糊测试可以探索到目标程序更深处的代码并暴露出潜在的漏洞，但这也会引入一些误报（false positives），可以通过符合执行进行验证。</p>
+<p>因此 Program Transformation 通过聚焦于可能触发漏洞的输入来缩小探索空间。</p>
+<h3 id="4-4-Input-Model"><a href="#4-4-Input-Model" class="headerlink" title="4.4 Input Model"></a>4.4 Input Model</h3><p>许多应用程序都需要高度结构化的输入，例如协议实现、系统调用等，输入模型（input model）指定了构造高度结构化的输入的规则，包括结构体、格式、输入的数据约束，即违反语法或语义的输入会在一开始就被拒绝，由此输入空间便被限制于输入模型。</p>
+<h3 id="4-5-Fragment-Recombination"><a href="#4-5-Fragment-Recombination" class="headerlink" title="4.5 Fragment Recombination"></a>4.5 Fragment Recombination</h3><h3 id="4-6-Format-Inference"><a href="#4-6-Format-Inference" class="headerlink" title="4.6 Format Inference"></a>4.6 Format Inference</h3><h4 id="4-6-1-Corpus-based"><a href="#4-6-1-Corpus-based" class="headerlink" title="4.6.1 Corpus-based"></a>4.6.1 Corpus-based</h4><h4 id="4-6-2-Coverage-based"><a href="#4-6-2-Coverage-based" class="headerlink" title="4.6.2 Coverage-based"></a>4.6.2 Coverage-based</h4><h4 id="4-6-3-Encoding-Function"><a href="#4-6-3-Encoding-Function" class="headerlink" title="4.6.3 Encoding Function"></a>4.6.3 Encoding Function</h4><h3 id="4-7-Dependency-Inference"><a href="#4-7-Dependency-Inference" class="headerlink" title="4.7 Dependency Inference"></a>4.7 Dependency Inference</h3><p>格式推断主要解决语法需求，这仍可能生成有着错误数据依赖项的输入。</p>
+<h2 id="0x05-自动化"><a href="#0x05-自动化" class="headerlink" title="0x05 自动化"></a>0x05 自动化</h2><p>自动执行是模糊测试理论与输入空间减方法的基础，而成功的模糊测试需要：</p>
+<ul>
+<li>自动重复地运行 PUTs。大部分 fuzzer 都能测试命令行程序，但对于硬件或多语言而言不行。</li>
+<li>对潜在漏洞的自动指示器</li>
+<li>高速执行。在相同的时间内检验更多的测试用例，以此增加发现漏洞的机会。</li>
+</ul>
+<h3 id="5-1-Automatic-Execution-of-PUTs"><a href="#5-1-Automatic-Execution-of-PUTs" class="headerlink" title="5.1 Automatic Execution of PUTs"></a>5.1 Automatic Execution of PUTs</h3><p>对不同应用程序的自动化模糊测试需要不同的工程努力，本节介绍几种自动化模糊测试的方法</p>
+<h4 id="5-1-1-Command-line-Programs"><a href="#5-1-1-Command-line-Programs" class="headerlink" title="5.1.1 Command-line Programs"></a>5.1.1 Command-line Programs</h4><h4 id="5-1-2-Deep-Learning-Systems"><a href="#5-1-2-Deep-Learning-Systems" class="headerlink" title="5.1.2 Deep Learning Systems"></a>5.1.2 Deep Learning Systems</h4><h4 id="5-1-3-Operating-System-Kernels"><a href="#5-1-3-Operating-System-Kernels" class="headerlink" title="5.1.3 Operating System Kernels"></a>5.1.3 Operating System Kernels</h4><p>OS kernel 包含了许多中断与内核线程，其执行状态无法确定，由此我们使用 hypervisor（如 QEMU）来运行内核，并通过 <a target="_blank" rel="noopener" href="https://zhangtong16.github.io/2019/06/05/Intel-Processor-Trace/">Intel’s Processor Trace</a> （PT）技术来获取代码覆盖；尽管这种方法能带反馈地测试不同种内核，但仍需要人工构造语法&amp;语义正确的输入</p>
+<p>因为输入包括文件系统镜像或一系列系统调用，fuzzers 可以以更轻量级的方法进行测试：在系统调用的数据依赖项被分析&#x2F;推断出来后生成一系列系统调用并在目标内核上运行，并监测代表潜在漏洞的 system panics</p>
+<p>另一种测试方法是通过模拟外设并生成相应输入来测试内核驱动</p>
+<h4 id="5-1-4-Cyber-Physical-Systems"><a href="#5-1-4-Cyber-Physical-Systems" class="headerlink" title="5.1.4 Cyber-Physical Systems"></a>5.1.4 Cyber-Physical Systems</h4><p><strong>信息物理系统</strong>（Cyber-Physical Systems，CPS）包含两个紧密结合的主要成分，即<strong>计算元素</strong>（computational elements）与<strong>物理过程</strong>（physical processes）</p>
+<p>一个被广泛使用的计算元素是 <em>可编程逻辑控制器</em> （programmable logic controller，PLC），其控制着物理过程的驱动器并从传感器中获取输入，因此在 fuzzing CPSs 时 fuzzer 可以替换掉 PLCs 并通过网络直接向驱动器发送大量的命令</p>
+<p>PLC 的二进制文件也是 CPSs 的一个可测试点，但其有着多种二进制格式以及复杂的与物理实体间的通信；基于对 PLC 二进制文件与开发平台的分析，自动化的 fuzz 可以在其运行在 PLC 设备上时进行</p>
+<h4 id="5-1-5-Internet-of-Things"><a href="#5-1-5-Internet-of-Things" class="headerlink" title="5.1.5 Internet of Things"></a>5.1.5 Internet of Things</h4><p>IOT 的自动化 fuzzing 包括固件模拟与网络级测试：</p>
+<ul>
+<li>模拟器可以在没有对应的硬件时模拟运行 IOT 固件，以灰盒模式测试目标程序。</li>
+<li>网络级的 fuzzing 以黑盒模式进行测试，即通过网络向 IOT 设备发送信息，以响应作为执行结果，fitness 便是类型数量。</li>
+</ul>
+<h4 id="5-1-6-Applications-with-Graphical-User-Interface"><a href="#5-1-6-Applications-with-Graphical-User-Interface" class="headerlink" title="5.1.6 Applications with Graphical User Interface"></a>5.1.6 Applications with Graphical User Interface</h4><p>GUI 程序的执行比命令行慢得多，而执行速度是 fuzzing 的关键，因此对 GUI 程序的自动化测试通常将 GUI 替换为一种更快的方案并以命令行模式执行目标</p>
+<blockquote>
+<p>例如对 UI 操作建模后为安卓应用生成事件序列（event sequences）</p>
+</blockquote>
+<p>此外，fuzzer 也可以使用 <strong>hardness</strong> 来准备执行上下文，以直接唤醒 GUIs 中的目标函数。</p>
+<h4 id="5-1-7-Applications-with-Network"><a href="#5-1-7-Applications-with-Network" class="headerlink" title="5.1.7 Applications with Network"></a>5.1.7 Applications with Network</h4><p>智能合约、协议实现、云服务、Android Native System Services、机器人装置等通过网络接收输入，由此可以在本地生成输入后由目标应用远程执行，自动测试的效率依赖于生成输入的质量与反映执行状态的 fitness</p>
+<h3 id="5-2-Automatic-Detection-of-Bugs"><a href="#5-2-Automatic-Detection-of-Bugs" class="headerlink" title="5.2 Automatic Detection of Bugs"></a>5.2 Automatic Detection of Bugs</h3><h4 id="5-2-1-Memory-violaton-Bugs"><a href="#5-2-1-Memory-violaton-Bugs" class="headerlink" title="5.2.1 Memory-violaton Bugs"></a>5.2.1 Memory-violaton Bugs</h4><p>内存破坏漏洞（Memory-violaton Bugs）是最古老也最严重的安全漏洞，分为两类：</p>
+<ul>
+<li>空间安全损坏</li>
+<li>时间安全损坏</li>
+</ul>
+<h4 id="5-2-2-并发漏洞"><a href="#5-2-2-并发漏洞" class="headerlink" title="5.2.2 并发漏洞"></a>5.2.2 并发漏洞</h4><p>并发型漏洞</p>
+<h4 id="5-2-3-Algorithmic-Complexity"><a href="#5-2-3-Algorithmic-Complexity" class="headerlink" title="5.2.3 Algorithmic Complexity"></a>5.2.3 Algorithmic Complexity</h4><p><strong>算法复杂性</strong>（Algorithm Complexity，AC）漏洞是算法在最坏情况下会显著的降低性能，从而可能导致拒绝服务（Denial-of-Service）攻击，Fig.9 展示了一个有着不同算法复杂度的例子，在最坏情况下可以被攻击者用作 DoS 攻击：</p>
+<h4 id="5-2-4-Spectre-type-Bugs"><a href="#5-2-4-Spectre-type-Bugs" class="headerlink" title="5.2.4 Spectre-type Bugs"></a>5.2.4 Spectre-type Bugs</h4><p><strong>幽灵型漏洞</strong>（Spectre-type Bugs）是一种利用错误分支预测（mispredicted branch speculations）来控制内存访问的微架构攻击，例如在 Fig.10 中攻击者可以利用有效值来训练分支预测为真，随后给变量一个 OOB 的值，此时预测器便会错误预测分支行为，从而错误地执行了第3、4行代码，造成了越界读取</p>
+<h4 id="5-2-5-侧信道"><a href="#5-2-5-侧信道" class="headerlink" title="5.2.5 侧信道"></a>5.2.5 侧信道</h4><p><strong>侧信道漏洞</strong>（side-channel）通过对系统的非功能性表现（例如执行时间）来泄露信息，例如通过分支执行时间判断执行的分支</p>
+<blockquote>
+<p>论文没给例子，那笔者给出一个例子：<a target="_blank" rel="noopener" href="https://gruss.cc/files/prefetch.pdf">prefetch side-channel attack: bypassing SMAP and KASLR</a></p>
+</blockquote>
+<p><strong>JIT-induced side channels</strong>（<del>不懂咋翻</del>）是一种由即时优化（Just-In-Time Optimization）导致的特殊侧信道，类似于幽灵型漏洞，通过训练 JIT 编译器优化单一分支以使得两执行分支间执行时间差大到可以被观测到</p>
+<h4 id="5-2-6-Integer-Bugs"><a href="#5-2-6-Integer-Bugs" class="headerlink" title="5.2.6 Integer Bugs"></a>5.2.6 Integer Bugs</h4><p><strong>整型上溢&#x2F;下溢</strong>（Integer Overflow&#x2F;Underflow）在算术表达式的值超过机器类型所决定的范围时发生，或是在整型间转换时发生（比如 int to uint）</p>
+<blockquote>
+<p>论文举了这个例子：<a target="_blank" rel="noopener" href="https://dl.acm.org/doi/10.5555/1855768.1855773">SmartFuzz</a></p>
+</blockquote>
+<h3 id="5-3-Improvement-of-Execution-Speed"><a href="#5-3-Improvement-of-Execution-Speed" class="headerlink" title="5.3 Improvement of Execution Speed"></a>5.3 Improvement of Execution Speed</h3><h4 id="5-3-1-二进制分析"><a href="#5-3-1-二进制分析" class="headerlink" title="5.3.1 二进制分析"></a>5.3.1 二进制分析</h4><p><strong>静态插桩</strong>（static instrumentation）是主流的获取执行状态的方式，因为其为 fuzzing 提供了更高的执行速度。</p>
+<ul>
+<li>对开源程序而言，一个被广泛使用的静态分析工具是 LLVM，其在编译器进行插桩。</li>
+<li>对于闭源程序而言，fuzzer 被限制于二进制分析，但二进制插桩工具有着不菲的运行时开销</li>
+</ul>
+<h4 id="5-3-2-Execution-Process"><a href="#5-3-2-Execution-Process" class="headerlink" title="5.3.2 Execution Process"></a>5.3.2 Execution Process</h4><p>执行速度同样可以在模糊测试过程中提升</p>
+<h4 id="5-3-3-各种应用"><a href="#5-3-3-各种应用" class="headerlink" title="5.3.3 各种应用"></a>5.3.3 各种应用</h4><p>模糊测试被用以检测多种目标中的缺陷，如 IOT、OS Kernel VMM 等，需要根据目标特性进行定制化。</p>
+<p>论文给出了这些例子：</p>
+<ul>
+<li>FIRM-AFL 通过结合用户态模拟与全系统模拟来缓解传统 IOT 固件 fuzzing 中全系统模拟带来的虚拟地址与内存访问间翻译及模拟系统调用的开销</li>
+<li>Schumilo 设计了一种</li>
+</ul>
+<h2 id="0x06-Fuzzing-未来研究方向"><a href="#0x06-Fuzzing-未来研究方向" class="headerlink" title="0x06 Fuzzing 未来研究方向"></a>0x06 Fuzzing 未来研究方向</h2><p>Fuzzing 未来的研究方向与挑战：</p>
+<ul>
+<li><p><strong>更灵敏的适应度函数（More sensitive fitness）</strong>：研究人员意识到仅依靠代码覆盖率在发现复杂漏洞时存在局限性，因此尝试引入基于漏洞分析获得的信息来改进适应度函数。未来工作可聚焦于基于漏洞特性进行漏洞检测，尤其是针对现有模糊测试未能发现的漏洞进行深入分析。</p>
+</li>
+<li><p><strong>更完善的模糊测试理论（More sophisticated fuzzing theory）</strong>：目前大部分研究集中于种子调度，少数关注模糊测试的其他环节。构建完整的数学模型虽不易，但多种模糊测试过程可共存，例如利用博弈论同时考虑种子调度与字节调度。未来更宏大的研究方向包括探索模糊测试理论的局限性（如灰盒模糊测试的限制），以及结合多种适应度函数，设计既考虑漏洞出现又兼顾状态转移的先进模糊测试过程。</p>
+</li>
+<li><p><strong>科学的评估方法（Sound evaluation）</strong>：部分工作关注评估的可靠性，但尚无定论（见 §3.6）。亟待解决的问题包括：评估语料库应使用真实漏洞还是合成漏洞？静态测试能否作为区分模糊测试技术的最终标准？合理的时间预算如何确定？如何在缺乏可比较模糊测试器的情况下评估特殊目标（如硬件）？</p>
+</li>
+<li><p><strong>可扩展的输入格式推断（Scalable input inference）</strong>：利用格式或数据依赖项可显著提升模糊测试效率（见 §4.6 和 §4.7）。静态分析广泛用于格式和数据依赖推断，但其结果高度依赖特定程序且实现复杂。动态分析主要关注格式推断，较少涉及数据依赖推断，但具有更好的可扩展性。</p>
+</li>
+<li><p><strong>高效的变异操作符（Efficient mutation operators）</strong> 几乎所有模糊测试工具都采用混合变异器，但通常不动态调整变异器。部分研究优化了变异器调度，但鲜有关注可变变异器设计。鉴于变异器调度与字节调度密切相关，未来可探索基于字节调度的变异器设计，特别是在处理高度结构化输入时的调度策略。</p>
+</li>
+<li><p><strong>更多类型的应用场景（More types of applications）</strong>：由于应用复杂性，模糊测试在检测某些应用（如 CPSs）时能力有限。鉴于执行速度对模糊测试的重要性，提升难以被模糊测试的程序的执行效率是潜在的发展方向。</p>
+</li>
+<li><p><strong>更多类型的漏洞（More types of bugs）</strong>：模糊测试在检测内存破坏、并发漏洞、算法复杂性漏洞等方面表现良好（见 §5.2），但在权限提升、逻辑漏洞等方面仍有挑战。设计合适的漏洞检测指标（indicator）尤为困难，需要研究人员同时具备对模糊测试技术和目标漏洞的深刻理解。</p>
+</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Paper/" class="print-no-link">#Paper</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>论文笔记：Fuzzing: A Survey for Roadmap</div>
+      <div>http://nanhang.top/2025/07/01/fuzz/paper/roadmap/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/syzkaller/" title="syzkaller初探">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">syzkaller初探</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/notes/philosophy/" title="大众哲学笔记">
+                        <span class="hidden-mobile">大众哲学笔记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

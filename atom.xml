@@ -6,7 +6,7 @@
   <link href="http://nanhang.top/atom.xml" rel="self"/>
   
   <link href="http://nanhang.top/"/>
-  <updated>2025-06-26T01:26:15.748Z</updated>
+  <updated>2025-07-01T02:04:50.030Z</updated>
   <id>http://nanhang.top/</id>
   
   <author>
@@ -17,23 +17,107 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>hello</title>
-    <link href="http://nanhang.top/2025/06/26/hello/"/>
-    <id>http://nanhang.top/2025/06/26/hello/</id>
-    <published>2025-06-26T01:25:59.000Z</published>
-    <updated>2025-06-26T01:26:15.748Z</updated>
+    <title>Rust Fuzz</title>
+    <link href="http://nanhang.top/2025/07/01/fuzz/rust/"/>
+    <id>http://nanhang.top/2025/07/01/fuzz/rust/</id>
+    <published>2025-07-01T01:54:01.000Z</published>
+    <updated>2025-07-01T02:04:50.030Z</updated>
     
     
       
       
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;hello world&lt;/p&gt;
-&lt;/blockquote&gt;
-</summary>
+    <summary type="html">&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&amp;#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go </summary>
       
     
     
     
+    <category term="Fuzz" scheme="http://nanhang.top/categories/Fuzz/"/>
+    
+    
+    <category term="fuzzers" scheme="http://nanhang.top/tags/fuzzers/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>libFuzzer浅探</title>
+    <link href="http://nanhang.top/2025/07/01/fuzz/libfuzzer/"/>
+    <id>http://nanhang.top/2025/07/01/fuzz/libfuzzer/</id>
+    <published>2025-07-01T01:54:01.000Z</published>
+    <updated>2025-07-01T02:04:18.134Z</updated>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的</summary>
+      
+    
+    
+    
+    <category term="Fuzz" scheme="http://nanhang.top/categories/Fuzz/"/>
+    
+    
+    <category term="fuzzers" scheme="http://nanhang.top/tags/fuzzers/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>AFL模糊测试入门</title>
+    <link href="http://nanhang.top/2025/07/01/fuzz/afl/"/>
+    <id>http://nanhang.top/2025/07/01/fuzz/afl/</id>
+    <published>2025-07-01T01:54:01.000Z</published>
+    <updated>2025-07-01T02:04:29.820Z</updated>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以</summary>
+      
+    
+    
+    
+    <category term="Fuzz" scheme="http://nanhang.top/categories/Fuzz/"/>
+    
+    
+    <category term="fuzzers" scheme="http://nanhang.top/tags/fuzzers/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Rust逆向分析</title>
+    <link href="http://nanhang.top/2025/07/01/ctf/re/rust/"/>
+    <id>http://nanhang.top/2025/07/01/ctf/re/rust/</id>
+    <published>2025-07-01T01:53:01.000Z</published>
+    <updated>2025-07-01T02:02:16.810Z</updated>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;h2 id=&quot;print-宏逆向&quot;&gt;&lt;a href=&quot;#print-宏逆向&quot; class=&quot;headerlink&quot; title=&quot;print!宏</summary>
+      
+    
+    
+    
+    <category term="CTF" scheme="http://nanhang.top/categories/CTF/"/>
+    
+    
+    <category term="高级语言逆向" scheme="http://nanhang.top/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Kernel基础入门</title>
+    <link href="http://nanhang.top/2025/07/01/ctf/kernel/base/"/>
+    <id>http://nanhang.top/2025/07/01/ctf/kernel/base/</id>
+    <published>2025-07-01T01:53:01.000Z</published>
+    <updated>2025-07-01T02:01:13.677Z</updated>
+    
+    
+    
+    
+    <category term="CTF" scheme="http://nanhang.top/categories/CTF/"/>
+    
+    
+    <category term="Kernel" scheme="http://nanhang.top/tags/Kernel/"/>
     
   </entry>
   

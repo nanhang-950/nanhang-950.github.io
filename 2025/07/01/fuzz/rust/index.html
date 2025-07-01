@@ -1,0 +1,1010 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" href="/img/icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="南行">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 cargo-fu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust Fuzz">
+<meta property="og:url" content="http://nanhang.top/2025/07/01/fuzz/rust/index.html">
+<meta property="og:site_name" content="南行的一座山">
+<meta property="og:description" content="简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 cargo-fu">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250613132204.png">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250613133117.png">
+<meta property="og:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250613140012.png">
+<meta property="article:published_time" content="2025-07-01T01:54:01.000Z">
+<meta property="article:modified_time" content="2025-07-01T02:04:50.030Z">
+<meta property="article:author" content="南行">
+<meta property="article:tag" content="fuzzers">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://nanhang.top/Linux/assets/Pasted%20image%2020250613132204.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Rust Fuzz - 南行的一座山</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"nanhang.top","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="南行的一座山" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>南行的一座山</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/" target="_self">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/atom.xml" target="_self">
+                <i class="iconfont icon-rss"></i>
+                <span>RSS</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/banner.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Rust Fuzz"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 09:54" pubdate>
+          2025年7月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          16 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Rust Fuzz</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。</p>
+<h2 id="cargo-fuzz"><a href="#cargo-fuzz" class="headerlink" title="cargo-fuzz"></a>cargo-fuzz</h2><p>cargo-fuzz 是 Rust 代码模糊测试的推荐工具。不过，cargo-fuzz 本身并不是一个 fuzzer，而是一个调用 fuzzer 的工具。目前，它仅仅支持通过 libfuzzer-sys crate 调用 LibFuzzer。</p>
+<h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>由于 libFuzzer 需要 LLVM sanitizer 支持，所以我们需要将 Rust 编译器切换至 nightly 版本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs shell">rustup default<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">安装nightly版本</span><br>rustup install nightly<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">设置为默认编译器</span><br>rustup default nightly<br><span class="hljs-meta prompt_"># </span><span class="language-bash">正确输出示例：</span><br>nightly-x86_64-unknown-linux-gnu (default)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>安装 cargo-fuzz 工具</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo install cargo-fuzz<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><p>接下来我们将对 Rust 的 URL 解析库  <a target="_blank" rel="noopener" href="https://github.com/servo/rust-url">rust-url</a> 进行 Fuzz，目标就是找到使其崩溃的 crash。</p>
+<ul>
+<li>环境搭建</li>
+</ul>
+<p>首先，克隆 rust-url 项目并切换指定提交：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">git clone https://github.com/servo/rust-url.git<br>cd rust-url<br><br>git checkout bfa167b4e0253642b6766a7aa74a99df60a94048<br></code></pre></td></tr></table></figure>
+
+<p>初始化 Fuzz 环境</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo fuzz init<br></code></pre></td></tr></table></figure>
+
+<p>查看现有的 fuzz 目标</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">cargo fuzz list</span><br></code></pre></td></tr></table></figure>
+
+<p><img src="/Linux/assets/Pasted%20image%2020250613132204.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>配置测试目标</li>
+</ul>
+<p>编辑默认生成的测试文件<code>fuzz-targets/fuzz_target_1.rs</code>，修改为以下内容。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_main]</span><br><span class="hljs-meta">#[macro_use]</span> <span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> libfuzzer_sys;<br><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> url;<br><br>fuzz_target!(|data: &amp;[<span class="hljs-type">u8</span>]| &#123;<br>    <span class="hljs-comment">// 你的模糊测试代码</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Ok</span>(s) = std::<span class="hljs-type">str</span>::<span class="hljs-title function_ invoke__">from_utf8</span>(data) &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">_</span> = url::Url::<span class="hljs-title function_ invoke__">parse</span>(s);<br>    &#125;<br>&#125;);<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>fuzz_target!</code>是 cargo-fuzz 提供的宏，用于定义 Fuzz 入口。libFuzzer 会持续调用它，并传入生成的数据。类似于 C&#x2F;C++ 中的<code>LLVM</code></p>
+</blockquote>
+<ul>
+<li>开始Fuzz</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo fuzz run fuzz_target_1<br></code></pre></td></tr></table></figure>
+
+<p>在跑了一会之后程序就直接 crash 了，并将crash 样本保存到了。</p>
+<p><img src="/Linux/assets/Pasted%20image%2020250613133117.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>使用保存的 crash 调试</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">RUST_BACKTRACE=1 cargo fuzz run &lt;target-name&gt; &lt;path/to/crash&gt;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>cargo fuzz add target：创建新的模糊测试目标</li>
+<li>cargo fuzz run target：运行模糊测试目标</li>
+<li>cargo fuzz fmt target input：打印测试用例的输入</li>
+<li>cargo fuz tmin target input：发送输入失败？缩小到最小输入</li>
+<li>cargo fuzz cmin target：缩小输入语料库</li>
+<li>cargo fuzz coverage：生成覆盖率信息</li>
+</ul>
+<h3 id="libFuzzer参数"><a href="#libFuzzer参数" class="headerlink" title="libFuzzer参数"></a>libFuzzer参数</h3><p>通过<code>--</code>向 libFuzzer 传参：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo fuzz run target_name -- -max_len=512 -only_ascii=1<br></code></pre></td></tr></table></figure>
+
+<p>参数：</p>
+<ul>
+<li><code>-ignore_crashes=1</code>：即使遇到崩溃也继续 Fuzz。</li>
+<li><code>-s,--sanitizer</code>：选择 Sanitizer。</li>
+<li><code>-max_len=&lt;len&gt;</code>：限制输入最大长度。</li>
+<li><code>-runs=&lt;number&gt;</code>：限制运行次数。</li>
+<li><code>-max_total_time=&lt;sec&gt;</code>：限制总运行时间（秒）。</li>
+<li><code>-timeout=&lt;sec&gt;</code>：单次运行超时时间（秒）。</li>
+<li><code>-only_ascii=1</code>：仅生成 ASCII 输入。</li>
+<li><code>-dict=&lt;file&gt;</code>：使用字典文件。</li>
+<li><code>-c, --careful</code>：开启额外的安全检查。</li>
+<li><code>--no-cfg-fuzzing</code>：禁用默认的<code>cfg(fuzzing)</code>编译配置。</li>
+</ul>
+<h2 id="afl-rs"><a href="#afl-rs" class="headerlink" title="afl.rs"></a>afl.rs</h2><p><code>afl.rs</code>是基于 AFL（American Fuzzy Lop） 的一个 Rust 语言 Fuzz 框架，它允许你在 Rust 项目中复用 AFL 强大的变异引擎和崩溃检测能力。</p>
+<h3 id="环境搭建-1"><a href="#环境搭建-1" class="headerlink" title="环境搭建"></a>环境搭建</h3><ul>
+<li>cargo 安装</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo install cargo-afl<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>源码安装</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">git clone https://github.com/rust-fuzz/afl.rs<br>cd afl.rs<br>git submodule update --init<br>cargo install --path cargo-afl<br></code></pre></td></tr></table></figure>
+
+<p>如果 cargo-afl 出现崩溃，可以尝试添加<code>--debug</code>参数安装。</p>
+<h3 id="基础用法"><a href="#基础用法" class="headerlink" title="基础用法"></a>基础用法</h3><p>同样以 URL 解析库  <a target="_blank" rel="noopener" href="https://github.com/servo/rust-url">rust-url</a> 为例。</p>
+<ul>
+<li>环境搭建</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo new --bin url-fuzz-target<br>cd url-fuzz-target<br></code></pre></td></tr></table></figure>
+
+<p>我们需要在该项目中添加两个依赖项：</p>
+<ul>
+<li><code>url</code>：我们要测试的库</li>
+<li><code>afl</code>：提供了一些辅助函数，帮助编写模糊测试目标</li>
+</ul>
+<p>将这些添加到<code>Cargo.toml</code>文件中</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">afl</span> = <span class="hljs-string">&quot;*&quot;</span><br><span class="hljs-attr">url</span> = &#123; git = <span class="hljs-string">&quot;https://github.com/servo/rust-url.git&quot;</span>, rev = <span class="hljs-string">&quot;bfa167b4e0253642b6766a7aa74a99df60a94048&quot;</span> &#125;<br></code></pre></td></tr></table></figure>
+
+<p>编写模糊测试源文件：<code>src/main.rs</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_use]</span><br><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> afl;<br><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> url;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    fuzz!(|data: &amp;[<span class="hljs-type">u8</span>]| &#123;<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Ok</span>(s) = std::<span class="hljs-type">str</span>::<span class="hljs-title function_ invoke__">from_utf8</span>(data) &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">_</span> = url::Url::<span class="hljs-title function_ invoke__">parse</span>(&amp;s);<br>        &#125;<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>fuzz!</code>宏会从 AFL 运行时提供的标准输入中读取数据投喂给目标程序。<code>fuzz!</code>宏内部用<code>catch_unwind</code>捕获 panic，确保拦截 panic 不至于直接让 Fuzz 进程退出。</p>
+</blockquote>
+<ul>
+<li>构建目标</li>
+</ul>
+<p>通常，人们用来编译一个基于 Cargo 的 Rust 项目。要让 AFL 与 Rust 一起工作，需要在构建过程中将一些额外的编译器标志传递给 rustc。为了简化这一点，有一个 AFL cargo 子命令（由 crate 提供）可以自动为我们传递这些 rustc 标志。要使用它，您需要执行以下作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo afl build<br><span class="hljs-meta prompt_">#</span><span class="language-bash">如果报错FL LLVM runtime was not built <span class="hljs-keyword">for</span> Rust rustc-1.89.0-nightly-99e7c15; run `cargo afl config --build` to build it.</span><br>cargo afl config --build<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>创建种子</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">mkdir in<br>echo &quot;tcp://example.com/&quot; &gt; in/url<br>echo &quot;ssh://192.168.1.1&quot; &gt; in/url2<br>echo &quot;http://www.example.com:80/foo?hi=bar&quot; &gt; in/url3<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>开始Fuzz</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo afl fuzz -i in -o out target/debug/url-fuzz-target<br></code></pre></td></tr></table></figure>
+
+<p><img src="/Linux/assets/Pasted%20image%2020250613140012.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>复现crash</li>
+</ul>
+<p>在运行模糊测试程序中收集到一些崩溃后，您可以通过手动将它们传递到测试用例来重现它们。这通常是通过 .例如，命令将是：<code>stdin</code> <code>url-fuzz-target</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo afl run url-fuzz-target &lt; out/default/crashes/crash_file<br></code></pre></td></tr></table></figure>
+
+<p>其中是 fuzz 命令中的参数，是目录中的任意文件。<code>out</code> <code>-o</code> <code>crash_file</code> <code>crashes</code></p>
+<h3 id="AFL的支持"><a href="#AFL的支持" class="headerlink" title="AFL的支持"></a>AFL的支持</h3><p><code>afl.rs</code>本质上是 AFL 模糊测试在 Rust 里的接口，它本身不直接解析或管理 AFL 的命令行参数。AFL 的参数主要由 AFL 或 AFL++ 的二进制模糊测试器（如 <code>afl-fuzz</code>）来处理，<code>afl.rs</code>只是提供 Rust 代码里的接口，让程序能接收 AFL 传入的输入，配合 AFL 的运行。</p>
+<p>我们同样可以在 afl.rs 上使用很多 AFL 的功能，如字典、输入优化、持久模式。延迟插桩。并行。黑盒。</p>
+<p>示例：</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs fortran">cargo afl fuzz -i <span class="hljs-keyword">in</span> -o <span class="hljs-keyword">out</span> -x dict.txt <span class="hljs-keyword">target</span>/debug/your-fuzz-<span class="hljs-keyword">target</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>-x</code>：指定字典文件</li>
+</ul>
+<p>并行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo afl fuzz -i in -o out -S fuzzer01 target/debug/your-fuzz-target<br>cargo afl fuzz -i in -o out -S fuzzer02 target/debug/your-fuzz-target<br></code></pre></td></tr></table></figure>
+
+<p>开启 ASan：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">RUSTFLAGS=&quot;-Z sanitizer=address&quot; cargo afl build<br>ASAN_OPTIONS=detect_leaks=0 cargo afl fuzz -i in -o out target/debug/your-fuzz-target<br></code></pre></td></tr></table></figure>
+
+
+<h4 id="持久模式"><a href="#持久模式" class="headerlink" title="持久模式"></a>持久模式</h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">input</span> = <span class="hljs-built_in">vec!</span>[];<br><span class="hljs-keyword">loop</span> &#123;<br>    afl::<span class="hljs-title function_ invoke__">read_stdio_into</span>(&amp;<span class="hljs-keyword">mut</span> input);<br>    <span class="hljs-comment">// 测试代码...</span><br>    input.<span class="hljs-title function_ invoke__">clear</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="honggfuzz"><a href="#honggfuzz" class="headerlink" title="honggfuzz"></a>honggfuzz</h2><p>确保已安装以下工具：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo install honggfuzz<br><span class="hljs-built_in">sudo</span> apt install libunwind-dev  <span class="hljs-comment"># Linux 上用于回溯解析</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>✅ 推荐安装：<code>honggfuzz-rs</code> 是 Rust 对 honggfuzz 的绑定和辅助集成库。</p>
+</blockquote>
+<hr>
+<h3 id="项目结构设置"><a href="#项目结构设置" class="headerlink" title="项目结构设置"></a>项目结构设置</h3><ol>
+<li>添加依赖（<code>Cargo.toml</code>）</li>
+</ol>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">honggfuzz</span> = <span class="hljs-string">&quot;0.5&quot;</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>创建 <code>fuzz/fuzz_target.rs</code>（或其他名字）</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">loop</span> &#123;<br>        honggfuzz::fuzz!(|data: &amp;[<span class="hljs-type">u8</span>]| &#123;<br>            <span class="hljs-comment">// 替换为你自己的目标逻辑，比如解析、反序列化、压缩等</span><br>            <span class="hljs-keyword">if</span> data.<span class="hljs-title function_ invoke__">starts_with</span>(<span class="hljs-string">b&quot;FUZZ&quot;</span>) &#123;<br>                <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Found FUZZ prefix!&quot;</span>);<br>            &#125;<br>        &#125;);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>honggfuzz::fuzz!</code> 是宏，负责从共享内存读取输入数据，并执行你提供的闭包。</p>
+</blockquote>
+<hr>
+<h3 id="3-配置可执行目标（Cargo-toml-中加入）"><a href="#3-配置可执行目标（Cargo-toml-中加入）" class="headerlink" title="3. 配置可执行目标（Cargo.toml 中加入）"></a>3. 配置可执行目标（<code>Cargo.toml</code> 中加入）</h3><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[[bin]]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;fuzz_target&quot;</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;fuzz/fuzz_target.rs&quot;</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>编译</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo build --release<br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>开始 Fuzz</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">honggfuzz -i <span class="hljs-keyword">in</span>/ -o out/ -- ./target/release/fuzz_target<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>-i in/</code>：输入种子目录（可以为空）</p>
+</li>
+<li><p><code>-o out/</code>：输出崩溃&#x2F;挂起样本保存目录</p>
+</li>
+<li><p><code>-- ./target/release/fuzz_target</code>：运行目标程序</p>
+</li>
+</ul>
+<p>你可以先创建空输入目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> -p <span class="hljs-keyword">in</span> out<br><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;test&quot;</span> &gt; <span class="hljs-keyword">in</span>/seed1<br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>添加依赖：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">serde</span> = &#123; version = <span class="hljs-string">&quot;1.0&quot;</span>, features = [<span class="hljs-string">&quot;derive&quot;</span>] &#125;<br><span class="hljs-attr">serde_json</span> = <span class="hljs-string">&quot;1.0&quot;</span><br><span class="hljs-attr">honggfuzz</span> = <span class="hljs-string">&quot;0.5&quot;</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>其他功能</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">hexdump -C out/INPUT_*.fuzz<br></code></pre></td></tr></table></figure>
+
+<p>或者用你的 target 手动重现：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cat</span> out/INPUT_000000.fuzz | ./target/release/fuzz_target<br></code></pre></td></tr></table></figure>
+
+<hr>
+<p>多线程 &#x2F; 自定义 Corpus 路径</p>
+<p>你可以使用多线程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">HFUZZ_RUN_ARGS=<span class="hljs-string">&quot;--threads 4&quot;</span> cargo run --release --bin fuzz_target<br></code></pre></td></tr></table></figure>
+
+<p>或者使用手动 corpus：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">HFUZZ_RUN_ARGS=<span class="hljs-string">&quot;-i corpus -o crashes&quot;</span> cargo run --release --bin fuzz_target<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="测量代码覆盖率"><a href="#测量代码覆盖率" class="headerlink" title="测量代码覆盖率"></a>测量代码覆盖率</h2><h3 id="环境搭建-2"><a href="#环境搭建-2" class="headerlink" title="环境搭建"></a>环境搭建</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">安装 Nightly 工具链</span><br>rustup install nightly<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">为 Nightly 安装 LLVM 工具集（用于 coverage）</span><br>rustup component add --toolchain nightly llvm-tools-preview<br></code></pre></td></tr></table></figure>
+
+<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo fuzz coverage fuzz_target_name path/to/corpus/ -- &lt;target args&gt;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>自动使用 <code>-C instrument-coverage</code> 重新编译你的目标程序（<code>nightly</code> 工具链）。</li>
+<li>遍历语料库（corpus）目录中的每个输入，在子目录 <code>fuzz/coverage/&lt;target&gt;/raw/</code> 中生成 <code>.profraw</code> 覆盖数据。</li>
+<li>自动调用 <code>llvm-profdata merge</code> 合并 <code>.profraw</code> 文件为 <code>coverage.profdata</code>。</li>
+</ul>
+<h3 id="可视化覆盖率信息"><a href="#可视化覆盖率信息" class="headerlink" title="可视化覆盖率信息"></a>可视化覆盖率信息</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo install cargo-binutils<br>rustup component add llvm-tools-preview<br></code></pre></td></tr></table></figure>
+
+<p>生成 HTML 格式覆盖率报告：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo cov show fuzz/target/x86_64-unknown-linux-gnu/release/url_fuzz_target \<br>  --format=html \<br>  --Xdemangler=rustfilt \<br>  --instr-profile=fuzz/coverage/url_fuzz_target/coverage.profdata \<br><span class="hljs-meta prompt_">  &gt; </span><span class="language-bash">coverage.html</span><br></code></pre></td></tr></table></figure>
+
+<p>终端查看</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">cargo cov show --use-color \<br>  --instr-profile=fuzz/coverage/url_fuzz_target/coverage.profdata \<br>  fuzz/target/.../url_fuzz_target \<br>  --show-functions --show-instantiations<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><blockquote>
+<p>CVE-2020-36435：PNG 解码器中的整数溢出</p>
+</blockquote>
+<p>使用 afl.rs 复现 CVE-2020-36435</p>
+<ul>
+<li>环境搭建</li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs"><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>Fuzz</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对比两个 Fuzz工具：<code>cargo-fuzz</code>基于 LibFuzzer，适合快速上手和函数级模糊测试；而<code>afl.rs</code>基于 AFL，更适合稳定版本 Rust 和高性能的程序级 fuzz。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/rust-fuzz/trophy-case">rust-fuzz&#x2F;trophy-case: 🏆 Collection of bugs uncovered by fuzzing Rust code</a><br><a target="_blank" rel="noopener" href="https://docs.rs/afl-stat/latest/afl_stat/#:~:text=This%20crate%20implement%20parsing%20AFL,file%20generated%20by%20AFL%20instances">afl_stat - Rust</a><br><a target="_blank" rel="noopener" href="https://rust-fuzz.github.io/book/afl/setup.html">设置 - Rust Fuzz Book</a><br><a target="_blank" rel="noopener" href="https://github.com/rust-fuzz/afl.rs/tree/master">rust-fuzz&#x2F;afl.rs: 🐇 Fuzzing Rust code with American Fuzzy Lop</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/fuzzers/" class="print-no-link">#fuzzers</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Rust Fuzz</div>
+      <div>http://nanhang.top/2025/07/01/fuzz/rust/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>南行</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/01/fuzz/libfuzzer/" title="libFuzzer浅探">
+                        <span class="hidden-mobile">libFuzzer浅探</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
