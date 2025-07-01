@@ -265,15 +265,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/honggfuzz/" target="_self">
-          Honggfuzz浅探
+        <a href="/2025/07/01/fuzz/go-fuzz/" target="_self">
+          Go Fuzz
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/honggfuzz/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/go-fuzz/" target="_self">
         <div>
-          简介Honggfuzz 是一款高性能、基于覆盖引导（Coverage-guided）的模糊测试工具，由 Google 安全工程师开发，广泛应用于挖掘软件中的内存破坏、逻辑漏洞等安全问题。 工作原理  覆盖引导：监控目标程序的代码覆盖率（通过插桩或硬件PT），优先保留触发新路径的输入。 输入变异：基于遗传算法，对初始种子文件进行位翻转、块替换等变异。 异常检测：捕获崩溃（如SIGSEGV）、超时或用
+          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的
         </div>
       </a>
 
@@ -326,15 +326,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/go-fuzz/" target="_self">
-          Go Fuzz
+        <a href="/2025/07/01/fuzz/honggfuzz/" target="_self">
+          Honggfuzz浅探
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/go-fuzz/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/honggfuzz/" target="_self">
         <div>
-          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的
+          简介Honggfuzz 是一款高性能、基于覆盖引导（Coverage-guided）的模糊测试工具，由 Google 安全工程师开发，广泛应用于挖掘软件中的内存破坏、逻辑漏洞等安全问题。 工作原理  覆盖引导：监控目标程序的代码覆盖率（通过插桩或硬件PT），优先保留触发新路径的输入。 输入变异：基于遗传算法，对初始种子文件进行位翻转、块替换等变异。 异常检测：捕获崩溃（如SIGSEGV）、超时或用
         </div>
       </a>
 
@@ -448,67 +448,6 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
-          论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
-        <div>
-          0x00 前言由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。  论文摘要：LLAMAFUZZ 是一篇研究在模糊测试中引入 LLM 的非常经典的论文。本文主要提出了通过 LLM 对种子进行生成，并且利用 LLM 的推理能力对种子进行结构化变异。通过 LLM 增强结构化数据模糊测试的能力。论
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-01 09:48" pubdate>
-              2025-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Paper/">#Paper</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
         <a href="/2025/07/01/notes/philosophy/" target="_self">
           大众哲学笔记
         </a>
@@ -563,15 +502,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
-          论文笔记：Fuzzing: A Survey for Roadmap
+        <a href="/2025/07/01/ctf/heap/heap/" target="_self">
+          Glibc堆利用入门
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/heap/heap/" target="_self">
         <div>
-          0x00 前言Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。  fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞
+          前言了解了 Ptmalloc2 的内存管理机制后，我们就可以学习一下堆的利用基础。 堆相关的漏洞无法像栈那样直接劫持控制流，在堆中的漏洞利用一般通过修改堆上的函数指针，在程序调用堆上的数据的时候达成目的。 另一种是基于对堆分配的理解，达到任意地址分配从而实现任意地址写。通过任意地址写修改libc当中的一些hook来达到劫持程序控制流的目的。 堆常见漏洞堆溢出堆溢出是指程序向某个堆块中写入的字节数超
         </div>
       </a>
 
@@ -595,7 +534,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
   
   
 
@@ -610,7 +549,183 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/Paper/">#Paper</a>
+              <a href="/tags/Heap/">#Heap</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/01/ctf/adv/cpp/" target="_self">
+          C++ Pwn
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/adv/cpp/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-01 09:48" pubdate>
+              2025-07-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/01/ctf/heter/arm/" target="_self">
+          ARM Pwn
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/heter/arm/" target="_self">
+        <div>
+          简介arm 是一种广泛支持嵌入式、移动设备和服务器上的处理器架构，它支持 32 位和 64 位模式。arm 汇编有不同的指令集，针对不同的架构（ARMv7、ARMv8等）有不同的语法和特性。 ARM 架构，曾称进阶精简指令集机器（Advanced RISC Machine）更早称作Acorn RISC Machine，是一个32位精简指令集（RISC）处理器架构。 环境搭建编译环境 安装编译工具
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-01 09:48" pubdate>
+              2025-07-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%BC%82%E6%9E%B6%E6%9E%84/">#异架构</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/01/ctf/stack/stack/" target="_self">
+          栈利用思考
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/stack/stack/" target="_self">
+        <div>
+          栈是什么？栈（Stack）一般表示计算机中一种内存区域，用于存储程序在运行过程中需要管理的局部变量、、函数调用、、返回地址等数据。 栈的特点是后进先出（LIFO），也就是说，，栈中的数据按照先进后出的顺序进行访问。 为什么我们需要栈内存栈内存的存在主要是为了高效管理函数调用的局部变量、返回地址以及其他与函数执行相关的临时数据。它为函数调用提供了自动化的内存管理，使得程序可以在不需要手动干预的情况下
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-01 09:48" pubdate>
+              2025-07-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Stack/">#Stack</a>
             
           </div>
         
@@ -685,76 +800,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/ctf/heap/heap/" target="_self">
-          Glibc堆利用入门
+        <a href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
+          论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/heap/heap/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
         <div>
-          前言了解了 Ptmalloc2 的内存管理机制后，我们就可以学习一下堆的利用基础。 堆相关的漏洞无法像栈那样直接劫持控制流，在堆中的漏洞利用一般通过修改堆上的函数指针，在程序调用堆上的数据的时候达成目的。 另一种是基于对堆分配的理解，达到任意地址分配从而实现任意地址写。通过任意地址写修改libc当中的一些hook来达到劫持程序控制流的目的。 堆常见漏洞堆溢出堆溢出是指程序向某个堆块中写入的字节数超
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-01 09:48" pubdate>
-              2025-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Heap/">#Heap</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/01/fuzz/src/afl/" target="_self">
-          AFL源码分析
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/src/afl/" target="_self">
-        <div>
-          
+          0x00 前言由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。  论文摘要：LLAMAFUZZ 是一篇研究在模糊测试中引入 LLM 的非常经典的论文。本文主要提出了通过 LLM 对种子进行生成，并且利用 LLM 的推理能力对种子进行结构化变异。通过 LLM 增强结构化数据模糊测试的能力。论
         </div>
       </a>
 
@@ -793,68 +847,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzer%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">#fuzzer源码分析</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/01/ctf/heter/arm/" target="_self">
-          ARM Pwn
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/heter/arm/" target="_self">
-        <div>
-          简介arm 是一种广泛支持嵌入式、移动设备和服务器上的处理器架构，它支持 32 位和 64 位模式。arm 汇编有不同的指令集，针对不同的架构（ARMv7、ARMv8等）有不同的语法和特性。 ARM 架构，曾称进阶精简指令集机器（Advanced RISC Machine）更早称作Acorn RISC Machine，是一个32位精简指令集（RISC）处理器架构。 环境搭建编译环境 安装编译工具
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-01 09:48" pubdate>
-              2025-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E5%BC%82%E6%9E%B6%E6%9E%84/">#异架构</a>
+              <a href="/tags/Paper/">#Paper</a>
             
           </div>
         

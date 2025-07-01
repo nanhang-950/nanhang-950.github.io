@@ -26,15 +26,15 @@
 <meta property="og:site_name" content="南行的一座山">
 <meta property="og:description" content="0x00 前言由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。  论文摘要：LLAMAFUZZ 是一篇研究在模糊测试中引入 LLM 的非常经典的论文。本文主要提出了通过 LLM 对种子进行生成，并且利用 LLM 的推理能力对种子进行结构化变异。通过 LLM 增强结构化数据模糊测试的能力。论">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://nanhang.top/2025/07/01/fuzz/paper/llamafuzz/assets/Pasted%20image%2020250626212538.png">
-<meta property="og:image" content="http://nanhang.top/2025/07/01/fuzz/paper/llamafuzz/assets/Pasted%20image%2020250629084732.png">
-<meta property="og:image" content="http://nanhang.top/2025/07/01/fuzz/paper/llamafuzz/assets/Pasted%20image%2020250629083827.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250626212538.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250629084732.png">
+<meta property="og:image" content="http://nanhang.top/assets/Pasted%20image%2020250629083827.png">
 <meta property="article:published_time" content="2025-07-01T01:48:01.000Z">
-<meta property="article:modified_time" content="2025-07-01T07:34:29.108Z">
+<meta property="article:modified_time" content="2025-07-01T07:54:39.954Z">
 <meta property="article:author" content="南行">
 <meta property="article:tag" content="Paper">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://nanhang.top/2025/07/01/fuzz/paper/llamafuzz/assets/Pasted%20image%2020250626212538.png">
+<meta name="twitter:image" content="http://nanhang.top/assets/Pasted%20image%2020250626212538.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -332,7 +332,7 @@
 <p>因此，fuzzer 开发人员面临着使用通用 fuzzer 和专用 fuzzer 之间的权衡。通用的 fuzzer 虽然用途广泛，但往往难以有效地处理结构化的种子。另一方面，专向的 fuzzer 可以生产出高质量的结构化种子，但这种专向会限制其灵活性和适用性。 此外，依赖语法规则生成种子需要广泛的领域知识，这可能成为其广泛使用的障碍。因此，需要一种更好的方法来利用通用和专用模糊器的优势。</p>
 <p>为了解决上述问题，论文提出使用大语言模型来增强模糊中的变异过程。下图提供了 LLAMAFUZZ 体系结构的概述。通过对不同数据集的LLM 进行预训练，LLM 可以学习复杂的数据转换模式和数据格式信息， 这对结构化数据突变至关重要。此外对 LLM 进行微调， 以学习特定的结构化种子模式和变异结构化种子，试图在通用 fuzzer 和专业 fuzzer 之间找到平衡。</p>
 <figure>
-  <img src="assets/Pasted%20image%2020250626212538.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
+  <img src="/assets/Pasted%20image%2020250626212538.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
   <figcaption><b>图 1：</b>LLAMAFUZZ 架构图。</figcaption>
 </figure>
 
@@ -364,7 +364,7 @@
 </ol>
 <p>随着模糊测试循环的不断进行，更多的代码分支将被探索，从而有更大概率触发潜在的漏洞。</p>
 <figure>
-  <img src="assets/Pasted%20image%2020250629084732.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
+  <img src="/assets/Pasted%20image%2020250629084732.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
   <figcaption><b>图 2：</b>样本输入和LLM突变结果的PNG示例。</figcaption>
 </figure>
 
@@ -423,7 +423,7 @@
 <p>需要注意的是：这种数据转换仅适用于基于二进制的数据。<br>对于文本类型的数据，仅在种子前添加 prompt，因此已有研究表明 LLM 能很好地处理基于文本的种子。</p>
 </blockquote>
 <figure>
-  <img src="assets/Pasted%20image%2020250629083827.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
+  <img src="/assets/Pasted%20image%2020250629083827.png" srcset="/img/loading.gif" lazyload alt="系统架构图">
   <figcaption><b>图 3：</b>数据集预处理的工程流程。</figcaption>
 </figure>
 
@@ -562,9 +562,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2025/07/01/fuzz/syzkaller/" title="syzkaller初探">
+                      <a href="/2025/07/01/fuzz/paper/seed/" title="论文笔记：Harnessing Large Language Models for Seed Generation in Greybox Fuzzing">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">syzkaller初探</span>
+                        <span class="hidden-mobile">论文笔记：Harnessing Large Language Models for Seed Generation in Greybox Fuzzing</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -572,8 +572,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2025/07/01/notes/philosophy/" title="大众哲学笔记">
-                        <span class="hidden-mobile">大众哲学笔记</span>
+                      <a href="/2025/07/01/fuzz/paper/roadmap/" title="论文笔记：Fuzzing: A Survey for Roadmap">
+                        <span class="hidden-mobile">论文笔记：Fuzzing: A Survey for Roadmap</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
