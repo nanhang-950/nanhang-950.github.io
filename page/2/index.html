@@ -265,67 +265,6 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/go-fuzz/" target="_self">
-          Go Fuzz
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/go-fuzz/" target="_self">
-        <div>
-          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-01 09:48" pubdate>
-              2025-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/fuzzers/">#fuzzers</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
         <a href="/2025/07/01/fuzz/honggfuzz/" target="_self">
           Honggfuzz浅探
         </a>
@@ -373,7 +312,68 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzers/">#fuzzers</a>
+              <a href="/tags/fuzzer/">#fuzzer</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/01/fuzz/go-fuzz/" target="_self">
+          Go Fuzz
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/go-fuzz/" target="_self">
+        <div>
+          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 对 Go 程序的
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-01 09:48" pubdate>
+              2025-07-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Fuzz/" class="category-chain-item">Fuzz</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/fuzzer/">#fuzzer</a>
             
           </div>
         
@@ -434,7 +434,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzers/">#fuzzers</a>
+              <a href="/tags/fuzzer/">#fuzzer</a>
             
           </div>
         
@@ -448,15 +448,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
-          论文笔记：Fuzzing: A Survey for Roadmap
+        <a href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
+          论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
         <div>
-          0x00 前言Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。  fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞
+          0x00 前言由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。  论文摘要：LLAMAFUZZ 是一篇研究在模糊测试中引入 LLM 的非常经典的论文。本文主要提出了通过 LLM 对种子进行生成，并且利用 LLM 的推理能力对种子进行结构化变异。通过 LLM 增强结构化数据模糊测试的能力。论
         </div>
       </a>
 
@@ -563,15 +563,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/src/afl/" target="_self">
-          AFL源码分析
+        <a href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
+          论文笔记：Fuzzing: A Survey for Roadmap
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/src/afl/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/roadmap/" target="_self">
         <div>
-          
+          0x00 前言Fuzz testing（fuzzing，即模糊测试）在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。  fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞
         </div>
       </a>
 
@@ -610,7 +610,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzer%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">#fuzzer源码分析</a>
+              <a href="/tags/Paper/">#Paper</a>
             
           </div>
         
@@ -746,15 +746,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
-          论文笔记：LLAMAFUZZ: Large Language Model Enhanced Greybox Fuzzing
+        <a href="/2025/07/01/fuzz/src/afl/" target="_self">
+          AFL源码分析
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/paper/llamafuzz/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/src/afl/" target="_self">
         <div>
-          0x00 前言论文摘要：LLAMAFUZZ 是一篇研究在灰盒模糊测试中引入 LLM 的非常经典的论文。本文主要提出了通过 LLM 对种子进行生成，并且利用 LLM 的推理能力对种子进行结构化变异。通过 LLM 增强结构化数据模糊测试的能力。论文基于 LLM 预训练获得的数据格式转换知识生成有效新输入，并通过配对变异种子进行微调，使其高效掌握结构化格式与变异策略。 0x01 简介这里就不对模糊测试的
+          
         </div>
       </a>
 
@@ -793,7 +793,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/Paper/">#Paper</a>
+              <a href="/tags/fuzzer%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">#fuzzer源码分析</a>
             
           </div>
         

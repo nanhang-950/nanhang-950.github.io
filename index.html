@@ -265,15 +265,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/rust/" target="_self">
-          Rust Fuzz
+        <a href="/2025/07/01/fuzz/afl/" target="_self">
+          AFL模糊测试入门
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/rust/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/afl/" target="_self">
         <div>
-          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 cargo-fu
+          前言玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。 基本概念模糊测试整个 fuzzing 流程大致可以拆分为三个部分，分别是：1. seed selection、2. mutation、3. coverage。 模糊测试的定义：一种通过提供非预期的输入并监视异常结果来发现软件故障的方法。 模
         </div>
       </a>
 
@@ -312,7 +312,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzers/">#fuzzers</a>
+              <a href="/tags/fuzzer/">#fuzzer</a>
             
           </div>
         
@@ -373,7 +373,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzers/">#fuzzers</a>
+              <a href="/tags/fuzzer/">#fuzzer</a>
             
           </div>
         
@@ -387,15 +387,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/fuzz/afl/" target="_self">
-          AFL模糊测试入门
+        <a href="/2025/07/01/fuzz/rust/" target="_self">
+          Rust Fuzz
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/afl/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/fuzz/rust/" target="_self">
         <div>
-          前言玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。 基本概念模糊测试整个 fuzzing 流程大致可以拆分为三个部分，分别是：1. seed selection、2. mutation、3. coverage。 模糊测试的定义：一种通过提供非预期的输入并监视异常结果来发现软件故障的方法。 模
+          简介传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C&#x2F;C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了专门的 Fuzz 工具。本文所要学习的 cargo-fuzz 和 afl.rs 正是如此。 cargo-fu
         </div>
       </a>
 
@@ -434,68 +434,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/fuzzers/">#fuzzers</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2025/07/01/ctf/re/rust/" target="_self">
-          Rust逆向分析
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/re/rust/" target="_self">
-        <div>
-          简介print!宏逆向概述print!是 rust 中用于输出的宏，rust中的宏在编译阶段会展开成具体的代码，print!宏比较常见，展开后的代码比较复杂，学习分析print语句可以帮助理清程序逻辑。 除了println!宏外还有print!宏，它们的区别就是在编译时编译器会在println!所输出的内容后加一个\n。 宏展开分析 示例代码  1println!(&quot;hello worl
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2025-07-01 09:53" pubdate>
-              2025-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91/">#高级语言逆向</a>
+              <a href="/tags/fuzzer/">#fuzzer</a>
             
           </div>
         
@@ -570,15 +509,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2025/07/01/ctf/re/vm/" target="_self">
-          VM指令虚拟化分析
+        <a href="/2025/07/01/ctf/re/rust/" target="_self">
+          Rust逆向分析
         </a>
       </h2>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/re/vm/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/re/rust/" target="_self">
         <div>
-          
+          简介print!宏逆向概述print!是 rust 中用于输出的宏，rust中的宏在编译阶段会展开成具体的代码，print!宏比较常见，展开后的代码比较复杂，学习分析print语句可以帮助理清程序逻辑。 除了println!宏外还有print!宏，它们的区别就是在编译时编译器会在println!所输出的内容后加一个\n。 宏展开分析 示例代码  1println!(&quot;hello worl
         </div>
       </a>
 
@@ -617,7 +556,7 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/%E9%80%86%E5%90%91%E5%AF%B9%E6%8A%97/">#逆向对抗</a>
+              <a href="/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91/">#高级语言逆向</a>
             
           </div>
         
@@ -679,6 +618,67 @@
             <i class="iconfont icon-tags"></i>
             
               <a href="/tags/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E9%80%86%E5%90%91/">#高级语言逆向</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/07/01/ctf/re/vm/" target="_self">
+          VM指令虚拟化分析
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/07/01/ctf/re/vm/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-07-01 09:53" pubdate>
+              2025-07-01
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/CTF/" class="category-chain-item">CTF</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E9%80%86%E5%90%91%E5%AF%B9%E6%8A%97/">#逆向对抗</a>
             
           </div>
         
