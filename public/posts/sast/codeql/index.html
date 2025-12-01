@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>CodeQL入门 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="简介
+CodeQL 是 GitHub 开发的一种静态分析工具，广泛用于代码安全性和质量的检测。CodeQL 允许开发人员使用一种类似于 SQL 的查询语言来分析源代码，并查找潜在的漏洞或代码缺陷。它通过创建一个“代码数据库”，使得用户可以查询程序中的各种数据流、控制流、API 调用等信息，从而发现安全漏洞、代码重复或不良编码实践。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/sast/codeql/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.e105e5001e5a6a4bdfd2fc39297ee1c1f9ed55bbfa466311bf23402970d44059.css" integrity="sha256-4QXlAB5aakvf0vw5KX7hwfntVbv6RmMRvyNAKXDUQFk=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/sast/codeql/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      CodeQL入门
+    </h1>
+    <div class="post-meta"><span title='2025-08-31 23:16:38 +0000 UTC'>2025年8月31日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a><ul>
+                            
+                    <li>
+                        <a href="#codeql-cli" aria-label="CodeQL CLI">CodeQL CLI</a></li>
+                    <li>
+                        <a href="#vscode%e6%8f%92%e4%bb%b6" aria-label="vscode插件">vscode插件</a></li>
+                    <li>
+                        <a href="#%e5%b7%a5%e4%bd%9c%e5%8c%ba" aria-label="工作区">工作区</a></li>
+                    <li>
+                        <a href="#%e5%88%9b%e5%bb%ba%e6%95%b0%e6%8d%ae%e5%ba%93" aria-label="创建数据库">创建数据库</a></li>
+                    <li>
+                        <a href="#vscode%e9%80%89%e4%b8%ad%e6%95%b0%e6%8d%ae%e5%ba%93" aria-label="vscode选中数据库">vscode选中数据库</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#ql%e6%9f%a5%e8%af%a2%e8%af%ad%e5%8f%a5" aria-label="QL查询语句">QL查询语句</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%bb%93%e6%9e%84" aria-label="基本结构">基本结构</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e6%8a%bd%e8%b1%a1%e7%b1%bb" aria-label="基础抽象类">基础抽象类</a></li>
+                    <li>
+                        <a href="#%e5%a3%b0%e6%98%8e%e7%b1%bb" aria-label="声明类">声明类</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%8f%98%e9%87%8f%e5%a3%b0%e6%98%8e" aria-label="变量声明">变量声明</a></li>
+                    <li>
+                        <a href="#%e5%87%bd%e6%95%b0%e5%a3%b0%e6%98%8e" aria-label="函数声明">函数声明</a></li>
+                    <li>
+                        <a href="#%e6%a8%a1%e6%9d%bf%e4%b8%8e%e7%b1%bb" aria-label="模板与类">模板与类</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%af%ad%e5%8f%a5%e7%b1%bb" aria-label="语句类">语句类</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e6%b5%81%e8%af%ad%e5%8f%a5" aria-label="控制流语句">控制流语句</a></li>
+                    <li>
+                        <a href="#%e8%b7%b3%e8%bd%ac%e8%af%ad%e5%8f%a5" aria-label="跳转语句">跳转语句</a></li>
+                    <li>
+                        <a href="#%e5%a4%8d%e5%90%88%e8%af%ad%e5%8f%a5" aria-label="复合语句">复合语句</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%a1%a8%e8%be%be%e5%bc%8f%e7%b1%bb" aria-label="表达式类">表达式类</a><ul>
+                            
+                    <li>
+                        <a href="#%e8%bf%90%e7%ae%97%e7%ac%a6" aria-label="运算符">运算符</a></li>
+                    <li>
+                        <a href="#%e5%ad%97%e9%9d%a2%e9%87%8f" aria-label="字面量">字面量</a></li>
+                    <li>
+                        <a href="#%e7%89%b9%e6%ae%8a%e8%a1%a8%e8%be%be%e5%bc%8f" aria-label="特殊表达式">特殊表达式</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%b1%bb%e5%9e%8b%e7%b1%bb" aria-label="类型类">类型类</a></li>
+                    <li>
+                        <a href="#%e9%a2%84%e5%a4%84%e7%90%86%e5%99%a8%e7%b1%bb" aria-label="预处理器类">预处理器类</a></li>
+                    <li>
+                        <a href="#%e6%a8%a1%e6%9d%bf%e7%9b%b8%e5%85%b3" aria-label="模板相关">模板相关</a></li>
+                    <li>
+                        <a href="#%e5%85%b6%e4%bb%96%e5%85%b3%e9%94%ae%e5%85%83%e7%b4%a0" aria-label="其他关键元素">其他关键元素</a></li>
+                    <li>
+                        <a href="#%e5%a4%8d%e5%90%88%e8%af%ad%e5%8f%a5%e7%b1%bb" aria-label="复合语句类">复合语句类</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e6%b5%81%e5%88%86%e6%9e%90" aria-label="数据流分析">数据流分析</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%b1%80%e9%83%a8%e6%95%b0%e6%8d%ae%e6%b5%81%e5%88%86%e6%9e%90" aria-label="局部数据流分析">局部数据流分析</a></li>
+                    <li>
+                        <a href="#%e5%85%a8%e5%b1%80%e6%95%b0%e6%8d%ae%e6%b5%81%e5%88%86%e6%9e%90" aria-label="全局数据流分析">全局数据流分析</a></li>
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e6%b5%81%e6%9f%a5%e8%af%a2" aria-label="数据流查询">数据流查询</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#codeql-%e5%b8%b8%e8%a7%81%e6%9f%a5%e8%af%a2%e7%b1%bb%e5%9e%8b" aria-label="CodeQL 常见查询类型">CodeQL 常见查询类型</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e6%b5%81%e5%88%86%e6%9e%90" aria-label="控制流分析">控制流分析</a></li>
+                    <li>
+                        <a href="#%e7%ac%a6%e5%8f%b7%e6%89%a7%e8%a1%8c%e5%92%8c%e8%b7%af%e5%be%84%e5%88%86%e6%9e%90" aria-label="符号执行和路径分析">符号执行和路径分析</a></li>
+                    <li>
+                        <a href="#api-%e4%bd%bf%e7%94%a8%e6%a3%80%e6%9f%a5" aria-label="API 使用检查">API 使用检查</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%b1%a1%e7%82%b9%e5%88%86%e6%9e%90" aria-label="污点分析">污点分析</a></li>
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e6%b5%81%e5%88%86%e6%9e%90%e6%a6%82%e8%bf%b0" aria-label="数据流分析概述"><strong>数据流分析概述</strong></a><ul>
+                            
+                    <li>
+                        <a href="#%e5%b1%80%e9%83%a8%e6%95%b0%e6%8d%ae%e6%b5%81" aria-label="局部数据流"><strong>局部数据流</strong></a></li>
+                    <li>
+                        <a href="#%e5%b1%80%e9%83%a8%e6%b1%a1%e6%9f%93%e8%bf%bd%e8%b8%aa" aria-label="局部污染追踪"><strong>局部污染追踪</strong></a></li>
+                    <li>
+                        <a href="#%e5%85%a8%e5%b1%80%e6%95%b0%e6%8d%ae%e6%b5%81" aria-label="全局数据流"><strong>全局数据流</strong></a></li>
+                    <li>
+                        <a href="#%e5%85%a8%e5%b1%80%e6%b1%a1%e6%9f%93%e8%bf%bd%e8%b8%aa" aria-label="全局污染追踪"><strong>全局污染追踪</strong></a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e6%a8%a1%e5%9e%8b" aria-label="漏洞模型">漏洞模型</a><ul>
+                            
+                    <li>
+                        <a href="#cwe-022" aria-label="CWE-022">CWE-022</a></li>
+                    <li>
+                        <a href="#cwe-078" aria-label="CWE-078">CWE-078</a></li>
+                    <li>
+                        <a href="#cwe-119" aria-label="CWE-119">CWE-119</a></li>
+                    <li>
+                        <a href="#cwe-120" aria-label="CWE-120">CWE-120</a></li>
+                    <li>
+                        <a href="#cwe-121" aria-label="CWE-121">CWE-121</a></li>
+                    <li>
+                        <a href="#cwe-787" aria-label="CWE-787">CWE-787</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a></li>
+                    <li>
+                        <a href="#reference" aria-label="Reference">Reference</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>CodeQL 是 GitHub 开发的一种静态分析工具，广泛用于代码安全性和质量的检测。CodeQL 允许开发人员使用一种类似于 SQL 的查询语言来分析源代码，并查找潜在的漏洞或代码缺陷。它通过创建一个“代码数据库”，使得用户可以查询程序中的各种数据流、控制流、API 调用等信息，从而发现安全漏洞、代码重复或不良编码实践。</p>
+<p>CodeQL 是一种基于规则匹配的代码审计工具。使用一种名为 CodeQL 的查询语言，这种语言类似于 SQL，允许开发人员编写自定义的查询来分析代码的结构、数据流和控制流。</p>
+<p>CodeQL 支持多种编程语言，包括但不限于：</p>
+<ul>
+<li>C/C++</li>
+<li>Java</li>
+<li>JavaScript/TypeScript</li>
+<li>Python</li>
+<li>Go</li>
+<li>Ruby</li>
+<li>C#</li>
+</ul>
+<p>本文主要研究的是 CodeQL C/C++ 的分析审计。</p>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>下面我们搭建 CodeQL 所需要的环境。</p>
+<p>使用 <strong>From GitHub</strong> 选项从 GitHub 仓库下载 CodeQL 数据库。例如，可以下载一个 C/C++ 项目，例如 <code>https://github.com/protocolbuffers/protobuf</code>。</p>
+<h3 id="codeql-cli">CodeQL CLI<a hidden class="anchor" aria-hidden="true" href="#codeql-cli">#</a></h3>
+<p>CodeQL CLI 是进行代码分析的核心工具，它允许您创建数据库、运行查询等操作</p>
+<ul>
+<li>Linux</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">wget https://github.com/github/codeql-cli-binaries/releases/download/v2.20.7/codeql-linux64.zip
+</span></span></code></pre></div><p>配置<code>.bashrc</code>环境变量。</p>
+<h3 id="vscode插件">vscode插件<a hidden class="anchor" aria-hidden="true" href="#vscode插件">#</a></h3>
+<p>扩展插件搜索 codeql 插件，然后安装即可。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250331180634.png" style="max-width: 100%; height: auto;"></p>
+<p>点击插件自动更新右边的齿轮按钮设置插件一些参数。</p>
+<p><code>Code QL&gt;Cli：Execuble Path</code>表示我们的 CodeQL CLI 路径，这里我们设置为我们的 codeql 目录下的 codeql 路径。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250331175742.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="工作区">工作区<a hidden class="anchor" aria-hidden="true" href="#工作区">#</a></h3>
+<p>下载工作区</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">git clone --recursive https://github.com/github/vscode-codeql-starter/
+</span></span></code></pre></div><p>从文件打开工作区</p>
+<h3 id="创建数据库">创建数据库<a hidden class="anchor" aria-hidden="true" href="#创建数据库">#</a></h3>
+<p>您需要为项目创建一个 CodeQL 数据库，以便进行查询。可以使用<code>codeql database create</code>命令来创建。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">codeql database create ./test-db --language<span class="o">=</span>cpp --command<span class="o">=</span><span class="s2">&#34;gcc test.c -o test&#34;</span>
+</span></span></code></pre></div><ul>
+<li><code>test-db</code>：指定数据库创建成功后存放在<code>test-db</code>目录下</li>
+<li><code>language</code>：指定语言，这里选择<code>cpp</code>即C++</li>
+<li><code>command</code>：编译指令，如果使用make编译那么就将make语句写在这里。</li>
+</ul>
+<h3 id="vscode选中数据库">vscode选中数据库<a hidden class="anchor" aria-hidden="true" href="#vscode选中数据库">#</a></h3>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250331185018.png" style="max-width: 100%; height: auto;"></p>
+<p>之后我们就可以编写<code>ql</code>文件语句，然后运行在数据库中查询就可以了。</p>
+<p>我们不仅可以自己编译数据库，还可以使用别人编译好的数据库。</p>
+<pre tabindex="0"><code>github/protocolbuffers/protobuf
+</code></pre><h2 id="ql查询语句">QL查询语句<a hidden class="anchor" aria-hidden="true" href="#ql查询语句">#</a></h2>
+<p>CodeQL 所使用的查询语言是一种类 SQL 的语法。</p>
+<p>用于查找每种受支持语言最相关和最有趣的问题。您还可以编写自定义查询来查找与您自己的项目相关的问题。</p>
+<p>重要的查询类型包括：</p>
+<ul>
+<li>警报查询：突出显示代码中特定位置的问题的查询。</li>
+<li>路径查询：描述代码中源和接收器之间的信息流的查询。</li>
+</ul>
+<h3 id="基本结构">基本结构<a hidden class="anchor" aria-hidden="true" href="#基本结构">#</a></h3>
+<pre tabindex="0"><code class="language-q" data-lang="q">import &lt;语言库&gt;  // 如 java, cpp, python
+
+from &lt;变量声明&gt;
+where &lt;条件表达式&gt;
+select &lt;输出结果&gt;
+</code></pre><ul>
+<li>查询源数据</li>
+</ul>
+<p>每个查询通常包含一个或多个语句，这些语句定义要导入到查询中的库或模块。库和模块提供了一种将相关类型、谓词和其他模块组合在一起的方法。然后，查询可以访问您导入的每个库或模块的内容。</p>
+<p>有一个广泛的库，用于分析从 C/C++ 项目中提取的 CodeQL 数据库。此库中的类以面向对象的形式呈现数据库中的数据，并提供抽象和谓词来帮助您完成常见的分析任务。 该库作为一组 QL 模块实现，即扩展名为 的文件。该模块会导入所有核心 C/C++ 库模块，因此您可以通过以下方式开始查询来包含完整的库：<code>.qll``cpp.qll</code></p>
+<pre tabindex="0"><code>import cppgg
+</code></pre><ul>
+<li>
+<p>可选的 codeql 类和谓词</p>
+</li>
+<li>
+<p><code>from</code>子句</p>
+</li>
+</ul>
+<p>该子句声明查询中使用的变量。每个声明的格式必须为：有关可用类型的更多信息，以及要了解如何使用类定义自己的类型。</p>
+<ul>
+<li><code>where</code>子句</li>
+</ul>
+<p>该子句定义要应用于子句中声明的变量以生成结果的逻辑条件。此子句使用聚合、谓词和逻辑公式将感兴趣的变量限制为满足定义条件的较小集合。codeql 库对特定语言和框架的常用谓词进行分组。</p>
+<ul>
+<li><code>select</code>子句</li>
+</ul>
+<p>该子句指定要为满足子句中声明的变量显示的结果。select 子句的有效结构由元数据中指定的属性定义。</p>
+<p>警报查询的select 子句由两个列组成，其结构如下：</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">select element,string
+</code></pre><ul>
+<li>element：由查询标识的代码元素，用于定义警报的显示位置</li>
+<li>string：一条消息，其中还可以包含连接和占位符，说明生成警报的原因</li>
+</ul>
+<p>以以下代码为例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">signed</span> <span class="kt">int</span> <span class="n">myInt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">myInt</span><span class="p">)</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="基础抽象类">基础抽象类<a hidden class="anchor" aria-hidden="true" href="#基础抽象类">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>类名</th>
+          <th>描述</th>
+          <th>子类示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Element</code></td>
+          <td>所有CodeQL元素的基类</td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><code>AstNode</code></td>
+          <td>所有AST节点的基类</td>
+          <td><code>Stmt</code>, <code>Expr</code>, <code>Decl</code>等</td>
+      </tr>
+      <tr>
+          <td><code>Stmt</code></td>
+          <td>所有语句的基类</td>
+          <td>控制流语句、表达式语句等</td>
+      </tr>
+      <tr>
+          <td><code>Expr</code></td>
+          <td>所有表达式的基类</td>
+          <td>各种运算符、字面量等</td>
+      </tr>
+      <tr>
+          <td><code>Decl</code></td>
+          <td>所有声明的基类</td>
+          <td>函数、变量、类声明等</td>
+      </tr>
+      <tr>
+          <td><code>Type</code></td>
+          <td>所有类型的基类</td>
+          <td>基本类型、指针类型等</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="声明类">声明类<a hidden class="anchor" aria-hidden="true" href="#声明类">#</a></h3>
+<h4 id="变量声明">变量声明<a hidden class="anchor" aria-hidden="true" href="#变量声明">#</a></h4>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL 类</th>
+          <th>C/C++ 语法示例</th>
+          <th>标准库关联</th>
+          <th>安全检测场景</th>
+          <th>查询示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>GlobalVariable</code></td>
+          <td><code>std::vector&lt;int&gt; g_data;</code></td>
+          <td>全局容器/资源管理</td>
+          <td>检测未初始化的全局 <code>std::vector</code></td>
+          <td><code>from GlobalVariable v where v.getType().getName() = &quot;vector&quot; select v</code></td>
+      </tr>
+      <tr>
+          <td><code>NamespaceVariable</code></td>
+          <td><code>namespace ns { int x; }</code></td>
+          <td>命名空间内静态变量</td>
+          <td>分析命名空间变量作用域泄漏风险</td>
+          <td><code>from NamespaceVariable v where v.getName() = &quot;x&quot; select v</code></td>
+      </tr>
+      <tr>
+          <td><code>MemberVariable</code></td>
+          <td><code>class C { std::string s; };</code></td>
+          <td>类成员资源持有</td>
+          <td>检查未使用 <code>std::unique_ptr</code> 的成员变量</td>
+          <td><code>from MemberVariable v where v.getType().getName() = &quot;string&quot; select v</code></td>
+      </tr>
+  </tbody>
+</table>
+<h4 id="函数声明">函数声明<a hidden class="anchor" aria-hidden="true" href="#函数声明">#</a></h4>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL 类</th>
+          <th>C/C++ 语法示例</th>
+          <th>标准库关联</th>
+          <th>安全检测场景</th>
+          <th>查询示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Function</code></td>
+          <td><code>void process(std::list&lt;int&gt;&amp;);</code></td>
+          <td>算法接口函数</td>
+          <td>检测未验证参数的迭代器操作</td>
+          <td><code>from Function f where f.getName() = &quot;process&quot; select f</code></td>
+      </tr>
+      <tr>
+          <td><code>FormattingFunction</code></td>
+          <td><code>printf(&quot;%s&quot;, str.c_str());</code></td>
+          <td>C标准I/O函数</td>
+          <td>检测格式化字符串与参数类型不匹配</td>
+          <td><code>from FormattingFunction f where f.getName() = &quot;printf&quot; select f</code></td>
+      </tr>
+      <tr>
+          <td><code>VirtualFunction</code></td>
+          <td><code>virtual void serialize() = 0;</code></td>
+          <td>多态接口设计</td>
+          <td>验证虚函数是否被正确覆盖</td>
+          <td><code>from VirtualFunction f where f.isPure() select f</code></td>
+      </tr>
+  </tbody>
+</table>
+<h4 id="模板与类">模板与类<a hidden class="anchor" aria-hidden="true" href="#模板与类">#</a></h4>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL 类</th>
+          <th>C/C++ 语法示例</th>
+          <th>标准库关联</th>
+          <th>安全检测场景</th>
+          <th>查询示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>ClassTemplateInstantiation</code></td>
+          <td><code>std::vector&lt;int&gt; vec;</code></td>
+          <td>模板容器实例化</td>
+          <td>检测未正确初始化的模板容器</td>
+          <td><code>from ClassTemplateInstantiation c where c.getTemplate().getName() = &quot;vector&quot; select c</code></td>
+      </tr>
+      <tr>
+          <td><code>FunctionTemplateSpecialization</code></td>
+          <td><code>template&lt;&gt; void swap&lt;int&gt;(int&amp;);</code></td>
+          <td>模板特化函数</td>
+          <td>验证模板特化的兼容性</td>
+          <td><code>from FunctionTemplateSpecialization f select f</code></td>
+      </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL类名</th>
+          <th>C/C++语法示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>FunctionDecl</code></td>
+          <td><code>void foo(int x);</code></td>
+          <td>函数声明</td>
+      </tr>
+      <tr>
+          <td><code>VariableDecl</code></td>
+          <td><code>int x = 42;</code></td>
+          <td>变量声明</td>
+      </tr>
+      <tr>
+          <td><code>ClassDecl</code></td>
+          <td><code>class C { ... };</code></td>
+          <td>类/结构体声明</td>
+      </tr>
+      <tr>
+          <td><code>FieldDecl</code></td>
+          <td><code>int member;</code></td>
+          <td>类成员变量声明</td>
+      </tr>
+      <tr>
+          <td><code>NamespaceDecl</code></td>
+          <td><code>namespace ns { ... }</code></td>
+          <td>命名空间声明</td>
+      </tr>
+      <tr>
+          <td><code>TypedefDecl</code></td>
+          <td><code>typedef int MyInt;</code></td>
+          <td>类型别名声明</td>
+      </tr>
+      <tr>
+          <td><code>EnumDecl</code></td>
+          <td><code>enum Color { RED, GREEN };</code></td>
+          <td>枚举声明</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>筛选是静态声明的函数</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+
+// // Finding all static functions
+from Function f
+where f.isStatic() //筛选是静态声明的函数
+select f, &#34;This is a static function.&#34;
+</code></pre><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">// Excluding functions that are referenced with a function pointer
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">from</span> <span class="n">Function</span> <span class="n">f</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span> <span class="n">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">FunctionCall</span> <span class="n">fc</span> <span class="o">|</span> <span class="n">fc</span><span class="p">.</span><span class="n">getTarget</span><span class="p">()</span> <span class="o">=</span> <span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">FunctionAccess</span> <span class="n">fa</span> <span class="o">|</span> <span class="n">fa</span><span class="p">.</span><span class="n">getTarget</span><span class="p">()</span> <span class="o">=</span> <span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">f</span><span class="p">,</span> <span class="s">&#34;This function is never called, or referenced with a function pointer.&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// from Class base, Class derived
+</span></span></span><span class="line"><span class="cl"><span class="c1">// where derived.getABaseClass+() = base
+</span></span></span><span class="line"><span class="cl"><span class="c1">// select base, derived, &#34;The second class is derived from the first.&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">Class</span> <span class="n">base</span><span class="p">,</span> <span class="n">Class</span> <span class="n">derived</span><span class="p">,</span> <span class="n">Destructor</span> <span class="n">d1</span><span class="p">,</span> <span class="n">Destructor</span> <span class="n">d2</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span> <span class="n">derived</span><span class="p">.</span><span class="n">getABaseClass</span><span class="o">+</span><span class="p">()</span> <span class="o">=</span> <span class="n">base</span> <span class="c1">//getABaseClass的作用是获取到它的父类
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">and</span> <span class="n">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">base</span><span class="p">.</span><span class="n">getATemplateArgument</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">derived</span><span class="p">.</span><span class="n">getATemplateArgument</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">d1</span> <span class="o">=</span> <span class="n">base</span><span class="p">.</span><span class="n">getDestructor</span><span class="p">()</span><span class="c1">//获取析构函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">and</span> <span class="n">d2</span> <span class="o">=</span> <span class="n">derived</span><span class="p">.</span><span class="n">getDestructor</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">base</span><span class="p">,</span> <span class="n">derived</span><span class="p">,</span> <span class="s">&#34;The second class is derived from the first, and both have a destructor.&#34;</span>
+</span></span></code></pre></div><h3 id="语句类">语句类<a hidden class="anchor" aria-hidden="true" href="#语句类">#</a></h3>
+<h4 id="控制流语句">控制流语句<a hidden class="anchor" aria-hidden="true" href="#控制流语句">#</a></h4>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL类名</th>
+          <th>C/C++语法示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>IfStmt</code></td>
+          <td><code>if (x) { ... }</code></td>
+          <td>if语句</td>
+      </tr>
+      <tr>
+          <td><code>SwitchStmt</code></td>
+          <td><code>switch (x) { case 1: ... }</code></td>
+          <td>switch语句</td>
+      </tr>
+      <tr>
+          <td><code>WhileStmt</code></td>
+          <td><code>while (x) { ... }</code></td>
+          <td>while循环</td>
+      </tr>
+      <tr>
+          <td><code>DoStmt</code></td>
+          <td><code>do { ... } while (x);</code></td>
+          <td>do-while循环</td>
+      </tr>
+      <tr>
+          <td><code>ForStmt</code></td>
+          <td><code>for (int i=0; i&lt;n; i++)</code></td>
+          <td>传统for循环</td>
+      </tr>
+      <tr>
+          <td><code>RangeBasedForStmt</code></td>
+          <td><code>for (auto&amp; x : list)</code></td>
+          <td>C++11范围for循环</td>
+      </tr>
+      <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+      </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL 类</th>
+          <th>C/C++ 语法示例</th>
+          <th>标准库关联</th>
+          <th>安全检测场景</th>
+          <th>查询示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>RangeBasedForStmt</code></td>
+          <td><code>for (auto&amp; x : std::map&lt;K,V&gt;)</code></td>
+          <td>容器遍历</td>
+          <td>检测循环内修改容器导致迭代器失效</td>
+          <td><code>from RangeBasedForStmt rbfor where rbfor.getRange().getType().getName() = &quot;map&quot; select rbfor</code></td>
+      </tr>
+      <tr>
+          <td><code>TryStmt</code></td>
+          <td><code>try { fs.read(...); } catch(...)</code></td>
+          <td>异常安全资源管理</td>
+          <td>检查文件操作未正确处理异常</td>
+          <td><code>from TryStmt t where t.getBody().getAChild*().(CallExpr).getTarget().getName() = &quot;read&quot; select t</code></td>
+      </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+      <tr>
+          <th>QL类名</th>
+          <th>对应C/C++语法</th>
+          <th>示例</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>LabelStmt</code></td>
+          <td>标签语句</td>
+          <td><code>label: ...</code></td>
+      </tr>
+      <tr>
+          <td><code>CaseStmt</code></td>
+          <td><code>switch</code>中的<code>case</code></td>
+          <td><code>case 1: ...</code></td>
+      </tr>
+      <tr>
+          <td><code>DefaultStmt</code></td>
+          <td><code>switch</code>中的<code>default</code></td>
+          <td><code>default: ...</code></td>
+      </tr>
+      <tr>
+          <td><code>TryStmt</code></td>
+          <td><code>try</code>块</td>
+          <td><code>try { ... }</code></td>
+      </tr>
+      <tr>
+          <td><code>CatchStmt</code></td>
+          <td><code>catch</code>块</td>
+          <td><code>catch (Exception&amp; e)</code></td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>IFStmt</li>
+<li>IfElseStmt</li>
+<li>WhileStmt</li>
+<li>SwitchStmt</li>
+<li>ForStmt</li>
+<li>GotoStmt</li>
+</ul>
+<h4 id="跳转语句">跳转语句<a hidden class="anchor" aria-hidden="true" href="#跳转语句">#</a></h4>
+<p>| <code>BreakStmt</code> | <code>break;</code> | 跳出循环 |<br>
+| <code>ContinueStmt</code> | <code>continue;</code> | 继续下一次循环 |<br>
+| <code>ReturnStmt</code> | <code>return x;</code> | 函数返回 |<br>
+| <code>GotoStmt</code> | <code>goto label;</code> | goto跳转 |</p>
+<ul>
+<li>ReturnStmt</li>
+<li>BreakStmt</li>
+<li>ContinueStmt</li>
+</ul>
+<h4 id="复合语句">复合语句<a hidden class="anchor" aria-hidden="true" href="#复合语句">#</a></h4>
+<p>| <code>CompoundStmt</code> | <code>{ x++; y--; }</code> | 代码块 |<br>
+| <code>TryStmt</code> | <code>try { ... } catch (...)</code> | try-catch块 |<br>
+| <code>LabelStmt</code> | <code>label: ...</code> | 标签语句 |</p>
+<ul>
+<li>CompoundStmt</li>
+<li>TryStmt</li>
+</ul>
+<h3 id="表达式类">表达式类<a hidden class="anchor" aria-hidden="true" href="#表达式类">#</a></h3>
+<h4 id="运算符">运算符<a hidden class="anchor" aria-hidden="true" href="#运算符">#</a></h4>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL类名</th>
+          <th>C/C++语法示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>BinaryExpr</code></td>
+          <td><code>x + y</code>, <code>a &amp;&amp; b</code></td>
+          <td>二元运算符表达式</td>
+      </tr>
+      <tr>
+          <td><code>UnaryExpr</code></td>
+          <td><code>!x</code>, <code>*ptr</code></td>
+          <td>一元运算符表达式</td>
+      </tr>
+      <tr>
+          <td><code>CallExpr</code></td>
+          <td><code>printf(&quot;hello&quot;)</code></td>
+          <td>函数调用表达式</td>
+      </tr>
+      <tr>
+          <td><code>ArrayAccess</code></td>
+          <td><code>arr[i]</code></td>
+          <td>数组访问表达式</td>
+      </tr>
+      <tr>
+          <td><code>MemberAccess</code></td>
+          <td><code>obj.member</code></td>
+          <td>成员访问表达式</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>筛选函数调用</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">// // Finding functions that are not called
+from Function f
+where not exists(FunctionCall fc | fc.getTarget() = f)//筛选函数调用，
+select f, &#34;This function is never called.&#34;
+</code></pre><ul>
+<li>筛选调用<code>sprintf</code>函数</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">// Finding a specific function
+from FunctionCall fc
+where fc.getTarget().getQualifiedName() = &#34;sprintf&#34; //筛选调用sprintf函数的地方
+  and not fc.getArgument(1) instanceof StringLiteral //匹配函数调用的第二个参数，为字符串类型的
+select fc, &#34;sprintf called with variable format string.&#34;
+</code></pre><h4 id="字面量">字面量<a hidden class="anchor" aria-hidden="true" href="#字面量">#</a></h4>
+<p> <code>IntegerLiteral</code> | <code>42</code> | 整数字面量 |<br>
+| <code>StringLiteral</code> | <code>&quot;hello&quot;</code> | 字符串字面量 |<br>
+| <code>FloatingLiteral</code> | <code>3.14</code> | 浮点数字面量 |</p>
+<ul>
+<li>IntegerLiteral</li>
+<li>StringLiteral</li>
+<li>ArrayAccess</li>
+</ul>
+<h4 id="特殊表达式">特殊表达式<a hidden class="anchor" aria-hidden="true" href="#特殊表达式">#</a></h4>
+<p>| <code>NewExpr</code> | <code>new int[10]</code> | new表达式 |<br>
+| <code>DeleteExpr</code> | <code>delete ptr</code> | delete表达式 |<br>
+| <code>LambdaExpr</code> | <code>[](int x) { return x; }</code> | Lambda表达式 |</p>
+<p>表达式类</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Finding assignments to zero
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">from</span> <span class="n">AssignExpr</span> <span class="n">e</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span> <span class="n">e</span><span class="p">.</span><span class="n">getRValue</span><span class="p">().</span><span class="n">getValue</span><span class="p">().</span><span class="n">toInt</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">//筛选到表达式右边的类
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">select</span> <span class="n">e</span><span class="p">,</span> <span class="s">&#34;Assigning the value 0 to something.&#34;</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="c1">// Finding assignments of 0 to an integer
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">from</span> <span class="n">AssignExpr</span> <span class="n">e</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span> <span class="n">e</span><span class="p">.</span><span class="n">getRValue</span><span class="p">().</span><span class="n">getValue</span><span class="p">().</span><span class="n">toInt</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">e</span><span class="p">.</span><span class="n">getLValue</span><span class="p">().</span><span class="n">getUnspecifiedType</span><span class="p">()</span> <span class="n">instanceof</span> <span class="n">IntegralType</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">e</span><span class="p">,</span> <span class="s">&#34;Assigning the value 0 to an integer.&#34;</span>
+</span></span></code></pre></div><h3 id="类型类">类型类<a hidden class="anchor" aria-hidden="true" href="#类型类">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL类名</th>
+          <th>C/C++语法示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>PrimitiveType</code></td>
+          <td><code>int</code>, <code>char</code></td>
+          <td>基本类型</td>
+      </tr>
+      <tr>
+          <td><code>PointerType</code></td>
+          <td><code>int*</code></td>
+          <td>指针类型</td>
+      </tr>
+      <tr>
+          <td><code>ArrayType</code></td>
+          <td><code>int[10]</code></td>
+          <td>数组类型</td>
+      </tr>
+      <tr>
+          <td><code>ClassType</code></td>
+          <td><code>class C</code></td>
+          <td>类类型</td>
+      </tr>
+      <tr>
+          <td><code>TemplateType</code></td>
+          <td><code>vector&lt;int&gt;</code></td>
+          <td>模板实例化类型</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>PrimitiveType</li>
+<li>PointerType</li>
+<li>ArrayType</li>
+<li>ClassType</li>
+</ul>
+<p>类型转换</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// from AssignExpr a
+</span></span></span><span class="line"><span class="cl"><span class="c1">// select a, a.getLValue().getType(), a.getRValue().getType()
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">AssignExpr</span> <span class="n">a</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">.</span><span class="n">getLValue</span><span class="p">().</span><span class="n">getExplicitlyConverted</span><span class="p">().</span><span class="n">getType</span><span class="p">(),</span> <span class="n">a</span><span class="p">.</span><span class="n">getRValue</span><span class="p">().</span><span class="n">getExplicitlyConverted</span><span class="p">().</span><span class="n">getUnspecifiedType</span><span class="p">()</span>
+</span></span></code></pre></div><h3 id="预处理器类">预处理器类<a hidden class="anchor" aria-hidden="true" href="#预处理器类">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>CodeQL类名</th>
+          <th>C/C++语法示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Macro</code></td>
+          <td><code>#define MAX 100</code></td>
+          <td>宏定义</td>
+      </tr>
+      <tr>
+          <td><code>MacroInvocation</code></td>
+          <td><code>MAX</code></td>
+          <td>宏调用</td>
+      </tr>
+      <tr>
+          <td><code>IncludeDirective</code></td>
+          <td><code>#include &lt;iostream&gt;</code></td>
+          <td>头文件包含</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>
+<p>Location</p>
+</li>
+<li>
+<p>Paramter</p>
+</li>
+<li>
+<p>Macro</p>
+</li>
+<li>
+<p>Comment</p>
+</li>
+<li>
+<p>RangeBaseForStmt</p>
+</li>
+<li>
+<p>DoStmt</p>
+</li>
+</ul>
+<h3 id="模板相关">模板相关<a hidden class="anchor" aria-hidden="true" href="#模板相关">#</a></h3>
+<p>| <code>TemplateDecl</code> | <code>template&lt;typename T&gt; class X</code> | 模板声明 |<br>
+| <code>TemplateInstantiation</code> | <code>vector&lt;int&gt;</code> | 模板实例化 |<br>
+| <code>TemplateParameter</code> | <code>typename T</code> | 模板参数 |</p>
+<h3 id="其他关键元素">其他关键元素<a hidden class="anchor" aria-hidden="true" href="#其他关键元素">#</a></h3>
+<p>| <code>Comment</code> | <code>/* comment */</code> | 代码注释 |<br>
+| <code>Parameter</code> | <code>void foo(int param)</code> | 函数参数 |<br>
+| <code>Constructor</code> | <code>ClassName()</code> | 构造函数 |<br>
+| <code>Destructor</code> | <code>~ClassName()</code> | 析构函数 |</p>
+<h3 id="复合语句类">复合语句类<a hidden class="anchor" aria-hidden="true" href="#复合语句类">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>QL类名</th>
+          <th>描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>BlockStmt</code></td>
+          <td><code>{ ... }</code>代码块</td>
+      </tr>
+      <tr>
+          <td><code>CompoundStmt</code></td>
+          <td>包含多个语句的复合块</td>
+      </tr>
+  </tbody>
+</table>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// from IfStmt ifstmt, BlockStmt block
+</span></span></span><span class="line"><span class="cl"><span class="c1">//如果满足这个条件我们该执行什么
+</span></span></span><span class="line"><span class="cl"><span class="c1">// where ifstmt.getThen() = block and
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   block.getNumStmt() = 0
+</span></span></span><span class="line"><span class="cl"><span class="c1">// select ifstmt, &#34;This &#39;if&#39; statement is redundant.&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//匹配所有if语句和代码块语句
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">from</span> <span class="n">IfStmt</span> <span class="n">ifstmt</span><span class="p">,</span> <span class="n">BlockStmt</span> <span class="n">block</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//条件匹配
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">where</span> <span class="n">ifstmt</span><span class="p">.</span><span class="n">getThen</span><span class="p">()</span> <span class="o">=</span> <span class="n">block</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">block</span><span class="p">.</span><span class="n">getNumStmt</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">not</span> <span class="n">ifstmt</span><span class="p">.</span><span class="n">hasElse</span><span class="p">()</span><span class="c1">//判断是否有else
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> <span class="c1">//查询
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">select</span> <span class="n">ifstmt</span><span class="p">,</span> <span class="s">&#34;This &#39;if&#39; statement is redundant.&#34;</span>
+</span></span></code></pre></div><p>stmt类</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">AssignExpr</span> <span class="n">e</span><span class="p">,</span> <span class="n">ForStmt</span> <span class="n">f</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// the assignment is in the &#39;for&#39; loop initialization statement
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 获得外层的封闭语句
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">where</span> <span class="n">e</span><span class="p">.</span><span class="n">getEnclosingStmt</span><span class="p">()</span> <span class="o">=</span> <span class="n">f</span><span class="p">.</span><span class="n">getInitialization</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">e</span><span class="p">.</span><span class="n">getRValue</span><span class="p">().</span><span class="n">getValue</span><span class="p">().</span><span class="n">toInt</span><span class="p">()</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">  <span class="n">and</span> <span class="n">e</span><span class="p">.</span><span class="n">getLValue</span><span class="p">().</span><span class="n">getType</span><span class="p">().</span><span class="n">getUnspecifiedType</span><span class="p">()</span> <span class="n">instanceof</span> <span class="n">IntegralType</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">e</span><span class="p">,</span> <span class="s">&#34;Assigning the value 0 to an integer, inside a for loop initialization.&#34;</span>
+</span></span></code></pre></div><h2 id="数据流分析">数据流分析<a hidden class="anchor" aria-hidden="true" href="#数据流分析">#</a></h2>
+<h3 id="局部数据流分析">局部数据流分析<a hidden class="anchor" aria-hidden="true" href="#局部数据流分析">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">semmle</span><span class="p">.</span><span class="n">code</span><span class="p">.</span><span class="n">cpp</span><span class="p">.</span><span class="n">dataflow</span><span class="p">.</span><span class="k">new</span><span class="p">.</span><span class="n">DataFlow</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">semmle</span><span class="p">.</span><span class="n">code</span><span class="p">.</span><span class="n">cpp</span><span class="p">.</span><span class="n">commons</span><span class="p">.</span><span class="n">Printf</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// // int x = (1 + c) + (a + b);
+</span></span></span><span class="line"><span class="cl"><span class="c1">// // DataFlow::Node
+</span></span></span><span class="line"><span class="cl"><span class="c1">// // asIndirectExpr(1)/asExpr()
+</span></span></span><span class="line"><span class="cl"><span class="c1">// // DataFlow::localFlow
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">// from FormattingFunction format, FunctionCall call, Expr formatString, DataFlow::Node sink
+</span></span></span><span class="line"><span class="cl"><span class="c1">// where
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   call.getTarget() = format and
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   call.getArgument(format.getFormatParameterIndex()) = formatString and
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   sink.asIndirectExpr(1) = formatString and
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   not exists(DataFlow::Node source |
+</span></span></span><span class="line"><span class="cl"><span class="c1">//     source.asIndirectExpr(1) instanceof StringLiteral and
+</span></span></span><span class="line"><span class="cl"><span class="c1">//     DataFlow::localFlow(source, sink)
+</span></span></span><span class="line"><span class="cl"><span class="c1">//   )
+</span></span></span><span class="line"><span class="cl"><span class="c1">// select call, &#34;Argument to &#34; + format.getQualifiedName() + &#34; isn&#39;t hard-coded.&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">from</span> <span class="n">StringLiteral</span> <span class="n">sl</span><span class="p">,</span> <span class="n">FunctionCall</span> <span class="n">fc</span><span class="p">,</span> <span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">source</span><span class="p">,</span> <span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">sink</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span>
+</span></span><span class="line"><span class="cl">  <span class="n">fc</span><span class="p">.</span><span class="n">getTarget</span><span class="p">().</span><span class="n">hasName</span><span class="p">(</span><span class="s">&#34;gethostbyname&#34;</span><span class="p">)</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">source</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">sl</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">sink</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">fc</span><span class="p">.</span><span class="n">getArgument</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">DataFlow</span><span class="o">::</span><span class="n">localFlow</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">sl</span><span class="p">,</span> <span class="n">fc</span>
+</span></span></code></pre></div><h3 id="全局数据流分析">全局数据流分析<a hidden class="anchor" aria-hidden="true" href="#全局数据流分析">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">import</span> <span class="n">cpp</span>
+</span></span><span class="line"><span class="cl"><span class="n">import</span> <span class="n">semmle</span><span class="p">.</span><span class="n">code</span><span class="p">.</span><span class="n">cpp</span><span class="p">.</span><span class="n">dataflow</span><span class="p">.</span><span class="k">new</span><span class="p">.</span><span class="n">DataFlow</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">EnvironmentToFileConfiguration</span> <span class="n">extends</span> <span class="n">DataFlow</span><span class="o">::</span><span class="n">Configuration</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="n">EnvironmentToFileConfiguration</span><span class="p">()</span> <span class="p">{</span> <span class="k">this</span> <span class="o">=</span> <span class="s">&#34;EnvironmentToFileConfiguration&#34;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">override</span> <span class="n">predicate</span> <span class="nf">isSource</span><span class="p">(</span><span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">source</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exists</span><span class="p">(</span><span class="n">Function</span> <span class="n">getenv</span> <span class="o">|</span>
+</span></span><span class="line"><span class="cl">      <span class="n">source</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">).(</span><span class="n">FunctionCall</span><span class="p">).</span><span class="n">getTarget</span><span class="p">()</span> <span class="o">=</span> <span class="n">getenv</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">      <span class="n">getenv</span><span class="p">.</span><span class="n">hasGlobalName</span><span class="p">(</span><span class="s">&#34;getenv&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">override</span> <span class="n">predicate</span> <span class="nf">isSink</span><span class="p">(</span><span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">sink</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">exists</span><span class="p">(</span><span class="n">FunctionCall</span> <span class="n">fc</span> <span class="o">|</span>
+</span></span><span class="line"><span class="cl">      <span class="n">sink</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">fc</span><span class="p">.</span><span class="n">getArgument</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">      <span class="n">fc</span><span class="p">.</span><span class="n">getTarget</span><span class="p">().</span><span class="n">hasGlobalName</span><span class="p">(</span><span class="s">&#34;fopen&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">from</span>
+</span></span><span class="line"><span class="cl">  <span class="n">Expr</span> <span class="n">getenv</span><span class="p">,</span> <span class="n">Expr</span> <span class="n">fopen</span><span class="p">,</span> <span class="n">EnvironmentToFileConfiguration</span> <span class="n">config</span><span class="p">,</span> <span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">source</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="n">DataFlow</span><span class="o">::</span><span class="n">Node</span> <span class="n">sink</span>
+</span></span><span class="line"><span class="cl"><span class="n">where</span>
+</span></span><span class="line"><span class="cl">  <span class="n">source</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">getenv</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">sink</span><span class="p">.</span><span class="n">asIndirectExpr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">fopen</span> <span class="n">and</span>
+</span></span><span class="line"><span class="cl">  <span class="n">config</span><span class="p">.</span><span class="n">hasFlow</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">sink</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">select</span> <span class="n">getenv</span><span class="p">,</span> <span class="n">fopen</span>
+</span></span></code></pre></div><h3 id="数据流查询">数据流查询<a hidden class="anchor" aria-hidden="true" href="#数据流查询">#</a></h3>
+<h2 id="codeql-常见查询类型">CodeQL 常见查询类型<a hidden class="anchor" aria-hidden="true" href="#codeql-常见查询类型">#</a></h2>
+<h3 id="控制流分析">控制流分析<a hidden class="anchor" aria-hidden="true" href="#控制流分析">#</a></h3>
+<p>控制流分析帮助检测程序中控制流的异常情况，例如逻辑漏洞、死代码、无法达到的代码等。</p>
+<h3 id="符号执行和路径分析">符号执行和路径分析<a hidden class="anchor" aria-hidden="true" href="#符号执行和路径分析">#</a></h3>
+<p>CodeQL 支持符号执行和路径分析，可以追踪变量的值在程序执行过程中的变化。</p>
+<h3 id="api-使用检查">API 使用检查<a hidden class="anchor" aria-hidden="true" href="#api-使用检查">#</a></h3>
+<p>通过查询 API 使用模式，检查潜在的不安全函数调用或不规范的 API 使用。</p>
+<h2 id="污点分析">污点分析<a hidden class="anchor" aria-hidden="true" href="#污点分析">#</a></h2>
+<p>找到数据的起点，然后找到数据的重点。</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">from 
+	Expr getenv,Expr fopen,EnvironmentToFileConfiguration config,DataFlow::Node source,
+	DataFlow::Node slink
+where
+	source.asIndirectExpr(1) = getenv and
+	slink.asIndirectExpr(1) = fopen and
+	config.hasFlow(source,slink)
+select getenv,fopen
+</code></pre><p>找到这个数据的起点在哪？找到数据的重点在哪？约束起点和重点，找到它的路径。</p>
+<p>并且将涉及到常见漏洞的函数定义为污点，寻找到污点汇聚的位置。</p>
+<p>构成这个漏洞的模型。</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+
+class NetworkByteSwap extends Expr {
+    NetworkByteSwap()
+    {
+        exists(MacroInvocation mi |
+            mi.getMacroName().regexpMatch(&#34;ntoh(s|l|ll)&#34;) and
+            this = mi.getExpr() //对类的集合做约束
+          )
+    }
+}
+from NetworkByteSwap n
+select n, &#34;Network byte swap&#34;
+</code></pre><p>路径分析</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+import semmle.code.cpp.dataflow.TaintTracking
+import DataFlow::PathGraph
+
+class NetworkByteSwap extends Expr{
+    NetworkByteSwap()    {
+        exists(MacroInvocation mi |
+            mi.getMacroName().regexpMatch(&#34;ntoh(s|l|ll)&#34;) and
+            this = mi.getExpr()
+          )
+    }
+}
+
+class Config extends TaintTracking::Configuration{
+    Config() { this = &#34;NetworkToMemFuncLength&#34;}
+
+    override predicate isSource(DataFlow::Node source){
+        source.asExpr() instanceof NetworkByteSwap
+    }
+
+    override predicate isSink(DataFlow::Node sink){
+        exists(FunctionCall c | c.getTarget().getName() = &#34;memcpy&#34; and sink.asExpr() = c.getArgument(2))
+    }
+}
+
+from Config cfg, DataFlow::PathNode source, DataFlow::PathNode sink
+where cfg.hasFlowPath(source, sink)
+select source, sink, &#34;Network byte swap flows to memcpy&#34;
+
+
+//新版库
+
+import cpp
+import semmle.code.cpp.dataflow.new.DataFlow
+
+class NetByteSwapToMemcpy extends DataFlow::Configuration {
+  NetByteSwapToMemcpy() { this = &#34;NetByteSwapToMemcpy&#34; }
+  
+  override predicate isSource(DataFlow::Node source) {
+    exists(MacroInvocation mi |
+        mi.getMacroName().regexpMatch(&#34;ntoh(s|l|ll)&#34;) and
+        source.asExpr() = mi.getExpr())
+  }
+
+  override predicate isSink(DataFlow::Node sink) {
+    exists(FunctionCall c | c.getTarget().getName() = &#34;memcpy&#34; and sink.asExpr() = c.getArgument(2))
+  }
+}
+
+from
+  NetByteSwapToMemcpy conf, DataFlow::Node source, DataFlow::Node sink
+where
+  conf.hasFlow(source, sink)
+select source, sink
+</code></pre><p>CodeQL 最大的作用是将审计的范围缩小。</p>
+<h2 id="数据流分析概述"><strong>数据流分析概述</strong><a hidden class="anchor" aria-hidden="true" href="#数据流分析概述">#</a></h2>
+<p><strong>数据流分析</strong> 通过追踪程序中数据的流动来帮助识别潜在的漏洞，尤其是涉及不可信输入的漏洞，如 <strong>污染分析</strong>。在 <strong>CodeQL</strong> 中，数据流分析可以应用于局部数据流和全局数据流。</p>
+<h3 id="局部数据流"><strong>局部数据流</strong><a hidden class="anchor" aria-hidden="true" href="#局部数据流">#</a></h3>
+<p>局部数据流分析集中在单个函数内的数据流，它比全局数据流更快速、更精确。主要的组件有：</p>
+<ul>
+<li>
+<p><strong>DataFlow::Node</strong>：表示数据流经的单元。节点可以是表达式节点或参数节点。</p>
+</li>
+<li>
+<p><strong>DataFlow::localFlow</strong>：跟踪节点间数据流的谓词，用于函数内部的局部数据流。</p>
+</li>
+</ul>
+<p>例如，以下 CodeQL 查询追踪从函数参数到 <code>fopen</code> 调用参数的数据流：</p>
+<pre tabindex="0"><code class="language-ql" data-lang="ql">import cpp
+import semmle.code.cpp.dataflow.new.DataFlow
+
+from Function fopen, FunctionCall fc, Parameter p, DataFlow::Node source, DataFlow::Node sink
+where
+  fopen.hasGlobalName(&#34;fopen&#34;) and
+  fc.getTarget() = fopen and
+  source.asParameter(1) = p and
+  sink.asIndirectExpr(1) = fc.getArgument(0) and
+  DataFlow::localFlow(source, sink)
+select p
+</code></pre><p>该查询找到作为参数传递给 <code>fopen</code> 的 <strong>参数</strong>。</p>
+<h3 id="局部污染追踪"><strong>局部污染追踪</strong><a hidden class="anchor" aria-hidden="true" href="#局部污染追踪">#</a></h3>
+<p><strong>污染追踪</strong> 扩展了局部数据流分析，通过追踪数据流经的不保值的操作（例如 <strong>用户输入</strong>）。例如，用户输入被污染，然后传递给 <code>malloc</code>。</p>
+<p>使用 <strong>TaintTracking::localTaint</strong> 谓词来追踪污染传播，它与 <code>localFlow</code> 类似，但还包括不保值的步骤。</p>
+<h3 id="全局数据流"><strong>全局数据流</strong><a hidden class="anchor" aria-hidden="true" href="#全局数据流">#</a></h3>
+<p>全局数据流分析跟踪整个程序中的数据流，尽管它比局部数据流更强大，但精度较低，分析通常需要更多的时间和内存。</p>
+<p>全局数据流通过实现 <strong>DataFlow::ConfigSig</strong> 配置来完成，配置中包括：</p>
+<ul>
+<li>
+<p><strong>isSource</strong>：定义数据的来源。</p>
+</li>
+<li>
+<p><strong>isSink</strong>：定义数据的去向。</p>
+</li>
+<li>
+<p><strong>isBarrier</strong>：可选地限制数据流。</p>
+</li>
+</ul>
+<p>使用 <code>DataFlow::Global</code> 模块进行全局分析。例如：</p>
+<pre tabindex="0"><code class="language-ql" data-lang="ql">module MyFlowConfiguration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node source) { ... }
+  predicate isSink(DataFlow::Node sink) { ... }
+}
+module MyFlow = DataFlow::Global&lt;MyFlowConfiguration&gt;;
+</code></pre><p>该配置允许你分析从源到汇的全局数据流。</p>
+<h3 id="全局污染追踪"><strong>全局污染追踪</strong><a hidden class="anchor" aria-hidden="true" href="#全局污染追踪">#</a></h3>
+<p>全局污染追踪是全局数据流的扩展，跟踪污染数据如何传播到程序中的关键点，如文件打开函数。类似于局部污染追踪，全局污染追踪有助于识别数据（例如来自不可信来源的数据）如何传播到文件操作等关键点。</p>
+<p>例如，以下配置可以跟踪从环境变量到 <code>fopen</code> 的数据流：</p>
+<pre tabindex="0"><code class="language-ql" data-lang="ql">module EnvironmentToFileConfiguration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node source) {
+    exists(Function getenv | source.asIndirectExpr(1).(FunctionCall).getTarget() = getenv)
+  }
+  predicate isSink(DataFlow::Node sink) {
+    exists(FunctionCall fc | sink.asIndirectExpr(1) = fc.getArgument(0) and fc.getTarget().hasGlobalName(&#34;fopen&#34;))
+  }
+}
+module EnvironmentToFileFlow = DataFlow::Global&lt;EnvironmentToFileConfiguration&gt;;
+</code></pre><h2 id="漏洞模型">漏洞模型<a hidden class="anchor" aria-hidden="true" href="#漏洞模型">#</a></h2>
+<h3 id="cwe-022">CWE-022<a hidden class="anchor" aria-hidden="true" href="#cwe-022">#</a></h3>
+<p>此漏洞模型涉及路径遍历，攻击者可以通过特制路径，访问原本不允许访问的目录或文件，可能导致敏感信息泄漏或其他恶意行为。</p>
+<ul>
+<li>demo</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">read_file</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 直接打开文件，未检查文件路径是否合规
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">file</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">file</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;File not found</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;File content: %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fclose</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">input</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Enter the file path: &#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fgets</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">stdin</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 去掉换行符
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">input</span><span class="p">[</span><span class="nf">strcspn</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 用户输入路径，这里没有检查路径是否合法，可能会导致路径遍历
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">read_file</span><span class="p">(</span><span class="n">input</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>查询代码</li>
+</ul>
+<h3 id="cwe-078">CWE-078<a hidden class="anchor" aria-hidden="true" href="#cwe-078">#</a></h3>
+<p>通过不安全的函数导致的命令注入。</p>
+<h3 id="cwe-119">CWE-119<a hidden class="anchor" aria-hidden="true" href="#cwe-119">#</a></h3>
+<ul>
+<li>经典的栈或堆缓冲区溢出，导致覆盖控制数据，进而造成代码执行或崩溃。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">sayHello</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">userId</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">18</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">sprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="s">&#34;Hello,user %d&#34;</span><span class="p">,</span><span class="n">userId</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">MessageBox</span><span class="p">(</span><span class="n">hWnd</span><span class="p">,</span><span class="n">buffer</span><span class="p">,</span><span class="s">&#34;New Message&#34;</span><span class="p">,</span><span class="n">MB_OK</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>查询语句</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">from BufferWrite bw,Expr dest,int destSize,int estimated,BufferWriteEstimationReason reason
+//BufferWrite，写缓冲区
+where
+	not bw.hasExplicitLimit() and //写入上限
+	dest=bw.getDest() and
+	destSize=getBufferSize(dest,_) and
+	estimated=bw.getMaxDataLimited(reason) and
+	not reason instanceof ValueFlowAnalysis and
+	estimated &gt; destSize
+select bw,
+	&#34;This &#39;&#34;+bw.getBWDesc()+&#34;&#39; operation requires&#34;+estimated+&#34; bytes but the destination is only&#34;+destSize+&#34; bytes.&#34;
+</code></pre><p>污点分析与不断约束，根据回溯限制变量值。</p>
+<h3 id="cwe-120">CWE-120<a hidden class="anchor" aria-hidden="true" href="#cwe-120">#</a></h3>
+<p>没有检查大小的缓冲区复制</p>
+<p>包含字符串和内存拷贝函数使用不当，越界访问。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">displayValue</span><span class="p">(</span><span class="kt">double</span> <span class="n">value</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">sprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="s">&#34;%f&#34;</span><span class="p">,</span><span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">MessageBox</span><span class="p">(</span><span class="n">hWnd</span><span class="p">,</span><span class="n">buffer</span><span class="p">,</span><span class="s">&#34;A Number&#34;</span><span class="p">,</span><span class="n">MB_OK</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><pre tabindex="0"><code class="language-q" data-lang="q">from BufferWrite bw,Expr dest,int destSize,int estimated,BufferWriteEstimationReason reason
+//BufferWrite，写缓冲区
+where
+	not bw.hasExplicitLimit() and //写入上限
+	destSize=getBufferSize(bw.getDest(),_) and
+	estimated=bw.getMaxData(reason) and
+	estimated &gt; destSize and
+	bw.getMaxDataLimited(reason) &lt;= destSize
+select destSize,bw.getMaxData(reason),bw.getMaxDataLimited(reason)
+</code></pre><h3 id="cwe-121">CWE-121<a hidden class="anchor" aria-hidden="true" href="#cwe-121">#</a></h3>
+<p>基于栈的缓冲区溢出</p>
+<p>基于栈的缓冲区溢出</p>
+<p>特指栈上的缓冲区溢出。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">congrtulateUser</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">userName</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">80</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="s">&#34;Congratulations,%s!&#34;</span><span class="p">,</span><span class="n">userName</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">MessgaeBox</span><span class="p">(</span><span class="n">hWnd</span><span class="p">,</span><span class="n">buffer</span><span class="p">,</span><span class="s">&#34;New Message&#34;</span><span class="p">,</span><span class="n">MB_OK</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>相关查询</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">from BufferWrite bw,int destSize
+//BufferWrite，写缓冲区
+where
+	bw.hasExplicitLimit() and //写入上限
+	destSize=getBufferSize(bw.getDest(),_) and //获得目标缓冲区大小
+select bw,
+	&#34;This &#39;&#34;+bw.getBWDesc()+&#34;&#39; operation is limited to &#34;+bw.getExplicitLimit()+&#34; bytes buf the destination is only&#34;+destSize+&#34; bytes.&#34;
+</code></pre><h3 id="cwe-787">CWE-787<a hidden class="anchor" aria-hidden="true" href="#cwe-787">#</a></h3>
+<p>对数组或缓冲区写操作越界。</p>
+<ul>
+<li>查找<code>memcpy</code>定义</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+
+from Function f
+where f.getName() = &#34;memcpy&#34; //匹配函数名为memcpy
+select f, &#34;a function named memcpy&#34;
+</code></pre><ul>
+<li>函数或宏</li>
+</ul>
+<p>将 2 字节大端的数据转换为小端</p>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp 
+
+//long len = ntohl(xxx)
+from Macro macro
+where macro.getName().regexpMatch(&#34;ntoh(s|l|ll)&#34;)
+select macro
+</code></pre><ul>
+<li><code>memcpy</code>调用</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+
+from FunctionCall fc, Function f
+where fc.getTarget() = f and 
+    f.getName() = &#34;memcpy&#34;
+select fc  
+</code></pre><ul>
+<li>宏调用处</li>
+</ul>
+<pre tabindex="0"><code class="language-q" data-lang="q">import cpp
+
+from MacroInvocation invoc
+//宏调用
+where invoc.getMacroName().regexpMatch(&#34;ntoh(s|l|ll)&#34;)
+elect invoc
+</code></pre><h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>CodeQL 是一个非常强大的白盒审计工具，它可以与什么什么集成。</p>
+<h2 id="reference">Reference<a hidden class="anchor" aria-hidden="true" href="#reference">#</a></h2>
+<blockquote>
+<p><a href="https://paper.seebug.org/3233/">CodeQL 入门和基本使用</a>
+<a href="https://codeql.github.com/docs/codeql-language-guides/codeql-library-for-cpp/">适用于 C 和 C++ 的 CodeQL 库 — CodeQL</a>
+<a href="https://securitylab.github.com/ctf/uboot/">U-Boot 挑战赛 |GitHub 安全实验室</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+</body>
+
+</html>

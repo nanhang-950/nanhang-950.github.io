@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Rust on 南行&#39;s Blog</title>
+    <link>https://nanhang.top/tags/rust/</link>
+    <description>Recent content in Rust on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
+    <atom:link href="https://nanhang.top/tags/rust/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Rust Fuzz</title>
+      <link>https://nanhang.top/posts/fuzz/rust/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/fuzz/rust/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

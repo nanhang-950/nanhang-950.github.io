@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>安全研究者的自我修养 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="前言
+在阅读了泉哥关于一次安全分享的总结之后感触良多，所以打算根据分享人的挖洞学习思路给自己制定一个学习训练计划。
+
+原文链接：安全研究者的自我修养
+
+根据研究方向选择了 Linux Kernel 为目标，按照分享人的思路以代码审计和 Fuzzing 复现历史的漏洞，在对 Linux Kernel 的历史漏洞进行了一些了解之后发现近来所有漏洞大都在网络子系统和驱动中产生，所以选择了几个相关漏洞进行复现复现分析：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/research/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/research/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      安全研究者的自我修养
+    </h1>
+    <div class="post-meta"><span title='2025-08-31 23:16:38 +0000 UTC'>2025年8月31日</span>
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<p>在阅读了泉哥关于一次安全分享的总结之后感触良多，所以打算根据分享人的挖洞学习思路给自己制定一个学习训练计划。</p>
+<blockquote>
+<p>原文链接：<a href="https://zhuanlan.zhihu.com/p/54205450">安全研究者的自我修养</a></p>
+</blockquote>
+<p>根据研究方向选择了 Linux Kernel 为目标，按照分享人的思路以代码审计和 Fuzzing 复现历史的漏洞，在对 Linux Kernel 的历史漏洞进行了一些了解之后发现近来所有漏洞大都在网络子系统和驱动中产生，所以选择了几个相关漏洞进行复现复现分析：</p>
+<p>读代码要带有目的去读,是要挖漏洞还是想要了解这个程序到在底干了些什么要理解整体的时候,千万不要在某个细节里钻牛角尖要一边理解细节一边挖洞的时候，记得要联想到所有可能的情况。</p>
+<p>训练挖洞的双技能：</p>
+<ol>
+<li>看洞：哪里看？历史漏洞的 git log、bug 报告、代码质量报告等等。</li>
+<li>识洞：就是肉眼看代码找漏洞，即代码审计，难点也就是在这上面，训练方法继续往下看。</li>
+</ol>
+<p>代码审计训练：</p>
+<ol>
+<li>根据自己目标定位，寻找相应的历史漏洞案例进行学习，比如要搞 chrome 就找 chrome 的历史漏洞；</li>
+<li>掌握漏洞所在的模块或子系统，但不看完整的漏洞细节描述，尝试在漏洞版本中找出对应的漏洞；</li>
+<li>如果 2 中未能找出漏洞，就去看漏洞细节描述，对比自己的审计过程，看遗漏了哪一步骤；</li>
+<li>不断重复上述训练，直至相信：挖洞只是体力消耗，而非能力问题。</li>
+</ol>
+<p>Fuzzing 训练：</p>
+<ol>
+<li>拿已公开的历史漏洞问自己：如何写 fuzzer 挖掘到此漏洞？</li>
+<li>如果自己不知道此漏洞，那又能够挖掘到呢？</li>
+<li>不断重复训练并改进 fuzzer，相信会有更多漏洞被意外发现。</li>
+</ol>
+<h2 id="看洞">看洞<a hidden class="anchor" aria-hidden="true" href="#看洞">#</a></h2>
+<p>看洞：哪里看？历史漏洞的 git log、bug 报告、代码质量报告等等。</p>
+<p><img loading="lazy" src="../Linux/assets/Pasted%20image%2020250713105603.png"></p>
+<p>Github commits 的功能是用来记录每一次 Git 提交代码的信息，里面包含了修改代码的原因，还有修改了哪些代码。Github commits 的功能在这里。</p>
+<p>可以看到参考链接中的<code>git.kernel.org...</code>链接，这些都是 Linux 内核官方 Git 仓库中具体的修复/引入漏洞的 commit 页面。参考链接中一共有两个<code>git.kernel.org...</code>链接，一个是引入漏洞的链接、一个是修复的链接。</p>
+<img src="assets/Pasted%20image%2020250713105638.png" width="80%">
+<ul>
+<li>引入漏洞的 commit：</li>
+</ul>
+<img src="assets/Pasted image 20250713110420.png" width="80%">
+<ul>
+<li>修复漏洞的 commit：</li>
+</ul>
+<img src="assets/Pasted%20image%2020250713110509.png" width="80%">
+<p>通过 Commit 提交记录，我们可以跟踪关于漏洞的详细信息。洞海无涯苦作舟，用这种方法可以从issus 和Commit 里面学到很多,但是要看懂整个Commit 不只是要看 Diff ,还要下载代码到本地一步一步分析漏洞成因。</p>
+<h2 id="漏洞信息">漏洞信息<a hidden class="anchor" aria-hidden="true" href="#漏洞信息">#</a></h2>
+<p>CVE ID：CVE-2021-22555</p>
+<p>由于 Linux Netfilter 模块在实现<code>IPT_SO_SET_REPLACE</code>（或<code>IP6T_SO_SET_REPLACE</code>）<code>setsockopt</code>时存在堆越界写入漏洞，导致攻击者可以利用漏洞实现权限提升。</p>
+<p>在<code>net/netfilter/x_tables.c</code>中发现自 v2.6.19-rc1 以来影响 Linux 的堆越界写入。这允许攻击者通过用户名空间获得权限或导致 DoS（通过堆内存损坏）。</p>
+<p>Linux 内核系统调用兼容性。Syzkaller 挖掘这个漏洞为什么不会那么明显？这个漏洞只涉及到创建<code>socket</code>和设置<code>socket</code>系统调用。</p>
+<p>当以兼容模式调用 <code>IPT_SO_SET_REPLACE</code> 或 <code>IP6T_SO_SET_REPLACE</code> 时（该操作需要 <code>CAP_NET_ADMIN</code> 权限，但在用户+网络命名空间中可以获取），系统需要将结构体从用户态转换为内核态，同时也要从 32 位转换为 64 位，以便被本地函数处理。显然，这一过程容易出错。</p>
+<p>我们的漏洞存在于<code>xt_compat_target_from_user()</code>函数中，其中<code>memset()</code>调用时使用了一个偏移量 <code>target-&gt;targetsize</code>，但该偏移量在内存分配时并未考虑进去 —— 导致有几个字节被写入到了分配范围之外，即发生了越界写。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/net/netfilter/x_tables.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">xt_compat_target_from_user</span><span class="p">(</span><span class="k">struct</span> <span class="n">xt_entry_target</span> <span class="o">*</span><span class="n">t</span><span class="p">,</span> <span class="kt">void</span> <span class="o">**</span><span class="n">dstptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="k">struct</span> <span class="n">xt_target</span> <span class="o">*</span><span class="n">target</span> <span class="o">=</span> <span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">kernel</span><span class="p">.</span><span class="n">target</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">compat_xt_entry_target</span> <span class="o">*</span><span class="n">ct</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">compat_xt_entry_target</span> <span class="o">*</span><span class="p">)</span><span class="n">t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">pad</span><span class="p">,</span> <span class="n">off</span> <span class="o">=</span> <span class="nf">xt_compat_target_offset</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">u_int16_t</span> <span class="n">tsize</span> <span class="o">=</span> <span class="n">ct</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">target_size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">)];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">t</span> <span class="o">=</span> <span class="o">*</span><span class="n">dstptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">memcpy</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">ct</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">compat_from_user</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">target</span><span class="o">-&gt;</span><span class="nf">compat_from_user</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">ct</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">else</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memcpy</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">ct</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">,</span> <span class="n">tsize</span> <span class="o">-</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">ct</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="n">pad</span> <span class="o">=</span> <span class="nf">XT_ALIGN</span><span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">)</span> <span class="o">-</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pad</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memset</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">+</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pad</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">tsize</span> <span class="o">+=</span> <span class="n">off</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">target_size</span> <span class="o">=</span> <span class="n">tsize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">strlcpy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">module_put</span><span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">me</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">strncpy</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="o">*</span><span class="n">size</span> <span class="o">+=</span> <span class="n">off</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="o">*</span><span class="n">dstptr</span> <span class="o">+=</span> <span class="n">tsize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>targetsize</code> 本身并不受用户控制，但用户可以通过指定不同名称的 target（如 <code>TCPMSS</code>、<code>TTL</code> 或 <code>NFQUEUE</code>）来选择结构体大小不同的目标。<code>targetsize</code> 越大，我们能够控制的偏移范围也就越大。</p>
+<p>不过，target 的大小<strong>不能</strong>是 8 字节对齐的，只有当 <code>pad &gt; 0</code> 时漏洞才能触发。</p>
+<p>我找到的最大可用 target 是 <code>NFLOG</code>，它允许我们实现最多 <strong>0x4C 字节</strong> 的越界写。用户可以通过在 <code>struct xt_entry_match</code> 和 <code>struct xt_entry_target</code> 之间添加填充（padding）来进一步影响这个偏移。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">xt_nflog_info</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* &#39;len&#39; will be used iff you set XT_NFLOG_F_COPY_LEN in flags */</span>
+</span></span><span class="line"><span class="cl">	<span class="n">__u32</span>	<span class="n">len</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">__u16</span>	<span class="n">group</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">__u16</span>	<span class="n">threshold</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">__u16</span>	<span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">__u16</span>	<span class="n">pad</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span>		<span class="n">prefix</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>请注意，缓冲区的目的地分配了<code>gfp_kernel_account</code>，也可以在大小上有所不同：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/net/netfilter/x_tables.c
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">xt_table_info</span> <span class="o">*</span><span class="nf">xt_alloc_table_info</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">xt_table_info</span> <span class="o">*</span><span class="n">info</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">size_t</span> <span class="n">sz</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">info</span><span class="p">)</span> <span class="o">+</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">sz</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">info</span><span class="p">)</span> <span class="o">||</span> <span class="n">sz</span> <span class="o">&gt;=</span> <span class="n">XT_MAX_TABLE_SIZE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">info</span> <span class="o">=</span> <span class="nf">kvmalloc</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span> <span class="n">GFP_KERNEL_ACCOUNT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">info</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">memset</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">info</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="n">info</span><span class="o">-&gt;</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">info</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>不过，该对象的<strong>最小大小大于 0x100（即 256 字节）</strong>，这意味着它<strong>只能被分配到 kmalloc-512 或更大的 slab 中</strong>。换句话说，想要利用这个漏洞，我们必须寻找<strong>分配在 kmalloc-512 到 kmalloc-8192 之间的受害对象</strong>，以便让越界写覆盖这些对象的数据。</p>
+<h2 id="漏洞分析">漏洞分析<a hidden class="anchor" aria-hidden="true" href="#漏洞分析">#</a></h2>
+<h3 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h3>
+<p>下载存在漏洞的内核版本。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">wget https://mirrors.aliyun.com/linux-kernel/v5.x/linux-5.8.1.tar.gz
+</span></span><span class="line"><span class="cl">tar -xzf linux-5.8.1.tar.gz
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> linux-5.8.1
+</span></span></code></pre></div><ul>
+<li>借用官方内核配置编译新内核</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make defconfig         <span class="c1"># 生成默认配置（根据架构）</span>
+</span></span><span class="line"><span class="cl">make kvm_guest.config  <span class="c1">#开启适合 KVM 来宾系统的选项</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">scripts/config --disable SYSTEM_TRUSTED_KEYS
+</span></span><span class="line"><span class="cl">scripts/config --disable SYSTEM_REVOCATION_KEYS
+</span></span><span class="line"><span class="cl">make olddefconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 修改.config字段</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># CONFIG_FRAME_WARN=4096</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># CONFIG_KASAN=y</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># CONFIG_KASAN_INLINE=y</span>
+</span></span><span class="line"><span class="cl">make olddefconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>
+</span></span><span class="line"><span class="cl">make modules
+</span></span><span class="line"><span class="cl">make modules_install
+</span></span></code></pre></div><ul>
+<li>关闭KASLR</li>
+</ul>
+<p>编译<code>/etc/default/grub</code>，找到<code>GRUB_CMDLINE_LINUX_DEFAULT</code>，末尾添加<code>nokaslr</code></p>
+<pre tabindex="0"><code>GRUB_CMDLINE_LINUX_DEFAULT=&#34;debian-installer/custom-installation=/custom find_preseed=/preseed.cfg auto preseed/file=/floppy/preseed.cfg automatic-ubiquity noprompt priority=critical locale=en_US console-setup/modelcode=evdev nokaslr&#34;
+</code></pre><p>安装 gdb 的 GEF 调试插件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># github</span>
+</span></span><span class="line"><span class="cl">git clone https://github.com/hugsy/gef.git
+</span></span><span class="line"><span class="cl"><span class="c1"># gitee</span>
+</span></span><span class="line"><span class="cl">git clone https://gitee.com/mirrors/gef.git
+</span></span></code></pre></div><p>修改用户目录下的<code>.gdbinit</code>文件，添加以下内容启用插件：</p>
+<pre tabindex="0"><code>set auto-load safe-path /
+source /tools/gef/gef.py
+</code></pre><h3 id="gef调试命令">GEF调试命令<a hidden class="anchor" aria-hidden="true" href="#gef调试命令">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>命令</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>context</code></td>
+          <td>显示寄存器、栈、反汇编、源代码、内存等调试上下文（自动刷新）</td>
+      </tr>
+      <tr>
+          <td><code>hexdump</code></td>
+          <td>内存十六进制查看</td>
+      </tr>
+      <tr>
+          <td><code>telescope</code></td>
+          <td>类似 hexdump，更适合分析栈或指针链（自动解引用）</td>
+      </tr>
+      <tr>
+          <td><code>dereference</code></td>
+          <td>解引用指针直到无法继续为止</td>
+      </tr>
+      <tr>
+          <td><code>pattern create &lt;size&gt;</code></td>
+          <td>创建指定大小的 cyclic pattern，用于溢出偏移计算</td>
+      </tr>
+      <tr>
+          <td><code>pattern search</code></td>
+          <td>在内存中搜索 cyclic pattern，用于查找崩溃点偏移</td>
+      </tr>
+      <tr>
+          <td><code>pattern offset &lt;value&gt;</code></td>
+          <td>给定值（如寄存器值），查找其对应的 pattern 偏移</td>
+      </tr>
+      <tr>
+          <td><code>aslr</code></td>
+          <td>开关 ASLR（在本地调试时常用）</td>
+      </tr>
+      <tr>
+          <td><code>vmmap</code></td>
+          <td>显示进程内存映射（类似于 <code>proc/pid/maps</code>）</td>
+      </tr>
+      <tr>
+          <td><code>canary</code></td>
+          <td>显示栈保护的 canary 值</td>
+      </tr>
+      <tr>
+          <td><code>pie</code></td>
+          <td>显示/分析当前是否启用 PIE</td>
+      </tr>
+      <tr>
+          <td><code>rop</code></td>
+          <td>ROP gadget 查找工具</td>
+      </tr>
+      <tr>
+          <td><code>gef config</code></td>
+          <td>查看和设置 GEF 的配置项</td>
+      </tr>
+      <tr>
+          <td><code>gef restore / gef save</code></td>
+          <td>保存或恢复 GEF 配置</td>
+      </tr>
+      <tr>
+          <td><code>solve</code></td>
+          <td>调用 angr、manticore、z3 解题（需要配置）</td>
+      </tr>
+      <tr>
+          <td><code>heap</code></td>
+          <td>触发 heap 命令子系统，分析 libc 分配器</td>
+      </tr>
+      <tr>
+          <td><code>heap chunks</code></td>
+          <td>显示堆块信息</td>
+      </tr>
+      <tr>
+          <td><code>heap bins</code></td>
+          <td>显示 fastbins、unsorted bins 等信息</td>
+      </tr>
+      <tr>
+          <td><code>heap arenas</code></td>
+          <td>显示多线程分配的 heap arena</td>
+      </tr>
+      <tr>
+          <td><code>ida-interact</code></td>
+          <td>连接 IDA Pro（需要配置）</td>
+      </tr>
+      <tr>
+          <td><code>trace-run</code></td>
+          <td>自动化执行多次记录上下文（类似动态 trace）</td>
+      </tr>
+      <tr>
+          <td><code>scan &lt;value&gt;</code></td>
+          <td>搜索 memory 中某些类型的数据（比如指向 libc 的指针）</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>调试</li>
+</ul>
+<p>启动 qemu，等待调试。然后我们通过 gdb 进行调试连接。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gdb vmlinux
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 连接</span>
+</span></span><span class="line"><span class="cl">target remote :8864
+</span></span></code></pre></div><ul>
+<li>
+<p>程序漏洞存在与内核源码<code>/kernel/net/netfilter/x_tables</code>中的<code>xt_compat_target_from_user</code>函数中</p>
+</li>
+<li>
+<p>程序逻辑为构造8字节对齐缓冲区，此处 target-&gt;targetsize 用来指定t-&gt;data实际使用长度(有可能非8字节对齐)，并将不足8字节的剩余空间清空</p>
+</li>
+<li>
+<p>在实际实现过程中，分配t-&gt;data缓冲区阶段，并没有考虑8字节对齐问题(直接分配实际使用大小)</p>
+</li>
+<li>
+<p>如果target-&gt;targetsize并非8字节对齐，此处将溢出覆盖pad字节0</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">xt_compat_target_from_user</span><span class="p">(</span><span class="k">struct</span> <span class="n">xt_entry_target</span> <span class="o">*</span><span class="n">t</span><span class="p">,</span> <span class="kt">void</span> <span class="o">**</span><span class="n">dstptr</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="k">struct</span> <span class="n">xt_target</span> <span class="o">*</span><span class="n">target</span> <span class="o">=</span> <span class="n">t</span><span class="o">-&gt;</span><span class="n">u</span><span class="p">.</span><span class="n">kernel</span><span class="p">.</span><span class="n">target</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">compat_xt_entry_target</span> <span class="o">*</span><span class="n">ct</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">compat_xt_entry_target</span> <span class="o">*</span><span class="p">)</span><span class="n">t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">pad</span><span class="p">,</span> <span class="n">off</span> <span class="o">=</span> <span class="nf">xt_compat_target_offset</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">pad</span> <span class="o">=</span> <span class="nf">XT_ALIGN</span><span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">)</span> <span class="o">-</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pad</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memset</span><span class="p">(</span><span class="n">t</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">+</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">targetsize</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pad</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 配置依赖</span>
+</span></span><span class="line"><span class="cl">sudo apt install gcc-multilib libc6-dev-i386 linux-libc-dev:i386   
+</span></span><span class="line"><span class="cl"><span class="c1"># 编译</span>
+</span></span><span class="line"><span class="cl">gcc -m32 --static -o exp exp.c
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载模块</span>
+</span></span><span class="line"><span class="cl">modprobe ip6_tables
+</span></span></code></pre></div><h3 id="设置断点观察crash">设置断点观察crash<a hidden class="anchor" aria-hidden="true" href="#设置断点观察crash">#</a></h3>
+<blockquote>
+<p>server: 为xt_compat_target_from_user设置断点，但xt_compat_target_from_user是驱动函数非内核函数，以下为gdb添加符号</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 定位函数位置</span>
+</span></span><span class="line"><span class="cl">root@ub20-test:~# cat /proc/kallsyms <span class="p">|</span>grep xt_compat_target_from_user
+</span></span><span class="line"><span class="cl">ffffffffc0ac3638 r __kstrtab_xt_compat_target_from_user <span class="o">[</span>x_tables<span class="o">]</span>
+</span></span><span class="line"><span class="cl">ffffffffc0ac3653 r __kstrtabns_xt_compat_target_from_user       <span class="o">[</span>x_tables<span class="o">]</span>
+</span></span><span class="line"><span class="cl">ffffffffc0ac318c r __ksymtab_xt_compat_target_from_user <span class="o">[</span>x_tables<span class="o">]</span>
+</span></span><span class="line"><span class="cl">ffffffffc0abc280 t xt_compat_target_from_user   <span class="o">[</span>x_tables<span class="o">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 定位驱动加载位置</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># cat /sys/module/x_tables/sections/.text</span>
+</span></span><span class="line"><span class="cl">root@ub20-test:~# cat /sys/module/ip6_tables/sections/.text
+</span></span><span class="line"><span class="cl">0xffffffffc0ac9000
+</span></span></code></pre></div><p>添加符号：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gdb vmlinux
+</span></span><span class="line"><span class="cl">add-symbol-file net/netfilter/x_tables.ko 0xffffffffc0ac9000
+</span></span><span class="line"><span class="cl"><span class="c1"># 成功下断</span>
+</span></span><span class="line"><span class="cl">b xt_compat_target_from_user
+</span></span></code></pre></div><h3 id="源码解析">源码解析<a hidden class="anchor" aria-hidden="true" href="#源码解析">#</a></h3>
+<p>继 <a href="https://google.github.io/security-research/pocs/linux/bleedingtooth/writeup.html">BleedingTooth</a>（我第一次研究 Linux 的契机）之后，我也想找到一个提权漏洞。我从一些旧漏洞入手，比如 CVE-2016-3134 和 CVE-2016-4997，它们启发我在 Netfilter 代码中使用 <code>grep</code> 搜索 <code>memcpy()</code> 和 <code>memset()</code>，最终让我发现了一些有问题的代码。</p>
+<ul>
+<li>translate_compat_table-&gt;xt_alloc_table_info，为新规则创建存储空间，用于将32位规则存储为64位规则</li>
+<li>xt_compat_target_from_user存储完旧规则后，为target-&gt;targetsize对应的xt_target添加字节对齐pad，但该内容在创建存储空间阶段未考虑(用户定义xt_entry_target.u.user部分，后续会关联填充xt_entry_target.u.kernel，target-&gt;targetsize对应kernel)</li>
+</ul>
+<h3 id="跟踪调试查看空间填充过程">跟踪调试，查看空间填充过程<a hidden class="anchor" aria-hidden="true" href="#跟踪调试查看空间填充过程">#</a></h3>
+<ul>
+<li><code>translate_compat_table-&gt;xt_alloc_table_info</code>创建空间，查看<code>&amp;newinfo-&gt;entries</code>偏移</li>
+<li>compat_copy_entry_from_user-&gt;memcpy: *dstptr 偏移</li>
+<li>compat_copy_entry_from_user-&gt;xt_compat_match_from_user: *dstptr 偏移</li>
+<li><code>xt_compat_target_from_user</code>: 查看<code>xt_target *target</code>，发现target-&gt;targetsize非0</li>
+<li>xt_compat_target_from_user-&gt;memset: 查看pad</li>
+</ul>
+<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>挖掘一个目标的漏洞，首先我们要了解目标的架构、功能、可能的漏洞点，针对于几万行代码的小项目可以短时间分析尝试挖掘。</p>
+<p>但是针对于操作系统、浏览器等这些比较大的项目我们就必须选择一个方向进行专向研究。</p>
+<p>Fuzzing 和源码挖洞是相辅相成的，不要把能不能挖到漏洞的锅都丢给Fuzzing，Fuzzing 不出来就是没有漏洞；也不要把全部的精力都花在阅读源码上，有很多时候会迷失在代码里，忘记上下文到底在做些什么，越看越迷茫。这是成本与收益的博弈，对于代码量较大的程序来说，偏向 Fuzzing 的投入产出比较高；对于代码量较小的程序来说，偏向阅读源码的投入产出比较高。</p>
+<h2 id="漏洞信息-1">漏洞信息<a hidden class="anchor" aria-hidden="true" href="#漏洞信息-1">#</a></h2>
+<p>漏洞描述：CVE-2024-1086 是一个影响 Linux 内核的高风险权限提升漏洞。由于 Netfilter 模块的 nf_tables 子系统中存在释放后重用（Use-After-Free）问题，这个漏洞允许本地经过身份验证的攻击者（包括具有低权限的用户）利用该缺陷提升至root权限。该漏洞的CVSS评分为7.8，并于2024年3月28日被发现。目前，漏洞的概念验证（PoC）和利用代码（EXP）已在互联网上公开。</p>
+<h3 id="漏洞概述">漏洞概述<a hidden class="anchor" aria-hidden="true" href="#漏洞概述">#</a></h3>
+<p><strong>根本原因：</strong> 在 <code>nft_verdict_init()</code> 函数 (位于 <code>net/netfilter/nf_tables_api.c:9814</code>) 中存在一个<strong>输入净化（input sanitization）错误</strong>，该错误允许规则判断（rule verdict）返回正的丢弃错误（positive drop errors）。此问题被分类为 <strong>CVE-2024-1086</strong>。</p>
+<p>此漏洞导致了 struct sk_buff 对象以及 sk_buff-&gt;head 对象（kmalloc 对象，大小范围从 256 到 65536 字节，假设 IPv4，即 order 4 的 buddy pages）的稳定双重释放（double-free）原语。</p>
+<h3 id="版本信息">版本信息<a hidden class="anchor" aria-hidden="true" href="#版本信息">#</a></h3>
+<ul>
+<li>
+<p><strong>引入漏洞的提交：</strong></p>
+<ul>
+<li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e0abdadcc6e113ed2e22c85b35007">https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e0abdadcc6e113ed2e22c85b35007</a></li>
+</ul>
+</li>
+<li>
+<p><strong>修复漏洞的提交（回滚了之前的提交）：</strong></p>
+<ul>
+<li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f342de4e2f33e0e39165d8639387aa6c19dff660">https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f342de4e2f33e0e39165d8639387aa6c19dff660</a></li>
+</ul>
+</li>
+<li>
+<p><strong>受影响的内核版本：</strong></p>
+<ul>
+<li><code>v3.5</code> 到 <code>v6.8-rc1</code> 之间的所有版本</li>
+<li>不包括 <code>v6.1.76</code> 及更高版本的 <code>v6.1.x</code> 系列</li>
+<li>不包括 <code>v6.6.15</code> 及更高版本的 <code>v6.6.x</code> 系列</li>
+<li>不包括 <code>v6.7.3</code> 及更高版本的 <code>v6.7.x</code> 系列</li>
+</ul>
+</li>
+</ul>
+<h2 id="代码审计">代码审计<a hidden class="anchor" aria-hidden="true" href="#代码审计">#</a></h2>
+<p>根据已知信息：Netfilter模块的<code>nf_tables</code>子系统中存在 UAF 漏洞。</p>
+<p>所以我们需要去分析 nf_tables 子系统。</p>
+<p>下载存在漏洞的源代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">wget https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/snapshot/linux-f342de4e2f33e0e39165d8639387aa6c19dff660.tar.gz
+</span></span><span class="line"><span class="cl">tar -xvf linux-f342de4e2f33e0e39165d8639387aa6c19dff660.tar.gz
+</span></span></code></pre></div><p>搜索发现 net/netfilter 目录中共存在四个和 nf_tables 有关的代码文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ ls net/netfilter <span class="p">|</span> grep nf_tables
+</span></span><span class="line"><span class="cl">nf_tables_api.c
+</span></span><span class="line"><span class="cl">nf_tables_core.c
+</span></span><span class="line"><span class="cl">nf_tables_offload.c
+</span></span><span class="line"><span class="cl">nf_tables_trace.c
+</span></span></code></pre></div><p>接下来我们就一个文件一个文件的分析。</p>
+<p>但是根据漏洞信息我们可以先想一下，UAF 漏洞的特征是什么？</p>
+<ul>
+<li>对象被释放后，内核仍然继续使用这个内存区域进行读写操作；</li>
+<li>跟哪些内存释放函数有关。</li>
+</ul>
+<p>那么内核中的内存分配和释放函数是什么呢？</p>
+<table>
+  <thead>
+      <tr>
+          <th>函数</th>
+          <th>功能</th>
+          <th>上下文/特点</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>kmalloc(size, flags)</code></td>
+          <td>分配内核小块内存（对象、缓冲区）</td>
+          <td>类似用户态 <code>malloc()</code>；<code>flags</code> 如 <code>GFP_KERNEL</code>（可睡眠）、<code>GFP_ATOMIC</code>（中断上下文）</td>
+      </tr>
+      <tr>
+          <td><code>kzalloc(size, flags)</code></td>
+          <td>分配并清零内存</td>
+          <td>等价于 <code>kmalloc()</code> + <code>memset(..., 0, size)</code></td>
+      </tr>
+      <tr>
+          <td><code>vmalloc(size)</code></td>
+          <td>分配大块连续虚拟内存（不保证物理连续）</td>
+          <td>用于大缓冲区或数组，效率比 <code>kmalloc</code> 低</td>
+      </tr>
+      <tr>
+          <td><code>vzalloc(size)</code></td>
+          <td>分配大块虚拟内存并清零</td>
+          <td>等价于 <code>vmalloc()</code> + 清零</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="fuzzing">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing">#</a></h2>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://github.com/google/security-research/tree/master">google/security-research: This project hosts security advisories and their accompanying proof-of-concepts related to research conducted at Google which impact non-Google owned code.</a>
+<a href="https://zhuanlan.zhihu.com/p/54205450">安全研究者的自我修养</a>
+<a href="https://avd.aliyun.com/detail?id=AVD-2024-1086&amp;timestamp__1384=n4%2BxRi0QDQD%3DG%3DKiteDsL3xCTTq0EorrkordTD">阿里云漏洞库</a>
+<a href="https://bbs.kanxue.com/thread-287573.htm">[原创]The shadow over Netfilter: 新一代脏页表利用技巧-CVE-2024-1086-二进制漏洞-看雪-安全社区</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span><a href="https://nanhang-950.github.io/">©2025 南行&rsquo;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

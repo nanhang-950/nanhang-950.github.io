@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>南行&#39;s Blog</title>
+    <link>https://nanhang.top/</link>
+    <description>Recent content on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
+    <atom:link href="https://nanhang.top/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android APP脱壳入门</title>
+      <link>https://nanhang.top/posts/mobile/android/obf/shell/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/mobile/android/obf/shell/</guid>
+      <description>&lt;h2 id=&#34;加固简介&#34;&gt;加固简介&lt;/h2&gt;
+&lt;p&gt;Android 应用加固（壳）是为了防止逆向分析、DEX dump、调试和修改，保护代码和资源的完整性与安全。随着技术发展，加固经历了四代演进：&lt;/p&gt;
+&lt;h3 id=&#34;第一代整体-dex-加密&#34;&gt;第一代：整体 Dex 加密&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;核心特性：&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Android APP抓包</title>
+      <link>https://nanhang.top/posts/mobile/android/bag/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/mobile/android/bag/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;反抓包的对抗：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;代理检测&lt;/li&gt;
+&lt;li&gt;VPN检测&lt;/li&gt;
+&lt;li&gt;SSL Pinning&lt;/li&gt;
+&lt;li&gt;双向认证&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;常用工具：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Yakit：和 burpsuite 差不多的抓包方式。&lt;/li&gt;
+&lt;li&gt;Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。&lt;/li&gt;
+&lt;li&gt;OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。&lt;/li&gt;
+&lt;li&gt;r0Capture：&lt;/li&gt;
+&lt;li&gt;eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Frida攻略</title>
+      <link>https://nanhang.top/posts/mobile/android/frida/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/mobile/android/frida/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Go Fuzz</title>
+      <link>https://nanhang.top/posts/fuzz/go/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/fuzz/go/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzzing 的需求。因此，人们在基于传统的 Fuzz 工具的基础上，逐步为这些语言构建了 Fuzz 工具。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>IOS逆向入门</title>
+      <link>https://nanhang.top/posts/mobile/ios/base/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/mobile/ios/base/</guid>
+      <description>&lt;h2 id=&#34;越狱&#34;&gt;越狱&lt;/h2&gt;
+&lt;p&gt;我的设备：iPhone X，IOS 16.1.1&lt;/p&gt;
+&lt;p&gt;越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>libFuzzer浅探</title>
+      <link>https://nanhang.top/posts/fuzz/libfuzzer/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/fuzz/libfuzzer/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>LLM安全入门</title>
+      <link>https://nanhang.top/posts/llm/sec/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/llm/sec/</guid>
+      <description>&lt;h2 id=&#34;越狱攻击&#34;&gt;越狱攻击&lt;/h2&gt;
+&lt;p&gt;大模型天生缺乏“指令”和“信息”的边界分辨能力，它倾向于将所有输入视作需要整合的素材，而不是区分哪些是强约束（必须遵守）与弱参考（仅供辅助）的部分。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Rust Fuzz</title>
+      <link>https://nanhang.top/posts/fuzz/rust/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/fuzz/rust/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Syzkaller初探</title>
+      <link>https://nanhang.top/posts/fuzz/syzkaller/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/fuzz/syzkaller/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;h3 id=&#34;基本知识&#34;&gt;基本知识&lt;/h3&gt;
+&lt;p&gt;Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 &lt;a href=&#34;https://github.com/dvyukov&#34;&gt;dvyukov&lt;/a&gt; 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Tenda AC15漏洞复现</title>
+      <link>https://nanhang.top/posts/iot/tenda/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/iot/tenda/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。&lt;/p&gt;
+&lt;h2 id=&#34;获取固件&#34;&gt;获取固件&lt;/h2&gt;
+&lt;p&gt;从官网下载固件：&lt;a href=&#34;https://www.tenda.com.cn/material/show/102680&#34;&gt;AC15升级软件_腾达(Tenda)官方网站&lt;/a&gt;
+&lt;img src=&#34;https://nanhang.top/assets/Pasted%20image%2020250514230701.png&#34; style=&#34;width: 80%;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;解压下载的压缩包就可以拿到固件&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>论文笔记：Fuzzing: A Survey for Roadmap</title>
+      <link>https://nanhang.top/posts/paper/roadmap/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/paper/roadmap/</guid>
+      <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
+&lt;p&gt;看了 arttnba3 师傅的关于这篇论文的博客想要好好读一下这篇论文，但是没有找到免费的 PDF 文档，而 ACM 官网下载要钱，而且还是doler。所以就直接看 arttnba3 师傅的博客了，这篇文章就是看 arttnba3 师傅的博客记的笔记，几乎就是完全转载了 arttnba3 的博客，仅对格式做了一些小小的修改，特此声明一下。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>论文笔记：Fuzzing: Art, Science, and Engineering</title>
+      <link>https://nanhang.top/posts/paper/art/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/paper/art/</guid>
+      <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;论文题目：模糊测试：艺术、科学和工程&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这篇论文是模糊测试领域的一篇具有代表性的综述性工作，系统总结了模糊测试技术的发展历程、关键组成部分、工程挑战以及未来研究趋势。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing</title>
+      <link>https://nanhang.top/posts/paper/llamafuzz/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>https://nanhang.top/posts/paper/llamafuzz/</guid>
+      <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
+&lt;p&gt;由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>https://nanhang.top/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://nanhang.top/about/</guid>
+      <description>about</description>
+    </item>
+  </channel>
+</rss>

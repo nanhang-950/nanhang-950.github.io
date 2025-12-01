@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Agent开发入门 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="简介
+什么是 Agent
+Agent 定义上是一个：能够推理、规划并与环境交互的 AI 模型。一旦他有了计划，他就必须采取行动。为了执行他的计划，他可以使用他知道的工具列表中的工具。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/llm/agent/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.e105e5001e5a6a4bdfd2fc39297ee1c1f9ed55bbfa466311bf23402970d44059.css" integrity="sha256-4QXlAB5aakvf0vw5KX7hwfntVbv6RmMRvyNAKXDUQFk=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/llm/agent/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Agent开发入门
+    </h1>
+    <div class="post-meta"><span title='2025-09-01 16:04:49 +0000 UTC'>2025年9月1日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%bb%80%e4%b9%88%e6%98%af-agent" aria-label="什么是 Agent">什么是 Agent</a></li>
+                    <li>
+                        <a href="#%e4%bb%80%e4%b9%88%e6%98%af-llm" aria-label="什么是 LLM">什么是 LLM</a></li>
+                    <li>
+                        <a href="#%e6%b6%88%e6%81%af%e5%92%8c%e7%89%b9%e6%ae%8a%e4%bb%a4%e7%89%8c" aria-label="消息和特殊令牌">消息和特殊令牌</a></li>
+                    <li>
+                        <a href="#%e4%bb%80%e4%b9%88%e6%98%af%e5%b7%a5%e5%85%b7" aria-label="什么是工具">什么是工具</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#langchain" aria-label="LangChain">LangChain</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%ae%89%e8%a3%85" aria-label="安装">安装</a></li>
+                    <li>
+                        <a href="#%e6%a1%88%e4%be%8b" aria-label="案例">案例</a></li>
+                    <li>
+                        <a href="#langserver" aria-label="LangServer">LangServer</a></li>
+                    <li>
+                        <a href="#%e5%ae%9e%e4%be%8b" aria-label="实例">实例</a></li>
+                    <li>
+                        <a href="#%e5%90%af%e5%8a%a8%e6%9c%8d%e5%8a%a1" aria-label="启动服务">启动服务</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#react" aria-label="ReACT">ReACT</a></li>
+                    <li>
+                        <a href="#%e5%ae%9e%e6%88%98-shell-%e5%91%bd%e4%bb%a4%e6%89%a7%e8%a1%8c%e5%8a%a9%e6%89%8b" aria-label="实战 shell 命令执行助手">实战 shell 命令执行助手</a></li>
+                    <li>
+                        <a href="#plan-and-execute" aria-label="Plan and Execute">Plan and Execute</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%8a%b6%e6%80%81%e5%ae%9a%e4%b9%89" aria-label="状态定义">状态定义</a></li>
+                    <li>
+                        <a href="#%e8%ae%a1%e5%88%92%e7%94%9f%e6%88%90%e5%99%a8" aria-label="计划生成器">计划生成器</a></li>
+                    <li>
+                        <a href="#%e9%87%8d%e8%a7%84%e5%88%92%e5%99%a8" aria-label="重规划器">重规划器</a></li>
+                    <li>
+                        <a href="#%e6%89%a7%e8%a1%8c%e5%99%a8" aria-label="执行器">执行器</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%9e%84%e5%bb%ba%e5%b7%a5%e4%bd%9c%e6%b5%81%e5%9b%be" aria-label="构建工作流图">构建工作流图</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8-langgraph-%e6%9e%84%e5%bb%ba%e7%8a%b6%e6%80%81%e5%9b%be" aria-label="使用 LangGraph 构建状态图">使用 LangGraph 构建状态图</a></li>
+                    <li>
+                        <a href="#%e5%ae%9a%e4%b9%89%e8%8a%82%e7%82%b9%e5%87%bd%e6%95%b0" aria-label="定义节点函数">定义节点函数</a></li>
+                    <li>
+                        <a href="#%e7%bb%84%e8%a3%85%e5%ae%8c%e6%95%b4%e7%9a%84%e5%b7%a5%e4%bd%9c%e6%b5%81" aria-label="组装完整的工作流">组装完整的工作流</a></li>
+                    <li>
+                        <a href="#%e5%ae%9e%e6%88%98%e6%a1%88%e4%be%8b" aria-label="实战案例">实战案例</a></li>
+                    <li>
+                        <a href="#%e5%b7%a5%e5%85%b7%e5%87%bd%e6%95%b0%e7%9a%84%e6%94%b9%e8%bf%9b" aria-label="工具函数的改进">工具函数的改进</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#supervisor%e6%a8%a1%e5%bc%8f" aria-label="Supervisor模式">Supervisor模式</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%a4%9a%e6%99%ba%e8%83%bd%e4%bd%93%e6%9e%b6%e6%9e%84%e6%a8%a1%e5%bc%8f" aria-label="多智能体架构模式">多智能体架构模式</a></li>
+                    <li>
+                        <a href="#supervisor%e6%a8%a1%e5%bc%8f-1" aria-label="Supervisor模式">Supervisor模式</a></li>
+                    <li>
+                        <a href="#supervisortool-calling%e6%a8%a1%e5%bc%8f%e8%af%a6%e8%a7%a3" aria-label="Supervisor（Tool-calling）模式详解">Supervisor（Tool-calling）模式详解</a></li>
+                    <li>
+                        <a href="#hierarchical%e6%a8%a1%e5%bc%8f" aria-label="Hierarchical模式">Hierarchical模式</a></li>
+                    <li>
+                        <a href="#%e6%a1%88%e4%be%8b-1" aria-label="案例">案例</a></li>
+                    <li>
+                        <a href="#web-search%e6%8e%a5%e5%8f%a3" aria-label="Web Search接口">Web Search接口</a></li>
+                    <li>
+                        <a href="#supervisor-%e6%a8%a1%e5%bc%8f%e6%a0%b8%e5%bf%83%e7%bb%84%e4%bb%b6" aria-label="Supervisor 模式核心组件">Supervisor 模式核心组件</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#mcp%e5%8d%8f%e8%ae%ae%e5%bc%80%e5%8f%91" aria-label="MCP协议开发">MCP协议开发</a><ul>
+                            
+                    <li>
+                        <a href="#mcp-%e6%9e%b6%e6%9e%84" aria-label="MCP 架构">MCP 架构</a></li>
+                    <li>
+                        <a href="#mcp-%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b" aria-label="MCP 工作流程">MCP 工作流程</a></li>
+                    <li>
+                        <a href="#%e5%ae%9e%e4%be%8b-1" aria-label="实例">实例</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<h3 id="什么是-agent">什么是 Agent<a hidden class="anchor" aria-hidden="true" href="#什么是-agent">#</a></h3>
+<p>Agent 定义上是一个：能够推理、规划并与环境交互的 AI 模型。一旦他有了计划，他就必须采取行动。为了执行他的计划，他可以使用他知道的工具列表中的工具。</p>
+<p>比如我们给 ming 一个要求：我想喝杯</p>
+<p>将大语言模型想象成一个大脑，大脑可以进行思考和决策，然后交给四肢去执行。单纯的大脑是做不了什么的，所以我们需要给大预言模型添加四肢。</p>
+<p>所以 Agent 主要有两部分组成：</p>
+<ul>
+<li>大脑（LLM）：LLM 处理推理和规划。它根据情况决定要采取哪些行动。</li>
+<li>身体（功能和工具）：可以做哪些事情在于有哪些功能和工具。例如，人类没有翅膀，所以不能飞行。</li>
+</ul>
+<p>代理的范围</p>
+<p>根据这个定义，Agent 存在于一个不断增加的代理范围内：</p>
+<table>
+  <thead>
+      <tr>
+          <th>代理级别</th>
+          <th>描述</th>
+          <th>这叫什么</th>
+          <th>示例模式</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>☆☆☆</td>
+          <td>代理输出对程序流程没有影响</td>
+          <td>简单的处理器</td>
+          <td><code>process_llm_output(llm_response)</code></td>
+      </tr>
+      <tr>
+          <td>★☆☆</td>
+          <td>代理输出决定基本控制流</td>
+          <td>路由器</td>
+          <td><code>if llm_decision(): path_a() else: path_b()</code></td>
+      </tr>
+      <tr>
+          <td>★★☆</td>
+          <td>代理输出决定函数执行</td>
+          <td>工具调用方</td>
+          <td><code>run_function(llm_chosen_tool, llm_chosen_args)</code></td>
+      </tr>
+      <tr>
+          <td>★★★</td>
+          <td>代理输出控制迭代和程序继续</td>
+          <td>多步骤代理</td>
+          <td><code>while llm_should_continue(): execute_next_step()</code></td>
+      </tr>
+      <tr>
+          <td>★★★</td>
+          <td>一个代理工作流可以启动另一个代理工作流</td>
+          <td>多代理</td>
+          <td><code>if llm_trigger(): execute_agent()</code></td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="什么是-llm">什么是 LLM<a hidden class="anchor" aria-hidden="true" href="#什么是-llm">#</a></h3>
+<p>LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。</p>
+<p>如今，大多数 LLM 都基于 Transformer 架构构建，这是一种基于 “Attention” 算法的深度学习架构，子 2018 年 Google 发布 BERT 以来，该架构引起了人们的极大兴趣。</p>
+<h3 id="消息和特殊令牌">消息和特殊令牌<a hidden class="anchor" aria-hidden="true" href="#消息和特殊令牌">#</a></h3>
+<h3 id="什么是工具">什么是工具<a hidden class="anchor" aria-hidden="true" href="#什么是工具">#</a></h3>
+<p>工具调用就是 LLM 的四肢，通过工具调用大模型可以从外界获取信息，也可以向外界发送信息。</p>
+<p>Tool Calling 是一种机制，允许 LLM 在对话过程中，判断是否需要调用外部工具，并构造符合要求的输入，交给系统去执行。</p>
+<p>Tool 本质上是一个带有签名的函数，并且这个函数具有明确定义的输入参数结构（schema）。它像是一个“插件”，可供模型在需要时主动选择并调用。</p>
+<p>模型如何调用工具？</p>
+<p>首先，需要确保模型支持 Tool Calling 能力。</p>
+<p>模型调用工具：需要先定义工具对应的 Python 函数，该函数将由模型来调用。</p>
+<h2 id="langchain">LangChain<a hidden class="anchor" aria-hidden="true" href="#langchain">#</a></h2>
+<p>LangChain 是一个开源的 Python LLM 应用开发框架，它提供了构建基于大模型的 LLM 应用所需的模块和工具。通过 LangChain，开发者开源轻松地与大型语言模型（LLM）集成，完成文本生成、问答、翻译、对话等任务。</p>
+<ul>
+<li>
+<p><code>langchain_core</code>：封装<code>langchain</code>框架的核心抽象接口和最基础功能。</p>
+</li>
+<li>
+<p>作用：</p>
+<ul>
+<li>不依赖第三方大模型；</li>
+<li>提供核心模块定义；</li>
+<li>避免循环依赖，便于更模块化的开发；</li>
+<li>可用于构建更小型、定制化的 langchain 应用或库。</li>
+</ul>
+</li>
+<li>
+<p><code>langchain</code>：LangChain的完整版库，集成各种 LLM、Agent、RAG 等功能模块。</p>
+<ul>
+<li>依赖：它依赖 langchain_core作为底层；</li>
+<li>功能更全：如 chain、memory、tools、加载器、向量存储等；</li>
+<li>适合开发复杂业务逻辑或需要多个模型集成的场景。</li>
+</ul>
+</li>
+</ul>
+<p>从 LangChain 0.1.x 开始，官方将大部分功能拆分为多个库，如：</p>
+<table>
+  <thead>
+      <tr>
+          <th>库名</th>
+          <th>功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>langchain-core</code></td>
+          <td>核心抽象与接口</td>
+      </tr>
+      <tr>
+          <td><code>langchain</code></td>
+          <td>完整框架，集成所有模块</td>
+      </tr>
+      <tr>
+          <td><code>langchain-community</code></td>
+          <td>对社区模型和工具的集成</td>
+      </tr>
+      <tr>
+          <td><code>langchain-openai</code></td>
+          <td>针对 OpenAI 的支持</td>
+      </tr>
+      <tr>
+          <td><code>langgraph</code></td>
+          <td>LangChain 的图式执行框架</td>
+      </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+      <tr>
+          <th>模块名</th>
+          <th>功能简介</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>LLMs</strong></td>
+          <td>接入各种大模型（OpenAI, Claude, Cohere, HuggingFace 等）</td>
+      </tr>
+      <tr>
+          <td><strong>Prompt</strong></td>
+          <td>提供 Prompt 模板系统，支持动态变量替换、拼接等</td>
+      </tr>
+      <tr>
+          <td><strong>Chains</strong></td>
+          <td>支持串联多个模型调用或任务逻辑，形成一个完整链路</td>
+      </tr>
+      <tr>
+          <td><strong>Memory</strong></td>
+          <td>记录对话历史，使模型具备“记忆”能力</td>
+      </tr>
+      <tr>
+          <td><strong>Tools</strong></td>
+          <td>接入搜索、数据库、Python REPL、API 调用等外部工具</td>
+      </tr>
+      <tr>
+          <td><strong>Agents</strong></td>
+          <td>类似于自动推理体，根据目标动态调用工具完成任务</td>
+      </tr>
+      <tr>
+          <td><strong>Document Loaders</strong></td>
+          <td>支持加载本地/在线文档（PDF、Notion、网页等）</td>
+      </tr>
+      <tr>
+          <td><strong>Vector Stores</strong></td>
+          <td>支持向量数据库如 FAISS、Pinecone、Milvus（用于 RAG）</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="安装">安装<a hidden class="anchor" aria-hidden="true" href="#安装">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install langchain
+</span></span></code></pre></div><h3 id="案例">案例<a hidden class="anchor" aria-hidden="true" href="#案例">#</a></h3>
+<p>Prompt + Chain 示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.prompts</span> <span class="kn">import</span> <span class="n">PromptTemplate</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.chains</span> <span class="kn">import</span> <span class="n">LLMChain</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.llms</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">prompt</span> <span class="o">=</span> <span class="n">PromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;写一首关于 </span><span class="si">{topic}</span><span class="s2"> 的诗&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">chain</span> <span class="o">=</span> <span class="n">LLMChain</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">OpenAI</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="s2">&#34;topic&#34;</span><span class="p">:</span> <span class="s2">&#34;秋天&#34;</span><span class="p">}))</span>
+</span></span></code></pre></div><p>Agent 示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.agents</span> <span class="kn">import</span> <span class="n">initialize_agent</span><span class="p">,</span> <span class="n">load_tools</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.llms</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">tools</span> <span class="o">=</span> <span class="n">load_tools</span><span class="p">([</span><span class="s2">&#34;serpapi&#34;</span><span class="p">,</span> <span class="s2">&#34;llm-math&#34;</span><span class="p">],</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">agent</span> <span class="o">=</span> <span class="n">initialize_agent</span><span class="p">(</span><span class="n">tools</span><span class="p">,</span> <span class="n">llm</span><span class="p">,</span> <span class="n">agent</span><span class="o">=</span><span class="s2">&#34;zero-shot-react-description&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&#34;中国的首都是哪？它距离南宁有多远？&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="langserver">LangServer<a hidden class="anchor" aria-hidden="true" href="#langserver">#</a></h3>
+<p>LangServer 是 LangChain 官方推出的一个服务框架，快速将 LangChain 应用部署为 RESTful API 接口。</p>
+<p>安装：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install langserve<span class="o">[</span>all<span class="o">]</span>
+</span></span></code></pre></div><h3 id="实例">实例<a hidden class="anchor" aria-hidden="true" href="#实例">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.chains</span> <span class="kn">import</span> <span class="n">LLMChain</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.prompts</span> <span class="kn">import</span> <span class="n">PromptTemplate</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.llms</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langserve</span> <span class="kn">import</span> <span class="n">add_routes</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fastapi</span> <span class="kn">import</span> <span class="n">FastAPI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">prompt</span> <span class="o">=</span> <span class="n">PromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;你是谁？回答：</span><span class="si">{name}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">chain</span> <span class="o">=</span> <span class="n">LLMChain</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">OpenAI</span><span class="p">(),</span> <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">add_routes</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&#34;/demo&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="启动服务">启动服务<a hidden class="anchor" aria-hidden="true" href="#启动服务">#</a></h3>
+<pre tabindex="0"><code>uvicorn app:app --reload --port 8000
+</code></pre><h2 id="react">ReACT<a hidden class="anchor" aria-hidden="true" href="#react">#</a></h2>
+<p>定义工具函数</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_core.tools</span> <span class="kn">import</span> <span class="n">tool</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span><span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;将两个数字相乘&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span>
+</span></span></code></pre></div><p>当用户问：“3 乘 7 的结果是多少？”，模型识别这个问题与 multiply 工具相关，它会生成如下的调用请求</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;multiply&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="nt">&#34;args&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nt">&#34;a&#34;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nt">&#34;b&#34;</span><span class="p">:</span><span class="mi">7</span>
+</span></span><span class="line"><span class="cl">	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="err">type:</span> <span class="nt">&#34;tool_call&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这个结构清晰地表示模型希望执行 multiply(3,7)，<strong>系统负责执行这个调用</strong>，并将结果（21）返回给模型，最后形成自然语言回复。</p>
+<ul>
+<li>tool 调用由模型发起，由系统执行</li>
+<li>系统执行工具调用后，将结果返回给模型</li>
+<li>模型根据工具调用结果，生成最终回复。</li>
+</ul>
+<p>一个工具调用，涉及到多次模型调用。</p>
+<h2 id="实战-shell-命令执行助手">实战 shell 命令执行助手<a hidden class="anchor" aria-hidden="true" href="#实战-shell-命令执行助手">#</a></h2>
+<p>使用 Tool call 机制，实现一个 shell 命令执行助手。</p>
+<p>输入：用户输入一段自然语言描述系统控制命令，例如 “查找 xxx.txt 文件”。</p>
+<p>输出：执行命令的结果</p>
+<p>模型根据用户输入，调用 shell 命令工具，执行命令，并返回结果。</p>
+<ul>
+<li>执行 shell 命令的工具函数</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_core.tools</span> <span class="kn">import</span> <span class="n">tool</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">tool_shell</span><span class="p">(</span><span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;执行 shell 命令&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[Tool] 执行命令：&#34;</span><span class="p">,</span><span class="n">cmd</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">result</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Tool] 执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 成功，结果：</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 成功，结果：</span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 失败：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span></code></pre></div><p>langgraph agent 工具调用</p>
+<ul>
+<li>llm 是一个一问一答的模型，它无法完成端到端的工具调用（即输入问题，自动执行工具，并生成回答）</li>
+<li>为了简化流程，我们使用 langgraph 的 agent 框架，实现端到端的工具调用。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install langgraph
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph.prebuilt</span> <span class="kn">import</span> <span class="n">create_react_agent</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">你是一个 shell 命令执行助手，请根据用户的问题执行命令
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">agent</span><span class="o">=</span><span class="n">create_react_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool_shell</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">response</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">&#34;messages&#34;</span><span class="p">:[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span><span class="s2">&#34;user&#34;</span><span class="p">,</span><span class="s2">&#34;content&#34;</span><span class="p">:</span><span class="s2">&#34;当前是什么系统？&#34;</span><span class="p">}]})</span>
+</span></span></code></pre></div><h2 id="plan-and-execute">Plan and Execute<a hidden class="anchor" aria-hidden="true" href="#plan-and-execute">#</a></h2>
+<p>在复杂任务面前，简单的工具调用往往力不从心：</p>
+<ul>
+<li>任务复杂性：用户的需求可能涉及多个步骤，需要系统性规划</li>
+<li>步骤依赖：后续步骤可能依赖前面步骤的结果</li>
+<li>错误处理：执行失败时需要重新规划和调整</li>
+</ul>
+<p>Plan and Execute（规划执行架构）模式是一种更高级的智能体架构，它将复杂任务分解为多个步骤，在执行过程中，根据执行结果调整计划。</p>
+<p>Plan and Execute 模式的核心思想是：</p>
+<ol>
+<li>将复杂任务分解为多个步骤</li>
+<li>按顺序执行步骤</li>
+<li>根据执行结果调整计划</li>
+</ol>
+<p>ReACT vs Plan-and-Execute</p>
+<p>ReACT（Reasoning+Acting）是一种简单直接的智能体模式：</p>
+<pre tabindex="0"><code>用户输入 -&gt; 思考 -&gt; 行动（Acting） -&gt; 观察结果 -&gt; 循环
+</code></pre><p>大模型的 tool calling 能力，可以实现 ReACT 模式。</p>
+<p>ReACT 模式适合单步或少步任务。</p>
+<p>Plan and Execute 对比 React 的差异是它可以重新规划。</p>
+<p>如何实现复杂的 Agent 流程：</p>
+<p>LangGraph 是一个强大的框架，可以用来实现复杂的 Agent 流程。</p>
+<ul>
+<li>Graph 就是图，图中的节点就是 Agent 的各个步骤；</li>
+<li>Node 就是图中的节点，节点是一个函数，每个节点可以有多个输入和输出，节点之间可以有边连接；</li>
+<li>Edge 就是图中的边，边可以有条件，根据条件决定是否执行；</li>
+<li>State 就是图中的状态，状态是图中的各个节点的输入和输出。</li>
+</ul>
+<p>如何实现 Plan-and-Execute模式？</p>
+<p>图中的节点：</p>
+<ul>
+<li>planer 节点，llm 驱动，输入是用户输入，输出是执行计划；</li>
+<li>agent 节点，react agent，负责执行子步骤，调用工具；</li>
+<li>replan 节点，llm 驱动，判断是否需要重新规划或者结束。</li>
+</ul>
+<p>图中状态的转移 State</p>
+<p>State 是图中的各个节点的输入和输出，LangGraph 中使用 TypedDict 来定义 State。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">TypedDict</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span><span class="n">List</span><span class="p">,</span><span class="n">Tuple</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">PlanExecute</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">input</span><span class="p">:</span> <span class="nb">str</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="n">past_steps</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="n">response</span><span class="p">:</span> <span class="nb">str</span>
+</span></span></code></pre></div><p>Plan-and-Execute核心组件：</p>
+<h3 id="状态定义">状态定义<a hidden class="anchor" aria-hidden="true" href="#状态定义">#</a></h3>
+<p>使用 TypedDict 定义智能体的状态：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">TypedDict</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span><span class="n">List</span><span class="p">,</span><span class="n">Tuple</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">PlanExecute</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">input</span><span class="p">:</span> <span class="nb">str</span>              <span class="c1">#用户输入</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>         <span class="c1">#执行计划步骤列表</span>
+</span></span><span class="line"><span class="cl">	<span class="n">past_steps</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">]</span> <span class="c1">#已执行步骤记录</span>
+</span></span><span class="line"><span class="cl">	<span class="n">response</span><span class="p">:</span> <span class="nb">str</span>           <span class="c1">#最终响应</span>
+</span></span></code></pre></div><p>状态在整个执行过程中传递，记录任务进展。</p>
+<h3 id="计划生成器">计划生成器<a hidden class="anchor" aria-hidden="true" href="#计划生成器">#</a></h3>
+<p>输入：用户的任务描述输出：结构化输出，执行任务列表。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span><span class="n">Field</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Plan</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;执行计划&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="n">description</span><span class="o">=</span><span class="s2">&#34;任务列表，应该按顺序执行&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">planler_prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_messages</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">	<span class="p">(</span><span class="s2">&#34;system&#34;</span><span class="p">,</span><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">	根据用户输入的任务，生成一个简单的步骤计划。
+</span></span></span><span class="line"><span class="cl"><span class="s2">	这个计划应该涉及单个任务，如果正确执行，将产生正确的答案。
+</span></span></span><span class="line"><span class="cl"><span class="s2">	不要添加任何不必要的步骤。最后一步的结果应该是最终答案。
+</span></span></span><span class="line"><span class="cl"><span class="s2">	确保每一步都要所需的信息 - 不要跳过步骤。
+</span></span></span><span class="line"><span class="cl"><span class="s2">	&#34;&#34;&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">(</span><span class="s2">&#34;placeholder&#34;</span><span class="p">,</span><span class="s2">&#34;</span><span class="si">{messages}</span><span class="s2">&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">planner</span> <span class="o">=</span> <span class="n">planner_prompt</span> <span class="o">|</span> <span class="n">llm</span><span class="o">.</span><span class="n">with_structured_output</span><span class="p">(</span><span class="n">Plan</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="重规划器">重规划器<a hidden class="anchor" aria-hidden="true" href="#重规划器">#</a></h3>
+<p>当执行过程中遇到问题或需要跳转时，重规划器负责重新规划。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;最终响应&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">response</span><span class="p">:</span> <span class="nb">str</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Act</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;下一步行动&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">action</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Response</span><span class="p">,</span><span class="n">Plan</span><span class="p">]</span><span class="o">=</span><span class="n">Field</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="n">description</span><span class="o">=</span><span class="s2">&#34;要执行的动作。如果需要响应用户，使用 Response。&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;如果需要进一步使用工具获取答案，使用 Plan&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">replanner_prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">根据用户输入的任务，分析当前执行情况：
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户任务：</span><span class="si">{input}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">原计划：</span><span class="si">{plan}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">已执行步骤：</span><span class="si">{past_steps}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">请分析：
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 如果某个步骤执行失败，请重新执行该步骤
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 如果需要补充新步骤，请补充计划
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 如果任务已完成，请使用 Response 返回结果
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="执行器">执行器<a hidden class="anchor" aria-hidden="true" href="#执行器">#</a></h3>
+<p>执行器用于执行规划中的某一个规划。</p>
+<p>输入：执行计划</p>
+<p>输出：执行结果</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">tool_shell</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">prompt</span> <span class="o">=</span> <span class="s2">&#34;你是一个 shell 命令执行助手，请根据用户的问题执行命令&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">agent_executor</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span><span class="n">tools</span><span class="p">,</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">)</span>
+</span></span></code></pre></div><h2 id="构建工作流图">构建工作流图<a hidden class="anchor" aria-hidden="true" href="#构建工作流图">#</a></h2>
+<h3 id="使用-langgraph-构建状态图">使用 LangGraph 构建状态图<a hidden class="anchor" aria-hidden="true" href="#使用-langgraph-构建状态图">#</a></h3>
+<p>LangGraph 如何把各个组件组合成一个完整的 Agent 流程？</p>
+<ol>
+<li>定义节点函数（设计点）</li>
+<li>定义边和流程（连线）</li>
+</ol>
+<h3 id="定义节点函数">定义节点函数<a hidden class="anchor" aria-hidden="true" href="#定义节点函数">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">plan_step</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">PlanExecute</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;制定初始计划&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plan</span> <span class="o">=</span> <span class="k">await</span> <span class="n">planner</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">({</span><span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span><span class="n">state</span><span class="p">[</span><span class="nb">input</span><span class="p">])]})</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">{</span><span class="s2">&#34;plan&#34;</span><span class="p">:</span><span class="n">plan</span><span class="o">.</span><span class="n">steps</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">execute_step</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">PlanExecute</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;执行当前步骤&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">task</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&#34;plan&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#取第一个未完成的任务</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agent_response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent_executor</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="p">{</span><span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span><span class="n">task</span><span class="p">)]}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;past_steps&#34;</span><span class="p">:</span> <span class="p">[(</span><span class="n">task</span><span class="p">,</span> <span class="n">agent_response</span><span class="p">[</span><span class="s2">&#34;messages&#34;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">replan_step</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">PlanExecute</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;重新规划&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">replanner</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">Response</span><span class="p">):</span>
+</span></span></code></pre></div><h3 id="组装完整的工作流">组装完整的工作流<a hidden class="anchor" aria-hidden="true" href="#组装完整的工作流">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">workflow</span> <span class="o">=</span> <span class="n">StateGraph</span><span class="p">(</span><span class="n">PlanExecute</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 添加节点</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&#34;planner&#34;</span><span class="p">,</span> <span class="n">plan_step</span><span class="p">)</span>  <span class="c1"># 计划节点</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&#34;agent&#34;</span><span class="p">,</span> <span class="n">execute_step</span><span class="p">)</span> <span class="c1"># 执行节点</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&#34;replan&#34;</span><span class="p">,</span> <span class="n">replan_step</span><span class="p">)</span> <span class="c1"># 重规划节点</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 定义边和流程</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">START</span><span class="p">,</span> <span class="s2">&#34;planner&#34;</span><span class="p">)</span>      <span class="c1"># 开始 -&gt; 计划</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&#34;planner&#34;</span><span class="p">,</span> <span class="s2">&#34;agent&#34;</span><span class="p">)</span>    <span class="c1"># 开始 -&gt; 计划</span>
+</span></span><span class="line"><span class="cl"><span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&#34;agent&#34;</span><span class="p">,</span> <span class="s2">&#34;replan&#34;</span><span class="p">)</span>     <span class="c1"># 开始 -&gt; 计划</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 条件边：根据重规划结果决定下一步</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">should_end</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">PlanExecute</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="s2">&#34;response&#34;</span> <span class="ow">in</span> <span class="n">state</span> <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&#34;response&#34;</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">ENO</span> <span class="c1"># 任务完成，结束</span>
+</span></span><span class="line"><span class="cl">	<span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="s2">&#34;agent&#34;</span> <span class="c1"># 继续执行</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 编译工作流</span>
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</span></span></code></pre></div><h3 id="实战案例">实战案例<a hidden class="anchor" aria-hidden="true" href="#实战案例">#</a></h3>
+<p>让我们通过一个复杂的系统分析任务来展示 Plan-and-Execute 的威力：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">task</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">1. 统计文件系统使用情况
+</span></span></span><span class="line"><span class="cl"><span class="s2">2. 使用 python3 matplotlib 绘制柱状图，并保存为图片（1.png）。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">命令的上下文可能比较多，你可以保存到临时文件，然后使用 head、tail 等命令查看结构
+</span></span></span><span class="line"><span class="cl"><span class="s2">请确保有图片输出和文件输出，并告诉我输出了哪些结果文件。
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 执行任务</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">app</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">({</span><span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="n">task</span><span class="p">})</span>
+</span></span></code></pre></div><h3 id="工具函数的改进">工具函数的改进<a hidden class="anchor" aria-hidden="true" href="#工具函数的改进">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">tool_shell</span><span class="p">(</span><span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;执行 shell 命令，并返回标准输出或错误信息&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">print</span>
+</span></span><span class="line"><span class="cl">		<span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">			<span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
+</span></span><span class="line"><span class="cl">			<span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="n">stderr</span><span class="p">,</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+</span></span><span class="line"><span class="cl">		<span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">stdout</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="n">stderr</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 成功，结果：</span><span class="si">{</span><span class="n">stdout</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">			<span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 成功，但标准输出为空。&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 失败，错误信息：</span><span class="si">{</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行命令 </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> 异常：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span></code></pre></div><h2 id="supervisor模式">Supervisor模式<a hidden class="anchor" aria-hidden="true" href="#supervisor模式">#</a></h2>
+<p>多智能体架构，从单一智能体到协作团队模式，构建可扩展的 AI 系统。</p>
+<p>Plan and Execute 模式能够处理复杂的多步骤任务，但随着系统复杂度的增加，单一智能体面临新的挑战：</p>
+<ul>
+<li>认知负担：单个智能体需要掌握太多领域知识</li>
+<li>工具过载：过多的工具选择导致决策困难。</li>
+<li>可扩展性：难以添加新功能而不影响现有逻辑</li>
+<li>维护困难：复杂的单体架构难以调试和优化</li>
+</ul>
+<p>因此，引入多智能体架构来解决这些问题。</p>
+<p>多智能体系统通过将复杂任务分解给专门的智能体来解决这些问题。</p>
+<p>多智能体架构具备如下优势：</p>
+<ul>
+<li>模块化：独立开发、测试和维护多个智能体</li>
+<li>专业化：每个智能体专注于特定领域，提升性能</li>
+<li>控制力：明确定义智能体间的通信方式</li>
+<li>可观测性：更容易追踪和调试系统行为</li>
+</ul>
+<h3 id="多智能体架构模式">多智能体架构模式<a hidden class="anchor" aria-hidden="true" href="#多智能体架构模式">#</a></h3>
+<p>根据智能体间的通信方式，可以分为如下几种架构：</p>
+<ol>
+<li>Single Agent 模式：单一智能体</li>
+<li>Network 模式：智能体间可以自由通信</li>
+<li>Supervisor 模式：中央调度器管理所有智能体</li>
+<li>Supervisor（Tool-calling）模式：将智能体作为工具调用</li>
+<li>Hierarchical 模式：多层级的管理结构</li>
+<li>Custom 模式：自定义的工作流模式</li>
+</ol>
+<h3 id="supervisor模式-1">Supervisor模式<a hidden class="anchor" aria-hidden="true" href="#supervisor模式-1">#</a></h3>
+<p>关键组件：</p>
+<ol>
+<li>Supervisor：调度其它 Agent 以及结构汇总</li>
+<li>Shell Agent：终端命令生成、执行与结果分析</li>
+<li>Python Agent：Python 代码生成、执行与结果分析</li>
+<li>Web Search Agent：网络搜索、信息获取与分析</li>
+</ol>
+<h3 id="supervisortool-calling模式详解">Supervisor（Tool-calling）模式详解<a hidden class="anchor" aria-hidden="true" href="#supervisortool-calling模式详解">#</a></h3>
+<p>在这种模式中，Supervisor 将其他智能体视为工具，通过工具调用机制来管理它们。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph.perbuilt</span> <span class="kn">import</span> <span class="n">InjectedState</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">research_agent_too</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">state</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">InjectedState</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;调用研究智能体进行网络搜索&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">response</span> <span class="o">=</span> <span class="n">research_agent</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">&#34;messages&#34;</span><span class="p">:[(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span><span class="n">query</span><span class="p">)]})</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="s2">&#34;messages&#34;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">python_agent_tool</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">state</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span><span class="n">InjectedState</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;调用Python智能体执行代码任务&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">response</span> <span class="o">=</span> <span class="n">python_agent</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">&#34;messages&#34;</span><span class="p">:[(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span><span class="n">task</span><span class="p">)]})</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="s2">&#34;messages&#34;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Supervisor 作为 ReAct 智能体</span>
+</span></span><span class="line"><span class="cl"><span class="n">supervisor</span> <span class="o">=</span> <span class="n">create_react_agnet</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent_tool</span><span class="p">,</span><span class="n">python_agent_tool</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;You are a supervisor. Use the available agent tools to complete tasks.&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><h3 id="hierarchical模式">Hierarchical模式<a hidden class="anchor" aria-hidden="true" href="#hierarchical模式">#</a></h3>
+<p>多层级管理架构</p>
+<p>Hierarchical 模式是 Supervisor 模式的扩展，允许创建 supervisor 的 supervisor，形成树状管理结构。</p>
+<p>示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 创建专业团队</span>
+</span></span><span class="line"><span class="cl"><span class="n">data_team</span> <span class="o">=</span> <span class="n">create_supervisor</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">python_agent</span><span class="p">,</span> <span class="n">shell_agent</span><span class="p">,</span> <span class="n">file_agent</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;管理数据处理相关的智能体团队&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">name</span><span class="o">=</span><span class="s2">&#34;data_team_supervisor&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">research_team</span> <span class="o">=</span> <span class="n">create_supervisor</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">search_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;管理研究和分析相关的智能体团队&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">name</span><span class="o">=</span><span class="s2">&#34;research_team_supervisor&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 顶级 Supervisor</span>
+</span></span><span class="line"><span class="cl"><span class="n">top_supervisor</span> <span class="o">=</span> <span class="n">create_supervisor</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">data_team</span><span class="p">,</span><span class="n">research_team</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;协调各专业团队，处理跨领域复杂任务&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">name</span><span class="o">=</span><span class="s2">&#34;top_supervisor&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><h3 id="案例-1">案例<a hidden class="anchor" aria-hidden="true" href="#案例-1">#</a></h3>
+<p>实战练习：使用多智能体架构，组织 Shell Agent 和 Web Search Agent。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 复杂任务：搜索并管理 Android CVE 信息</span>
+</span></span><span class="line"><span class="cl"><span class="n">ans</span> <span class="o">=</span> <span class="n">supervisor</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;messages&#34;</span><span class="p">:[</span>
+</span></span><span class="line"><span class="cl">		<span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="s2">&#34;role&#34;</span><span class="p">:</span><span class="s2">&#34;user&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s2">&#34;content&#34;</span><span class="p">:</span><span class="s2">&#34;搜索最新的 5 条 Android CVE，并整理到文件 Android-CVE.md，并为每一个 CVE 创建一个 markdown 文件，最后使用 matplotlib 绘图统计 CVE 对应的 CWE 情况&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><h3 id="web-search接口">Web Search接口<a hidden class="anchor" aria-hidden="true" href="#web-search接口">#</a></h3>
+<p>哪里寻找一个稳定可靠的搜索接口？</p>
+<p>推荐使用 Tavily，这是一个免费的搜索接口，可以提供稳定可靠的搜索结果。</p>
+<p><a href="https://www.tavily.com">https://www.tavily.com</a></p>
+<ol>
+<li>申请 Tavily API Key</li>
+<li>安装 langchain-tavily 包</li>
+<li>使用 TavilySearch 接口</li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_tavily</span> <span class="kn">import</span> <span class="n">TavilySearch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;TAVILY_API_KEY&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;tvly-.......&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">web_search</span> <span class="o">=</span> <span class="n">TavilySearch</span><span class="p">(</span><span class="n">max_results</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">web_search</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">&#34;query&#34;</span><span class="p">:</span> <span class="s2">&#34;kali 最新版本&#34;</span><span class="p">}))</span>
+</span></span></code></pre></div><h3 id="supervisor-模式核心组件">Supervisor 模式核心组件<a hidden class="anchor" aria-hidden="true" href="#supervisor-模式核心组件">#</a></h3>
+<p>专业化智能体</p>
+<p>每个智能体专注于特定领域：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 研究智能体 - 负责网络搜索</span>
+</span></span><span class="line"><span class="cl"><span class="n">research_agent</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">tools</span><span class="p">[</span><span class="n">web_search</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;You are a research agent.</span><span class="se">\n\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;INSTRUCTIONS:</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- Assist ONLY with research-related tasks, DO NOT do any math</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- After you&#39;re aone with your tasks, respond to the supervisor directly</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- Respond ONLY with the results of your work, do NOT include ANY other text.&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="n">name</span><span class="o">=</span><span class="s2">&#34;research_agent&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Shell 智能体 - 负责系统命令执行</span>
+</span></span><span class="line"><span class="cl"><span class="n">shell_agent</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool_shell</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">name</span><span class="o">=</span><span class="s2">&#34;shell_agent&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;You are a shell agent.</span><span class="se">\n\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;INSTRUCTIONS:</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- Assist ONLY with research-related tasks, DO NOT do any math</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- After you&#39;re aone with your tasks, respond to the supervisor directly</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- Respond ONLY with the results of your work, do NOT include ANY other text.&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><p>中央调度器负责任务分发：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">supervisor</span> <span class="o">=</span> <span class="n">create_supervisor</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">shell_agent</span><span class="p">,</span><span class="n">research_agent</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;You are a supervisor managing three agents:</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- a shell agent. Assign shell-related tasks to this agent, do not exec python.</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;- a research agent. Assign research-related tasks to this agent, for web search.</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;Assign work to one agent at a time, do not call agents in parallel.</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;Do not use shell agent for Python tasks. </span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s2">&#34;Do not do any work yourself.&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add_handoff_back_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">output_mode</span><span class="o">=</span><span class="s2">&#34;full_history&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="o">.</span><span class="n">complie</span><span class="p">()</span>
+</span></span></code></pre></div><p>create_supervisor 函数</p>
+<p>LangGraph 提供了便捷的<code>create_supervisor</code>函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph_supervisor</span> <span class="kn">import</span> <span class="n">create_supervisor</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">vupervisor</span> <span class="o">=</span> <span class="n">create_supervisor</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>                       <span class="c1"># 用于决策的LLM</span>
+</span></span><span class="line"><span class="cl">	<span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent1</span><span class="p">,</span><span class="n">agent2</span><span class="p">,</span><span class="n">agent3</span><span class="p">],</span>   <span class="c1"># 管理的智能体列表</span>
+</span></span><span class="line"><span class="cl">	<span class="n">prompt</span><span class="o">=</span><span class="s2">&#34;supervisor 的系统提示词&#34;</span><span class="p">,</span> <span class="c1"># 调度策略</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add_handoff_back_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># 是否添加handoff消息</span>
+</span></span><span class="line"><span class="cl">	<span class="n">output_mode</span><span class="o">=</span><span class="s2">&#34;full_history&#34;</span><span class="p">,</span>      <span class="c1"># 输出模式</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</span></span></code></pre></div><p>核心参数说明：</p>
+<ul>
+<li><code>model</code>：用于决策的大语言模型</li>
+<li><code>agents</code>：需要管理的智能体列表</li>
+<li><code>prompt</code>：定义 Supervisor 的行为策略</li>
+<li><code>add_handoff_back_messages</code>：是否在智能体完成任务后自动添加回传消息</li>
+</ul>
+<h2 id="mcp协议开发">MCP协议开发<a hidden class="anchor" aria-hidden="true" href="#mcp协议开发">#</a></h2>
+<p>MCP（Model Context Protocol，模型上下文协议），MCP 是一个开放协议，允许大语言模型与外部工具和服务进行安全、结构化的交互。</p>
+<p>核心思想：让大语言模型能够调用外部工具，扩展其能力边界。统一接口协议，开放更加方便快捷。</p>
+<h3 id="mcp-架构">MCP 架构<a hidden class="anchor" aria-hidden="true" href="#mcp-架构">#</a></h3>
+<img src="assets/Pasted%20image%2020250728134324.png" style="zoom: 60%;" />
+<ul>
+<li>MCP 客户端：与大语言模型集成</li>
+<li>MCP 服务器：提供工具和服务</li>
+<li>传输层：支持 stdio、HTTP、WebSocket 等</li>
+</ul>
+<h3 id="mcp-工作流程">MCP 工作流程<a hidden class="anchor" aria-hidden="true" href="#mcp-工作流程">#</a></h3>
+<p>MCP 开放有哪些方面？</p>
+<ul>
+<li>开发 MCP 服务（给大语言模型提供工具）</li>
+<li>开发 MCP 客户端（调用 MCP 服务，LangChain）</li>
+</ul>
+<p>在 MCP 开发中最重要的就是开发 MCP 的服务。</p>
+<p>FastMCP</p>
+<h3 id="实例-1">实例<a hidden class="anchor" aria-hidden="true" href="#实例-1">#</a></h3>
+<p>创建简单的提供基础数学运算的 MCP 服务器</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.server.fastmcp</span> <span class="kn">import</span> <span class="n">FastMCP</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">mcp</span> <span class="o">=</span> <span class="n">FastMCP</span><span class="p">(</span><span class="s2">&#34;Math&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@mcp.tool</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;Add two numbers&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@mcp.tool</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;Multiply two numbers&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mcp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="s2">&#34;stdio&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>LangChain 客户端</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_mcp_adapters.client</span> <span class="kn">import</span> <span class="n">MultiServerMCPClient</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_deepseek</span> <span class="kn">import</span> <span class="n">ChatDeepSeek</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph.prebuilt</span> <span class="kn">import</span> <span class="n">create_react_agent</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">asyncio</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">API_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;GEMINI_API_KEY&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatGoogleGenerativeAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;gemini-1.5-flash&#34;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">API_KEY</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">MultiServerMCPClient</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;my_mcp&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;url&#34;</span><span class="p">:</span> <span class="s2">&#34;http://localhost:8000/mcp&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;transport&#34;</span><span class="p">:</span> <span class="s2">&#34;streamable_http&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tools</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">math_response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;what&#39;s (3 + 5) x 12?&#34;</span><span class="p">}]}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">math_response</span><span class="p">[</span><span class="s1">&#39;messages&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></span></code></pre></div><p>cursor 客户端</p>
+<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<blockquote>
+<p>huggingface <a href="https://huggingface.co/learn/agents-course/">agents-course</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+</body>
+
+</html>

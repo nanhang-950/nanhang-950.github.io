@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Syzkaller初探 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="简介
+基本知识
+Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。">
+<meta name="author" content="">
+<link rel="canonical" href="https://nanhang.top/posts/fuzz/syzkaller/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="mask-icon" href="https://nanhang.top/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="https://nanhang.top/posts/fuzz/syzkaller/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style><meta property="og:url" content="https://nanhang.top/posts/fuzz/syzkaller/">
+  <meta property="og:site_name" content="南行&#39;s Blog">
+  <meta property="og:title" content="Syzkaller初探">
+  <meta property="og:description" content="简介 基本知识 Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-11-30T23:30:38+00:00">
+    <meta property="article:modified_time" content="2025-11-30T23:30:38+00:00">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Syzkaller初探">
+<meta name="twitter:description" content="简介
+基本知识
+Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://nanhang.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Syzkaller初探",
+      "item": "https://nanhang.top/posts/fuzz/syzkaller/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Syzkaller初探",
+  "name": "Syzkaller初探",
+  "description": "简介 基本知识 Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "简介 基本知识 Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 dvyukov 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。\n众所周知内核是通过系统调用进行交互的，因此 Syzkaller 的 Fuzzing 是通过不断构造系统调用序列来驱动内核执行。这些系统调用组合会触发内核中的各种逻辑路径，进而暴露潜在的安全漏洞。\n为了生成更高效的测试用例，通过内核插桩机制获取覆盖率反馈用于引导 Fuzzing。内核通过 KCOV 插桩内核代码，获得边覆盖。被 KCOV 编译的内核运行起来后，会在sys/kernel/debug/kcov目录下生成对应的接口文件，Syzkaller 程序会通过ioctl接口与该文件交互，获取内核的执行路径信息，从而作为覆盖率反馈。\nGoogle 还维护了一个公开的 Syzkaller 平台——syzbot，用于持续自动 Fuzzing 最新的 Linux 内核主线。我们可以通过 syzbot 查看 Linux 系统中常见的漏洞的分布区域。\n架构信息 下面是 Syzkaller 的架构图，主要分为二个组件，分别是 syz-manager 和 syz-executor（新版取消了 syz-fuzzer 组件）：\nsyz-manager：主控模块，运行在 VM 外。\n在宿主机上运行，每个虚拟机对应一个 syz-manager 启动的管理进程。 内置 fuzzing 核心逻辑（包括系统调用生成、变异、语料更新等）； 收集并记录覆盖率和崩溃信息。 提供 Web UI 展示统计信息。 syz-executor：在 VM 内执行。\n运行于每个虚拟机内部。 接收 syz-manager 下发的系统调用程序（syscall sequence）。 启动临时子进程执行单一测试输入（即一系列系统调用）。 收集 KCOV 覆盖率信息，反馈执行结果。 报告崩溃、挂起或异常状态。 以 C++ 静态编译方式实现，进程间通过共享内存通信，保证简洁、高效。 工作流程 syz-manager 生成系统调用序列，封装成二进制文件。 通过 SSH 将测试程序传输到目标虚拟机。 syz-executor 接收程序，执行系统调用组合以触发内核不同代码路径。 利用内核的 KCOV 插桩收集覆盖率信息，作为反馈引导 Fuzz。 syz-manager 监控虚拟机运行状态，遇内核 panic 自动重启虚拟机（借助虚拟机快照和 watchdog 机制）。 崩溃和覆盖率数据被收集并持久化，便于后续分析和复现。 架构示意图：\n+----------------------+ | syz-manager | ⇽ 宿主机（管理者） |----------------------| | - 管理虚拟机实例 | | - 系统调用生成与变异 | | - 收集覆盖率与崩溃 | | - Web UI 展示 | +----------+-----------+ | | RPC 通信 v +----------+-----------+ | syz-executor | ⇽ 虚拟机内部执行 |----------------------| | - 执行系统调用程序 | | - 收集 KCOV 覆盖率 | | - 上报崩溃与反馈结果 | +----------------------+ 崩溃报告 Syzkaller 对每一种唯一的内核崩溃（Crash）都会保存一个专属目录，目录名是崩溃的唯一标识（hash），方便归类和去重。\n目录结构示例：\nsyzkaller_workdir/crashes/ ├── 6e512290efa36515a7a27e53623304d20d1c3e/ │ ├── description # 崩溃简短描述 │ ├── log0 # 原始内核日志及测试输入（第一次崩溃） │ ├── report0 # 后处理符号化报告（第一次崩溃） │ ├── log1 # 原始日志（重复崩溃） │ ├── report1 # 后处理报告（重复崩溃） │ ├── report.prog # 复现某次 fuzz 触发的内核 crash 的程序 │ └── report.cprog # repro.prog 的 C 可执行复现程序 ├── 77c578906abe311d06227b9dc3bffa4c52676f/ │ ├── description │ ├── log0 │ ├── report0 │ └── ... 三种特殊崩溃类型：\n这类崩溃通常没有正常的日志和报告，但也是内核异常的信号。\n崩溃类型 说明 no output from test machine 测试机无任何输出，通常指内核死锁、严重挂起或崩溃。 lost connection to test machine SSH 连接中断，可能内核 panic 或网络故障导致。 test machine is not executing programs 测试机看似在线，但长时间未执行测试程序，可能挂起或陷入死循环。 这些情况可能没有对应的logN或reportN文件。 日志中如出现 Go runtime panic 等异常，也是一种重要的错误信号。 大部分情况下这些崩溃表明内核死机或类似的环境问题。\n环境配置 使用 Syzkaller 进行 Linux 内核的 Fuzzing 需要以下环境：\n硬件支持 编译 Syzkaller 项目 编译 Linux 内核 配置 Qemu 虚拟机 硬件支持 使用 Syzkaller 进行内核模糊测试，需要满足以下硬件和内核条件：\nCPU 支持虚拟化 检查 CPU 是否支持虚拟化技术：\negrep -wo 'vmx|svm' /proc/cpuinfo | sort | uniq 有输出 vmx → Intel 支持虚拟化\n有输出 svm → AMD 支持虚拟化\n没输出 → CPU 虚拟化关闭，需在 BIOS 开启（Intel VT-x 或 AMD-V）\n内核支持 KVM\nSyzkaller 依赖 KVM 进行虚拟化测试，因此需要加载相应模块：\nsudo modprobe kvm sudo modprobe kvm_intel # Intel CPU # 或者 sudo modprobe kvm_amd # AMD CPU 编译Syzkaller 编译 Syzkaller 需安装 Go 编译器和 C 编译器：\n# 下载 Go 1.23.7 wget https://go.dev/dl/go1.23.7.linux-amd64.tar.gz # 解压到 /usr/local sudo tar -C /usr/local -xzf go1.23.7.linux-amd64.tar.gz # 设置环境变量 export GOROOT=/usr/local/go export GOPATH=$HOME/go export PATH=$GOROOT/bin:$GOPATH/bin:$PATH sudo apt install gcc # 不开代理建议配置 Go 国内代理 export GOPROXY=https://goproxy.cn,direct 安装所需的依赖：\n# 安装所需的依赖 sudo apt update sudo apt install build-essential clang llvm libncurses5-dev libssl-dev libelf-dev bc sudo apt install make flex bison libncurses-dev libelf-dev libssl-dev 编译 Syzkaller：\ngit clone https://github.com/google/syzkaller cd syzkaller make all 如果我们需要对其它架构下的目标进行 Fuzz，那么我们需要进行交叉编译。\n#如 arm 架构的目标 make CC=aarch64-linux-gnu-g++ TARGETARCH=arm64 编译完成后，生成的执行文件会放在syzkaller/bin/目录中。\n编译Linux内核 以内核版本 5.15 为例：\nwget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.38.tar.xz tar -xvf linux-5.15.186.tar.xz \u0026\u0026 cd linux-5.15 make defconfig # 生成默认配置（根据架构） make kvm_guest.config #开启适合 KVM 来宾系统的选项 syzkaller 所需的功能主要是启用KCOV来收集内核覆盖，并启用KASAN来检测内存错误。\n修改内核配置，通过scripts/config启用所需选项，以便于让内核更好的被 Fuzz。\n# 通过 scripts/config 启用所需选项 scripts/config --enable CONFIG_KCOV # 启用 KCOV scripts/config --enable CONFIG_KASAN # 启用 KASAN scripts/config --enable CONFIG_KASAN_INLINE # 允许内联检测代码 scripts/config --enable CONFIG_DEBUG_INFO scripts/config --disable CONFIG_DEBUG_INFO_NONE scripts/config --enable CONFIG_DEBUG_INFO_DWARF4 # 开启内核调试信息生成 scripts/config --enable CONFIG_NET_SCHED scripts/config --enable CONFIG_NET_CLS_ACT scripts/config --enable CONFIG_NET_SCH_FQ scripts/config --enable CONFIG_NET_SCH_NETEM scripts/config --enable CONFIG_NET_SCH_INGRESS scripts/config --enable CONFIG_NET_SCH_HTB scripts/config --enable CONFIG_NET_SCH_PRIO scripts/config --enable CONFIG_CONFIGFS_FS # 启用 configfs 文件系统支持 scripts/config --enable CONFIG_SECURITYFS # 启用 securityfs 文件系统 scripts/config --enable CONFIG_KCOV_JIT scripts/config --enable CONFIG_DEBUG_KERNEL scripts/config --enable CONFIG_LOCKDEP 重新生成配置文件并编译：\n#修改完成后更新配置 make olddefconfig #编译 make -j$(nproc) 编译后会生成以下文件：\nbzImage：经过压缩的可启动内核镜像，位于arch目录中相应架构的目录下。 vmlinux：带有调试符号的未压缩内核镜像。 Qemu配置 Syzkaller 主要通过 Qemu 来运行 Linux 内核。\n安装 qemu：\nsudo apt install qemu-system-x86 创建虚拟机镜像：\n使用debootstrap来创建一个最小的 Debian 系统根文件系统。\nsudo apt install debootstrap cd /linux #下载 syzkaller 项目 tools 目录下的 create-image.sh 文件 wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh -O create-image.sh chmod +x create-image.sh #Linux 项目不能存在于挂载目录上，否则会报错 ./create-image.sh 脚本运行完后，当前目录下多了几个文件：\n❯ ls bullseye bullseye.id_rsa bullseye.id_rsa.pub bullseye.img create-image.sh 主要文件：\nbullseye.img：虚拟机硬盘镜像文件 bullseye.id_rsa：SSH 私钥 bullseye.id_rsa.pub：SSH 公钥 启动虚拟机：\n修改指定bzImage文件和bullseye.img文件，其余参数不变。\nqemu-system-x86_64 \\ -m 2G \\ -smp 2 \\ -kernel /linux/arch/x86/boot/bzImage \\ #指定bzImage文件 -append \"console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0\" \\ -drive file=/linux/bullseye.img,format=raw \\ #指定文件系统 -net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22 \\ -net nic,model=e1000 \\ -enable-kvm \\ -nographic \\ -pidfile vm.pid \\ 2\u003e\u00261 | tee vm.log 如果成功的话，就会出现 syzkaller login。用户名键入root，无需输入密码，即可进入终端。\n我们需要测试 ssh 是否能正常工作，因为 syzkaller 是通过 ssh 向 VM 传输文件的。\nssh -i /linux/bullseye.id_rsa -p 10021 -o \"StrictHostKeyChecking no\" root@localhost 然后我们可以通过poweroff命令关闭虚拟机模拟的系统。\n基本用法 配置文件 当以上环境搭建完成后，为 Syzkaller 创建一个配置文件test.cfg，这个配置文件将指定一些参数，如目标内核、内核调试符号、执行的测试类型等。以下是官方的配置示例：\n{ \"target\": \"linux/amd64\", // 目标平台架构 \"http\": \"127.0.0.1:56741\", // WebUI接口 \"workdir\": \"/linux/workdir/\", // 工作目录 \"kernel_obj\": \"/linux/\", // 内核路径 \"image\": \"/linux/bullseye.img\", // QEMU 虚拟机镜像 \"sshkey\": \"/linux/bullseye.id_rsa\", // 连接 虚拟机 用的私钥 \"syzkaller\": \"/syzkaller/\", // syzkaller 源码路径 \"procs\": 8, // 每个 VM 中并发 fuzz 实例数量 \"type\": \"qemu\", // 虚拟机类型 \"vm\": { \"count\": 4, // 启动的 VM 数量 \"kernel\": \"/linux/arch/x86/boot/bzImage\", // bzImage 路径 \"cmdline\": \"net.ifnames=0\", // 内核参数（简化网络设备名） \"cpu\": 2, // 每个 VM 的 CPU 数量 \"mem\": 2048 // 每个 VM 的内存（单位：MB） } } 启动运行 执行以下命令来运行 Syzkaller：\nsyz-manager -config test.cfg 一但 Syzkaller 在其中一个 VM 中检测到内核崩溃，它将自动重现此崩溃的过程。默认情况下，它将使用 4 个 VM 来重新崩溃，然后最小化导致崩溃的重新。\n启动后可以通过http://localhost:56741访问 WebUI 界面，看到以下界面代码启动成功。 如果出错，加上-debug参数可以排查 Syzkaller 运行失败的问题。\nsyz-manager -config test.cfg --debug 它会输出syz-manager的日志信息，包括虚拟机启动、SSH 连接尝试以及syz-executor的运行状态等详细内容。\nKCOV Syzkaller 使用 KCOV 接口收集代码覆盖信息，可以通过访问以下地址查看覆盖率信息：\nhttp://127.0.0.1:$(PORT)/cover 我们可以选择想要查看的文件查看更具体的覆盖率。\nKCOV 会使用不同颜色高亮显示已覆盖的分支，颜色标注说明：\n已覆盖：黑色 部分覆盖：橙色 函数未执行：暗红色 未覆盖：红色 未插桩：灰色 Syzkaller 项目提供了 syz-cover 工具，可以基于原始覆盖率数据生成报告。\n构建方法：\nmake cover 原始覆盖率数据可通过 syz-manager 获取：\nwget http://localhost:/rawcover 将数据输入 syz-cover 生成报告：\nbin/syz-cover --config rawcover 导出函数覆盖率 CSV 文件：\nbin/syz-cover --config --csv \u003c输出文件名\u003e rawcover 导出源码行覆盖率 JSON 文件：\nbin/syz-cover --config --json \u003c输出文件名\u003e rawcover syzlang Syzkaller 自己定义了一套声明式语言，称为 syzlang，用于描述系统调用（syscall）的接口和参数格式。每个目标设备节点通常对应一个专门的 syzlang 声明文件（txt 格式）。通过通过定制 syzlang 文件，Syzkaller 能精准理解目标内核或子系统的系统调用参数及行为，从而提高模糊测试的效率和覆盖率。\n基本结构 syzlang 文件基于 Syzkaller 设计的语法，描述包括：系统调用名称与编号、参数类型、参数的可选值、返回值类型以及常量与宏定义引用。\n一个 syzlang 描述文件通常包含以下元素：\n元素 示例 说明 include include 引用头文件，仅作为标注 syscall open(file filename, flags flags[open_flags], mode flags[open_mode]) fd 定义 syscall 返回值 fd, intptr, void 返回类型（通常是 resource） flags open_flags = O_RDONLY, O_RDWR, O_CREAT 枚举值集合 bitmask prot_flags = PROT_READ, PROT_WRITE 按位或组合 struct sock_fprog { len len[filter, int16]; filter ptr[in, array[sock_filter]] } 定义结构体 union union u [ type1, type2 ] 定义联合体 别名 type buffer ptr[in, array[int8]] 类型模板/别名 注释 # comment 单行注释 例：\nopen(file filename, flags flags[open_flags], mode flags[open_mode]) fd read(fd fd, buf buffer[out], count len[buf]) close(fd fd) open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, O_CREAT open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP syzlang 中的注释与 Shell 脚本注释形式相同，为以#开头的单行注释。在 syzlang 中，我们可以额外引入内核源码文件作为参数、系统调用等一系列的补充，形式与 C 语言的 include 语句大致相同，不过没有了开头的#号\nopenat(fd fd, path ptr[in, filename], flags flags[open_flags], mode mode[octal]) fd openat：系统调用名称 参数说明： fd fd：一个文件描述符类型参数。 path ptr[in, filename]：输入参数指针，指向一个文件名 flags flags[open_flags]：带有符号集合的 flags mode mode[octal]：八进制表示的权限 返回值：类型为 fd（文件描述符） syscall描述基本格式 syscallname(argname1 type1, argname2 type2, ...) return_type 常用类型包括：\nintN / intptr：普通整数类型（带有可选范围、对齐） flags[flagname]：枚举或位标志 ptr[in, type]：指针（方向可选 in/out/inout） array[type, size]：数组（长度可选固定/范围） string[filename]：字符串（例如生成文件路径） len[fieldname] / bytesize[fieldname]：指定字段长度 类型模板与别名：\ntype buffer[DIR] ptr[DIR, array[int8]] type optional[T] [ val\tT void\tvoid ] [varlen] 这可以大大简化重复结构的写法，增强可读性和复读性。\n调用属性：\n可选关键字修饰 syscall 调用行为：\nno_generate: 不自动生成调用（用于 seed 触发） no_minimize: 崩溃最小化时跳过该调用 ignore_return: 不使用返回值作为反馈路径 timeout[N], prog_timeout[N]: 增加 fuzz 超时时间 disabled: 禁用该 syscall（调试或逐步启用时有用） 条件字段语法与路径引用：\nfield2 int32 (if[value[header:haveInteger] == 1]) 使用 value[path] 可引用嵌套结构字段 可组合逻辑运算：==, !=, \u0026, || syscall:argname 可引用 syscall 外部参数 注意：不支持条件字段嵌套引用链（如字段本身带 if） 类型系统 基本类型： int8, int16, int32, int64 const[123, int32] # 常量 bool8, bool32 # 布尔类型 指针类型： ptr[in, struct_name] # 输入指针 ptr[out, buffer] # 输出指针 数组： array[int32, 4] # 固定长度数组 array[int8, VAR] # 动态数组 union union my_union [ type1 type2 type3 ] 最后一个 union 项不能加条件（必须有 fallback），[varlen] 表示大小依赖于所选字段。\nstruct： my_struct { field1 int32 field2 ptr[in, buffer] ... } 可以使用条件字段 (if[...])、可以定义为 [packed] 结构以避免自动对齐、支持out_overlay字段区分输入输出共享内存布局。\n常量和flags const define SOME_CONST 0x1000 flags flags open_flags = O_RDONLY, O_WRONLY, O_CREAT, O_APPEND bitmask bitmask是一种 flags 类型修饰符，表示这些 flag 标志可以通过按位或的方式组成多个取值。\nbitmask prot_flags = PROT_READ, PROT_WRITE, PROT_EXEC 资源类型 用于管理系统资源，如文件描述符、socket、eventfd 等。资源是 syzkaller 建立 syscall 顺序依赖关系的关键。\nresource fd[int32]: 0xffffffffffffffff, AT_FDCWD open(...) fd read(fd fd, ...) close(fd fd) 资源的使用可以帮助 Syzkaller 自动构建合法调用链。\n高级特性 define宏定义： 可定义魔数、长度、特殊常量，用于结构体或验证。\ndefine XT_BPF_MAX_NUM_INSTR 64 [align[x]]对齐约束： my_struct { field1 int32 field2 ptr[in, buffer] } [align[8]] [packed]与[varlen]修饰符 [packed]：紧凑布局，取消默认 padding。 [varlen]：用于描述变长结构体或联合体的尾部。 描述文件还包含指向 Linux 内核头文件的include指令、指向自定义 Linux 内核头文件目录的incdir指令和定义符号常量值的define指令。\n编写技巧 系统调用 / 结构体 / 字段 / 标志命名：遵循内核已有命名，不要创造新名字； 系统调用顺序中的资源：in/out/inout决定调用顺序； 使用未声明的值：不要随意添加-1、INT_MAX这种特殊值； Flags / Enums：flag类型可用于枚举、位标志、混合模式。 声明顺序：不要求先声明后使用，推荐按重要性排序。与 C 相反，最重要的放最前面。 使用流程 编写系统调用描述文件时我们需要调研接口，了解相关 syscalls。然后将编写的描述文件放入syzkaller/sys/linux这个目录下。最后我们需要使用 syz-extract 和 syz-gen 来生成 Go 描述代码。\n后面我们会通过实例来学习这个流程的具体操作。\nHeaderparser 由于手工编写 syzlang 描述成本较高，人们开始研究自动化生成系统调用描述的方法。headerparser 就是一个比较成熟的辅助工具，可自动生成 syzlang 描述。\n为了让 Syzkaller 在 fuzz 某个设备节点时更加智能，你可以提供该设备所需的ioctl参数结构体类型信息。然而，当结构体类型数量庞大时，手动编写描述文件的工作量会很大。\n为减轻这种负担，headerlib会尽量自动生成这些描述文件。不过，你仍需从 类型列表 中手动选择适合的 syzkaller 数据类型。\n下载：Headerparser\n环境配置：\npip3 install pycparser 基本用法：\npython3 headerparser.py --filenames=./test_headers/th_b.h B { B1 len|fileoff|flags|intN #(unsigned long) B2 len|fileoff|flags|intN #(unsigned long) } struct_containing_union { something len|fileoff|flags|int32 #(int) a_union.a_char ptr[in|out, string]|ptr[in, filename] #(char*) a_union.B_ptr ptr|buffer|array #(struct B*) } 你可以直接复制Structure Metadata部分的内容到 syzkaller 的设备描述文件中。\n实例 这里我们使用一个存在漏洞的驱动模块代码来测试我们是否可以使用 Syzkaller 将其 Fuzzing 出来。\n漏洞驱动 初始加载驱动时，会在/proc文件夹下创建一个名为test的伪设备节点。然后支持用户空间的read和write操作。\n#include #include #include #include #include #define MY_DEV_NAME \"test\" #define DEBUG_FLAG \"PROC_DEV\" static ssize_t proc_read(struct file *proc_file, char __user *proc_user, size_t n, loff_t *loff); static ssize_t proc_write(struct file *proc_file, const char __user *proc_user, size_t n, loff_t *loff); static int proc_open(struct inode *proc_inode, struct file *proc_file); // file_operations 结构体，用于注册读写操作 static const struct proc_ops proc_fops = { .proc_open = proc_open, .proc_read = proc_read, .proc_write = proc_write, }; // 模块初始化函数，在 insmod 加载模块时被调用 static int __init mod_init(void) { struct proc_dir_entry *test_entry; printk(DEBUG_FLAG \": proc init start!\\n\"); test_entry = proc_create(MY_DEV_NAME, 0666, NULL, \u0026proc_fops); if (!test_entry) printk(DEBUG_FLAG \": failed to create /proc entry!\\n\"); else printk(DEBUG_FLAG \": proc init over!\\n\"); return 0; } // 打开操作，仅打印调试信息 static int proc_open(struct inode *proc_inode, struct file *proc_file) { printk(DEBUG_FLAG \": into open!\\n\"); return 0; } // 读操作函数：当前没有真正实现任何功能，仅打印调试信息 static ssize_t proc_read(struct file *proc_file, char __user *proc_user, size_t n, loff_t *loff) { printk(DEBUG_FLAG\":finish copy_from_use,the string of newbuf is\"); return 0; } // 写操作函数：存在严重的堆溢出漏洞 static ssize_t proc_write(struct file *proc_file, const char __user *proc_user, size_t n, loff_t *loff) { char *c = kmalloc(n + 512, GFP_KERNEL); //溢出，原先只有 512 字节，但是复制了 4096 size_t size = copy_from_user(c, proc_user, n + 4096); printk(DEBUG_FLAG\":into write %ld!\\n\", size); return 0; } // 注册模块初始化函数 module_init(mod_init); MODULE_LICENSE(\"GPL\"); 在proc_write函数中，kmalloc函数（kmalloc是内核的内存分配函数）申请了n+512字节的内核缓冲区。copy_from_user从用户空间复制n+4096字节到这个缓冲区中，超出其分配内存导致了堆溢出。\n编译进内核 将漏洞驱动编译进内核中。\n# 将漏洞驱动文件复制到 linux/drivers/char/ 目录下 mv test.c linux/drivers/char/ # 修改 Makefile echo \"obj-y += test.o\" \u003e\u003e linux/drivers/char/Makefile # 编译 make -j$(nproc) 运行内核后可用在/proc/test下可以找到目标：\nroot@syzkaller:~# cat /proc/test [ 61.660874] PROC_DEV: into open! 编写syzlang 接下来我们给漏洞驱动编写 syzlang 描述文件，在syzkaller/sys/linux/创建一个对应于这个漏洞驱动的描述文件vuln.txt，内容如下：\ninclude open$proc(file ptr[in, string[\"/proc/test\"]], flags flags[proc_open_flags], mode flags[proc_open_mode]) fd read$proc(fd fd, buf buffer[out], count len[buf]) write$proc(fd fd, buf buffer[in], count len[buf]) close$proc(fd fd) proc_open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE proc_open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH include ：表示引用linux/fs.h中定义的常量、结构体、宏等。 open$proc(...)：使用系统调用open，并通过$proc做 “符号变种” 标识。表示这个open是专用于/proc/test的。 file ptr[in, string[\"/proc/test\"]]：固定路径参数，仅允许 open /proc/test，是一个常量字符串。 bitmask proc_open_flags：定义了一组打开文件时的选项。 bitmask proc_open_mode：定义了文件权限。 在 Syzkaller 项目根目录下执行以下命令以创建对应的.const文件：\nbin/syz-extract -os linux -sourcedir /root/linux-6.12.38 -arch amd64 vuln.txt 然后就会在sys/linux目录下生成*.const文件，然后通过 syz-sysgen 将描述文件翻译成 go 代码结构。而且由于我们新增了 syscall 描述文件所以我们需要重建 Syzkaller。\n#将 syscall 描述文件转换为 go 代码结构 bin/syz-sysgen #重建 syzkaller make all Fuzzing 限定 Fuzz 的 syscall 集合，进一步缩小 Fuzz 的范围，提高精度。\n即让 Syzkaller 只 Fuzz 有漏洞的接口，提高测试效率。\n在开始 Fuzz 之前我们需要修改 Syzkaller 的运行配置启用这些系统调用。修改test.cfg，添加以下内容：\n{ \"target\": \"linux/amd64\", \"http\": \"127.0.0.1:56741\", \"workdir\": \"/linux/workdir/\", \"kernel_obj\": \"/linux/\", \"image\": \"/linux/bullseye.img\", \"sshkey\": \"/linux/bullseye.id_rsa\", \"syzkaller\": \"/syzkaller/\", \"procs\": 8, \"type\": \"qemu\", //开启的系统调用 \"enable_syscalls\": [ \"open$proc\", \"read$proc\", \"write$proc\", \"close$proc\" ], \"vm\": { \"count\": 4, \"kernel\": \"/linux/arch/x86/boot/bzImage\", \"cmdline\": \"net.ifnames=0\", \"cpu\": 2, \"mem\": 2048 } } 开始 Fuzzing：\nsyz-manager -config test.cfg -vv 10 很快就 Fuzzing 出了这个洞：\n然后 Syzkaller 就会复现 crash，reproducing=1表示有一个正在复现的 crash。\n一旦 Syzkaller 在某个 VM 中检测到内核崩溃，它将自动开始重现该崩溃全过程（除非你在配置中指定 \"reproduce\": false）。 默认情况下，它将使用 4 个 VM 来重现内核崩溃，并缩小引起内核崩溃的程序。 这可能会停止模糊测试，因为所有的 VM 可能都在忙于重现检测到的内核崩溃。\n重现一个内核崩溃的过程可能需要几分钟到一个小时不等，这取决于内核崩溃是否容易重现或根本不可重现。 由于这个过程并不完美，有一种尝试手动重现崩溃的方法，详见此处描述。\n如果成功找到复现程序，它将以 syzkaller 程序或 C 程序 进行呈现。 Syzkaller 总是尝试生成更用户友好的 C 语言复现程序，但有时因为各种原因失败（例如轻微不同的执行时序）。 如果 Syzkaller 仅生成 Syzkaller 程序，你可以通过一种方式执行这些程序来手动重现和调试内核崩溃。\n点击 has C repro 可以看到最小化的 crash：\n复现Crash 在我们运行 Syzkaller fuzzing 出 crash 的时候，Syzkaller 会调用 syz-execprog 执行 prog 程序并调用 syz-prog2c 尝试生成 C 代码。\n同样我们也可以自己将 syz-execprog push 到虚拟机中去运行我们要复现的 crash 的 prog 程序，但是这样效率较低而且效果不好，所以 Syzkaller 的工具链中集成了更好用的一些工具。\nsyz-crush syz-crush 用于读取 crash 的 prog 程序，然后重复执行该程序复现 crash。\n构建：\nmake crush 运行工具：\nmkdir workdir bin/syz-crush -config ./test.cfg ./crashes/736f88e1c13700f40338df50cd9a6364a46963cf/repro.cprog 其它参数：\n-debug：开启调试模式，将虚拟机的所有标准输出打印到本地控制台； -infinite：控制是否持续执行测试，默认一直执行，值为true或false； -strace：在 strace 模式下运行被测程序； -vv int：日志详细级别，由 0 到 3。 手动停止后观察 syz-crush 输出的信息发现，它在运行过程中进行了 104 次崩溃复现，其中成功稳定复现了 101 次（约 97.12%），并将这些经过验证的 crash 保存到了crashes/736f88e1c13700f40338df50cd9a6364a46963cf/crashes/439c37d288d4f26a33a6c7e5c57a97791453a447 目录下。\nsyz-repro 使用 repro 复现 crash：\nbin/syz-repro -config=test.cfg ./crashes/736f88e1c13700f40338df50cd9a6364a46963cf/repro.prog 其它参数：\n-count int：用于并行复现的 VM 数量，会覆盖配置文件； -crepro string：制定输出的 C Poc 文件名，默认为 repro.c。 -debug：打印更详细的调试信息。 -output string：制定输出的 syz 复现文件，默认为 repro.txt； -strace string：将执行过程的 strace 日志输出到指定文件； -title string：把复现到的 crash 摘要写入指定文件； -vv int：日志详细级别，由 0 到 2。 运行成功后 syz-repro 会解析 prog 文件并开始复现程序。\n分析 KASAN 报错头部发现inline_copy_from_user和_copy_from_user，说明越界发生在内核从用户空间读取数据时；跟踪调用栈发现copy_from_user（内核访问用户空间数据统一接口函数），proc_write函数紧跟在copy_from_user上方，说明它是调用copy_from_user的函数。也就是说，用户空间写入的数据经过proc_write进入内核，而越界正是在这个函数分配的缓冲区内发生的。\n分析输出信息发现内核分配了 512 字节的对象，但是程序写入了 4096 字节导致了越界：\n最后会在当前目录生成repro.txt文件，并描述复现 crash 中进行的一系列操作。\nrepro.txt 文件内容：\nr0 = open$proc(\u0026(0x7f0000000580), 0x2, 0x24) write$proc(r0, 0x0, 0x0) 这是最小化后的 syz 程序。\n总结 深入理解 Syzkaller，可以发现它不仅是一个简单的内核模糊测试工具，更是一种系统化、闭环化的内核安全研究框架。它通过精心设计的 syzlang 描述系统调用接口，并结合覆盖率驱动（KCOV）和内存检测（KASAN/KCOV/UBSAN）形成反馈闭环，使模糊测试从随机尝试升级为“智能探索”。这种探索不仅依赖于单个测试用例的执行，更依赖于对整个内核状态空间的动态感知与迭代优化，体现了“测试用例驱动漏洞发现”的思想。\n总的来说，Syzkaller 的力量不仅在于它发现漏洞的能力，更在于它提供了一种“理解内核、建模内核接口、用数据驱动探索”的研究范式。这种方法论对任何从事内核安全研究的开发者而言，都具有深远的启发意义：它强调自动化、反馈驱动和系统化设计，让 Fuzzing 不再是盲目的尝试，而是有策略、有方向的漏洞探索。\nReference 文章 - linux下fuzz初试 - 先知社区 Syzkaller入门知识总结 - FreeBuf网络安全行业门户 syzkaller fuzz 工具的使用方法及实践实例 | blingbling’s blog syzkaller 环境搭建 | Kiprey’s Blog\n",
+  "wordCount" : "8575",
+  "inLanguage": "zh",
+  "datePublished": "2025-11-30T23:30:38Z",
+  "dateModified": "2025-11-30T23:30:38Z",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://nanhang.top/posts/fuzz/syzkaller/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "南行's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://nanhang.top/assets/favicon.jpg"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://nanhang.top/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://nanhang.top/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Syzkaller初探
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%9f%a5%e8%af%86" aria-label="基本知识">基本知识</a></li>
+                    <li>
+                        <a href="#%e6%9e%b6%e6%9e%84%e4%bf%a1%e6%81%af" aria-label="架构信息">架构信息</a></li>
+                    <li>
+                        <a href="#%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b" aria-label="工作流程">工作流程</a></li>
+                    <li>
+                        <a href="#%e5%b4%a9%e6%ba%83%e6%8a%a5%e5%91%8a" aria-label="崩溃报告">崩溃报告</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae" aria-label="环境配置">环境配置</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%a1%ac%e4%bb%b6%e6%94%af%e6%8c%81" aria-label="硬件支持">硬件支持</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91syzkaller" aria-label="编译Syzkaller">编译Syzkaller</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91linux%e5%86%85%e6%a0%b8" aria-label="编译Linux内核">编译Linux内核</a></li>
+                    <li>
+                        <a href="#qemu%e9%85%8d%e7%bd%ae" aria-label="Qemu配置">Qemu配置</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%94%a8%e6%b3%95" aria-label="基本用法">基本用法</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6" aria-label="配置文件">配置文件</a></li>
+                    <li>
+                        <a href="#%e5%90%af%e5%8a%a8%e8%bf%90%e8%a1%8c" aria-label="启动运行">启动运行</a></li>
+                    <li>
+                        <a href="#kcov" aria-label="KCOV">KCOV</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#syzlang" aria-label="syzlang">syzlang</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%bb%93%e6%9e%84" aria-label="基本结构">基本结构</a></li>
+                    <li>
+                        <a href="#syscall%e6%8f%8f%e8%bf%b0%e5%9f%ba%e6%9c%ac%e6%a0%bc%e5%bc%8f" aria-label="syscall描述基本格式">syscall描述基本格式</a></li>
+                    <li>
+                        <a href="#%e7%b1%bb%e5%9e%8b%e7%b3%bb%e7%bb%9f" aria-label="类型系统">类型系统</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e9%87%8f%e5%92%8cflags" aria-label="常量和flags">常量和flags</a></li>
+                    <li>
+                        <a href="#%e8%b5%84%e6%ba%90%e7%b1%bb%e5%9e%8b" aria-label="资源类型">资源类型</a></li>
+                    <li>
+                        <a href="#%e9%ab%98%e7%ba%a7%e7%89%b9%e6%80%a7" aria-label="高级特性">高级特性</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99%e6%8a%80%e5%b7%a7" aria-label="编写技巧">编写技巧</a></li>
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8%e6%b5%81%e7%a8%8b" aria-label="使用流程">使用流程</a></li>
+                    <li>
+                        <a href="#headerparser" aria-label="Headerparser">Headerparser</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%ae%9e%e4%be%8b" aria-label="实例">实例</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e9%a9%b1%e5%8a%a8" aria-label="漏洞驱动">漏洞驱动</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91%e8%bf%9b%e5%86%85%e6%a0%b8" aria-label="编译进内核">编译进内核</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99syzlang" aria-label="编写syzlang">编写syzlang</a></li>
+                    <li>
+                        <a href="#fuzzing" aria-label="Fuzzing">Fuzzing</a></li>
+                    <li>
+                        <a href="#%e5%a4%8d%e7%8e%b0crash" aria-label="复现Crash">复现Crash</a><ul>
+                            
+                    <li>
+                        <a href="#syz-crush" aria-label="syz-crush">syz-crush</a></li>
+                    <li>
+                        <a href="#syz-repro" aria-label="syz-repro">syz-repro</a></li></ul>
+                    </li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%80%bb%e7%bb%93" aria-label="总结">总结</a></li>
+                    <li>
+                        <a href="#reference" aria-label="Reference">Reference</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<h3 id="基本知识">基本知识<a hidden class="anchor" aria-hidden="true" href="#基本知识">#</a></h3>
+<p>Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 <a href="https://github.com/dvyukov">dvyukov</a> 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。</p>
+<p>众所周知内核是通过系统调用进行交互的，因此 Syzkaller 的 Fuzzing 是通过<strong>不断构造系统调用序列</strong>来驱动内核执行。这些系统调用组合会触发内核中的各种逻辑路径，进而暴露潜在的安全漏洞。</p>
+<p>为了生成更高效的测试用例，通过内核插桩机制获取覆盖率反馈用于引导 Fuzzing。内核通过 KCOV 插桩内核代码，获得边覆盖。被 KCOV 编译的内核运行起来后，会在<code>sys/kernel/debug/kcov</code>目录下生成对应的接口文件，Syzkaller 程序会通过<code>ioctl</code>接口与该文件交互，获取内核的执行路径信息，从而作为覆盖率反馈。</p>
+<p>Google 还维护了一个公开的 Syzkaller 平台——<a href="https://syzkaller.appspot.com/">syzbot</a>，用于持续自动 Fuzzing 最新的 Linux 内核主线。我们可以通过 syzbot 查看 Linux 系统中常见的漏洞的分布区域。</p>
+<h3 id="架构信息">架构信息<a hidden class="anchor" aria-hidden="true" href="#架构信息">#</a></h3>
+<p>下面是 Syzkaller 的架构图，主要分为二个组件，分别是 syz-manager 和 syz-executor（新版取消了 syz-fuzzer 组件）：</p>
+<img src="/assets/Pasted%20image%2020250521160056.png" width="60%">
+<p><strong>syz-manager</strong>：主控模块，运行在 VM 外。</p>
+<ul>
+<li>在宿主机上运行，每个虚拟机对应一个 syz-manager 启动的管理进程。</li>
+<li>内置 fuzzing 核心逻辑（包括系统调用生成、变异、语料更新等）；</li>
+<li>收集并记录覆盖率和崩溃信息。</li>
+<li>提供 Web UI 展示统计信息。</li>
+</ul>
+<p><strong>syz-executor</strong>：在 VM 内执行。</p>
+<ul>
+<li>运行于每个虚拟机内部。</li>
+<li>接收 syz-manager 下发的系统调用程序（syscall sequence）。</li>
+<li>启动临时子进程执行单一测试输入（即一系列系统调用）。</li>
+<li>收集 KCOV 覆盖率信息，反馈执行结果。</li>
+<li>报告崩溃、挂起或异常状态。</li>
+<li>以 C++ 静态编译方式实现，进程间通过共享内存通信，保证简洁、高效。</li>
+</ul>
+<h3 id="工作流程">工作流程<a hidden class="anchor" aria-hidden="true" href="#工作流程">#</a></h3>
+<ul>
+<li>syz-manager 生成系统调用序列，封装成二进制文件。</li>
+<li>通过 SSH 将测试程序传输到目标虚拟机。</li>
+<li>syz-executor 接收程序，执行系统调用组合以触发内核不同代码路径。</li>
+<li>利用内核的 KCOV 插桩收集覆盖率信息，作为反馈引导 Fuzz。</li>
+<li>syz-manager 监控虚拟机运行状态，遇内核 panic 自动重启虚拟机（借助虚拟机快照和 watchdog 机制）。</li>
+<li>崩溃和覆盖率数据被收集并持久化，便于后续分析和复现。</li>
+</ul>
+<p><strong>架构示意图</strong>：</p>
+<pre tabindex="0"><code>+----------------------+
+|     syz-manager      |    ⇽ 宿主机（管理者）
+|----------------------|
+| - 管理虚拟机实例      |
+| - 系统调用生成与变异  |
+| - 收集覆盖率与崩溃    |
+| - Web UI 展示        |
++----------+-----------+
+           |
+           | RPC 通信
+           v
++----------+-----------+
+|    syz-executor      |    ⇽ 虚拟机内部执行
+|----------------------|
+| - 执行系统调用程序    |
+| - 收集 KCOV 覆盖率    |
+| - 上报崩溃与反馈结果   |
++----------------------+
+</code></pre><h3 id="崩溃报告">崩溃报告<a hidden class="anchor" aria-hidden="true" href="#崩溃报告">#</a></h3>
+<p>Syzkaller 对每一种唯一的内核崩溃（Crash）都会保存一个专属目录，目录名是崩溃的唯一标识（hash），方便归类和去重。</p>
+<p>目录结构示例：</p>
+<pre tabindex="0"><code>syzkaller_workdir/crashes/
+   ├── 6e512290efa36515a7a27e53623304d20d1c3e/
+   │     ├── description    # 崩溃简短描述
+   │     ├── log0           # 原始内核日志及测试输入（第一次崩溃）
+   │     ├── report0        # 后处理符号化报告（第一次崩溃）
+   │     ├── log1           # 原始日志（重复崩溃）
+   │     ├── report1        # 后处理报告（重复崩溃）
+   │ 	 ├── report.prog    # 复现某次 fuzz 触发的内核 crash 的程序
+   │     └── report.cprog   # repro.prog 的 C 可执行复现程序
+   ├── 77c578906abe311d06227b9dc3bffa4c52676f/
+   │     ├── description
+   │     ├── log0
+   │     ├── report0
+   │     └── ...
+</code></pre><p>三种特殊崩溃类型：</p>
+<p>这类崩溃通常没有正常的日志和报告，但也是内核异常的信号。</p>
+<table>
+  <thead>
+      <tr>
+          <th>崩溃类型</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>no output from test machine</code></td>
+          <td>测试机无任何输出，通常指内核死锁、严重挂起或崩溃。</td>
+      </tr>
+      <tr>
+          <td><code>lost connection to test machine</code></td>
+          <td>SSH 连接中断，可能内核 panic 或网络故障导致。</td>
+      </tr>
+      <tr>
+          <td><code>test machine is not executing programs</code></td>
+          <td>测试机看似在线，但长时间未执行测试程序，可能挂起或陷入死循环。</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>这些情况可能没有对应的<code>logN</code>或<code>reportN</code>文件。</li>
+<li>日志中如出现 Go runtime panic 等异常，也是一种重要的错误信号。</li>
+</ul>
+<p>大部分情况下这些崩溃表明内核死机或类似的环境问题。</p>
+<h2 id="环境配置">环境配置<a hidden class="anchor" aria-hidden="true" href="#环境配置">#</a></h2>
+<p>使用 Syzkaller 进行 Linux 内核的 Fuzzing 需要以下环境：</p>
+<ul>
+<li>硬件支持</li>
+<li>编译 Syzkaller 项目</li>
+<li>编译 Linux 内核</li>
+<li>配置 Qemu 虚拟机</li>
+</ul>
+<h3 id="硬件支持">硬件支持<a hidden class="anchor" aria-hidden="true" href="#硬件支持">#</a></h3>
+<p>使用 Syzkaller 进行内核模糊测试，需要满足以下硬件和内核条件：</p>
+<ul>
+<li><strong>CPU 支持虚拟化</strong></li>
+</ul>
+<p>检查 CPU 是否支持虚拟化技术：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">egrep -wo <span class="s1">&#39;vmx|svm&#39;</span> /proc/cpuinfo <span class="p">|</span> sort <span class="p">|</span> uniq
+</span></span></code></pre></div><ul>
+<li>
+<p>有输出 <code>vmx</code> → Intel 支持虚拟化</p>
+</li>
+<li>
+<p>有输出 <code>svm</code> → AMD 支持虚拟化</p>
+</li>
+<li>
+<p>没输出 → CPU 虚拟化关闭，需在 BIOS 开启（Intel VT-x 或 AMD-V）</p>
+</li>
+<li>
+<p><strong>内核支持 KVM</strong></p>
+</li>
+</ul>
+<p>Syzkaller 依赖 KVM 进行虚拟化测试，因此需要加载相应模块：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo modprobe kvm  
+</span></span><span class="line"><span class="cl">sudo modprobe kvm_intel   <span class="c1"># Intel CPU  </span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 或者  </span>
+</span></span><span class="line"><span class="cl">sudo modprobe kvm_amd     <span class="c1"># AMD CPU</span>
+</span></span></code></pre></div><h3 id="编译syzkaller">编译Syzkaller<a hidden class="anchor" aria-hidden="true" href="#编译syzkaller">#</a></h3>
+<p>编译 Syzkaller 需安装 Go 编译器和 C 编译器：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 下载 Go 1.23.7</span>
+</span></span><span class="line"><span class="cl">wget https://go.dev/dl/go1.23.7.linux-amd64.tar.gz
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 解压到 /usr/local</span>
+</span></span><span class="line"><span class="cl">sudo tar -C /usr/local -xzf go1.23.7.linux-amd64.tar.gz
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 设置环境变量</span>
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GOROOT</span><span class="o">=</span>/usr/local/go
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GOPATH</span><span class="o">=</span><span class="nv">$HOME</span>/go
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$GOROOT</span>/bin:<span class="nv">$GOPATH</span>/bin:<span class="nv">$PATH</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">sudo apt install gcc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 不开代理建议配置 Go 国内代理</span>
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GOPROXY</span><span class="o">=</span>https://goproxy.cn,direct
+</span></span></code></pre></div><p>安装所需的依赖：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 安装所需的依赖</span>
+</span></span><span class="line"><span class="cl">sudo apt update
+</span></span><span class="line"><span class="cl">sudo apt install build-essential clang llvm libncurses5-dev libssl-dev libelf-dev bc
+</span></span><span class="line"><span class="cl">sudo apt install make flex bison libncurses-dev libelf-dev libssl-dev
+</span></span></code></pre></div><p>编译 Syzkaller：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git clone https://github.com/google/syzkaller
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> syzkaller
+</span></span><span class="line"><span class="cl">make all
+</span></span></code></pre></div><p>如果我们需要对其它架构下的目标进行 Fuzz，那么我们需要进行交叉编译。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#如 arm 架构的目标</span>
+</span></span><span class="line"><span class="cl">make <span class="nv">CC</span><span class="o">=</span>aarch64-linux-gnu-g++ <span class="nv">TARGETARCH</span><span class="o">=</span>arm64
+</span></span></code></pre></div><p>编译完成后，生成的执行文件会放在<code>syzkaller/bin/</code>目录中。</p>
+<h3 id="编译linux内核">编译Linux内核<a hidden class="anchor" aria-hidden="true" href="#编译linux内核">#</a></h3>
+<p>以内核版本 5.15 为例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.38.tar.xz
+</span></span><span class="line"><span class="cl">tar -xvf linux-5.15.186.tar.xz <span class="o">&amp;&amp;</span> <span class="nb">cd</span> linux-5.15
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">make defconfig         <span class="c1"># 生成默认配置（根据架构）</span>
+</span></span><span class="line"><span class="cl">make kvm_guest.config  <span class="c1">#开启适合 KVM 来宾系统的选项</span>
+</span></span></code></pre></div><p>syzkaller 所需的功能主要是启用<code>KCOV</code>来收集内核覆盖，并启用<code>KASAN</code>来检测内存错误。</p>
+<p>修改内核配置，通过<code>scripts/config</code>启用所需选项，以便于让内核更好的被 Fuzz。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 通过 scripts/config 启用所需选项</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_KCOV         <span class="c1"># 启用 KCOV</span>
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_KASAN        <span class="c1"># 启用 KASAN  </span>
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_KASAN_INLINE <span class="c1"># 允许内联检测代码</span>
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_DEBUG_INFO
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">scripts/config --disable CONFIG_DEBUG_INFO_NONE 
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_DEBUG_INFO_DWARF4 <span class="c1"># 开启内核调试信息生成</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCHED
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_CLS_ACT
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCH_FQ
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCH_NETEM
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCH_INGRESS
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCH_HTB
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_NET_SCH_PRIO
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_CONFIGFS_FS  <span class="c1"># 启用 configfs 文件系统支持</span>
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_SECURITYFS   <span class="c1"># 启用 securityfs 文件系统</span>
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_KCOV_JIT
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_DEBUG_KERNEL
+</span></span><span class="line"><span class="cl">scripts/config --enable CONFIG_LOCKDEP
+</span></span></code></pre></div><p>重新生成配置文件并编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#修改完成后更新配置</span>
+</span></span><span class="line"><span class="cl">make olddefconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#编译</span>
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>
+</span></span></code></pre></div><p>编译后会生成以下文件：</p>
+<ul>
+<li><code>bzImage</code>：经过压缩的可启动内核镜像，位于<code>arch</code>目录中相应架构的目录下。</li>
+<li><code>vmlinux</code>：带有调试符号的未压缩内核镜像。</li>
+</ul>
+<h3 id="qemu配置">Qemu配置<a hidden class="anchor" aria-hidden="true" href="#qemu配置">#</a></h3>
+<p>Syzkaller 主要通过 Qemu 来运行 Linux 内核。</p>
+<p>安装 qemu：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt install qemu-system-x86
+</span></span></code></pre></div><p>创建虚拟机镜像：</p>
+<p>使用<code>debootstrap</code>来创建一个最小的 Debian 系统根文件系统。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo apt install debootstrap
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> /linux
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#下载 syzkaller 项目 tools 目录下的 create-image.sh 文件</span>
+</span></span><span class="line"><span class="cl">wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh -O create-image.sh  
+</span></span><span class="line"><span class="cl">chmod +x create-image.sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#Linux 项目不能存在于挂载目录上，否则会报错</span>
+</span></span><span class="line"><span class="cl">./create-image.sh
+</span></span></code></pre></div><p>脚本运行完后，当前目录下多了几个文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ ls
+</span></span><span class="line"><span class="cl">bullseye  bullseye.id_rsa  bullseye.id_rsa.pub  bullseye.img  create-image.sh
+</span></span></code></pre></div><p>主要文件：</p>
+<ul>
+<li><code>bullseye.img</code>：虚拟机硬盘镜像文件</li>
+<li><code>bullseye.id_rsa</code>：SSH 私钥</li>
+<li><code>bullseye.id_rsa.pub</code>：SSH 公钥</li>
+</ul>
+<p>启动虚拟机：</p>
+<p>修改指定<code>bzImage</code>文件和<code>bullseye.img</code>文件，其余参数不变。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-system-x86_64 <span class="se">\ </span>                                  
+</span></span><span class="line"><span class="cl">  -m 2G <span class="se">\ </span>                                        
+</span></span><span class="line"><span class="cl">  -smp <span class="m">2</span> <span class="se">\ </span>                                       
+</span></span><span class="line"><span class="cl">  -kernel /linux/arch/x86/boot/bzImage <span class="se">\ </span>            <span class="c1">#指定bzImage文件</span>
+</span></span><span class="line"><span class="cl">  -append <span class="s2">&#34;console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0&#34;</span> <span class="se">\ </span>  
+</span></span><span class="line"><span class="cl">  -drive <span class="nv">file</span><span class="o">=</span>/linux/bullseye.img,format<span class="o">=</span>raw <span class="se">\ </span> <span class="c1">#指定文件系统</span>
+</span></span><span class="line"><span class="cl">  -net user,host<span class="o">=</span>10.0.2.10,hostfwd<span class="o">=</span>tcp:127.0.0.1:10021-:22 <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">  -net nic,model<span class="o">=</span>e1000 <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">  -enable-kvm <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">  -nographic <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">  -pidfile vm.pid <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">  2&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">|</span> tee vm.log
+</span></span></code></pre></div><p>如果成功的话，就会出现 syzkaller login。用户名键入<code>root</code>，无需输入密码，即可进入终端。</p>
+<img src="/assets/Pasted%20image%2020250713081526.png" width="80%">
+<p>我们需要测试 ssh 是否能正常工作，因为 syzkaller 是通过 ssh 向 VM 传输文件的。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ssh -i /linux/bullseye.id_rsa -p <span class="m">10021</span> -o <span class="s2">&#34;StrictHostKeyChecking no&#34;</span> root@localhost
+</span></span></code></pre></div><img src="/assets/Pasted%20image%2020250713081635.png" width="80%">
+<p>然后我们可以通过<code>poweroff</code>命令关闭虚拟机模拟的系统。</p>
+<h2 id="基本用法">基本用法<a hidden class="anchor" aria-hidden="true" href="#基本用法">#</a></h2>
+<h3 id="配置文件">配置文件<a hidden class="anchor" aria-hidden="true" href="#配置文件">#</a></h3>
+<p>当以上环境搭建完成后，为  Syzkaller 创建一个配置文件<code>test.cfg</code>，这个配置文件将指定一些参数，如目标内核、内核调试符号、执行的测试类型等。以下是官方的配置示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;target&#34;</span><span class="p">:</span> <span class="s2">&#34;linux/amd64&#34;</span><span class="p">,</span>                    <span class="c1">// 目标平台架构
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;http&#34;</span><span class="p">:</span> <span class="s2">&#34;127.0.0.1:56741&#34;</span><span class="p">,</span>                  <span class="c1">// WebUI接口
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;workdir&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/workdir/&#34;</span><span class="p">,</span>               <span class="c1">// 工作目录
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;kernel_obj&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/&#34;</span><span class="p">,</span>                    <span class="c1">// 内核路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;image&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/bullseye.img&#34;</span><span class="p">,</span>             <span class="c1">// QEMU 虚拟机镜像
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;sshkey&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/bullseye.id_rsa&#34;</span><span class="p">,</span>         <span class="c1">// 连接 虚拟机 用的私钥
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;syzkaller&#34;</span><span class="p">:</span> <span class="s2">&#34;/syzkaller/&#34;</span><span class="p">,</span>                 <span class="c1">// syzkaller 源码路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;procs&#34;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>                                 <span class="c1">// 每个 VM 中并发 fuzz 实例数量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;qemu&#34;</span><span class="p">,</span>                             <span class="c1">// 虚拟机类型
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;vm&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;count&#34;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>                               <span class="c1">// 启动的 VM 数量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nt">&#34;kernel&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/arch/x86/boot/bzImage&#34;</span><span class="p">,</span> <span class="c1">// bzImage 路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nt">&#34;cmdline&#34;</span><span class="p">:</span> <span class="s2">&#34;net.ifnames=0&#34;</span><span class="p">,</span>               <span class="c1">// 内核参数（简化网络设备名）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nt">&#34;cpu&#34;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>                                 <span class="c1">// 每个 VM 的 CPU 数量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nt">&#34;mem&#34;</span><span class="p">:</span> <span class="mi">2048</span>                               <span class="c1">// 每个 VM 的内存（单位：MB）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="启动运行">启动运行<a hidden class="anchor" aria-hidden="true" href="#启动运行">#</a></h3>
+<p>执行以下命令来运行 Syzkaller：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">syz-manager -config test.cfg
+</span></span></code></pre></div><p>一但 Syzkaller 在其中一个 VM 中检测到内核崩溃，它将自动重现此崩溃的过程。默认情况下，它将使用 4 个 VM 来重新崩溃，然后最小化导致崩溃的重新。</p>
+<p>启动后可以通过<code>http://localhost:56741</code>访问 WebUI 界面，看到以下界面代码启动成功。
+<img src="/assets/Pasted%20image%2020250823191402.png" width="80%"></p>
+<p>如果出错，加上<code>-debug</code>参数可以排查 Syzkaller 运行失败的问题。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">syz-manager -config test.cfg --debug
+</span></span></code></pre></div><p>它会输出<code>syz-manager</code>的日志信息，包括虚拟机启动、SSH 连接尝试以及<code>syz-executor</code>的运行状态等详细内容。</p>
+<h3 id="kcov">KCOV<a hidden class="anchor" aria-hidden="true" href="#kcov">#</a></h3>
+<p>Syzkaller 使用 KCOV 接口收集代码覆盖信息，可以通过访问以下地址查看覆盖率信息：</p>
+<pre tabindex="0"><code>http://127.0.0.1:$(PORT)/cover
+</code></pre><p>我们可以选择想要查看的文件查看更具体的覆盖率。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250930211622.png" style="max-width: 100%; height: auto;"></p>
+<p>KCOV 会使用不同颜色高亮显示已覆盖的分支，颜色标注说明：</p>
+<ul>
+<li>已覆盖：黑色</li>
+<li>部分覆盖：橙色</li>
+<li>函数未执行：暗红色</li>
+<li>未覆盖：红色</li>
+<li>未插桩：灰色</li>
+</ul>
+<p>Syzkaller 项目提供了 syz-cover 工具，可以基于原始覆盖率数据生成报告。</p>
+<p>构建方法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make cover
+</span></span></code></pre></div><p>原始覆盖率数据可通过 syz-manager 获取：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">wget http://localhost:&lt;syz-manager端口&gt;/rawcover
+</span></span></code></pre></div><p>将数据输入 syz-cover 生成报告：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">bin/syz-cover --config &lt;syzkaller配置文件路径&gt; rawcover
+</span></span></code></pre></div><p>导出函数覆盖率 CSV 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">bin/syz-cover --config &lt;syzkaller配置文件路径&gt; --csv &lt;输出文件名&gt; rawcover
+</span></span></code></pre></div><p>导出源码行覆盖率 JSON 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">bin/syz-cover --config &lt;syzkaller配置文件路径&gt; --json &lt;输出文件名&gt; rawcover
+</span></span></code></pre></div><h2 id="syzlang">syzlang<a hidden class="anchor" aria-hidden="true" href="#syzlang">#</a></h2>
+<p>Syzkaller 自己定义了一套声明式语言，称为 syzlang，用于描述系统调用（syscall）的接口和参数格式。每个目标设备节点通常对应一个专门的 syzlang 声明文件（txt 格式）。通过通过定制 syzlang 文件，Syzkaller 能精准理解目标内核或子系统的系统调用参数及行为，从而提高模糊测试的效率和覆盖率。</p>
+<h3 id="基本结构">基本结构<a hidden class="anchor" aria-hidden="true" href="#基本结构">#</a></h3>
+<p>syzlang 文件基于 Syzkaller 设计的语法，描述包括：系统调用名称与编号、参数类型、参数的可选值、返回值类型以及常量与宏定义引用。</p>
+<p>一个 syzlang 描述文件通常包含以下元素：</p>
+<table>
+  <thead>
+      <tr>
+          <th>元素</th>
+          <th>示例</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>include</code></td>
+          <td><code>include &lt;linux/fs.h&gt;</code></td>
+          <td>引用头文件，仅作为标注</td>
+      </tr>
+      <tr>
+          <td><code>syscall</code></td>
+          <td><code>open(file filename, flags flags[open_flags], mode flags[open_mode]) fd</code></td>
+          <td>定义 syscall</td>
+      </tr>
+      <tr>
+          <td>返回值</td>
+          <td><code>fd</code>, <code>intptr</code>, <code>void</code></td>
+          <td>返回类型（通常是 <code>resource</code>）</td>
+      </tr>
+      <tr>
+          <td><code>flags</code></td>
+          <td><code>open_flags = O_RDONLY, O_RDWR, O_CREAT</code></td>
+          <td>枚举值集合</td>
+      </tr>
+      <tr>
+          <td><code>bitmask</code></td>
+          <td><code>prot_flags = PROT_READ, PROT_WRITE</code></td>
+          <td>按位或组合</td>
+      </tr>
+      <tr>
+          <td><code>struct</code></td>
+          <td><code>sock_fprog { len len[filter, int16]; filter ptr[in, array[sock_filter]] }</code></td>
+          <td>定义结构体</td>
+      </tr>
+      <tr>
+          <td><code>union</code></td>
+          <td><code>union u [ type1, type2 ]</code></td>
+          <td>定义联合体</td>
+      </tr>
+      <tr>
+          <td>别名</td>
+          <td><code>type buffer ptr[in, array[int8]]</code></td>
+          <td>类型模板/别名</td>
+      </tr>
+      <tr>
+          <td>注释</td>
+          <td><code># comment</code></td>
+          <td>单行注释</td>
+      </tr>
+  </tbody>
+</table>
+<p>例：</p>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">open(file filename, flags flags[open_flags], mode flags[open_mode]) fd
+read(fd fd, buf buffer[out], count len[buf])
+close(fd fd)
+
+open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, O_CREAT
+open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP
+</code></pre><p>syzlang 中的注释与 Shell 脚本注释形式相同，为以<code>#</code>开头的单行注释。在 syzlang 中，我们可以额外引入内核源码文件作为参数、系统调用等一系列的补充，形式与 C 语言的 include 语句大致相同，不过没有了开头的<code>#</code>号</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">openat<span class="o">(</span>fd fd, path ptr<span class="o">[</span>in, filename<span class="o">]</span>, flags flags<span class="o">[</span>open_flags<span class="o">]</span>, mode mode<span class="o">[</span>octal<span class="o">])</span> fd
+</span></span></code></pre></div><ul>
+<li><code>openat</code>：系统调用名称</li>
+<li>参数说明：
+<ul>
+<li><code>fd fd</code>：一个文件描述符类型参数。</li>
+<li><code>path ptr[in, filename]</code>：输入参数指针，指向一个文件名</li>
+<li><code>flags flags[open_flags]</code>：带有符号集合的 flags</li>
+<li><code>mode mode[octal]</code>：八进制表示的权限</li>
+</ul>
+</li>
+<li>返回值：类型为 <code>fd</code>（文件描述符）</li>
+</ul>
+<h3 id="syscall描述基本格式">syscall描述基本格式<a hidden class="anchor" aria-hidden="true" href="#syscall描述基本格式">#</a></h3>
+<pre tabindex="0"><code>syscallname(argname1 type1, argname2 type2, ...) return_type
+</code></pre><p>常用类型包括：</p>
+<ul>
+<li><code>intN</code> / <code>intptr</code>：普通整数类型（带有可选范围、对齐）</li>
+<li><code>flags[flagname]</code>：枚举或位标志</li>
+<li><code>ptr[in, type]</code>：指针（方向可选 in/out/inout）</li>
+<li><code>array[type, size]</code>：数组（长度可选固定/范围）</li>
+<li><code>string[filename]</code>：字符串（例如生成文件路径）</li>
+<li><code>len[fieldname]</code> / <code>bytesize[fieldname]</code>：指定字段长度</li>
+</ul>
+<p>类型模板与别名：</p>
+<pre tabindex="0"><code>type buffer[DIR] ptr[DIR, array[int8]]
+type optional[T] [
+  val	T
+  void	void
+] [varlen]
+</code></pre><p>这可以大大简化重复结构的写法，增强可读性和复读性。</p>
+<p>调用属性：</p>
+<p>可选关键字修饰 syscall 调用行为：</p>
+<ul>
+<li><code>no_generate</code>: 不自动生成调用（用于 seed 触发）</li>
+<li><code>no_minimize</code>: 崩溃最小化时跳过该调用</li>
+<li><code>ignore_return</code>: 不使用返回值作为反馈路径</li>
+<li><code>timeout[N]</code>, <code>prog_timeout[N]</code>: 增加 fuzz 超时时间</li>
+<li><code>disabled</code>: 禁用该 syscall（调试或逐步启用时有用）</li>
+</ul>
+<p>条件字段语法与路径引用：</p>
+<pre tabindex="0"><code>field2 int32 (if[value[header:haveInteger] == 1])
+</code></pre><ul>
+<li>使用 <code>value[path]</code> 可引用嵌套结构字段</li>
+<li>可组合逻辑运算：<code>==</code>, <code>!=</code>, <code>&amp;</code>, <code>||</code></li>
+<li><code>syscall:argname</code> 可引用 syscall 外部参数</li>
+<li>注意：不支持条件字段嵌套引用链（如字段本身带 if）</li>
+</ul>
+<h3 id="类型系统">类型系统<a hidden class="anchor" aria-hidden="true" href="#类型系统">#</a></h3>
+<ul>
+<li>基本类型：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">int8, int16, int32, int64
+</span></span><span class="line"><span class="cl">const<span class="o">[</span>123, int32<span class="o">]</span>   <span class="c1"># 常量</span>
+</span></span><span class="line"><span class="cl">bool8, bool32       <span class="c1"># 布尔类型</span>
+</span></span></code></pre></div><ul>
+<li>指针类型：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ptr<span class="o">[</span>in, struct_name<span class="o">]</span>   <span class="c1"># 输入指针</span>
+</span></span><span class="line"><span class="cl">ptr<span class="o">[</span>out, buffer<span class="o">]</span>       <span class="c1"># 输出指针</span>
+</span></span></code></pre></div><ul>
+<li>数组：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">array<span class="o">[</span>int32, 4<span class="o">]</span>      <span class="c1"># 固定长度数组</span>
+</span></span><span class="line"><span class="cl">array<span class="o">[</span>int8, VAR<span class="o">]</span>     <span class="c1"># 动态数组</span>
+</span></span></code></pre></div><ul>
+<li>union</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">union my_union <span class="o">[</span>
+</span></span><span class="line"><span class="cl">  type1
+</span></span><span class="line"><span class="cl">  type2
+</span></span><span class="line"><span class="cl">  type3
+</span></span><span class="line"><span class="cl"><span class="o">]</span>
+</span></span></code></pre></div><p>最后一个 union 项不能加条件（必须有 fallback），<code>[varlen]</code> 表示大小依赖于所选字段。</p>
+<ul>
+<li>struct：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">my_struct <span class="o">{</span>
+</span></span><span class="line"><span class="cl">  field1   int32
+</span></span><span class="line"><span class="cl">  field2   ptr<span class="o">[</span>in, buffer<span class="o">]</span>
+</span></span><span class="line"><span class="cl">  ...
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></div><p>可以使用条件字段 <code>(if[...])</code>、可以定义为 <code>[packed]</code> 结构以避免自动对齐、支持<code>out_overlay</code>字段区分输入输出共享内存布局。</p>
+<h3 id="常量和flags">常量和flags<a hidden class="anchor" aria-hidden="true" href="#常量和flags">#</a></h3>
+<ul>
+<li>const</li>
+</ul>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">define SOME_CONST  0x1000
+</code></pre><ul>
+<li>flags</li>
+</ul>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">flags open_flags = O_RDONLY, O_WRONLY, O_CREAT, O_APPEND
+</code></pre><ul>
+<li>bitmask</li>
+</ul>
+<p><code>bitmask</code>是一种 flags 类型修饰符，表示这些 flag 标志可以通过按位或的方式组成多个取值。</p>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">bitmask prot_flags = PROT_READ, PROT_WRITE, PROT_EXEC
+</code></pre><h3 id="资源类型">资源类型<a hidden class="anchor" aria-hidden="true" href="#资源类型">#</a></h3>
+<p>用于管理系统资源，如文件描述符、socket、eventfd 等。资源是 syzkaller 建立 syscall 顺序依赖关系的关键。</p>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">resource fd[int32]: 0xffffffffffffffff, AT_FDCWD
+
+open(...) fd
+read(fd fd, ...)
+close(fd fd)
+</code></pre><p>资源的使用可以帮助 Syzkaller 自动构建合法调用链。</p>
+<h3 id="高级特性">高级特性<a hidden class="anchor" aria-hidden="true" href="#高级特性">#</a></h3>
+<ul>
+<li><code>define</code>宏定义：</li>
+</ul>
+<p>可定义魔数、长度、特殊常量，用于结构体或验证。</p>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">define XT_BPF_MAX_NUM_INSTR 64
+</code></pre><ul>
+<li><code>[align[x]]</code>对齐约束：</li>
+</ul>
+<pre tabindex="0"><code class="language-syzlang" data-lang="syzlang">my_struct {
+  field1 int32
+  field2 ptr[in, buffer]
+} [align[8]]
+</code></pre><ul>
+<li><code>[packed]</code>与<code>[varlen]</code>修饰符
+<ul>
+<li><code>[packed]</code>：紧凑布局，取消默认 padding。</li>
+<li><code>[varlen]</code>：用于描述变长结构体或联合体的尾部。</li>
+</ul>
+</li>
+</ul>
+<p>描述文件还包含指向 Linux 内核头文件的<code>include</code>指令、指向自定义 Linux 内核头文件目录的<code>incdir</code>指令和定义符号常量值的<code>define</code>指令。</p>
+<h3 id="编写技巧">编写技巧<a hidden class="anchor" aria-hidden="true" href="#编写技巧">#</a></h3>
+<ul>
+<li>系统调用 / 结构体 / 字段 / 标志命名：遵循内核已有命名，不要创造新名字；</li>
+<li>系统调用顺序中的资源：<code>in</code>/<code>out</code>/<code>inout</code>决定调用顺序；</li>
+<li>使用未声明的值：不要随意添加<code>-1</code>、<code>INT_MAX</code>这种特殊值；</li>
+<li>Flags / Enums：flag类型可用于枚举、位标志、混合模式。</li>
+<li>声明顺序：不要求先声明后使用，推荐按重要性排序。与 C 相反，最重要的放最前面。</li>
+</ul>
+<h3 id="使用流程">使用流程<a hidden class="anchor" aria-hidden="true" href="#使用流程">#</a></h3>
+<p>编写系统调用描述文件时我们需要调研接口，了解相关 syscalls。然后将编写的描述文件放入<code>syzkaller/sys/linux</code>这个目录下。最后我们需要使用 syz-extract 和 syz-gen 来生成 Go 描述代码。</p>
+<p>后面我们会通过实例来学习这个流程的具体操作。</p>
+<h3 id="headerparser">Headerparser<a hidden class="anchor" aria-hidden="true" href="#headerparser">#</a></h3>
+<p>由于手工编写 syzlang 描述成本较高，人们开始研究自动化生成系统调用描述的方法。headerparser 就是一个比较成熟的辅助工具，可自动生成 syzlang 描述。</p>
+<p>为了让 Syzkaller 在 fuzz 某个设备节点时更加智能，你可以提供该设备所需的<code>ioctl</code>参数结构体类型信息。然而，当结构体类型数量庞大时，手动编写描述文件的工作量会很大。</p>
+<p>为减轻这种负担，<code>headerlib</code>会尽量自动生成这些描述文件。不过，你仍需从 <a href="https://chatgpt.com/docs/syscall_descriptions_syntax.md">类型列表</a> 中手动选择适合的 syzkaller 数据类型。</p>
+<p>下载：<a href="https://github.com/google/syzkaller/tree/master/tools/syz-headerparser">Headerparser</a></p>
+<p>环境配置：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip3 install pycparser
+</span></span></code></pre></div><p>基本用法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">python3 headerparser.py --filenames<span class="o">=</span>./test_headers/th_b.h    
+</span></span><span class="line"><span class="cl">B <span class="o">{</span>    
+</span></span><span class="line"><span class="cl">          B1     len<span class="p">|</span>fileoff<span class="p">|</span>flags<span class="p">|</span>intN     <span class="c1">#(unsigned long)    </span>
+</span></span><span class="line"><span class="cl">          B2     len<span class="p">|</span>fileoff<span class="p">|</span>flags<span class="p">|</span>intN     <span class="c1">#(unsigned long)    </span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>    
+</span></span><span class="line"><span class="cl">struct_containing_union <span class="o">{</span>    
+</span></span><span class="line"><span class="cl">          something          len<span class="p">|</span>fileoff<span class="p">|</span>flags<span class="p">|</span>int32                   <span class="c1">#(int)    </span>
+</span></span><span class="line"><span class="cl">          a_union.a_char     ptr<span class="o">[</span>in<span class="p">|</span>out, string<span class="o">]</span><span class="p">|</span>ptr<span class="o">[</span>in, filename<span class="o">]</span>     <span class="c1">#(char*)    </span>
+</span></span><span class="line"><span class="cl">          a_union.B_ptr      ptr<span class="p">|</span>buffer<span class="p">|</span>array                          <span class="c1">#(struct B*)    </span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></div><p>你可以直接复制<code>Structure Metadata</code>部分的内容到 syzkaller 的设备描述文件中。</p>
+<h2 id="实例">实例<a hidden class="anchor" aria-hidden="true" href="#实例">#</a></h2>
+<p>这里我们使用一个存在漏洞的驱动模块代码来测试我们是否可以使用 Syzkaller 将其 Fuzzing 出来。</p>
+<h3 id="漏洞驱动">漏洞驱动<a hidden class="anchor" aria-hidden="true" href="#漏洞驱动">#</a></h3>
+<p>初始加载驱动时，会在<code>/proc</code>文件夹下创建一个名为<code>test</code>的伪设备节点。然后支持用户空间的<code>read</code>和<code>write</code>操作。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/init.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/proc_fs.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/uaccess.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/slab.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define MY_DEV_NAME &#34;test&#34;
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define DEBUG_FLAG &#34;PROC_DEV&#34;
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">proc_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">,</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="n">proc_user</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="n">loff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">proc_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="n">proc_user</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="n">loff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">proc_open</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">proc_inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// file_operations 结构体，用于注册读写操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">proc_ops</span> <span class="n">proc_fops</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">proc_open</span> <span class="o">=</span> <span class="n">proc_open</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">proc_read</span> <span class="o">=</span> <span class="n">proc_read</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">proc_write</span> <span class="o">=</span> <span class="n">proc_write</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 模块初始化函数，在 insmod 加载模块时被调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">mod_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">proc_dir_entry</span> <span class="o">*</span><span class="n">test_entry</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span> <span class="s">&#34;: proc init start!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">test_entry</span> <span class="o">=</span> <span class="nf">proc_create</span><span class="p">(</span><span class="n">MY_DEV_NAME</span><span class="p">,</span> <span class="mo">0666</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">proc_fops</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">test_entry</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span> <span class="s">&#34;: failed to create /proc entry!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span> <span class="s">&#34;: proc init over!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 打开操作，仅打印调试信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">proc_open</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">proc_inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span> <span class="s">&#34;: into open!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 读操作函数：当前没有真正实现任何功能，仅打印调试信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">proc_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">,</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="n">proc_user</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="n">loff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span><span class="s">&#34;:finish copy_from_use,the string of newbuf is&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 写操作函数：存在严重的堆溢出漏洞
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">ssize_t</span> <span class="nf">proc_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">proc_file</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="n">proc_user</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="n">loff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">c</span> <span class="o">=</span> <span class="nf">kmalloc</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">512</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">	<span class="c1">//溢出，原先只有 512 字节，但是复制了 4096
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="nf">copy_from_user</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">proc_user</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">4096</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">DEBUG_FLAG</span><span class="s">&#34;:into write %ld!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 注册模块初始化函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">module_init</span><span class="p">(</span><span class="n">mod_init</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">MODULE_LICENSE</span><span class="p">(</span><span class="s">&#34;GPL&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><p>在<code>proc_write</code>函数中，<code>kmalloc</code>函数（<code>kmalloc</code>是内核的内存分配函数）申请了<code>n+512</code>字节的内核缓冲区。<code>copy_from_user</code>从用户空间复制<code>n+4096</code>字节到这个缓冲区中，超出其分配内存导致了堆溢出。</p>
+<h3 id="编译进内核">编译进内核<a hidden class="anchor" aria-hidden="true" href="#编译进内核">#</a></h3>
+<p>将漏洞驱动编译进内核中。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 将漏洞驱动文件复制到 linux/drivers/char/ 目录下</span>
+</span></span><span class="line"><span class="cl">mv test.c linux/drivers/char/
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 修改 Makefile   </span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;obj-y += test.o&#34;</span> &gt;&gt; linux/drivers/char/Makefile  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 编译  </span>
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>
+</span></span></code></pre></div><p>运行内核后可用在<code>/proc/test</code>下可以找到目标：</p>
+<pre tabindex="0"><code>root@syzkaller:~# cat /proc/test
+[   61.660874] PROC_DEV: into open!
+</code></pre><h3 id="编写syzlang">编写syzlang<a hidden class="anchor" aria-hidden="true" href="#编写syzlang">#</a></h3>
+<p>接下来我们给漏洞驱动编写 syzlang 描述文件，在<code>syzkaller/sys/linux/</code>创建一个对应于这个漏洞驱动的描述文件<code>vuln.txt</code>，内容如下：</p>
+<pre tabindex="0"><code>include &lt;linux/fs.h&gt;  
+   
+open$proc(file ptr[in, string[&#34;/proc/test&#34;]], flags flags[proc_open_flags], mode flags[proc_open_mode]) fd  
+read$proc(fd fd, buf buffer[out], count len[buf])  
+write$proc(fd fd, buf buffer[in], count len[buf])  
+close$proc(fd fd)  
+   
+proc_open_flags = O_RDONLY, O_WRONLY, O_RDWR, O_APPEND, FASYNC, O_CLOEXEC, O_CREAT, O_DIRECT, O_DIRECTORY, O_EXCL, O_LARGEFILE, O_NOATIME, O_NOCTTY, O_NOFOLLOW, O_NONBLOCK, O_PATH, O_SYNC, O_TRUNC, __O_TMPFILE  
+proc_open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH
+</code></pre><ul>
+<li><code>include &lt;linux/fs.h&gt;</code>：表示引用<code>linux/fs.h</code>中定义的常量、结构体、宏等。</li>
+<li><code>open$proc(...)</code>：使用系统调用<code>open</code>，并通过<code>$proc</code>做 “符号变种” 标识。表示这个<code>open</code>是专用于<code>/proc/test</code>的。</li>
+<li><code>file ptr[in, string[&quot;/proc/test&quot;]]</code>：固定路径参数，仅允许 open <code>/proc/test</code>，是一个常量字符串。</li>
+<li><code>bitmask proc_open_flags</code>：定义了一组打开文件时的选项。</li>
+<li><code>bitmask proc_open_mode</code>：定义了文件权限。</li>
+</ul>
+<p>在 Syzkaller 项目根目录下执行以下命令以创建对应的<code>.const</code>文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">bin/syz-extract -os linux -sourcedir /root/linux-6.12.38 -arch amd64 vuln.txt
+</span></span></code></pre></div><p>然后就会在<code>sys/linux</code>目录下生成<code>*.const</code>文件，然后通过 syz-sysgen 将描述文件翻译成 go 代码结构。而且由于我们新增了 syscall 描述文件所以我们需要重建 Syzkaller。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#将 syscall 描述文件转换为 go 代码结构</span>
+</span></span><span class="line"><span class="cl">bin/syz-sysgen
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#重建 syzkaller</span>
+</span></span><span class="line"><span class="cl">make all
+</span></span></code></pre></div><h3 id="fuzzing">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing">#</a></h3>
+<p>限定 Fuzz 的 syscall 集合，进一步缩小 Fuzz 的范围，提高精度。</p>
+<p>即让 Syzkaller 只 Fuzz 有漏洞的接口，提高测试效率。</p>
+<p>在开始 Fuzz 之前我们需要修改 Syzkaller 的运行配置启用这些系统调用。修改<code>test.cfg</code>，添加以下内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;target&#34;</span><span class="p">:</span> <span class="s2">&#34;linux/amd64&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;http&#34;</span><span class="p">:</span> <span class="s2">&#34;127.0.0.1:56741&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;workdir&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/workdir/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;kernel_obj&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;image&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/bullseye.img&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;sshkey&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/bullseye.id_rsa&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;syzkaller&#34;</span><span class="p">:</span> <span class="s2">&#34;/syzkaller/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;procs&#34;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;qemu&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">//开启的系统调用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nt">&#34;enable_syscalls&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;open$proc&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;read$proc&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;write$proc&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;close$proc&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;vm&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;count&#34;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;kernel&#34;</span><span class="p">:</span> <span class="s2">&#34;/linux/arch/x86/boot/bzImage&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;cmdline&#34;</span><span class="p">:</span> <span class="s2">&#34;net.ifnames=0&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;cpu&#34;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;mem&#34;</span><span class="p">:</span> <span class="mi">2048</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>开始 Fuzzing：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">syz-manager -config test.cfg -vv <span class="m">10</span>
+</span></span></code></pre></div><p>很快就 Fuzzing 出了这个洞：</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250823191616.png" style="max-width: 100%; height: auto;"></p>
+<p>然后 Syzkaller 就会复现 crash，<code>reproducing=1</code>表示有一个正在复现的 crash。</p>
+<p>一旦 Syzkaller 在某个 VM 中检测到内核崩溃，它将自动开始重现该崩溃全过程（除非你在配置中指定 <code>&quot;reproduce&quot;: false</code>）。 默认情况下，它将使用 4 个 VM 来重现内核崩溃，并缩小引起内核崩溃的程序。 这可能会停止模糊测试，因为所有的 VM 可能都在忙于重现检测到的内核崩溃。</p>
+<p>重现一个内核崩溃的过程可能需要几分钟到一个小时不等，这取决于内核崩溃是否容易重现或根本不可重现。 由于这个过程并不完美，有一种尝试手动重现崩溃的方法，详见<a href="#ZgotmplZ">此处</a>描述。</p>
+<p>如果成功找到复现程序，它将以 syzkaller 程序或 C 程序 进行呈现。 Syzkaller 总是尝试生成更用户友好的 C 语言复现程序，但有时因为各种原因失败（例如轻微不同的执行时序）。 如果 Syzkaller 仅生成 Syzkaller 程序，你可以通过<a href="#ZgotmplZ">一种方式</a>执行这些程序来手动重现和调试内核崩溃。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250823195558.png" style="max-width: 100%; height: auto;"></p>
+<p>点击 has C repro 可以看到最小化的 crash：</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250823195624.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="复现crash">复现Crash<a hidden class="anchor" aria-hidden="true" href="#复现crash">#</a></h3>
+<p>在我们运行 Syzkaller fuzzing 出 crash 的时候，Syzkaller 会调用 syz-execprog 执行 prog 程序并调用 syz-prog2c 尝试生成 C 代码。</p>
+<p>同样我们也可以自己将 syz-execprog push 到虚拟机中去运行我们要复现的 crash 的 prog 程序，但是这样效率较低而且效果不好，所以 Syzkaller 的工具链中集成了更好用的一些工具。</p>
+<h4 id="syz-crush">syz-crush<a hidden class="anchor" aria-hidden="true" href="#syz-crush">#</a></h4>
+<p>syz-crush 用于读取 crash 的 prog 程序，然后重复执行该程序复现 crash。</p>
+<p>构建：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">make crush
+</span></span></code></pre></div><p>运行工具：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir workdir  
+</span></span><span class="line"><span class="cl">bin/syz-crush -config ./test.cfg ./crashes/736f88e1c13700f40338df50cd9a6364a46963cf/repro.cprog
+</span></span></code></pre></div><p>其它参数：</p>
+<ul>
+<li><code>-debug</code>：开启调试模式，将虚拟机的所有标准输出打印到本地控制台；</li>
+<li><code>-infinite</code>：控制是否持续执行测试，默认一直执行，值为<code>true</code>或<code>false</code>；</li>
+<li><code>-strace</code>：在 strace 模式下运行被测程序；</li>
+<li><code>-vv int</code>：日志详细级别，由 0 到 3。</li>
+</ul>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251110232117182.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<p>手动停止后观察 syz-crush 输出的信息发现，它在运行过程中进行了 104 次崩溃复现，其中成功稳定复现了 101 次（约 97.12%），并将这些经过验证的 crash 保存到了<code>crashes/736f88e1c13700f40338df50cd9a6364a46963cf/crashes/439c37d288d4f26a33a6c7e5c57a97791453a447</code> 目录下。</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251110232754412.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<h4 id="syz-repro">syz-repro<a hidden class="anchor" aria-hidden="true" href="#syz-repro">#</a></h4>
+<p>使用 repro 复现 crash：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">bin/syz-repro -config<span class="o">=</span>test.cfg ./crashes/736f88e1c13700f40338df50cd9a6364a46963cf/repro.prog
+</span></span></code></pre></div><p>其它参数：</p>
+<ul>
+<li><code>-count int</code>：用于并行复现的 VM 数量，会覆盖配置文件；</li>
+<li><code>-crepro string</code>：制定输出的 C Poc 文件名，默认为 repro.c。</li>
+<li><code>-debug</code>：打印更详细的调试信息。</li>
+<li><code>-output string</code>：制定输出的 syz 复现文件，默认为 repro.txt；</li>
+<li><code>-strace string</code>：将执行过程的 strace 日志输出到指定文件；</li>
+<li><code>-title string</code>：把复现到的 crash 摘要写入指定文件；</li>
+<li><code>-vv int</code>：日志详细级别，由 0 到 2。</li>
+</ul>
+<p>运行成功后 syz-repro 会解析 prog 文件并开始复现程序。</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251113002116233.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<p>分析 KASAN 报错头部发现<code>inline_copy_from_user</code>和<code>_copy_from_user</code>，说明越界发生在内核从用户空间读取数据时；跟踪调用栈发现<code>copy_from_user</code>（内核访问用户空间数据统一接口函数），<code>proc_write</code>函数紧跟在<code>copy_from_user</code>上方，说明它是调用<code>copy_from_user</code>的函数。也就是说，用户空间写入的数据经过<code>proc_write</code>进入内核，而越界正是在这个函数分配的缓冲区内发生的。</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251113003843934.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<p>分析输出信息发现内核分配了 512 字节的对象，但是程序写入了 4096 字节导致了越界：</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251113004150801.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<p>最后会在当前目录生成<code>repro.txt</code>文件，并描述复现 crash 中进行的一系列操作。</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251113003538827.png?lastModify=1762966662" style="max-width: 100%; height: auto;"></p>
+<p>repro.txt 文件内容：</p>
+<pre tabindex="0"><code>r0 = open$proc(&amp;(0x7f0000000580), 0x2, 0x24)  
+write$proc(r0, 0x0, 0x0)
+</code></pre><p>这是最小化后的 syz 程序。</p>
+<h2 id="总结">总结<a hidden class="anchor" aria-hidden="true" href="#总结">#</a></h2>
+<p>深入理解 Syzkaller，可以发现它不仅是一个简单的内核模糊测试工具，更是一种系统化、闭环化的内核安全研究框架。它通过精心设计的 syzlang 描述系统调用接口，并结合覆盖率驱动（KCOV）和内存检测（KASAN/KCOV/UBSAN）形成反馈闭环，使模糊测试从随机尝试升级为“智能探索”。这种探索不仅依赖于单个测试用例的执行，更依赖于对整个内核状态空间的动态感知与迭代优化，体现了“测试用例驱动漏洞发现”的思想。</p>
+<p>总的来说，Syzkaller 的力量不仅在于它发现漏洞的能力，更在于它提供了一种“理解内核、建模内核接口、用数据驱动探索”的研究范式。这种方法论对任何从事内核安全研究的开发者而言，都具有深远的启发意义：它强调自动化、反馈驱动和系统化设计，让 Fuzzing 不再是盲目的尝试，而是有策略、有方向的漏洞探索。</p>
+<h2 id="reference">Reference<a hidden class="anchor" aria-hidden="true" href="#reference">#</a></h2>
+<blockquote>
+<p><a href="https://xz.aliyun.com/news/2394">文章 - linux下fuzz初试 - 先知社区</a>
+<a href="https://www.freebuf.com/sectool/323886.html">Syzkaller入门知识总结 - FreeBuf网络安全行业门户</a>
+<a href="https://blingblingxuanxuan.github.io/2019/10/26/syzkaller/#x86-64-linux%E8%99%9A%E6%8B%9F%E6%9C%BA">syzkaller fuzz 工具的使用方法及实践实例 | blingbling&rsquo;s blog</a>
+<a href="https://kiprey.github.io/2021/11/syzkaller_1/#1-%E5%B0%86%E6%BC%8F%E6%B4%9E%E9%A9%B1%E5%8A%A8%E7%BC%96%E8%AF%91%E8%BF%9B-kernel">syzkaller 环境搭建 | Kiprey&rsquo;s Blog</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+</body>
+
+</html>

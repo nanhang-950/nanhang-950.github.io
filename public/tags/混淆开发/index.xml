@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>混淆开发 on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/%E6%B7%B7%E6%B7%86%E5%BC%80%E5%8F%91/</link>
+    <description>Recent content in 混淆开发 on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 31 Aug 2025 23:16:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%B7%B7%E6%B7%86%E5%BC%80%E5%8F%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>LLVM初探</title>
+      <link>http://localhost:1313/posts/mobile/android/obf/llvm/</link>
+      <pubDate>Sun, 31 Aug 2025 23:16:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/android/obf/llvm/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>OLLVM混淆和反混淆</title>
+      <link>http://localhost:1313/posts/mobile/android/obf/ollvm/</link>
+      <pubDate>Sun, 31 Aug 2025 23:16:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/android/obf/ollvm/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

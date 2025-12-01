@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>SAST on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/categories/sast/</link>
+    <description>Recent content in SAST on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 31 Aug 2025 23:16:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/sast/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Joern漏洞挖掘</title>
+      <link>http://localhost:1313/posts/sast/joern/</link>
+      <pubDate>Sun, 31 Aug 2025 23:16:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/sast/joern/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

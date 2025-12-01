@@ -1,0 +1,114 @@
+baseURL: "https://nanhang.top/" # 主站的 URL
+title: 南行's Blog # 站点标题
+copyright: "[©2025 南行's Blog](https://nanhang-950.github.io/)" # 网站的版权声明，通常显示在页脚
+theme: PaperMod # 主题
+languageCode: zh-cn # 语言
+
+frontmatter:
+  default: "yaml"
+
+enableInlineShortcodes: true # shortcode，类似于模板变量，可以在写 markdown 的时候便捷地插入，官方文档中有一个视频讲的很通俗
+hasCJKLanguage: true # 是否有 CJK 的字符
+enableRobotsTXT: true # 允许生成 robots.txt
+buildDrafts: false # 构建时是否包括草稿
+buildFuture: false # 构建未来发布的内容
+buildExpired: false # 构建过期的内容
+enableEmoji: true # 允许 emoji
+pygmentsUseClasses: true
+defaultContentLanguage: zh # 顶部首先展示的语言界面
+defaultContentLanguageInSubdir: false # 是否要在地址栏加上默认的语言
+showToc: true  #默认显示toc
+tocOpen: true  #默认展开toc
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+languages:
+  zh:
+    languageName: "中文" # 展示的语言名
+    weight: 1 # 权重
+    taxonomies: # 分类系统
+      category: categories
+      tag: tags
+    # https://gohugo.io/content-management/menus/#define-in-site-configuration
+    menus:
+      main:
+        - name: 首页
+          pageRef: /
+          weight: 4 # 控制在页面上展示的前后顺序
+        - name: 归档
+          pageRef: archives/
+          weight: 5
+        - name: 分类
+          pageRef: categories/
+          weight: 10
+        - name: 标签
+          pageRef: tags/
+          weight: 10
+        - name: 搜索
+          pageRef: search/
+          weight: 20
+        - name: 关于
+          pageRef: about/
+          weight: 21
+
+outputs:
+  home:
+    - HTML # 生成的静态页面
+    - RSS # 这个其实无所谓
+    - JSON # necessary for search, 这里的配置修改好之后，一定要重新生成一下
+
+params:
+  # 搜索
+  fuseOpts:
+      isCaseSensitive: false # 是否大小写敏感
+      shouldSort: true # 是否排序
+      location: 0
+      distance: 1000
+      threshold: 0.4
+      minMatchCharLength: 0
+      keys: ["title", "permalink", "summary", "content"]
+      includeMatches: true
+      hasCJKLanguage: true
+
+  showToc: true  #默认显示toc
+  tocOpen: true  #默认展开toc
+  showScrollToTop: true
+  showReadingProgress: true
+
+  homeInfoParams:
+    Title: "南行的一座山"
+    ImageUrl: /assets/about.png
+    Content: 二进制安全登山者
+
+  assets:
+      favicon: "/assets/favicon.jpg"
+      favicon16x16: "/assets/favicon.jpg"
+      favicon32x32: "/assets/favicon.jpg"
+      apple_touch_icon: "/assets/favicon.jpg"
+      safari_pinned_tab: "/assets/favicon.jpg"
+  
+  socialIcons:
+        - name: github
+          url: "https://github.com/nanhang-950"
+        - name: email
+          url: "mailto:2122295973@qq.com"
+        - name: RSS
+          url: "index.xml"
+  giscus:
+    repo: "{{ YOUR REPOSITORY }}"
+    repoId: "{{ YOUR REPO ID }}"
+    category: "Announcements"
+    categoryId: "{{ YOUR CATEGORY ID }}"
+    mapping: "pathname"
+    strict: "0"
+    reactionsEnabled: "1"
+    emitMetadata: "0"
+    inputPosition: "top"
+    lightTheme: "light"
+    darkTheme: "dark"
+    lang: "zh-CN"
+  discussionTitle: 欢迎来到评论区
+  discussionSubtitle: 感谢您的耐心阅读！来选个表情，或者留个评论吧！

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>libFuzzer浅探 | 南行&#39;s Blog</title>
+<meta name="keywords" content="C&#43;&#43;">
+<meta name="description" content="简介
+libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C&#43;&#43; 项目的单元测试。">
+<meta name="author" content="">
+<link rel="canonical" href="https://nanhang.top/posts/fuzz/libfuzzer/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="mask-icon" href="https://nanhang.top/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="https://nanhang.top/posts/fuzz/libfuzzer/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style><meta property="og:url" content="https://nanhang.top/posts/fuzz/libfuzzer/">
+  <meta property="og:site_name" content="南行&#39;s Blog">
+  <meta property="og:title" content="libFuzzer浅探">
+  <meta property="og:description" content="简介 libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C&#43;&#43; 项目的单元测试。">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-11-30T23:30:38+00:00">
+    <meta property="article:modified_time" content="2025-11-30T23:30:38+00:00">
+    <meta property="article:tag" content="C&#43;&#43;">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="libFuzzer浅探">
+<meta name="twitter:description" content="简介
+libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C&#43;&#43; 项目的单元测试。">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://nanhang.top/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "libFuzzer浅探",
+      "item": "https://nanhang.top/posts/fuzz/libfuzzer/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "libFuzzer浅探",
+  "name": "libFuzzer浅探",
+  "description": "简介 libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。\n",
+  "keywords": [
+    "C++"
+  ],
+  "articleBody": "简介 libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。\nlibFuzzer 通过与被测试的目标链接，向入口函数提供测试的输入。模糊测试引擎通过追踪代码覆盖的区域来工作，并对输入数据进行变异，以最大化代码的覆盖率。libFuzzer 通过 LLVM 的 SanitizerCoverage 插件来获取代码覆盖信息。需要注意的是，模糊测试的目标与 libFuzzer 本身无关，因此可以将其与其他模糊测试引擎（如 AFL 或 Radamsa）结合使用，以增强测试效果。\nlibFuzzer 基于 LLVM 项目实现，是一个编译好的链接库，特别适用于有源代码的程序，且程序已经设计了能够处理 fuzz 输入的接口。实现代码在llvm-project/compiler-rt/lib/fuzzer目录下。\n接口函数 LibFuzzer 不是对整个程序进行模糊测试，而是测试一个格式为如下签名的函数：\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size); 我们需要自己实现这个函数，LibFuzzer 会不断调用它，并提供不同的Data和Size。\nlibFuzzer以LLVMFuzzerTestOneInput()作为用户自定义的模糊测试入口点，用户只需要关注为 libFuzzer 生成的数据编写接口调用逻辑，而 libFuzzer 会通过自己实现的数据生成和变异逻辑来进行 fuzz。\n环境搭建 clang 6.0 及更高版本已经包含了 libFuzzer，因此我们只需要安装 clang 即可。\napt install clang llvm 基本使用 这里我们通过 libFuzzer work 中的示例来学习如何编写 libFuzzer 的 fuzzer。\n目标函数 使用 libFuzzer 的第一步是实现一个模糊目标（fuzz target），这是一个接受字节数组并通过被测试的 API 执行某些操作的函数。代码示例如下：\nvuln就是我们需要测试的目标函数，接下来我们需要给它编写测试的 fuzzer。\n#include #include bool vuln(const uint8_t* data, size_t size) { bool result = false; if (size \u003e= 3) { result = data[0] == 'F' \u0026\u0026 data[1] == 'U' \u0026\u0026 data[2] == 'Z' \u0026\u0026 data[3] == 'Z'; } return result; } 编写fuzzer 这里只需要将要测试的函数添加即可。\n#include #include #include \"vuln.h\" //通过接口将数据投喂到目标函数 extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { vuln(data, size); return 0; } Fuzzing 编译：\nclang++ -fsanitize=address,fuzzer fuzzer.cc -o fuzzer -fsanitize=fuzzer：启用 LibFuzzer -fsanitize=address：启用 ASan 检测内存错误 配置语料：\n创建一个空目录用于存放初始语料，并运行 fuzzer 程序。libFuzzer 会递归遍历指定的目录，读取所有文件作为初始输入。\nmkdir corpus echo \"a\" \u003e corpus/seed 开始 Fuzzing：\n运行 Fuzzer 程序即可进行 Fuzz。\n./fuzzer corpus crash分析 程序崩溃之后会在当前目录下生成 crash 文件，可以看到以下 crash 文件内容是FUZ。\n我们可以直接通过 fuzzer 指定 crash 文件来复现 crash。\n./fuzzer ./crash-0eb8e4ed029b774d80f2b66408203801cb982a60 ASan 会显示出当前 crash 的堆栈信息。\n我们还可以通过symbolize=1启用堆栈跟踪的符号化解析，将二进制地址转换为可读的代码位置（如函数名、源文件行号）。\nASAN_OPTIONS=symbolize=1 ./fuzzer ./crash-0eb8e4ed029b774d80f2b66408203801cb982a60 更多参数：\n-max_total_time：设置最大运行时间 -print_final_stats：打印最终统计信息 -seed=N：设置随机种子，默认值为 0。 -runs=N：设置测试运行次数，默认为 -1（无限次运行）。 -max_len=N：设置输入最大长度，默认值为 0。 -timeout=N：设置超时秒数，默认 1200 秒。 -rss_limit_mb=N：设置内存限制，默认 2048 MB。 -reload：如果为 1，模糊器定期重新加载种子目录。 语料库优化 当拥有一个大型语料库时，我们可能希望进行语料库最小化或合并操作，以确保覆盖范围的完整性，同时减小语料库的规模。使用-merge=1参数，可以将新的输入合并到现有语料库中，仅保留能触发新路径的输入。\n合并语料库 合并两个语料库：\nmkdir corpus1 # 存储最小化后的语料库 ./fuzzer -merge=1 corpus1 corpus2 这会将 corpus2 中的种子合并到 corpus1，只保留哪些可以触发新路径的种子。\n合并恢复 合并恢复是 libFuzzer 提供的一种中断恢复机制。在执行语料库合并时，如果因某些原因（如崩溃、系统中断或人为终止）导致合并未能完成，合并恢复允许从中断的地方继续合并，而无需从头开始。\n初始化合并 首先，使用以下命令开始合并两个语料库，并指定一个控制文件来记录合并的状态：\n./fuzzer corpus1 corpus2 -merge=1 -merge_control_file=SomeLocalPath 参数-merge_control_file=SomeLocalPath用于指定保存合并状态的文件路径。\n处理合并中断 如果合并进程中断，可以通过执行以下命令来恢复合并：\nkillall -SIGUSR1 fuzzer 该命令会将合并状态保存到指定的控制文件，以便下一次恢复时可以继续从上次中断的地方进行合并，而无需从头开始。\n恢复合并 合并过程中断可以通过以下命令恢复合并：\nkillall -SIGUSR1 fuzzer 这会使 fuzzer 从中断的位置继续合并，而不是重新开始。\n字典支持 字典构成：\n字典每一行都是一个可被插入、替换或拼接到输入中的字符串或字节片段。在 Fuzz 过程中\n用双引号包裹，特殊字符需要转义。\n\"GET\" \"POST\" \"Content-Type:\" \"username=\" \"{\\\"key\\\":\" \"\\r\\n\" 使用字典：\n通过-dict参数指定使用的字典。\n./fuzzer corpus -dict=demo.dict 并行模式 每个 libFuzzer 进程都是单线程的，除非受测库启动它自己的线程。然而，可以通过并行运行多个实例并共享一个语料库目录来实现并行模糊测试。这样做的好处是，任何一个模糊测试进程发现的输入将能够供其他进程使用（除非使用了-reload=0禁用此功能）。\nlibFuzzer 支持多进程或多线程方式的并行模糊测试。你可以通过设置多个实例来运行 libFuzzer，每个实例都有自己的输入 Corpus，并且共享一个全局结果。以下是并行模糊测试的常用配置选项：\n./fuzzer -jobs=10 corpus 选项说明：\n-jobs=N：设置要运行的模糊测试作业数量。这决定了并行运行的模糊测试实例数。每个作业将会在不同的进程中运行，并且共享语料库，直到达到时间/迭代限制或找到错误； -workers=N：设置并行工作的进程数。这可以覆盖-jobs的默认值。即使是一个多核 CPU，libFuzzer 默认只使用一半的核心数来运行模糊测试。如果你有12核机器，可以通过-workers=12来使用所有的核心来加速模糊测试过程。 Fork模式 libFuzzer 默认在单进程模式下运行，而 Fork 模式通过多子进程与父进程的配合来执行模糊测试。使用 Fork 模式可以提升模糊测试的容错性，特别是在处理内存溢出、超时和崩溃时。Fork 模式通常用于大规模模糊测试时，可以通过独立的子进程来并行化测试。\n参数说明：\n-fork=N：启用 Fork 模式，开启 N 个子进程并行 fuzz。父进程负责协调语料、调度和崩溃合并； -jobs=N：并行作业数量。与-workers配合使用，推荐用于分布式 / CI 等现代调度场景； -workers=N：每个工作进程中使用的线程数； -ignore_ooms=1：如果子进程发生内存溢出，继续 fuzz 并保存问题输入； -ignore_timeouts=1：如果子进程超时，继续 fuzz 并保存问题输入； -ignore_crashes=0：默认遇到崩溃会中止 fuzz，可设置为 1 忽略并继续。 使用 Fork 模式，启动 4 个子进程并忽略崩溃：\n./fuzzer -fork=4 corpus -ignore_crashes=1 使用并行模式，启动 4 个作业，每个作业有 1 个工作线程，并忽略崩溃：\n./fuzzer -jobs=4 -workers=1 corpus -ignore_crashes=1 覆盖率分析 LibFuzzer 使用 基于 SanitizerCoverage（SanCov） 的插桩方式记录哪些代码路径已经被执行过。它依赖 LLVM 编译器提供的功能，在编译时插入探针代码，以便在运行时收集覆盖率信息。\nclang++ -fsanitize=fuzzer -fsanitize-coverage=trace-pc-guard -g fuzzer.cc -o fuzzer -fsanitize=fuzzer：启用 libFuzzer 驱动； -fsanitize-coverage=trace-pc-guard：在每个基本块插入 PC 路径追踪代码； 每当 Fuzzer 执行一次输入，它会：\n收集当前输入触发的路径哈希； 判断是否是新的路径； 如果是新路径，将该输入加入语料库。 收集覆盖率信息：\n通过LLVM_PROFILE_FILE环境变量指定覆盖率数据的输出文件。\nLLVM_PROFILE_FILE=\"coverage.profraw\" ./fuzzer corpus/ 合并 Profile 数据：\n执行完 fuzzer 后，使用llvm-profdata工具合并收集到的 profile 数据。\nllvm-profdata merge -sparse coverage.profraw -o coverage.profdata 生成可读的覆盖率报告：\nllvm-cov show ./fuzzer -instr-profile=coverage.profdata fuzzer.cc 生成 HTML 报告：\nllvm-cov show ./fuzzer -instr-profile=coverage.profdata -format=html -output-dir=coverage_html 案例 复现著名的心脏滴血漏洞。\n构建项目 #下拉项目 git clone https://github.com/google/fuzzer-test-suite.git cd fuzzer-test-suite ./openssl-1.0.1f/build.sh cd BUILD 编写fuzzer 以下代码通过 libFuzzer 对 OpenSSL 的 SSL 握手过程进行测试。在每次测试中，通过 fuzzer 提供的不同数据，模拟与 SSL/TLS 握手发现相关的安全漏洞。\n#include #include #include #include #include #ifndef CERT_PATH # define CERT_PATH #endif // OpenSSL 初始化 SSL_CTX *Init() { SSL_library_init(); //初始化 OpenSSL库 SSL_load_error_strings(); //加载 OpenSSL 错误字符串 ERR_load_BIO_strings(); //加载 BIO 相关的错误字符串 OpenSSL_add_all_algorithms(); //加载 OpenSSL 支持的所有加密算法 SSL_CTX *sctx; //创建 SSL 上下文 assert (sctx = SSL_CTX_new(TLSv1_method())); assert(SSL_CTX_use_certificate_file(sctx, CERT_PATH \"server.pem\", SSL_FILETYPE_PEM));//加载公钥证书 assert(SSL_CTX_use_PrivateKey_file(sctx, CERT_PATH \"server.key\",SSL_FILETYPE_PEM)); //加载私钥文件 return sctx; } //Fuzz 入口 extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) { static SSL_CTX *sctx = Init(); //初始化 SSL 库 SSL *server = SSL_new(sctx); //创建 SSL 对象 BIO *sinbio = BIO_new(BIO_s_mem()); //创建 BIO 对象 BIO *soutbio = BIO_new(BIO_s_mem()); //创建 BIO 对象 SSL_set_bio(server, sinbio, soutbio); //绑定 BIO 对象到 SSL 对象 SSL_set_accept_state(server); //设置 SSL 状态为接受状态 BIO_write(sinbio, Data, Size); //将数据写入输入 BIO SSL_do_handshake(server); //执行 SSL 握手 SSL_free(server); //释放 SSL 对象 return 0; } 编译：\nclang++ -g openssl_fuzzer.cc -O2 -fno-omit-frame-pointer -fsanitize=address,fuzzer \\ -fsanitize-coverage=trace-cmp,trace-gep,trace-div \\ -Iopenssl1.0.1f/include openssl1.0.1f/libssl.a openssl1.0.1f/libcrypto.a \\ -o openssl_fuzzer Fuzzing fuzzer 要求公钥和私钥文件和它在一个目录下。\n#将证书等文件复制到当前目录 cp ../openssl-1.0.1f/runtime/* ./ #配置语料 echo \"aa\" \u003e ./corpus/seed #开始fuzzing ./openssl_fuzzer -max_total_time=300 -detect_leaks=0 Crash分析 分析 crash 信息之后，发现 crash 原因为在调用CRYPTO_malloc()分配 32 字节内存，但是没有释放。\n后言 libFuzzer 可以和 AFL 联合加快 Fuzz 效率。比如先用 AFL 进行初步的 Fuzz 测试，使用 AFL 生成的样本进行 libFuzzer 测试。对目标函数进行专注性的模糊测试。\nReference Dor1s/libfuzzer-workshop: Repository for materials of “Modern fuzzing of C/C++ Projects” workshop. libFuzzer 官方文档 [原创]libFuzzer模糊测试引擎调研与自定义开发 fuzz实战之libfuzzer - SecPulse.COM | 安全脉搏 libFuzzer漏洞挖掘总结教程 - FreeBuf网络安全行业门户 google/fuzzer-test-suite: Set of tests for fuzzing engines\n",
+  "wordCount" : "3790",
+  "inLanguage": "zh",
+  "datePublished": "2025-11-30T23:30:38Z",
+  "dateModified": "2025-11-30T23:30:38Z",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://nanhang.top/posts/fuzz/libfuzzer/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "南行's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://nanhang.top/assets/favicon.jpg"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://nanhang.top/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://nanhang.top/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://nanhang.top/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      libFuzzer浅探
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%8e%a5%e5%8f%a3%e5%87%bd%e6%95%b0" aria-label="接口函数">接口函数</a></li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8" aria-label="基本使用">基本使用</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%9b%ae%e6%a0%87%e5%87%bd%e6%95%b0" aria-label="目标函数">目标函数</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99fuzzer" aria-label="编写fuzzer">编写fuzzer</a></li>
+                    <li>
+                        <a href="#fuzzing" aria-label="Fuzzing">Fuzzing</a></li>
+                    <li>
+                        <a href="#crash%e5%88%86%e6%9e%90" aria-label="crash分析">crash分析</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%af%ad%e6%96%99%e5%ba%93%e4%bc%98%e5%8c%96" aria-label="语料库优化">语料库优化</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%90%88%e5%b9%b6%e8%af%ad%e6%96%99%e5%ba%93" aria-label="合并语料库">合并语料库</a></li>
+                    <li>
+                        <a href="#%e5%90%88%e5%b9%b6%e6%81%a2%e5%a4%8d" aria-label="合并恢复">合并恢复</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%ad%97%e5%85%b8%e6%94%af%e6%8c%81" aria-label="字典支持">字典支持</a></li>
+                    <li>
+                        <a href="#%e5%b9%b6%e8%a1%8c%e6%a8%a1%e5%bc%8f" aria-label="并行模式">并行模式</a></li>
+                    <li>
+                        <a href="#fork%e6%a8%a1%e5%bc%8f" aria-label="Fork模式">Fork模式</a></li>
+                    <li>
+                        <a href="#%e8%a6%86%e7%9b%96%e7%8e%87%e5%88%86%e6%9e%90" aria-label="覆盖率分析">覆盖率分析</a></li>
+                    <li>
+                        <a href="#%e6%a1%88%e4%be%8b" aria-label="案例">案例</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%9e%84%e5%bb%ba%e9%a1%b9%e7%9b%ae" aria-label="构建项目">构建项目</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99fuzzer-1" aria-label="编写fuzzer">编写fuzzer</a></li>
+                    <li>
+                        <a href="#fuzzing-1" aria-label="Fuzzing">Fuzzing</a></li>
+                    <li>
+                        <a href="#crash%e5%88%86%e6%9e%90-1" aria-label="Crash分析">Crash分析</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a></li>
+                    <li>
+                        <a href="#reference" aria-label="Reference">Reference</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。</p>
+<p>libFuzzer 通过与被测试的目标链接，向入口函数提供测试的输入。模糊测试引擎通过追踪代码覆盖的区域来工作，并对输入数据进行变异，以最大化代码的覆盖率。libFuzzer 通过 LLVM 的 SanitizerCoverage 插件来获取代码覆盖信息。需要注意的是，模糊测试的目标与 libFuzzer 本身无关，因此可以将其与其他模糊测试引擎（如 AFL 或 Radamsa）结合使用，以增强测试效果。</p>
+<p>libFuzzer 基于 LLVM 项目实现，是一个编译好的链接库，特别适用于有源代码的程序，且程序已经设计了能够处理 fuzz 输入的接口。实现代码在<code>llvm-project/compiler-rt/lib/fuzzer</code>目录下。</p>
+<h3 id="接口函数">接口函数<a hidden class="anchor" aria-hidden="true" href="#接口函数">#</a></h3>
+<p>LibFuzzer 不是对整个程序进行模糊测试，而是测试一个格式为如下签名的函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="kt">int</span> <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">Data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">Size</span><span class="p">);</span>
+</span></span></code></pre></div><p>我们需要自己实现这个函数，LibFuzzer 会不断调用它，并提供不同的<code>Data</code>和<code>Size</code>。</p>
+<p>libFuzzer以<code>LLVMFuzzerTestOneInput()</code>作为用户自定义的模糊测试入口点，用户只需要关注为 libFuzzer 生成的数据编写接口调用逻辑，而 libFuzzer 会通过自己实现的数据生成和变异逻辑来进行 fuzz。</p>
+<h3 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h3>
+<p>clang 6.0 及更高版本已经包含了 libFuzzer，因此我们只需要安装 clang 即可。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">apt install clang llvm
+</span></span></code></pre></div><h2 id="基本使用">基本使用<a hidden class="anchor" aria-hidden="true" href="#基本使用">#</a></h2>
+<p>这里我们通过 libFuzzer work 中的示例来学习如何编写 libFuzzer 的 fuzzer。</p>
+<h3 id="目标函数">目标函数<a hidden class="anchor" aria-hidden="true" href="#目标函数">#</a></h3>
+<p>使用 libFuzzer 的第一步是实现一个模糊目标（fuzz target），这是一个接受字节数组并通过被测试的 API 执行某些操作的函数。代码示例如下：</p>
+<p><code>vuln</code>就是我们需要测试的目标函数，接下来我们需要给它编写测试的 fuzzer。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">vuln</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span><span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">bool</span> <span class="n">result</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;F&#39;</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">             <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;U&#39;</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">             <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;Z&#39;</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">             <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="sc">&#39;Z&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="编写fuzzer">编写fuzzer<a hidden class="anchor" aria-hidden="true" href="#编写fuzzer">#</a></h3>
+<p>这里只需要将要测试的函数添加即可。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;vuln.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//通过接口将数据投喂到目标函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="kt">int</span> <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">vuln</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="fuzzing">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing">#</a></h3>
+<p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang++ -fsanitize<span class="o">=</span>address,fuzzer fuzzer.cc -o fuzzer
+</span></span></code></pre></div><ul>
+<li><code>-fsanitize=fuzzer</code>：启用 LibFuzzer</li>
+<li><code>-fsanitize=address</code>：启用 ASan 检测内存错误</li>
+</ul>
+<p>配置语料：</p>
+<p>创建一个空目录用于存放初始语料，并运行 fuzzer 程序。libFuzzer 会递归遍历指定的目录，读取所有文件作为初始输入。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir corpus
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;a&#34;</span> &gt; corpus/seed
+</span></span></code></pre></div><p>开始 Fuzzing：</p>
+<p>运行 Fuzzer 程序即可进行 Fuzz。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./fuzzer corpus
+</span></span></code></pre></div><h3 id="crash分析">crash分析<a hidden class="anchor" aria-hidden="true" href="#crash分析">#</a></h3>
+<p>程序崩溃之后会在当前目录下生成 crash 文件，可以看到以下 crash 文件内容是<code>FUZ</code>。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250712124215.png" style="max-width: 100%; height: auto;"></p>
+<p>我们可以直接通过 fuzzer 指定 crash 文件来复现 crash。</p>
+<pre tabindex="0"><code>./fuzzer ./crash-0eb8e4ed029b774d80f2b66408203801cb982a60  
+</code></pre><p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250712153103.png" style="max-width: 100%; height: auto;"></p>
+<p>ASan 会显示出当前 crash 的堆栈信息。</p>
+<p>我们还可以通过<code>symbolize=1</code>启用堆栈跟踪的符号化解析，将二进制地址转换为可读的代码位置（如函数名、源文件行号）。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">ASAN_OPTIONS</span><span class="o">=</span><span class="nv">symbolize</span><span class="o">=</span><span class="m">1</span> ./fuzzer ./crash-0eb8e4ed029b774d80f2b66408203801cb982a60  
+</span></span></code></pre></div><p>更多参数：</p>
+<ul>
+<li><code>-max_total_time</code>：设置最大运行时间</li>
+<li><code>-print_final_stats</code>：打印最终统计信息</li>
+<li><code>-seed=N</code>：设置随机种子，默认值为 0。</li>
+<li><code>-runs=N</code>：设置测试运行次数，默认为 -1（无限次运行）。</li>
+<li><code>-max_len=N</code>：设置输入最大长度，默认值为 0。</li>
+<li><code>-timeout=N</code>：设置超时秒数，默认 1200 秒。</li>
+<li><code>-rss_limit_mb=N</code>：设置内存限制，默认 2048 MB。</li>
+<li><code>-reload</code>：如果为 1，模糊器定期重新加载种子目录。</li>
+</ul>
+<h2 id="语料库优化">语料库优化<a hidden class="anchor" aria-hidden="true" href="#语料库优化">#</a></h2>
+<p>当拥有一个大型语料库时，我们可能希望进行语料库最小化或合并操作，以确保覆盖范围的完整性，同时减小语料库的规模。使用<code>-merge=1</code>参数，可以将新的输入合并到现有语料库中，仅保留能触发新路径的输入。</p>
+<h3 id="合并语料库">合并语料库<a hidden class="anchor" aria-hidden="true" href="#合并语料库">#</a></h3>
+<p>合并两个语料库：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir corpus1  <span class="c1"># 存储最小化后的语料库</span>
+</span></span><span class="line"><span class="cl">./fuzzer -merge<span class="o">=</span><span class="m">1</span> corpus1 corpus2
+</span></span></code></pre></div><p>这会将 corpus2 中的种子合并到 corpus1，只保留哪些可以触发新路径的种子。</p>
+<h3 id="合并恢复">合并恢复<a hidden class="anchor" aria-hidden="true" href="#合并恢复">#</a></h3>
+<p>合并恢复是 libFuzzer 提供的一种中断恢复机制。在执行语料库合并时，如果因某些原因（如崩溃、系统中断或人为终止）导致合并未能完成，合并恢复允许从中断的地方继续合并，而无需从头开始。</p>
+<ol>
+<li>初始化合并</li>
+</ol>
+<p>首先，使用以下命令开始合并两个语料库，并指定一个控制文件来记录合并的状态：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">./fuzzer corpus1 corpus2 -merge<span class="o">=</span><span class="m">1</span> -merge_control_file<span class="o">=</span>SomeLocalPath
+</span></span></code></pre></div><p>参数<code>-merge_control_file=SomeLocalPath</code>用于指定保存合并状态的文件路径。</p>
+<ol start="2">
+<li>处理合并中断</li>
+</ol>
+<p>如果合并进程中断，可以通过执行以下命令来恢复合并：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">killall -SIGUSR1 fuzzer
+</span></span></code></pre></div><p>该命令会将合并状态保存到指定的控制文件，以便下一次恢复时可以继续从上次中断的地方进行合并，而无需从头开始。</p>
+<ol start="3">
+<li>恢复合并</li>
+</ol>
+<p>合并过程中断可以通过以下命令恢复合并：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">killall -SIGUSR1 fuzzer
+</span></span></code></pre></div><p>这会使 fuzzer 从中断的位置继续合并，而不是重新开始。</p>
+<h2 id="字典支持">字典支持<a hidden class="anchor" aria-hidden="true" href="#字典支持">#</a></h2>
+<p>字典构成：</p>
+<p>字典每一行都是一个可被插入、替换或拼接到输入中的字符串或字节片段。在 Fuzz 过程中</p>
+<p>用双引号包裹，特殊字符需要转义。</p>
+<pre tabindex="0"><code class="language-dict" data-lang="dict">&#34;GET&#34;
+&#34;POST&#34;
+&#34;Content-Type:&#34;
+&#34;username=&#34;
+&#34;{\&#34;key\&#34;:&#34;
+&#34;\r\n&#34;
+</code></pre><p>使用字典：</p>
+<p>通过<code>-dict</code>参数指定使用的字典。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./fuzzer corpus -dict<span class="o">=</span>demo.dict
+</span></span></code></pre></div><h2 id="并行模式">并行模式<a hidden class="anchor" aria-hidden="true" href="#并行模式">#</a></h2>
+<p>每个 libFuzzer 进程都是单线程的，除非受测库启动它自己的线程。然而，可以通过并行运行多个实例并共享一个语料库目录来实现并行模糊测试。这样做的好处是，任何一个模糊测试进程发现的输入将能够供其他进程使用（除非使用了<code>-reload=0</code>禁用此功能）。</p>
+<p>libFuzzer 支持多进程或多线程方式的并行模糊测试。你可以通过设置多个实例来运行 libFuzzer，每个实例都有自己的输入 Corpus，并且共享一个全局结果。以下是并行模糊测试的常用配置选项：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./fuzzer -jobs<span class="o">=</span><span class="m">10</span> corpus
+</span></span></code></pre></div><p>选项说明：</p>
+<ul>
+<li><code>-jobs=N</code>：设置要运行的模糊测试作业数量。这决定了并行运行的模糊测试实例数。每个作业将会在不同的进程中运行，并且共享语料库，直到达到时间/迭代限制或找到错误；</li>
+<li><code>-workers=N</code>：设置并行工作的进程数。这可以覆盖<code>-jobs</code>的默认值。即使是一个多核 CPU，libFuzzer 默认只使用一半的核心数来运行模糊测试。如果你有12核机器，可以通过<code>-workers=12</code>来使用所有的核心来加速模糊测试过程。</li>
+</ul>
+<h2 id="fork模式">Fork模式<a hidden class="anchor" aria-hidden="true" href="#fork模式">#</a></h2>
+<p>libFuzzer 默认在单进程模式下运行，而 Fork 模式通过多子进程与父进程的配合来执行模糊测试。使用 Fork 模式可以提升模糊测试的容错性，特别是在处理内存溢出、超时和崩溃时。Fork 模式通常用于大规模模糊测试时，可以通过独立的子进程来并行化测试。</p>
+<p>参数说明：</p>
+<ul>
+<li><code>-fork=N</code>：启用 Fork 模式，开启 N 个子进程并行 fuzz。父进程负责协调语料、调度和崩溃合并；</li>
+<li><code>-jobs=N</code>：并行作业数量。与<code>-workers</code>配合使用，推荐用于分布式 / CI 等现代调度场景；</li>
+<li><code>-workers=N</code>：每个工作进程中使用的线程数；</li>
+<li><code>-ignore_ooms=1</code>：如果子进程发生内存溢出，继续 fuzz 并保存问题输入；</li>
+<li><code>-ignore_timeouts=1</code>：如果子进程超时，继续 fuzz 并保存问题输入；</li>
+<li><code>-ignore_crashes=0</code>：默认遇到崩溃会中止 fuzz，可设置为 1 忽略并继续。</li>
+</ul>
+<p>使用 Fork 模式，启动 4 个子进程并忽略崩溃：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./fuzzer -fork<span class="o">=</span><span class="m">4</span> corpus -ignore_crashes<span class="o">=</span><span class="m">1</span>
+</span></span></code></pre></div><p>使用并行模式，启动 4 个作业，每个作业有 1 个工作线程，并忽略崩溃：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./fuzzer -jobs<span class="o">=</span><span class="m">4</span> -workers<span class="o">=</span><span class="m">1</span> corpus -ignore_crashes<span class="o">=</span><span class="m">1</span>
+</span></span></code></pre></div><h2 id="覆盖率分析">覆盖率分析<a hidden class="anchor" aria-hidden="true" href="#覆盖率分析">#</a></h2>
+<p>LibFuzzer 使用 基于 SanitizerCoverage（SanCov） 的插桩方式记录哪些代码路径已经被执行过。它依赖 LLVM 编译器提供的功能，在编译时插入探针代码，以便在运行时收集覆盖率信息。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang++ -fsanitize<span class="o">=</span>fuzzer -fsanitize-coverage<span class="o">=</span>trace-pc-guard -g fuzzer.cc -o fuzzer
+</span></span></code></pre></div><ul>
+<li><code>-fsanitize=fuzzer</code>：启用 libFuzzer 驱动；</li>
+<li><code>-fsanitize-coverage=trace-pc-guard</code>：在每个基本块插入 PC 路径追踪代码；</li>
+</ul>
+<p>每当 Fuzzer 执行一次输入，它会：</p>
+<ol>
+<li>收集当前输入触发的路径哈希；</li>
+<li>判断是否是新的路径；</li>
+<li>如果是新路径，将该输入加入语料库。</li>
+</ol>
+<p>收集覆盖率信息：</p>
+<p>通过<code>LLVM_PROFILE_FILE</code>环境变量指定覆盖率数据的输出文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">LLVM_PROFILE_FILE</span><span class="o">=</span><span class="s2">&#34;coverage.profraw&#34;</span> ./fuzzer corpus/
+</span></span></code></pre></div><p>合并 Profile 数据：</p>
+<p>执行完 fuzzer 后，使用<code>llvm-profdata</code>工具合并收集到的 profile 数据。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llvm-profdata merge -sparse coverage.profraw -o coverage.profdata
+</span></span></code></pre></div><p>生成可读的覆盖率报告：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llvm-cov show ./fuzzer -instr-profile<span class="o">=</span>coverage.profdata fuzzer.cc
+</span></span></code></pre></div><p>生成 HTML 报告：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llvm-cov show ./fuzzer -instr-profile<span class="o">=</span>coverage.profdata -format<span class="o">=</span>html -output-dir<span class="o">=</span>coverage_html
+</span></span></code></pre></div><h2 id="案例">案例<a hidden class="anchor" aria-hidden="true" href="#案例">#</a></h2>
+<p>复现著名的心脏滴血漏洞。</p>
+<h3 id="构建项目">构建项目<a hidden class="anchor" aria-hidden="true" href="#构建项目">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#下拉项目</span>
+</span></span><span class="line"><span class="cl">git clone https://github.com/google/fuzzer-test-suite.git
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> fuzzer-test-suite
+</span></span><span class="line"><span class="cl">./openssl-1.0.1f/build.sh
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> BUILD
+</span></span></code></pre></div><h3 id="编写fuzzer-1">编写fuzzer<a hidden class="anchor" aria-hidden="true" href="#编写fuzzer-1">#</a></h3>
+<p>以下代码通过 libFuzzer 对 OpenSSL 的 SSL 握手过程进行测试。在每次测试中，通过 fuzzer 提供的不同数据，模拟与 SSL/TLS 握手发现相关的安全漏洞。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;openssl/ssl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;openssl/err.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;assert.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifndef CERT_PATH
+</span></span></span><span class="line"><span class="cl"><span class="cp"># define CERT_PATH
+</span></span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">// OpenSSL 初始化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">SSL_CTX</span> <span class="o">*</span><span class="nf">Init</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">SSL_library_init</span><span class="p">();</span>           <span class="c1">//初始化 OpenSSL库
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">SSL_load_error_strings</span><span class="p">();</span>     <span class="c1">//加载 OpenSSL 错误字符串
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">ERR_load_BIO_strings</span><span class="p">();</span>       <span class="c1">//加载 BIO 相关的错误字符串
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">OpenSSL_add_all_algorithms</span><span class="p">();</span> <span class="c1">//加载 OpenSSL 支持的所有加密算法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">SSL_CTX</span> <span class="o">*</span><span class="n">sctx</span><span class="p">;</span>                <span class="c1">//创建 SSL 上下文
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">assert</span> <span class="p">(</span><span class="n">sctx</span> <span class="o">=</span> <span class="nf">SSL_CTX_new</span><span class="p">(</span><span class="nf">TLSv1_method</span><span class="p">()));</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  <span class="nf">assert</span><span class="p">(</span><span class="nf">SSL_CTX_use_certificate_file</span><span class="p">(</span><span class="n">sctx</span><span class="p">,</span> <span class="n">CERT_PATH</span> <span class="s">&#34;server.pem&#34;</span><span class="p">,</span> <span class="n">SSL_FILETYPE_PEM</span><span class="p">));</span><span class="c1">//加载公钥证书
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">assert</span><span class="p">(</span><span class="nf">SSL_CTX_use_PrivateKey_file</span><span class="p">(</span><span class="n">sctx</span><span class="p">,</span> <span class="n">CERT_PATH</span> <span class="s">&#34;server.key&#34;</span><span class="p">,</span><span class="n">SSL_FILETYPE_PEM</span><span class="p">));</span>  <span class="c1">//加载私钥文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="n">sctx</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//Fuzz 入口
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="kt">int</span> <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">Data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">Size</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="n">SSL_CTX</span> <span class="o">*</span><span class="n">sctx</span> <span class="o">=</span> <span class="nf">Init</span><span class="p">();</span>        <span class="c1">//初始化 SSL 库
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">SSL</span> <span class="o">*</span><span class="n">server</span> <span class="o">=</span> <span class="nf">SSL_new</span><span class="p">(</span><span class="n">sctx</span><span class="p">);</span>          <span class="c1">//创建 SSL 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">BIO</span> <span class="o">*</span><span class="n">sinbio</span> <span class="o">=</span> <span class="nf">BIO_new</span><span class="p">(</span><span class="nf">BIO_s_mem</span><span class="p">());</span>   <span class="c1">//创建 BIO 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">BIO</span> <span class="o">*</span><span class="n">soutbio</span> <span class="o">=</span> <span class="nf">BIO_new</span><span class="p">(</span><span class="nf">BIO_s_mem</span><span class="p">());</span>  <span class="c1">//创建 BIO 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">SSL_set_bio</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">sinbio</span><span class="p">,</span> <span class="n">soutbio</span><span class="p">);</span> <span class="c1">//绑定 BIO 对象到 SSL 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">SSL_set_accept_state</span><span class="p">(</span><span class="n">server</span><span class="p">);</span>         <span class="c1">//设置 SSL 状态为接受状态
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">BIO_write</span><span class="p">(</span><span class="n">sinbio</span><span class="p">,</span> <span class="n">Data</span><span class="p">,</span> <span class="n">Size</span><span class="p">);</span>        <span class="c1">//将数据写入输入 BIO
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">SSL_do_handshake</span><span class="p">(</span><span class="n">server</span><span class="p">);</span>             <span class="c1">//执行 SSL 握手
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">SSL_free</span><span class="p">(</span><span class="n">server</span><span class="p">);</span>                     <span class="c1">//释放 SSL 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang++ -g openssl_fuzzer.cc -O2 -fno-omit-frame-pointer -fsanitize<span class="o">=</span>address,fuzzer <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -fsanitize-coverage<span class="o">=</span>trace-cmp,trace-gep,trace-div <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -Iopenssl1.0.1f/include openssl1.0.1f/libssl.a openssl1.0.1f/libcrypto.a <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -o openssl_fuzzer
+</span></span></code></pre></div><h3 id="fuzzing-1">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing-1">#</a></h3>
+<p>fuzzer 要求公钥和私钥文件和它在一个目录下。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#将证书等文件复制到当前目录</span>
+</span></span><span class="line"><span class="cl">cp ../openssl-1.0.1f/runtime/* ./    
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#配置语料</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;aa&#34;</span> &gt; ./corpus/seed
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#开始fuzzing</span>
+</span></span><span class="line"><span class="cl">./openssl_fuzzer -max_total_time<span class="o">=</span><span class="m">300</span> -detect_leaks<span class="o">=</span><span class="m">0</span>
+</span></span></code></pre></div><h3 id="crash分析-1">Crash分析<a hidden class="anchor" aria-hidden="true" href="#crash分析-1">#</a></h3>
+<p>分析 crash 信息之后，发现 crash 原因为在调用<code>CRYPTO_malloc()</code>分配 32 字节内存，但是没有释放。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250712155054.png" style="max-width: 100%; height: auto;"></p>
+<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>libFuzzer 可以和 AFL 联合加快 Fuzz 效率。比如先用 AFL 进行初步的 Fuzz 测试，使用 AFL 生成的样本进行 libFuzzer 测试。对目标函数进行专注性的模糊测试。</p>
+<h2 id="reference">Reference<a hidden class="anchor" aria-hidden="true" href="#reference">#</a></h2>
+<blockquote>
+<p><a href="https://github.com/Dor1s/libfuzzer-workshop">Dor1s/libfuzzer-workshop: Repository for materials of &ldquo;Modern fuzzing of C/C++ Projects&rdquo; workshop.</a>
+<a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer 官方文档</a>
+<a href="https://bbs.kanxue.com/thread-283781.htm#msg_header_h1_0">[原创]libFuzzer模糊测试引擎调研与自定义开发</a>
+<a href="https://www.secpulse.com/archives/71898.html">fuzz实战之libfuzzer - SecPulse.COM | 安全脉搏</a>
+<a href="https://www.freebuf.com/articles/system/395965.html">libFuzzer漏洞挖掘总结教程 - FreeBuf网络安全行业门户</a>
+<a href="https://github.com/google/fuzzer-test-suite">google/fuzzer-test-suite: Set of tests for fuzzing engines</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://nanhang.top/tags/c&#43;&#43;/">C&#43;&#43;</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+</body>
+
+</html>

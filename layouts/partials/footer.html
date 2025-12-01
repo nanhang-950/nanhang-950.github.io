@@ -1,0 +1,37 @@
+{{- if (not .Site.Params.disableScrollToTop) }}
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+{{- end }}
+
+<script>
+    // 阅读进度百分比
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    // 返回顶部按钮显示 / 隐藏
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
