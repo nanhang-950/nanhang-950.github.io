@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>LLM on 南行&#39;s Blog</title>
-    <link>http://localhost:1313/categories/llm/</link>
+    <link>https://nanhang.top/categories/llm/</link>
     <description>Recent content in LLM on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/llm/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://nanhang.top/categories/llm/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>LLM安全入门</title>
-      <link>http://localhost:1313/posts/llm/sec/</link>
+      <link>https://nanhang.top/posts/llm/sec/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/llm/sec/</guid>
+      <guid>https://nanhang.top/posts/llm/sec/</guid>
       <description>&lt;h2 id=&#34;越狱攻击&#34;&gt;越狱攻击&lt;/h2&gt;
 &lt;p&gt;大模型天生缺乏“指令”和“信息”的边界分辨能力，它倾向于将所有输入视作需要整合的素材，而不是区分哪些是强约束（必须遵守）与弱参考（仅供辅助）的部分。&lt;/p&gt;</description>
     </item>

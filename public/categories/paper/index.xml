@@ -2,26 +2,26 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Paper on 南行&#39;s Blog</title>
-    <link>http://localhost:1313/categories/paper/</link>
+    <link>https://nanhang.top/categories/paper/</link>
     <description>Recent content in Paper on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/categories/paper/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://nanhang.top/categories/paper/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>论文笔记：Fuzzing: A Survey for Roadmap</title>
-      <link>http://localhost:1313/posts/paper/roadmap/</link>
+      <link>https://nanhang.top/posts/paper/roadmap/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/paper/roadmap/</guid>
+      <guid>https://nanhang.top/posts/paper/roadmap/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;p&gt;看了 arttnba3 师傅的关于这篇论文的博客想要好好读一下这篇论文，但是没有找到免费的 PDF 文档，而 ACM 官网下载要钱，而且还是doler。所以就直接看 arttnba3 师傅的博客了，这篇文章就是看 arttnba3 师傅的博客记的笔记，几乎就是完全转载了 arttnba3 的博客，仅对格式做了一些小小的修改，特此声明一下。&lt;/p&gt;</description>
     </item>
     <item>
       <title>论文笔记：Fuzzing: Art, Science, and Engineering</title>
-      <link>http://localhost:1313/posts/paper/art/</link>
+      <link>https://nanhang.top/posts/paper/art/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/paper/art/</guid>
+      <guid>https://nanhang.top/posts/paper/art/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;论文题目：模糊测试：艺术、科学和工程&lt;/p&gt;
@@ -30,9 +30,9 @@
     </item>
     <item>
       <title>论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing</title>
-      <link>http://localhost:1313/posts/paper/llamafuzz/</link>
+      <link>https://nanhang.top/posts/paper/llamafuzz/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/paper/llamafuzz/</guid>
+      <guid>https://nanhang.top/posts/paper/llamafuzz/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;p&gt;由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。&lt;/p&gt;</description>
     </item>
