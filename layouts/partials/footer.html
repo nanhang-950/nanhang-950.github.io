@@ -35,3 +35,19 @@
         }
     });
 </script>
+
+{{- if (not site.Params.disableThemeToggle) }}
+<script>
+    // 主题深浅模式切换
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script>
+{{- end }}

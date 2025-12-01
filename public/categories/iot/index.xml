@@ -2,24 +2,11 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>IOT on 南行&#39;s Blog</title>
-    <link>https://nanhang.top/categories/iot/</link>
+    <link>http://localhost:1313/categories/iot/</link>
     <description>Recent content in IOT on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
-    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="https://nanhang.top/categories/iot/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Tenda AC15漏洞复现</title>
-      <link>https://nanhang.top/posts/iot/tenda/</link>
-      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/iot/tenda/</guid>
-      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-&lt;p&gt;基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。&lt;/p&gt;
-&lt;h2 id=&#34;获取固件&#34;&gt;获取固件&lt;/h2&gt;
-&lt;p&gt;从官网下载固件：&lt;a href=&#34;https://www.tenda.com.cn/material/show/102680&#34;&gt;AC15升级软件_腾达(Tenda)官方网站&lt;/a&gt;
-&lt;img src=&#34;https://nanhang.top/assets/Pasted%20image%2020250514230701.png&#34; style=&#34;width: 80%;&#34;&gt;&lt;/p&gt;
-&lt;p&gt;解压下载的压缩包就可以拿到固件&lt;/p&gt;</description>
-    </item>
+    <atom:link href="http://localhost:1313/categories/iot/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

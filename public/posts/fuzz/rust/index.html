@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh" dir="auto" data-theme="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, nofollow">
 <title>Rust Fuzz | 南行&#39;s Blog</title>
 <meta name="keywords" content="Rust">
 <meta name="description" content="简介
 传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C&#43;&#43; 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。">
 <meta name="author" content="">
-<link rel="canonical" href="https://nanhang.top/posts/fuzz/rust/">
+<link rel="canonical" href="http://localhost:1313/posts/fuzz/rust/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="16x16" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="apple-touch-icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="mask-icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="zh" href="https://nanhang.top/posts/fuzz/rust/">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/fuzz/rust/">
 <noscript>
     <style>
         #theme-toggle,
@@ -105,77 +105,13 @@ code.has-jax {
     border: inherit;
     color: #515151;
 }
-</style><meta property="og:url" content="https://nanhang.top/posts/fuzz/rust/">
-  <meta property="og:site_name" content="南行&#39;s Blog">
-  <meta property="og:title" content="Rust Fuzz">
-  <meta property="og:description" content="简介 传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C&#43;&#43; 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。">
-  <meta property="og:locale" content="zh">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2025-11-30T23:30:38+00:00">
-    <meta property="article:modified_time" content="2025-11-30T23:30:38+00:00">
-    <meta property="article:tag" content="Rust">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Rust Fuzz">
-<meta name="twitter:description" content="简介
-传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C&#43;&#43; 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。">
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position":  1 ,
-      "name": "Posts",
-      "item": "https://nanhang.top/posts/"
-    }, 
-    {
-      "@type": "ListItem",
-      "position":  2 ,
-      "name": "Rust Fuzz",
-      "item": "https://nanhang.top/posts/fuzz/rust/"
-    }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "Rust Fuzz",
-  "name": "Rust Fuzz",
-  "description": "简介 传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。\n",
-  "keywords": [
-    "Rust"
-  ],
-  "articleBody": "简介 传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。\nRust环境配置 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh #然后选1，将以下命令写入 source $HOME/.cargo/env cargo-fuzz cargo-fuzz 是 Rust 代码模糊测试的推荐工具。不过，cargo-fuzz 本身并不是一个 fuzzer，而是一个调用 fuzzer 的工具。目前，它仅仅支持通过 libfuzzer-sys crate 调用 LibFuzzer。\n环境搭建 由于 libFuzzer 需要 LLVM sanitizer 支持，所以我们需要将 Rust 编译器切换至 nightly 版本\n# 安装nightly版本 rustup install nightly # 设置为默认编译器 rustup default nightly 安装 cargo-fuzz 工具：\ncargo install cargo-fuzz 基本用法 接下来我们将对 Rust 的 URL 解析库 rust-url 进行 Fuzzing 来学习如何使用 cargo-fuzz。\n环境搭建：\n首先，克隆 rust-url 项目并切换指定提交：\ngit clone https://github.com/servo/rust-url.git cd rust-url git checkout bfa167b4e0253642b6766a7aa74a99df60a94048 初始化 Fuzz 环境\ncargo fuzz init 查看现有的 fuzz 目标\n❯ cargo fuzz list fuzz_target_1 默认生成了 fuzz_target_1 文件。\n配置测试目标：\n编辑默认生成的测试文件fuzz-targets/fuzz_target_1.rs，修改为以下内容。\n#![no_main] //禁用默认 main 函数入口 extern crate libfuzzer_sys; //导入 libfuzzer_sys， use libfuzzer_sys::fuzz_target; extern crate url; //引入 url crate //模糊测试接口函数 fuzz_target!(|data: \u0026[u8]| { // 忽略非 URF-8 输入 if let Ok(s) = std::str::from_utf8(data) { // 测试目标函数 let _ = url::Url::parse(s); } }); fuzz_target!是 cargo-fuzz 提供的宏，用于定义 Fuzz 入口。libFuzzer 会持续调用它，并传入生成的数据。类似于 C/C++ 中的LLVMTestOneInput。\n构建语料：\n在 fuzz 目录下创建corpus/fuzz_target_1目录，然后将语料存放在corpus/fuzz_target_1目录下。\ncd fuzz mkdir -p corpus/fuzz_target_1 mv seed.txt corpus/fuzz_target_1 开始 Fuzzing：\n通过cargo fuzz run运行目标，自动编译带插桩的目标。\ncargo fuzz run fuzz_target_1 在跑了一会之后程序就直接 crash 了，并将 crash 样本保存到了artifacts/fuzz_target_1中。\n根据调用栈跟踪发现具体问题在#18 ... rust-url/src/parser.rs:287:46，错误信息为：\nthread '' panicked at ... attempt to subtract with overflow 说明某个地方发生了x - y的运算，其中x \u003c y，在 release 模式下没有检查，但是我们通过 ASan 捕捉到了。\n复现 crash：\ncargo fuzz run fuzz_target_1 artifacts/fuzz_target_1/crash-7336c41a88a07fc4343d1cea44ddc092589caff9 cargo fuzz 的其它常用参数：\ncargo fuzz add target：创建新的模糊测试目标。 cargo fuzz fmt target input：打印测试用例的输入。 cargo fuz tmin target input：缩小crash。 cargo fuzz cmin target：缩小输入语料库。 cargo fuzz coverage：生成覆盖率信息。 可以设置环境变量RUST_BACKTRACE=1来决定是否打印调用栈。 libFuzzer支持 通过--可以使用 libFuzzer 的参数：\ncargo fuzz run target_name -- -max_len=512 -only_ascii=1 参数：\n-ignore_crashes=1：即使遇到崩溃也继续 Fuzz。 -s,--sanitizer：选择 Sanitizer。 -max_len=：限制输入最大长度。 -runs=：限制运行次数。 -max_total_time=：限制总运行时间（秒）。 -timeout=：单次运行超时时间（秒）。 -only_ascii=1：仅生成 ASCII 输入。 -dict=：使用字典文件。 -c, --careful：开启额外的安全检查。 --no-cfg-fuzzing：禁用默认的cfg(fuzzing)编译配置。 测量代码覆盖率 环境搭建 # 安装 LLVM 工具集（用于 coverage） rustup component add --toolchain nightly llvm-tools-preview cargo install cargo-binutils cargo install rustfilt 基本使用 测量代码覆盖率需要通过 cargo-fuzz，所以又回到了 cargo-fuzz。\n#手动插桩目标项目 RUSTFLAGS=\"-C instrument-coverage\" cargo build --release #测量覆盖率 cargo fuzz coverage fuzz_target_1 这里 cargo fuzz 会自动测试corpus/fuzz_target_1目录下的语料。\n最后在fuzz/coverage/fuzz_target_1目录下生成了覆盖率文件coverage.profdata。\n可视化覆盖率信息 生成 HTML 格式覆盖率报告：\ncargo cov -- show fuzz/target/x86_64-unknown-linux-gnu/release/fuzz_target_1 \\ --format=html \\ --Xdemangler=rustfilt \\ --instr-profile=fuzz/coverage/fuzz_target_1/coverage.profdata \\ \u003e coverage.html 终端查看：\ncargo cov -- show --use-color \\ --instr-profile=fuzz/coverage/fuzz_target_1/coverage.profdata \\ fuzz/target/x86_64-unknown-linux-gnu/release/fuzz_target_1 \\ --show-regions --show-instantiations 参考 rust-fuzz/trophy-case: 🏆 Collection of bugs uncovered by fuzzing Rust code afl_stat - Rust 设置 - Rust Fuzz Book rust-fuzz/afl.rs: 🐇 Fuzzing Rust code with American Fuzzy Lop\n",
-  "wordCount" : "1658",
-  "inLanguage": "zh",
-  "datePublished": "2025-11-30T23:30:38Z",
-  "dateModified": "2025-11-30T23:30:38Z",
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "https://nanhang.top/posts/fuzz/rust/"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "南行's Blog",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://nanhang.top/assets/favicon.jpg"
-    }
-  }
-}
-</script>
+</style>
 </head>
 <body id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://nanhang.top/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
@@ -201,32 +137,32 @@ code.has-jax {
         </div>
         <ul id="menu">
             <li>
-                <a href="https://nanhang.top/" title="南行&#39;s Blog">
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
                     <span>首页</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/archives/" title="归档">
+                <a href="http://localhost:1313/archives/" title="归档">
                     <span>归档</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/categories/" title="Categories">
+                <a href="http://localhost:1313/categories/" title="Categories">
                     <span>分类</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/tags/" title="Tags">
+                <a href="http://localhost:1313/tags/" title="Tags">
                     <span>标签</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/search/" title="搜索">
+                <a href="http://localhost:1313/search/" title="搜索">
                     <span>搜索</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/about/" title="About">
+                <a href="http://localhost:1313/about/" title="About">
                     <span>关于</span>
                 </a>
             </li>
@@ -512,7 +448,7 @@ mv seed.txt corpus/fuzz_target_1
 
   <footer class="post-footer">
     <ul class="post-tags">
-      <li><a href="https://nanhang.top/tags/rust/">Rust</a></li>
+      <li><a href="http://localhost:1313/tags/rust/">Rust</a></li>
     </ul>
   </footer>
 </article>
@@ -553,6 +489,18 @@ mv seed.txt corpus/fuzz_target_1
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>
