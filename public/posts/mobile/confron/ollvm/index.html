@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>OLLVM混淆和反混淆 | 南行&#39;s Blog</title>
+<meta name="keywords" content="加固开发">
+<meta name="description" content="前言
+简介
+OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/confron/ollvm/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/confron/ollvm/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      OLLVM混淆和反混淆
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%b8%8b%e8%bd%bd%e6%ba%90%e7%a0%81" aria-label="下载源码">下载源码</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91%e9%a1%b9%e7%9b%ae" aria-label="编译项目">编译项目</a></li>
+                    <li>
+                        <a href="#%e6%95%b4%e5%90%88ndk" aria-label="整合NDK">整合NDK</a></li>
+                    <li>
+                        <a href="#%e6%b7%b7%e6%b7%86%e4%bd%bf%e7%94%a8" aria-label="混淆使用">混淆使用</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#angr%e7%ac%a6%e5%8f%b7%e6%89%a7%e8%a1%8c" aria-label="Angr符号执行">Angr符号执行</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%ac%a6%e5%8f%b7%e6%89%a7%e8%a1%8c%e5%8e%9f%e7%90%86" aria-label="符号执行原理">符号执行原理</a></li>
+                    <li>
+                        <a href="#%e7%ac%a6%e5%8f%b7%e5%8c%96%e8%be%93%e5%85%a5" aria-label="符号化输入">符号化输入</a></li>
+                    <li>
+                        <a href="#%e8%b7%af%e5%be%84%e6%8e%a2%e7%b4%a2" aria-label="路径探索">路径探索</a></li>
+                    <li>
+                        <a href="#%e8%b7%af%e5%be%84%e7%ba%a6%e6%9d%9f" aria-label="路径约束">路径约束</a></li>
+                    <li>
+                        <a href="#%e7%ba%a6%e6%9d%9f%e6%b1%82%e8%a7%a3" aria-label="约束求解">约束求解</a></li>
+                    <li>
+                        <a href="#%e9%9d%a2%e4%b8%b4%e7%9a%84%e9%97%ae%e9%a2%98" aria-label="面临的问题">面临的问题</a></li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba-1" aria-label="环境搭建">环境搭建</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e6%a6%82%e5%bf%b5" aria-label="基础概念">基础概念</a></li>
+                    <li>
+                        <a href="#%e7%ac%a6%e5%8f%b7%e5%8f%98%e9%87%8f" aria-label="符号变量">符号变量</a></li>
+                    <li>
+                        <a href="#state%e7%8a%b6%e6%80%81" aria-label="State状态">State状态</a></li>
+                    <li>
+                        <a href="#simulation-manager" aria-label="Simulation Manager">Simulation Manager</a></li>
+                    <li>
+                        <a href="#explorer" aria-label="Explorer">Explorer</a></li>
+                    <li>
+                        <a href="#%e7%ac%a6%e5%8f%b7%e5%8c%96%e5%88%a4%e6%96%ad" aria-label="符号化判断">符号化判断</a></li>
+                    <li>
+                        <a href="#%e6%89%a7%e8%a1%8c-state" aria-label="执行 state">执行 state</a></li>
+                    <li>
+                        <a href="#%e5%bb%b6%e8%bf%9f%e6%b1%82%e8%a7%a3" aria-label="延迟求解">延迟求解</a></li>
+                    <li>
+                        <a href="#%e8%b0%83%e7%94%a8%e6%8c%87%e5%ae%9a%e5%87%bd%e6%95%b0" aria-label="调用指定函数">调用指定函数</a></li>
+                    <li>
+                        <a href="#%e6%a8%a1%e6%8b%9f%e6%89%a7%e8%a1%8c" aria-label="模拟执行">模拟执行</a></li>
+                    <li>
+                        <a href="#%e6%9b%b4%e9%ab%98%e6%95%88%e7%9a%84-state-%e6%89%a7%e8%a1%8c%e7%ae%a1%e7%90%86" aria-label="更高效的 state 执行管理">更高效的 state 执行管理</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#z3" aria-label="Z3">Z3</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%a0%b8%e5%bf%83%e6%a6%82%e5%bf%b5%e9%80%9f%e8%a7%88" aria-label="核心概念速览">核心概念速览</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b" aria-label="基本数据类型">基本数据类型</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e8%af%ad%e5%8f%a5" aria-label="基本语句">基本语句</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8" aria-label="基本使用">基本使用</a></li>
+                    <li>
+                        <a href="#%e5%8f%98%e9%87%8f%e8%a1%a8%e7%a4%ba" aria-label="变量表示">变量表示</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e9%87%8f%e8%a1%a8%e7%a4%ba" aria-label="常量表示">常量表示</a></li>
+                    <li>
+                        <a href="#%e6%b7%bb%e5%8a%a0%e7%ba%a6%e6%9d%9f" aria-label="添加约束">添加约束</a></li>
+                    <li>
+                        <a href="#%e7%ba%a6%e6%9d%9f%e6%b1%82%e8%a7%a3-1" aria-label="约束求解">约束求解</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e8%a7%84%e4%bd%bf%e7%94%a8" aria-label="常规使用">常规使用</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%b1%a1%e7%82%b9%e5%88%86%e6%9e%90" aria-label="污点分析">污点分析</a></li>
+                    <li>
+                        <a href="#%e5%8f%8d%e6%b7%b7%e6%b7%86%e4%b8%8e%e6%b1%a1%e7%82%b9%e5%88%86%e6%9e%90" aria-label="反混淆与污点分析">反混淆与污点分析</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e6%b5%81%e5%b9%b3%e5%9d%a6%e5%8c%96" aria-label="控制流平坦化">控制流平坦化</a></li>
+                    <li>
+                        <a href="#%e8%99%9a%e5%81%87%e6%8e%a7%e5%88%b6%e6%b5%81" aria-label="虚假控制流">虚假控制流</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%9f%ba%e4%ba%8e-angr-%e6%9e%84%e5%bb%ba%e6%b1%a1%e7%82%b9%e5%88%86%e6%9e%90%e6%a1%86%e6%9e%b6" aria-label="基于 angr 构建污点分析框架">基于 angr 构建污点分析框架</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%b1%a1%e7%82%b9%e6%ba%90" aria-label="污点源">污点源</a></li>
+                    <li>
+                        <a href="#%e5%88%a4%e6%96%ad%e8%a1%a8%e8%be%be%e5%bc%8f%e6%98%af%e5%90%a6%e6%b1%a1%e7%82%b9" aria-label="判断表达式是否污点">判断表达式是否污点</a></li>
+                    <li>
+                        <a href="#%e6%b1%a1%e7%82%b9%e4%bc%a0%e6%92%ad%e6%89%a7%e8%a1%8c" aria-label="污点传播(执行)">污点传播(执行)</a></li>
+                    <li>
+                        <a href="#trace-%e6%a8%a1%e6%8b%9f%e6%89%a7%e8%a1%8c" aria-label="trace 模拟执行">trace 模拟执行</a></li>
+                    <li>
+                        <a href="#%e6%95%8f%e6%84%9f%e6%93%8d%e4%bd%9c%e6%a3%80%e6%b5%8b" aria-label="敏感操作检测"><strong>敏感操作检测</strong></a></li>
+                    <li>
+                        <a href="#deflat" aria-label="deflat">deflat</a></li>
+                    <li>
+                        <a href="#d810" aria-label="D810">D810</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e6%b5%81%e5%b9%b3%e5%9d%a6%e5%8c%96-1" aria-label="控制流平坦化">控制流平坦化</a></li>
+                    <li>
+                        <a href="#%e8%99%9a%e5%81%87%e6%8e%a7%e5%88%b6%e6%b5%81-1" aria-label="虚假控制流">虚假控制流</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%9f%a5%e6%89%be%e6%89%80%e6%9c%89-bcf-%e4%bd%8d%e7%bd%ae" aria-label="查找所有 BCF 位置">查找所有 BCF 位置</a></li>
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90%e6%b5%81%e7%a8%8b" aria-label="分析流程">分析流程</a></li>
+                    <li>
+                        <a href="#d810-%e5%8e%bb%e9%99%a4" aria-label="D810 去除">D810 去除</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%8c%87%e4%bb%a4%e6%9b%bf%e6%8d%a2" aria-label="指令替换">指令替换</a></li>
+                    <li>
+                        <a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%8a%a0%e5%af%86" aria-label="字符串加密">字符串加密</a></li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。</p>
+<p>作为 LLVM 的 IR 级混淆框架，OLLVM 的混淆操作直接作用于 LLVM IR，只要目标平台能够使用 LLVM 编译链，理论上都可以使用 OLLVM 生成混淆后的二进制。其核心机制是通过编写自定义 Pass 修改和扰动 IR，使后端生成的机器码继承相同的混淆效果。</p>
+<p>OLLVM 提供了三类经典的混淆策略：</p>
+<ul>
+<li><strong>控制流平坦化（Control Flow Flattening）</strong></li>
+<li><strong>虚假控制流（Bogus Control Flow）</strong></li>
+<li><strong>指令替换（Instructions Substitution）</strong></li>
+</ul>
+<p>不过现在在实际的生产环境中，更常使用的是 Hikari。Hikari 是 OLLVM 的改进版。与原版 OLLVM 相比，Hikari 增强和扩展了多个关键能力，包括：</p>
+<ul>
+<li><strong>常量加密混淆（Constant Encryption）</strong></li>
+<li><strong>强化的控制流平坦化（Enhanced CFF）</strong></li>
+<li><strong>更强的不透明谓词（Opaque Predicates）</strong></li>
+<li><strong>反调试、反 Hook 等运行时防护机制</strong></li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>环境：Win11MSVC</p>
+<p>需安装：</p>
+<ul>
+<li>CMake</li>
+<li>Ninja</li>
+</ul>
+<h3 id="下载源码">下载源码<a hidden class="anchor" aria-hidden="true" href="#下载源码">#</a></h3>
+<p>很可惜 Hikari 已经被删除了，所以我自己做了一个 Hikari-LLVM18 版。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">git clone https://github.com/nanhang-950/Hikari-LLVM18
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> Hikari-LLVM18
+</span></span><span class="line"><span class="cl">git submodule update --init --recursive
+</span></span></code></pre></div><h3 id="编译项目">编译项目<a hidden class="anchor" aria-hidden="true" href="#编译项目">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> Hikari-LLVM15  
+</span></span><span class="line"><span class="cl">mkdir build  
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> build  
+</span></span><span class="line"><span class="cl">cmake -S ../llvm -B . -G <span class="s2">&#34;Ninja&#34;</span> ^
+</span></span><span class="line"><span class="cl">    -DCMAKE_BUILD_TYPE<span class="o">=</span>Release ^
+</span></span><span class="line"><span class="cl">    -DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&#34;clang&#34;</span> ^
+</span></span><span class="line"><span class="cl">    -DLLVM_INCLUDE_TESTS<span class="o">=</span>OFF ^
+</span></span><span class="line"><span class="cl">    -DCMAKE_CXX_FLAGS<span class="o">=</span><span class="s2">&#34;/utf-8&#34;</span> ^
+</span></span><span class="line"><span class="cl">    -DCMAKE_C_FLAGS<span class="o">=</span><span class="s2">&#34;/utf-8&#34;</span>
+</span></span><span class="line"><span class="cl">ninja -j12
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">cmake ../llvm <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -DCMAKE_BUILD_TYPE<span class="o">=</span>Release <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&#34;clang&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -DLLVM_TARGETS_TO_BUILD<span class="o">=</span><span class="s2">&#34;AArch64&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span> 
+</span></span></code></pre></div><h3 id="整合ndk">整合NDK<a hidden class="anchor" aria-hidden="true" href="#整合ndk">#</a></h3>
+<p>llvm 18 选择<code>android-ndk-r27c</code>，将<code>build/bin</code>目录下的<code>clang.exe</code>、<code>clang++.exe</code>、<code>clang.cl.exe</code>替换到<code>ndk\27\toolchains/llvm/prebuilt/linux-x86_64/bin/clang-18</code>目录下。</p>
+<h3 id="混淆使用">混淆使用<a hidden class="anchor" aria-hidden="true" href="#混淆使用">#</a></h3>
+<p>在<code>build.gradle</code>中配置需要混淆的组件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gradle" data-lang="gradle"><span class="line"><span class="cl"><span class="n">defaultConfig</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">applicationId</span> <span class="s2">&#34;com.example.myapplication&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">minSdk</span> <span class="mi">24</span>
+</span></span><span class="line"><span class="cl">    <span class="n">targetSdk</span> <span class="mi">33</span>
+</span></span><span class="line"><span class="cl">    <span class="n">versionCode</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="n">versionName</span> <span class="s2">&#34;1.0&#34;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">testInstrumentationRunner</span> <span class="s2">&#34;androidx.test.runner.AndroidJUnitRunner&#34;</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">    <span class="n">externalNativeBuild</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cmake</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cppFlags</span> <span class="s2">&#34;-mllvm -irobf-cff&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></div><p>编译混淆样本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">CC</span><span class="o">=</span>/home/pandaos/android-ndk/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android22-clang -I/home/pandaos/android-ndk/android-ndk-r21e/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.9/include 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nv">$CC</span> -mllvm -irobf-indbr main.c -o main-obf
+</span></span></code></pre></div><p>ndk 里面的一些 headers 没有自动导入，需要手动处理导入处理一下。</p>
+<p>跟ollvm类似,可通过编译选项开启相应混淆. 如启用间接跳转混淆</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ path_to_the/build/bin/clang -mllvm -irobf -mllvm --irobf-indbr test.c
+</span></span></code></pre></div><p>对于使用autotools的工程</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ <span class="nv">CC</span><span class="o">=</span>path_to_the/build/bin/clang or <span class="nv">CXX</span><span class="o">=</span>path_to_the/build/bin/clang
+</span></span><span class="line"><span class="cl">$ <span class="nv">CFLAGS</span><span class="o">+=</span><span class="s2">&#34;-mllvm -irobf -mllvm --irobf-indbr&#34;</span> or <span class="nv">CXXFLAGS</span><span class="o">+=</span><span class="s2">&#34;-mllvm -irobf -mllvm --irobf-indbr&#34;</span> <span class="o">(</span>or any other obfuscation-related flags<span class="o">)</span>
+</span></span><span class="line"><span class="cl">$ ./configure
+</span></span><span class="line"><span class="cl">$ make
+</span></span></code></pre></div><h2 id="angr符号执行">Angr符号执行<a hidden class="anchor" aria-hidden="true" href="#angr符号执行">#</a></h2>
+<img src="./assets/Pasted image 20250326152447.png" alt="Pasted image 20250326152447" style="zoom: 33%;" />
+<h3 id="符号执行原理">符号执行原理<a hidden class="anchor" aria-hidden="true" href="#符号执行原理">#</a></h3>
+<p>定义：符号执行（Symbolic Execution）是一种程序分析技术，通过将程序输入替换为符号变量，探索程序的所有可能路径，并生成路径约束条件进行求解，从而帮助发现漏洞、验证程序正确性或生成测试用例。</p>
+<p>核心思想：通过将程序的输入抽象为符号变量，追踪这些变量在程序中的操作，并通过生成路径条件来验证各条路径的可行性。这种方法有助于检测潜在的错误和漏洞，并能够覆盖更多的执行路径，从而提高程序分析的全面性和准确性。</p>
+<p>什么是符号执行，一般我们运行一个程序需要给程序输入内容，直接输入内容后程序执行。这属于传统执行的使用实际的具体值来运行程序，而符号执行使用符号值来运行程序。</p>
+<p>符号执行的三个关键点：</p>
+<ul>
+<li>变量符号化</li>
+<li>程序执行模拟</li>
+<li>约束求解</li>
+</ul>
+<p>符号执行的关键在于：</p>
+<ul>
+<li>符号化输入：将程序的输入替换为符号变量。</li>
+<li>路径探索：模拟程序的执行过程，探索程序的所有可能路径，特别是在条件分支处，符号执行会分别生成两个路径来代表条件为真和条件为假的情况。</li>
+<li>路径约束：每一条路径都会产生一个路径约束，路径约束是关于符号变量的数学公式，表示这条路径的条件。</li>
+<li>约束求解：符号执行生成的路径条件可以通过约束求解器（例如 Z3）来求解，求解器可以找到满足这些条件的符号变量具体值，从而推导出实际输入。</li>
+</ul>
+<h3 id="符号化输入">符号化输入<a hidden class="anchor" aria-hidden="true" href="#符号化输入">#</a></h3>
+<p>符号执行首先要将程序的输入替换为符号变量，而是表示一个不确定的集合，即它们可以取多个可能的值。，符号变量不仅可以表示未知数，还可以用于表达任何一个可能的值。</p>
+<p>比如在下例代码中，用户输入了两个整型<code>x</code>和<code>y</code>。<code>x</code>和<code>y</code>可能是任何值，即都是未知数。</p>
+<ul>
+<li>例</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">x</span><span class="o">=</span><span class="nb">input</span><span class="p">(</span><span class="s2">&#34;请输入x: &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span><span class="o">=</span><span class="nb">input</span><span class="p">(</span><span class="s2">&#34;请输入y: &#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;success&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">print</span><span class="p">(</span><span class="s2">&#34;try again&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>我们对这个程序进行符号执行，首先将<code>x</code>和<code>y</code>替换为符号变量。</p>
+<p>由于<code>x</code>和<code>y</code>都是整型，所以我们要定义两个整型的符号变量</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 符号变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="n">Int</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl"><span class="n">y</span> <span class="o">=</span> <span class="n">Int</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span> 
+</span></span></code></pre></div><h3 id="路径探索">路径探索<a hidden class="anchor" aria-hidden="true" href="#路径探索">#</a></h3>
+<h3 id="路径约束">路径约束<a hidden class="anchor" aria-hidden="true" href="#路径约束">#</a></h3>
+<p>然后生成路径条件，在上述例子中我们的路径条件是<code>x &gt; y</code>。</p>
+<p>所以我们通过<code>z3</code>向符号变量添加约束。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 创建求解器</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加入路径条件：x &gt; y</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span> <span class="o">==</span> <span class="n">sat</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Path 1: x = </span><span class="si">{</span><span class="n">model</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="si">}</span><span class="s2">, y = </span><span class="si">{</span><span class="n">model</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>  <span class="c1"># 满足 x &gt; y</span>
+</span></span><span class="line"><span class="cl"><span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;No solution for x &gt; y&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 创建新求解器实例，加入另一个路径条件：x &lt;= y</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">push</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">y</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="约束求解">约束求解<a hidden class="anchor" aria-hidden="true" href="#约束求解">#</a></h3>
+<p>使用求解器来求解可能的输入。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 求解路径条件</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span> <span class="o">==</span> <span class="n">sat</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Path 2: x = </span><span class="si">{</span><span class="n">model</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="si">}</span><span class="s2">, y = </span><span class="si">{</span><span class="n">model</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>  <span class="c1"># 满足 x &lt;= y</span>
+</span></span></code></pre></div><h3 id="面临的问题">面临的问题<a hidden class="anchor" aria-hidden="true" href="#面临的问题">#</a></h3>
+<ul>
+<li>程序的路径符号化：
+<ul>
+<li>程序中的输入被抽象为符号变量</li>
+<li>每次条件分支都会生成新的路径约束</li>
+<li>程序执行不再是单一路径，而是<strong>路径集合</strong></li>
+</ul>
+</li>
+<li>路径爆炸：
+<ul>
+<li>每个条件分支 ⇒ 路径数指数增长</li>
+<li>循环、递归、状态机尤为严重</li>
+</ul>
+</li>
+<li>约束求解困难
+<ul>
+<li>SMT 约束复杂、非线性</li>
+<li>包含位运算、数组、指针、哈希</li>
+<li>求解时间不可预测</li>
+</ul>
+</li>
+</ul>
+<h3 id="环境搭建-1">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建-1">#</a></h3>
+<p>推荐用虚拟环境搭建：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">python3 -m venv angr_env
+</span></span><span class="line"><span class="cl"><span class="nb">source</span> angr_env/bin/activate
+</span></span><span class="line"><span class="cl">pip install angr
+</span></span></code></pre></div><h3 id="基础概念">基础概念<a hidden class="anchor" aria-hidden="true" href="#基础概念">#</a></h3>
+<ul>
+<li><code>Project</code>：一个可加载的二进制文件在 Angr 中的表示形式；</li>
+<li><code>State</code>：程序点的状态，包括寄存器、内存以及当前约束限制等；</li>
+<li>Block：基本块，但是 angr 中的基本块与 ida 基本块不同，angr 中 call 也算控制流图的边；</li>
+<li>符号值：由一个未知的符号来代替运算数值，用于约束求解，符号值有符号名，比如 x，y，z；</li>
+<li>具体值：一个具体的数值，比如 1，2，3。</li>
+</ul>
+<table>
+  <thead>
+      <tr>
+          <th>名称</th>
+          <th>描述</th>
+          <th>传入值</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>auto_load_libs</td>
+          <td>是否自动加载程序的依赖库</td>
+          <td>True/False</td>
+      </tr>
+      <tr>
+          <td>skip_libs</td>
+          <td>希望避免加载的库</td>
+          <td>库名</td>
+      </tr>
+      <tr>
+          <td>except_missling_libs</td>
+          <td>无法解析库时是否抛出异常</td>
+          <td>True/False</td>
+      </tr>
+      <tr>
+          <td>force_load_libs</td>
+          <td>强制加载的库</td>
+          <td>库名</td>
+      </tr>
+      <tr>
+          <td>ld_path</td>
+          <td>共享库的优先搜索路径</td>
+          <td>路径名</td>
+      </tr>
+  </tbody>
+</table>
+<p>使用 angr 时最重要的就是效率问题，少加载一些无关结果的库能够提升 angr 的效率，如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">p</span><span class="o">=</span><span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s2">&#34;test&#34;</span><span class="p">,</span><span class="n">auto_load_libs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span></code></pre></div><p>Project 类中有许多方法和属性，例如加载的文件名、架构、程序入口点，大小端等等。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">angr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">binary</span> <span class="o">=</span> <span class="s1">&#39;/bin/true&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">p</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">auto_load_libs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;文件:&#34;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;入口点:&#34;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">entry</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;架构:&#34;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">arch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;位数:&#34;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">bits</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;端序:&#34;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">arch</span><span class="o">.</span><span class="n">memory_endness</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;加载器:&#34;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">loader</span><span class="p">)</span>
+</span></span></code></pre></div><p><code>angr.Project</code>​ 函数能够加载 ELF、PE 文件，并返回 project 用于表示加载的可执行文件，后续的分析操作都在都需要在 project 里完成。</p>
+<p><code>auto_load_libs=False</code>​ 参数表示让 angr 不加载。</p>
+<h3 id="符号变量">符号变量<a hidden class="anchor" aria-hidden="true" href="#符号变量">#</a></h3>
+<p>Angr 使用 <code>claripy</code>​ 库来创建符号值。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">claripy</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span> <span class="c1"># 创建一个 32 位的符号值</span>
+</span></span><span class="line"><span class="cl"><span class="n">claripy</span><span class="o">.</span><span class="n">BVV</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span> <span class="c1"># 创建一个 32 位的具体值，值为 10</span>
+</span></span></code></pre></div><p>angr 是一个混合符号执行框架，为了符号执行速度，不是所有的数据都以符号化的形式存在，如果一个值是确定的，那么就可以用确定的具体值参与执行，从而加速执行效率，<code>claripy.BVV</code>​ 用于创建一个具体值变量。</p>
+<p>使用 BVS 和 BVV 创建的符号变量可以直接在 Python 进行运算，例如</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">claripy</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="n">claripy</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span> <span class="o">=</span> <span class="n">claripy</span><span class="o">.</span><span class="n">BVV</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span></code></pre></div><p>运行将输出</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">BV32</span> <span class="n">x_0_32</span> <span class="o">+</span> <span class="mh">0x1</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">BV32</span> <span class="n">x_0_32</span> <span class="o">+</span> <span class="mh">0xb</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p>y 是一个具体值变量，因此可以直接参与运算，<code>10 + 1 == 0xb</code>​ 最终在第二条输出中显示的是 0xb。</p>
+<h3 id="state状态">State状态<a hidden class="anchor" aria-hidden="true" href="#state状态">#</a></h3>
+<p>Project 实际上只是将二进制文件加载进来了，要执行它，实际上是对 SimState 对象进行操作，它是程序的状态。</p>
+<p>要创建状态，需要使用 Project 对象中的 factory，它还可以用于创建模拟管理器和基本块，如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span></code></pre></div><p>预设状态有四种方式如下：</p>
+<table>
+  <thead>
+      <tr>
+          <th>预设状态方式</th>
+          <th>描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>entry_state</td>
+          <td>初始化状态为程序运行到程序入口点处的状态</td>
+      </tr>
+      <tr>
+          <td>blank_state(addr=)</td>
+          <td>大多数数据都没有初始化，状态中下一条指令为 addr 处的指令</td>
+      </tr>
+      <tr>
+          <td>full_init_state</td>
+          <td>共享库和预定义内容已经加载完毕，例如刚加载完共享库</td>
+      </tr>
+      <tr>
+          <td>call_state</td>
+          <td>准备调用函数的状态</td>
+      </tr>
+  </tbody>
+</table>
+<p>在 Angr 中，程序在某一个程序点的执行状态叫做 State，执行过程就是从一个 State 向另外一个 State 转换。每个 State 的寄存器、内存、约束限制等都是独立的，互相不影响。</p>
+<p>状态包含了程序运行时的一切信息，寄存器、内存的值、文件系统以及符号变量等，这些信息的使用等用到时再进一步说明。</p>
+<p><code>entry_state</code>和<code>blank_state</code>是常用的两种方式，后者通常用于跳过一些极大降低 angr 效率的指令，它们间的对比如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rax</span><span class="p">,</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rip</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">blank_state</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="mh">0x400000</span><span class="p">)</span>
+</span></span></code></pre></div><p>‍
+BV 即 BitVector 意思是位向量</p>
+<p>默认情况下，state 所在的程序点位置的地址是基本块开始地址，angr 符号执行的“单步执行”是执行一个基本块的所有指令，并产生后继基本块的 state。</p>
+<p>获取初始化 State，获取入口点 state（从入口点开始执行）</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">proj</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s1">&#39;/bin/ls&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span></code></pre></div><p>程序将输出</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">SimState</span> <span class="o">@</span> <span class="mh">0x406d30</span><span class="o">&gt;</span>
+</span></span></code></pre></div><p><code>/bin/ls</code>​ 程序的入口地址是 <code>0x406d30</code>​，当前 state 表示位于 <code>pc = 0x406d30</code>​ 地址，并且该地址的指令还未执行的状态。</p>
+<p>其它创建 state 的方法还有</p>
+<ul>
+<li><code>proj.factory.blank_state(addr=0x401234)</code>: 在 0x401234 位置创建 state</li>
+<li><code>proj.factory.call_state(addr=0x401234, arg1, arg2)</code>​ ：创建一个调用函数的 state</li>
+</ul>
+<p>访问 state 寄存器：</p>
+<p>每个 state 的寄存器是独立的，angr 允许访问和修改 state 中的寄存器值。</p>
+<p>注意，在 angr 符号执行框架中，寄存器的值可能是具体值，也可能是符号值，这一点跟模拟执行、动态执行不一样。</p>
+<p>访问(修改) R0 寄存器: <code>state.regs.r0</code>​</p>
+<p>访问(修改) RAX 寄存器: <code>state.regs.RAX</code>​</p>
+<p>给 R0 寄存器设置一个符号值</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="c1"># 给寄存器赋值一个符号值</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rax</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;symbolic_rax&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 给寄存器赋值一个具体值 123</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rdi</span> <span class="o">=</span> <span class="mi">123</span>
+</span></span></code></pre></div><p>当然也可以使用 <code>claripy.BVS</code>​ 创建符号值，<code>claripy.BVV</code>​ 创建具体值。</p>
+<p>‍</p>
+<p>通过寄存器名的字符串读取寄存器</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"> <span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reg_name&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><p>通过寄存器名的字符串修改寄存器</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="nb">setattr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="p">,</span> <span class="s1">&#39;reg_name&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</span></span></code></pre></div><p>访问 state 内存：</p>
+<p>在 angr 中，每一个 state 的内存状态是独立的，就像每个程序点都有一份内存快照一样。当 state 符号执行，创建新 state 的时候，新 state 的内存首先从原 state 复制一份，根据指令语义进行内存修改。这与传统的动态执行不一样，传统动态执行的内存是全局的。</p>
+<p><code>state.memory</code>​ 是访问 state 内存的主要接口。</p>
+<p>修改内存</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="n">address</span> <span class="o">=</span> <span class="mh">0x401234</span>
+</span></span><span class="line"><span class="cl"><span class="n">size_in_bytes</span> <span class="o">=</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;mem&#39;</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">size_in_bytes</span><span class="p">))</span>
+</span></span></code></pre></div><p>读取内存</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="n">address</span> <span class="o">=</span> <span class="mh">0x401234</span>
+</span></span><span class="line"><span class="cl"><span class="n">size_in_bytes</span> <span class="o">=</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">size_in_bytes</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="simulation-manager">Simulation Manager<a hidden class="anchor" aria-hidden="true" href="#simulation-manager">#</a></h3>
+<p>上述方式只是预设了程序开始分析时的状态，我们要分析程序就必须要让它到达下一个状态，这就需要模拟管理器的帮助（简称 SM）。</p>
+<p>使用以下指令能创建一个 SM，它需要传入一个 state 或者 state 的列表作为参数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">simgr</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simgr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span></code></pre></div><p>SM 中有许多列表，这些列表被称为 stash，它保存了处于某种状态的 state，stash有如下几种：</p>
+<table>
+  <thead>
+      <tr>
+          <th>stash</th>
+          <th>描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>active</td>
+          <td>保存接下来可以执行并且将要执行的状态</td>
+      </tr>
+      <tr>
+          <td>deadended</td>
+          <td>由于某些原因不能继续执行的状态，例如没有合法指令，或者有非法指针</td>
+      </tr>
+      <tr>
+          <td>pruned</td>
+          <td>与 solve 的策略有关，当发现一个不可解的节点后，其后面所有的节点都优化掉放在 pruned 里</td>
+      </tr>
+      <tr>
+          <td>unconstrained</td>
+          <td>如果创建 SM 时启用了 save_unconstrained，则没有约束条件的 state 会放在这里</td>
+      </tr>
+      <tr>
+          <td>unsat</td>
+          <td>如果创建 SM 时启用了 save_unsat，则被认为不可满足的 state 会放在这里</td>
+      </tr>
+  </tbody>
+</table>
+<p>默认情况下，state 会被存放在 active 中。</p>
+<p>可以通过 step() 非法来让处于 active 的 state 执行一个基本块，这种操作不会改变 state 本身（类比docker）：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entryi</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simgr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rax</span><span class="p">,</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rip</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">simgr</span><span class="o">.</span><span class="n">one_active</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">simgr</span><span class="o">.</span><span class="n">one_active</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rax</span><span class="p">,</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rip</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="explorer">Explorer<a hidden class="anchor" aria-hidden="true" href="#explorer">#</a></h3>
+<p>可以使用 explorer 方法去执行某个状态，直到直到目标指令或者 active 中没有状态为止，它有如下参数：</p>
+<ul>
+<li>find：传入目标指令的地址或地址列表，或者一个用于判断的函数</li>
+<li>avoid：传入要避免的指令的地址或地址列表，或者一个用于判断的函数，用于减少路径</li>
+</ul>
+<p>angr 会沿着分支按照某种策略（默认DFS）进行状态搜索，当达到目标状态时，使用约束求解器（claripy）对收集到的约束进行求解。</p>
+<p>因此，使用 angr 一般分为如下步骤：</p>
+<ul>
+<li>创建 Project，预设 state</li>
+<li>创建位向量和符号变量，保存在内存/寄存器/文件或其他地方</li>
+<li>将 state 添加到 SM 中</li>
+<li>运行，探索满足条件的路径</li>
+<li>约束求解获取执行结果</li>
+</ul>
+<h3 id="符号化判断">符号化判断<a hidden class="anchor" aria-hidden="true" href="#符号化判断">#</a></h3>
+<p>判断一个 angr 中的表达式是否含有符号在反混淆程序分析、漏挖挖掘等场景中非常有意义。</p>
+<p>基于符号执行运算特性，能够实现一个高精度的污点分析框架。</p>
+<p>例如在某个程序点将 R0 寄存器设置赋值一个符号值，等程序遇到间接跳转时，判断 pc 寄存器是否是一个符号化的表达式，如果是则说明 R0 寄存器能够控制 PC 寄存器。</p>
+<p>另外一个例子，将控制流平坦化混淆中的状态变量符号化，对函数进行符号执行，就能找出所有与状态变量相关的指令，这样能精准区分混淆产生的垃圾指令与真实代码指令。具体细节将在后续讨论。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rdi</span> <span class="o">=</span> <span class="mi">123</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rdi</span><span class="o">.</span><span class="n">symbolic</span><span class="p">)</span> <span class="c1"># 输出 False</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rdx</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;symbolic_rdx&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">rdx</span><span class="o">.</span><span class="n">symbolic</span><span class="p">)</span> <span class="c1"># 输出 True</span>
+</span></span></code></pre></div><p>state 内存读取出来的数据也可以判断是否符号化</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">address</span> <span class="o">=</span> <span class="mh">0x801234</span>
+</span></span><span class="line"><span class="cl"><span class="n">size_in_bytes</span> <span class="o">=</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s1">&#39;mem&#39;</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">size_in_bytes</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">size_in_bytes</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c1"># &lt;BV128 mem_46_128&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">symbolic</span><span class="p">)</span> <span class="c1"># True</span>
+</span></span></code></pre></div><p>‍</p>
+<h3 id="执行-state">执行 state<a hidden class="anchor" aria-hidden="true" href="#执行-state">#</a></h3>
+<p>如何从一个 state ，通过符号执行，得到新的 state 呢？</p>
+<p>最简单的方法是通过单步执行的形式，来得到当前 state 经过符号执行所产生的新的 state，只需要调用 <code>state.step()</code>​ 函数就能执行一个基本块的所有指令。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">angr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">proj</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s1">&#39;/bin/ls&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;state 地址:&#34;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">addr</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">successors</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">step</span><span class="p">()</span><span class="o">.</span><span class="n">successors</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;后继 state(</span><span class="si">%d</span><span class="s2"> 个):&#34;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">successors</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">successors</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;后续 state </span><span class="si">%d</span><span class="s2">: addr: </span><span class="si">%s</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">addr</span><span class="p">)))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># state 地址: 0x406d30</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 后继 state(1 个):</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 后续 state 0: addr: 0x62a200</span>
+</span></span></code></pre></div><p>在符号执行中，如果遇到条件分支，并且条件符号化，无法判断具体执行哪个分支的时候，就会产生两个新的 state ，分别对应满足条件的分支和不满足条件的分支。同时，与 state 绑定的约束限制也会增加对应的条件。</p>
+<p><code>state.step().successors</code>​ 调用引擎符号执行一次，返回后继 state 数组。</p>
+<p>注意，即使 state 经过 step 函数符号执行一次后，它内部的状态仍然不会改变，新产生的 state 是在当前 state 的基础上复制产生的，换句话说，state 的中的寄存器、内存以及约束限制仍然是执行前的内容，就像程序快照一样。</p>
+<h3 id="延迟求解">延迟求解<a hidden class="anchor" aria-hidden="true" href="#延迟求解">#</a></h3>
+<p>angr 会判断路径条件是否满足，有时候这样很影响效率，我们可以设置 angr 使其找到 State 之后再进行求解</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span><span class="o">.</span><span class="n">options</span> <span class="o">|=</span> <span class="p">{</span><span class="n">angr</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">LAZY_SOLVES</span><span class="p">}</span>
+</span></span></code></pre></div><h3 id="调用指定函数">调用指定函数<a hidden class="anchor" aria-hidden="true" href="#调用指定函数">#</a></h3>
+<p>如何通过 angr 调用一个已知地址的函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">angr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">proj</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s2">&#34;demo&#34;</span><span class="p">,</span> <span class="n">auto_load_libs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 假设 target_func 的地址已知</span>
+</span></span><span class="line"><span class="cl"><span class="n">func_addr</span> <span class="o">=</span> <span class="mh">0x401136</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 创建调用状态，传入参数 3 和 5</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">call_state</span><span class="p">(</span><span class="n">func_addr</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simgr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 获取函数返回值</span>
+</span></span><span class="line"><span class="cl"><span class="n">ret_state</span> <span class="o">=</span> <span class="n">simgr</span><span class="o">.</span><span class="n">deadended</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Return value:&#34;</span><span class="p">,</span> <span class="n">ret_state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">ret_state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">eax</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="模拟执行">模拟执行<a hidden class="anchor" aria-hidden="true" href="#模拟执行">#</a></h3>
+<p>注意 angr 默认加载地址是 0x400000</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">angr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">proj</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s2">&#34;demo&#34;</span><span class="p">,</span> <span class="n">auto_load_libs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">							   <span class="c1">#函数入口   #第一个参数 #第二个参数</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">call_state</span><span class="p">(</span><span class="mh">0x401136</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1">#用于从指定函数地址开始执行，模拟函数调用</span>
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simulation_manager</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ret_state</span> <span class="o">=</span> <span class="n">simgr</span><span class="o">.</span><span class="n">deadended</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#获取函数返回的状态</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="mh">0x42ED24</span><span class="p">,</span> <span class="mi">19</span><span class="p">),</span> <span class="n">cast_to</span><span class="o">=</span><span class="nb">bytes</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="更高效的-state-执行管理">更高效的 state 执行管理<a hidden class="anchor" aria-hidden="true" href="#更高效的-state-执行管理">#</a></h3>
+<p><code>state.step()</code>​ 只能执行一个基本块，如果想连续执行，就需要手动添加循环，并且管理路径，十分麻烦。</p>
+<p>为了解决这个问题，angr 中使用 Simulation Managers (simgr) 来管理 state，使用更加高级的路径执行策略、搜索策略等。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simulation_manager</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span></code></pre></div><p>使用 Project 提供的工厂函数<code> proj.factory.simulation_manager</code>​ 就能从一个 state 创建 simgr。</p>
+<p>simgr 将管理的 state 按照不同类型分类，并存入对应的 stash 列表：</p>
+<ul>
+<li>
+<p><code>simgr.active</code>​ ：活跃 state 列表，simgr 每次单步执行，会执行 active 中所有的 state。</p>
+</li>
+<li>
+<p><code>simgr.deadended</code>​：当状态因为某种原因无法继续执行时，它会被放入 <code>deadended</code>​，这种情况可能包括没有更多有效的指令、所有后继状态的不可满足性（unsat），或者无效的指令指针。</p>
+</li>
+<li>
+<p><code>simgr.pruned</code>: 在使用 <code>LAZY_SOLVES</code>​ 时，状态不会被检查是否满足条件，除非绝对必要。当发现一个状态在 <code>LAZY_SOLVES</code>​ 模式下是不可满足的（unsat）时，会遍历状态的历史，找出最初变为不可满足的时刻。所有从这个时刻开始的后代状态（也会是不可满足的，因为状态不能变得满足）会被修剪并放入这个 stash。</p>
+</li>
+<li>
+<p><code>simgr.unconstrained</code>: 如果在 <code>SimulationManager</code>​ 构造函数中提供了 <code>save_unconstrained</code>​ 选项，所有被判定为不受约束的状态（即指令指针由用户数据或其他符号数据控制的状态）会放入这个 stash。</p>
+</li>
+<li>
+<p><code>simgr.unsat</code>: 如果在 <code>SimulationManager</code>​ 构造函数中提供了 <code>save_unsat</code>​ 选项，所有被判定为不可满足的状态（例如，约束相互矛盾，比如输入既要是 &ldquo;AAAA&rdquo; 又要是 &ldquo;BBBB&rdquo;）会放入这个 stash。</p>
+</li>
+</ul>
+<p>其中最重要的就是 active 列表，这个列表存放了活跃的 state，simgr 每次单步执行会单步执行 active 列表中的所有 state，并将新的 state 放入对应的 stash 列表。</p>
+<p>举例来说，最初创建 simgr 时的 state 将放入 active 列表，此时 active 列表中只有初始 state。调用 <code>simgr.step</code>​ ，angr 遍历 active 列表，依次执行每一个 state 的 step 函数，并将新产生的 state 放入对应的 stash 列表，通常将放入 active 列表。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">angr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">proj</span> <span class="o">=</span> <span class="n">angr</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s1">&#39;/bin/ls&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">state</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">entry_state</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">simgr</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">simulation_manager</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 不断执行，直到找到一个符号化的条件分支</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">simgr</span><span class="o">.</span><span class="n">active</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nb">print</span><span class="p">(</span><span class="n">simgr</span><span class="o">.</span><span class="n">active</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">simgr</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">simgr</span><span class="o">.</span><span class="n">active</span><span class="p">)</span>
+</span></span></code></pre></div><p>上面这个例子中，从程序入口开始符号执行，直到找到第一个符号化分支。只需要在循环中判断 active 长度即可实现。</p>
+<p>simgr 更加高级的用法是路径搜索，<code>simgr.explore(find=x)</code>​ 的作用就是在符号执行过程中搜索满足 find 参数条件的 state。find 可以传递一个地址或者带有state 参数的函数。​</p>
+<p>上面例子中，要回答什么样的输入能够让程序输出“Good Job.”，需要找到一个从 main 函数入口到 “Good Job.” 的 state。</p>
+<p>首先，在符号执行前将标准输入符号化（scanf 输入），从 main 函数入口的 state 开始符号执行，直到找到 “Good Job.” 的 state，该位置 state 中的约束限制由标准输入符号描述，使用该 state 求解满足所有约束限制的符号值，就能得到能让程序输出 “Good Job.” 的字符串。</p>
+<h2 id="z3">Z3<a hidden class="anchor" aria-hidden="true" href="#z3">#</a></h2>
+<p>Z3 是一个微软出品的开源约束求解器，能够解决很多种情况下的给定部分约束条件寻求一组满足条件的解的问题。</p>
+<p>Z3是由微软研究院开发的高性能定理证明器，专注于解决包含布尔逻辑、算术、位运算等复杂约束条件的问题。作为当前最先进的SMT（可满足性模理论）求解器之一，Z3广泛应用于软件验证、程序分析、网络安全和人工智能等领域。</p>
+<p>angr 符号执行引擎基于 z3 约束求解实现，因此学习 z3 约束求解器对于理解 angr 工作原理至关重要。</p>
+<p>安装：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install z3-solver
+</span></span></code></pre></div><h3 id="核心概念速览">核心概念速览<a hidden class="anchor" aria-hidden="true" href="#核心概念速览">#</a></h3>
+<ol>
+<li><strong>求解器对象</strong>：创建<code>Solver()</code>​实例管理约束条件</li>
+<li><strong>变量声明</strong>：使用<code>Int()</code>​, <code>Bool()</code>​, <code>BitVec()</code>​等函数</li>
+<li><strong>约束添加</strong>：通过<code>add()</code>​方法添加条件</li>
+<li><strong>求解验证</strong>：<code>check()</code>​检查可满足性，<code>model()</code>​获取解</li>
+</ol>
+<h3 id="基本数据类型">基本数据类型<a hidden class="anchor" aria-hidden="true" href="#基本数据类型">#</a></h3>
+<ul>
+<li><code>Int</code>：整数类型；</li>
+<li><code>Real</code>：实数类型；</li>
+<li><code>Bool</code>：布尔类型；</li>
+<li><code>Array</code>：数组类型；</li>
+<li><code>BitVec('a',8)</code>：字节向量。</li>
+</ul>
+<p>其特征 bitvec 可以是特定大小的数据类型，不一定是 8 位，例如 C语言中的 int 型开源用 bitvec(&lsquo;a&rsquo;,32)表示。</p>
+<h3 id="基本语句">基本语句<a hidden class="anchor" aria-hidden="true" href="#基本语句">#</a></h3>
+<ul>
+<li><code>Solver()</code>：创建一个通用求解器，以进行下一步的求解</li>
+<li><code>add()</code>：添加约束条件，通常在 solver() 命令之后，添加的约束条件通常是一个逻辑等式。</li>
+<li><code>check()</code>：添加完约束条件后，用来检测解的情况，有解的时候会返回 sat，无解的时候会返回 unsat</li>
+<li><code>model()</code>：在存在解的时候，该函数会将每个限制条件所对应的解集的交集，进而得出正解。</li>
+</ul>
+<p>分别对应设未知数，列方程组，判断方程是否有界，解方程组</p>
+<p>在使用 z3 进行约束求解之前我们首先需要获得一个求解器类实例，本质上其实就是一组约束的集合：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span><span class="o">=</span><span class="n">z3</span><span class="o">.</span><span class="n">Solver</span><span class="p">()</span>
+</span></span></code></pre></div><h3 id="基本使用">基本使用<a hidden class="anchor" aria-hidden="true" href="#基本使用">#</a></h3>
+<p>假设有方程组：</p>
+<pre tabindex="0"><code>30x + 15y = 675
+12x + 5y = 265
+</code></pre><p>使用 z3 来解这个方程组，首先是未知数</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">x</span> <span class="o">=</span> <span class="n">Int</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span> <span class="o">=</span> <span class="n">Int</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><p>列方程</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">30</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="mi">15</span><span class="o">*</span><span class="n">v</span><span class="o">==</span><span class="mi">675</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="变量表示">变量表示<a hidden class="anchor" aria-hidden="true" href="#变量表示">#</a></h3>
+<ul>
+<li>Int-整数型</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="o">=</span><span class="n">Int</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="c1">#声明单个整型变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">Ints</span><span class="p">(</span><span class="s1">&#39;a b&#39;</span><span class="p">)</span><span class="c1">#声明多个整型变量</span>
+</span></span></code></pre></div><ul>
+<li>Real-实数型</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="o">=</span><span class="n">Real</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="c1">#声明单个实性变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">Reals</span><span class="p">(</span><span class="s1">&#39;a b&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><ul>
+<li>BitVec-向量</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="o">=</span><span class="n">BitVec</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span><span class="c1">#声明单个8位的变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">BitVec</span><span class="p">(</span><span class="s1">&#39;a b&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span><span class="c1">#声明多个8位的变量</span>
+</span></span></code></pre></div><p>只有向量类型可以进行位运算（异或，左右移位等）</p>
+<ul>
+<li>Bool</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">p</span><span class="o">=</span><span class="n">z3</span><span class="o">.</span><span class="n">Bool</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><ul>
+<li>整型宇实数类型变量之间可以互相进行转换</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">ToReal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl"><span class="n">ToReal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">ToInt</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl"><span class="n">ToInt</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="常量表示">常量表示<a hidden class="anchor" aria-hidden="true" href="#常量表示">#</a></h3>
+<p>除了 python 原有的常量数据类型外，我们也可以使用<code>z3</code>自带的常量类型参与运算：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">IntVal</span><span class="p">(</span><span class="n">val</span> <span class="o">=</span> <span class="mi">114514</span><span class="p">)</span> <span class="c1"># integer </span>
+</span></span><span class="line"><span class="cl"><span class="mi">114514</span> 
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">RealVal</span><span class="p">(</span><span class="n">val</span> <span class="o">=</span> <span class="mi">1919810</span><span class="p">)</span> <span class="c1"># real number </span>
+</span></span><span class="line"><span class="cl"><span class="mi">1919810</span> 
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">BitVecVal</span><span class="p">(</span><span class="n">val</span> <span class="o">=</span> <span class="mi">1145141919810</span><span class="p">,</span> <span class="n">bv</span> <span class="o">=</span> <span class="mi">32</span><span class="p">)</span> <span class="c1"># bit vector，自动截断 </span>
+</span></span><span class="line"><span class="cl"><span class="mi">2680619074</span> 
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">z3</span><span class="o">.</span><span class="n">BitVecVal</span><span class="p">(</span><span class="n">val</span> <span class="o">=</span> <span class="mi">1145141919810</span><span class="p">,</span> <span class="n">bv</span> <span class="o">=</span> <span class="mi">64</span><span class="p">)</span> <span class="c1"># bit vector </span>
+</span></span><span class="line"><span class="cl"><span class="mi">1145141919810</span>
+</span></span></code></pre></div><h3 id="添加约束">添加约束<a hidden class="anchor" aria-hidden="true" href="#添加约束">#</a></h3>
+<p>我们可以通过求解器的<code>add()</code>方法为指定求解器添加约束条件，约束条件可以直接通过<code>z3</code>变量组成的式子进行表示：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="mi">5</span><span class="o">==</span><span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="o">==</span><span class="n">x</span><span class="p">)</span>
+</span></span></code></pre></div><p>对于布尔类型的式子而言，我们可以使用z3内置的<code>And()</code>、<code>Or()</code>、<code>Not()</code>、<code>Implies()</code>等方法进行布尔逻辑运算：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Implies</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">==</span><span class="n">z3</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Or</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">r</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="约束求解-1">约束求解<a hidden class="anchor" aria-hidden="true" href="#约束求解-1">#</a></h3>
+<p>当我们向求解器中添加约束条件之后，我们可以使用<code>check()</code>方法检查约束是否是可满足的（satisfiable，即z3是否能够帮我们找到一组解）：</p>
+<ul>
+<li><code>z3.sat</code>：约束可以被满足</li>
+<li><code>z3.unsat</code>：约束无法被满足</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+</span></span></code></pre></div><p>若约束可以被满足，则我们可以通过<code>model()</code>方法获取到一组解：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+</span></span></code></pre></div><p>对于约束条件比较少的情况，我们也可以无需创建求解器，直接通过<code>solve()</code>方法进行求解：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">z3</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Implies</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">),</span><span class="n">r</span><span class="o">==</span><span class="n">z3</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="n">q</span><span class="p">),</span><span class="n">z3</span><span class="o">.</span><span class="n">Or</span><span class="p">(</span><span class="n">z3</span><span class="o">.</span><span class="n">Not</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">r</span><span class="p">))</span>
+</span></span></code></pre></div><h3 id="常规使用">常规使用<a hidden class="anchor" aria-hidden="true" href="#常规使用">#</a></h3>
+<ul>
+<li>解方程</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">Ints</span><span class="p">(</span><span class="s1">&#39;a b&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#solve函数</span>
+</span></span><span class="line"><span class="cl"><span class="n">solve</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">==</span><span class="mi">10</span><span class="p">,</span><span class="n">a</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">b</span><span class="o">==</span><span class="mi">12</span><span class="p">)</span>
+</span></span></code></pre></div><ul>
+<li>化简表达式</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">x</span><span class="o">=</span><span class="n">Int</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">y</span><span class="o">=</span><span class="n">Int</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span> <span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span> <span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span> <span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)))</span>
+</span></span></code></pre></div><ul>
+<li>当需要取出特定变量的时候，可以使用 Solver 求解器</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">Ints</span><span class="p">(</span><span class="s1">&#39;a b&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">=</span><span class="n">Solver</span><span class="p">()</span>  <span class="c1">#创建一个解的对象s</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span><span class="c1">#添加约束条件</span>
+</span></span><span class="line"><span class="cl"><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">12</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span> <span class="o">==</span> <span class="n">sat</span><span class="p">:</span> <span class="c1">#check() 检查解是否存在，存在会return &#39;sat&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">result</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span> <span class="c1">#输出</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+</span></span></code></pre></div><h2 id="污点分析">污点分析<a hidden class="anchor" aria-hidden="true" href="#污点分析">#</a></h2>
+<p><strong>污点分析（Taint Analysis）</strong> 是一种广泛应用于软件安全和漏洞检测领域的程序分析技术。其核心思想是通过追踪程序中不可信或敏感数据（称为“污点数据”）的传播路径，识别这些数据是否可能被用于危险操作（如执行恶意代码、触发漏洞等）。通过这种方式，污点分析能够帮助发现潜在的安全漏洞、隐私泄露或逻辑缺陷。</p>
+<p>‍污点分析工作原理：</p>
+<ol>
+<li>
+<p><strong>污点标记（Taint Source）</strong> 在程序执行或静态分析过程中，将外部输入（如用户输入、网络数据、文件读取等）标记为“污点源”，即可能携带风险的初始数据。</p>
+</li>
+<li>
+<p><strong>污点传播（Taint Propagation）</strong> 跟踪污点数据在程序中的流动路径，包括变量赋值、函数调用、表达式计算等操作。若污点数据通过合法操作（如字符串拼接、算术运算）传播到其他变量，则新变量也会被标记为污点。</p>
+</li>
+<li>
+<p><strong>敏感操作检测（Sink Check）</strong> 当污点数据到达“敏感操作点”（如数据库查询、系统命令执行、内存写入等）时，分析器会触发警报，判定是否存在安全风险（如SQL注入、命令注入、缓冲区溢出等）。</p>
+</li>
+</ol>
+<h2 id="反混淆与污点分析">反混淆与污点分析<a hidden class="anchor" aria-hidden="true" href="#反混淆与污点分析">#</a></h2>
+<p>在反混淆场景下的二进制分析任务中，经常需要区分正常指令和混淆产生的垃圾指令，我们可以借助污点分析来区分正常指令和非正常指令。</p>
+<h3 id="控制流平坦化">控制流平坦化<a hidden class="anchor" aria-hidden="true" href="#控制流平坦化">#</a></h3>
+<p>在反混淆场景下的二进制分析任务中，经常需要区分正常指令和混淆产生的垃圾指令，我们可以借助污点分析来区分正常指令和非正常指令。</p>
+<img src="assets/image-20250129220357-dy3vi2x.png" alt="image" width="60%" style="zoom:50%;" >
+<p>这样能够找出所有状态变量相关的指令，包括内存加载、寄存器移动、加减、比较等指令。</p>
+<h3 id="虚假控制流">虚假控制流<a hidden class="anchor" aria-hidden="true" href="#虚假控制流">#</a></h3>
+<p>如下图是一个 Hikari 虚假控制流（简称 bcf）效果。</p>
+<p><img decoding="async" loading="lazy" src="assets/image-20250130144539-h8vodik.png" style="max-width: 100%; height: auto;"></p>
+<p>bcf 混淆会生成许多虚假的基本块，并用一个永真式嵌入原程序，Hikari bcf 生成的表达式中依赖于一些全局变量。</p>
+<p>用污点分析识别 bcf 相关的指令，首先将 bcf 涉及到的全局变量全部设置为污点源。Hikari bcf 的全局变量很容易识别，所有Hikari bcf 全局变量位于一个固定的全局连续区间，只需要人工标记区间的开始和结束位置即可。</p>
+<h2 id="基于-angr-构建污点分析框架">基于 angr 构建污点分析框架<a hidden class="anchor" aria-hidden="true" href="#基于-angr-构建污点分析框架">#</a></h2>
+<p>针对反混淆需求，污点分析框架应该有如下能力：</p>
+<p>（1）某个指定地址的指令位置，该位置的指令是否会被污点源污染？</p>
+<p>（2）某个指定地址的指令位置，指定的寄存器是否被污点源污染？</p>
+<p>（3）某个指定地址的指令位置，指定的内存是否被污点源污染？</p>
+<p>利用 angr 符号执行的特性可以构建一个基于符号执行的污点分析框架。“污点” 用 angr 中的符号值来表示，随着符号值参与执行运算，污点对应的符号值随着执行指令的语义污点传播。</p>
+<p>同时，angr 的多指令集符号执行能力，让基于 angr 构建的污点分析框架能够跨指令集工作。</p>
+<h3 id="污点源">污点源<a hidden class="anchor" aria-hidden="true" href="#污点源">#</a></h3>
+<p>针对反混淆的需求，污点源通常是寄存器和内存。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">taint_memory</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">size_in_bytes</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">state</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">address</span><span class="p">,</span> <span class="n">claripy</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s2">&#34;taint&#34;</span><span class="p">,</span> <span class="n">size_in_bytes</span><span class="o">*</span><span class="mi">8</span><span class="p">))</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">taint_register</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reg_name</span><span class="p">,</span> <span class="n">reg_size_in_bytes</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="nb">setattr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="p">,</span> <span class="n">reg_name</span><span class="p">,</span> <span class="n">claripy</span><span class="o">.</span><span class="n">BVS</span><span class="p">(</span><span class="s2">&#34;taint&#34;</span><span class="p">,</span> <span class="n">reg_size_in_bytes</span><span class="o">*</span><span class="mi">8</span><span class="p">))</span>
+</span></span></code></pre></div><p>实现原理是将指定的内存或寄存器符号化，并且符号名是 <code>taint</code>​。</p>
+<h3 id="判断表达式是否污点">判断表达式是否污点<a hidden class="anchor" aria-hidden="true" href="#判断表达式是否污点">#</a></h3>
+<p>用表达式来抽象“寄存器”和“内存数据”，从寄存器和内存中读取出来的值都称为表达式。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">taint_check_expr</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    check if an expression is tainted  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">symbolic</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">vname</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="s1">&#39;taint&#39;</span> <span class="ow">in</span> <span class="n">vname</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="kc">True</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">False</span>
+</span></span></code></pre></div><p>接下来构建判断寄存器是否被污点感染的函数</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">taint_check_register</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reg_name</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    check if a register is tainted  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>  
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">reg_name</span> <span class="o">==</span> <span class="s1">&#39;nzcv&#39;</span><span class="p">:</span> <span class="c1"># 架构相关！只在 aarch64 验证  </span>
+</span></span><span class="line"><span class="cl">            <span class="n">reg_name</span> <span class="o">=</span> <span class="s1">&#39;flags&#39;</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">rs</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">reg_name</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&#34;taint_check_register: </span><span class="si">%s</span><span class="s2"> not supported by angr&#34;</span> <span class="o">%</span> <span class="n">reg_name</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">False</span>  
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">taint_check_expr</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="污点传播执行">污点传播(执行)<a hidden class="anchor" aria-hidden="true" href="#污点传播执行">#</a></h3>
+<p>污点源设置后，用 angr 做符号执行就能实现污点传播，具体的执行策略，比如控制流之间的转移策略还需要根据不同的任务具体讨论。然而 angr 默认的指令执行策略不合适反混淆场景的污点传播（它一次性执行一个 block而不是一条指令），因此要构建一个适合反混淆分析场景的污点指令级执行策略。</p>
+<p>angr 符号执行有一个特性，它一次性执行一个 block，很难满足 ”某个指定地址的指令位置“，特别是位于基本块中间的指令。经过查阅 angr 源码，发现 state 的 step 能够指定执行指令的数量，将指令数量设置为 1 即可实现逐指令插桩污点分析。当然还有一些其它比较 trick 的技巧可以实现逐指令执行，比如 angr inspect。</p>
+<p>下代码能够执行一条指令。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">successors</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">run_state</span><span class="p">,</span> <span class="n">num_inst</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">successors</span>
+</span></span></code></pre></div><p>在如上代码的基础上，构建一个污点分析专用的 step 函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">taint_step</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">run_until_pc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_inst</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_every_inst</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    对程序状态执行污点传播步骤，返回后继状态及污染状态列表  
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Args:  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        proj (angr.Project): angr 项目对象  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        state (angr.SimState): 当前待分析的模拟程序状态  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        run_until_pc (int, optional): 目标程序计数器值，运行直到达到该PC地址时停止。  
+</span></span></span><span class="line"><span class="cl"><span class="s2">                                      若为None则表示不启用此停止条件，默认为None  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        num_inst (int, optional): 指定要执行的指令数量。若为None则表示不启用此停止条件，  
+</span></span></span><span class="line"><span class="cl"><span class="s2">                                  默认为None  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        check_every_inst (bool, optional): 是否在每条指令执行后检查污染状态。  
+</span></span></span><span class="line"><span class="cl"><span class="s2">                                           若为False则仅在停止时检查，默认为True  
+</span></span></span><span class="line"><span class="cl"><span class="s2">  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Returns:  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        tuple: 包含两个列表的元组：  
+</span></span></span><span class="line"><span class="cl"><span class="s2">            - successors (list[SimState]): 执行产生的所有后继状态列表  
+</span></span></span><span class="line"><span class="cl"><span class="s2">            - tainted_list (list[SimState]): 被识别为受污染的状态列表  
+</span></span></span><span class="line"><span class="cl"><span class="s2">  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    功能说明：  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        通过污点分析跟踪程序状态的传播过程。可根据PC地址或指令数量设置停止条件，  
+</span></span></span><span class="line"><span class="cl"><span class="s2">        返回分析过程中产生的所有后继状态和检测到的受污染状态  
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>  
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">tainted_list</span> <span class="o">=</span> <span class="p">[]</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">regs_read_write_cache</span> <span class="o">=</span> <span class="p">{}</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">run_state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">run_inst</span> <span class="o">=</span> <span class="mi">0</span>  
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">cur_pc</span> <span class="o">=</span> <span class="n">run_state</span><span class="o">.</span><span class="n">addr</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">run_until_pc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cur_pc</span> <span class="o">==</span> <span class="n">run_until_pc</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="p">[</span><span class="n">run_state</span><span class="p">],</span> <span class="n">tainted_list</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 解析指令的读写寄存器  </span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">check_every_inst</span> <span class="ow">and</span> <span class="p">(</span><span class="n">cur_pc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">regs_read_write_cache</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">insn</span> <span class="ow">in</span> <span class="n">run_state</span><span class="o">.</span><span class="n">block</span><span class="p">()</span><span class="o">.</span><span class="n">capstone</span><span class="o">.</span><span class="n">insns</span><span class="p">:</span> <span class="c1"># block 返回一块的指令，提前缓存  </span>
+</span></span><span class="line"><span class="cl">                <span class="n">read_regs</span><span class="p">,</span> <span class="n">write_regs</span> <span class="o">=</span> <span class="n">insn</span><span class="o">.</span><span class="n">regs_access</span><span class="p">()</span> <span class="c1"># 使用 capstone 解析指令的读写寄存器  </span>
+</span></span><span class="line"><span class="cl">                <span class="n">regs_read_write_cache</span><span class="p">[</span><span class="n">insn</span><span class="o">.</span><span class="n">address</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="n">insn</span><span class="o">.</span><span class="n">reg_name</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">read_regs</span><span class="p">],</span> <span class="p">[</span><span class="n">insn</span><span class="o">.</span><span class="n">reg_name</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">write_regs</span><span class="p">])</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 检查 tainted  </span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">check_every_inst</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">read_regs</span><span class="p">,</span> <span class="n">write_regs</span> <span class="o">=</span> <span class="n">regs_read_write_cache</span><span class="p">[</span><span class="n">cur_pc</span><span class="p">]</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">read_regs</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">taint_check_register</span><span class="p">(</span><span class="n">run_state</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="n">cur_pc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tainted_list</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;tainted pc: </span><span class="si">%x</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="n">cur_pc</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">                        <span class="n">tainted_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_pc</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">successors</span> <span class="o">=</span> <span class="n">proj</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">run_state</span><span class="p">,</span> <span class="n">num_inst</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">successors</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&#34;taint_step: failed to execute </span><span class="si">%x</span><span class="s2">: </span><span class="si">%s</span><span class="s2">, skip&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cur_pc</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">temp_state</span> <span class="o">=</span> <span class="n">run_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">temp_state</span><span class="o">.</span><span class="n">regs</span><span class="o">.</span><span class="n">pc</span> <span class="o">=</span> <span class="n">cur_pc</span> <span class="o">+</span> <span class="mi">4</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">successors</span> <span class="o">=</span> <span class="p">[</span><span class="n">temp_state</span><span class="p">]</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="n">run_inst</span> <span class="o">+=</span> <span class="mi">1</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">num_inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">run_inst</span> <span class="o">&gt;=</span> <span class="n">num_inst</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">successors</span><span class="p">,</span> <span class="n">tainted_list</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">check_every_inst</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">read_regs</span><span class="p">,</span> <span class="n">write_regs</span> <span class="o">=</span> <span class="n">regs_read_write_cache</span><span class="p">[</span><span class="n">cur_pc</span><span class="p">]</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">write_regs</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">successors</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                    <span class="k">if</span> <span class="n">taint_check_register</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">                        <span class="k">if</span> <span class="n">cur_pc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tainted_list</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;tainted pc: </span><span class="si">%x</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="n">cur_pc</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">                            <span class="n">tainted_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_pc</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">successors</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">successors</span><span class="p">,</span> <span class="n">tainted_list</span>  
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>  
+</span></span><span class="line"><span class="cl">            <span class="n">run_state</span> <span class="o">=</span> <span class="n">successors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span></code></pre></div><p>每一条指令执行前，首先调用 capstone 汇编引擎，解析每一条指令读写的寄存器列表。执行前，判断指令指令读取的寄存器是否为污点；执行后，判断指令写入的寄存器是否被污点。</p>
+<h3 id="trace-模拟执行">trace 模拟执行<a hidden class="anchor" aria-hidden="true" href="#trace-模拟执行">#</a></h3>
+<p>在污点执行过程中，可能有将污点结果与没有污点分析结果进行对比的需求，因此需要实现不带污点的执行。对于不带污点的执行，只需要不设置污点即可，封住 <code>trace_step</code>​ 函数，该函数传入的 state 不能设置污点。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">trace_step</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">run_until_pc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_inst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">successors</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">taint_step</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">run_until_pc</span><span class="p">,</span> <span class="n">num_inst</span><span class="p">,</span> <span class="n">check_every_inst</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">successors</span>
+</span></span></code></pre></div><h3 id="敏感操作检测"><strong>敏感操作检测</strong><a hidden class="anchor" aria-hidden="true" href="#敏感操作检测">#</a></h3>
+<p>污点分析的最后一个环节是<strong>敏感操作检测(sink)。</strong> 在反混淆场景中，sink 需要根据具体的需求来制定。以 bcf 混淆为例，sink 就是 state 发生分叉，即遇到了污点传播到的条件跳转指令。</p>
+<p>污点检查函数 <code>taint_check_expr</code>​ 在前面已经讨论过。</p>
+<h3 id="deflat">deflat<a hidden class="anchor" aria-hidden="true" href="#deflat">#</a></h3>
+<p>通过 deflat 符号执行脚本去混淆，主要去除控制流平坦化和虚假的控制流。</p>
+<ul>
+<li>deflat 脚本下载</li>
+</ul>
+<blockquote>
+<p>下载：https://github.com/cq674350529/deflat.git</p>
+</blockquote>
+<h3 id="d810">D810<a hidden class="anchor" aria-hidden="true" href="#d810">#</a></h3>
+<ul>
+<li>D810 环境搭建</li>
+</ul>
+<p>D810下载：<a href="https://gitlab.com/eshard/d810">eshard / D810 · GitLab</a></p>
+<p>直接下载插件，然后将 d810 目录和<code>D810.py</code>文件复制到 ida 中的<code>plugins</code>文件夹下。</p>
+<p>使用插件需要安装依赖，进入<code>IDA\python311\Scripts</code>目录，然后执行以下命令：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./pip.exe install PyQt5
+</span></span><span class="line"><span class="cl">./pip.exe install z3-solver
+</span></span></code></pre></div><p>快捷键<code>ctrl+shift+D</code>可以调出 d810 配置面板</p>
+<h2 id="控制流平坦化-1">控制流平坦化<a hidden class="anchor" aria-hidden="true" href="#控制流平坦化-1">#</a></h2>
+<ul>
+<li>D810 去除</li>
+</ul>
+<p>打开 D810 后，选择第二个规则。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250609104733.png" style="max-width: 100%; height: auto;"></p>
+<p>然后点击 start，等到右边出现绿色的loaded。</p>
+<h2 id="虚假控制流-1">虚假控制流<a hidden class="anchor" aria-hidden="true" href="#虚假控制流-1">#</a></h2>
+<p>Hikari BCF 虚假控制流，先不讨论它的简单去除方法，以这个为例子来验证用于反混淆的污点分析框架特别合适。</p>
+<p>一些方法</p>
+<ol>
+<li>简单方法：IDA Pro 把 data 段设置只读，借助编译优化自动优化（不讨论，确实可以，没有泛化能力）</li>
+<li>unicorn 模拟执行（不能肯定回答某个条件跳转指令是否与 BCF 混淆相关，容易误报！）</li>
+<li>污点分析</li>
+</ol>
+<p>模拟执行无法回答某个条件跳转指令是否与 BCF 混淆相关，但是可以回答条件跳转指令实际跳转的目标地址；污点分析框架无法回答被污点感染的条件跳转指令的运行时目标。把两者结合一下，就能做到准确识别 BCF 中的混淆条件跳转指令，并且分析运行时实际地址。模拟执行的过程仍然可以用 angr 来实现，只需要不添加污点源就是模拟执行！</p>
+<p>目标：识别 BCF 引入的部分垃圾代码，如下图红色部分，特别是最后一条指令 <code>B.LS</code>​ 条件跳转，对于最后一个 BLS 条件跳转，还要分析它的目标，我们要修复它！
+‍
+<img decoding="async" loading="lazy" src="assets/image-20250130162636-np871kw.png" style="max-width: 100%; height: auto;"></p>
+<p>具体流程如下：</p>
+<h3 id="查找所有-bcf-位置">查找所有 BCF 位置<a hidden class="anchor" aria-hidden="true" href="#查找所有-bcf-位置">#</a></h3>
+<p>查找所有含有 BCF 的基本块，思路是通过 BCF 引入的全局变量交叉引用分析。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">debcf_hikari_find_all</span><span class="p">(</span><span class="n">hikari_bcf_start</span><span class="p">,</span> <span class="n">hikari_bcf_end</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    find all hikari bcf in (hikari_bcf_start, hikari_bcf_end)
+</span></span></span><span class="line"><span class="cl"><span class="s2">    only works in ida
+</span></span></span><span class="line"><span class="cl"><span class="s2">    return a list of hikari bcf start address
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">block_list</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">start_ea</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hikari_bcf_start</span><span class="p">,</span> <span class="n">hikari_bcf_end</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">xrefs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">frm</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">idautils</span><span class="o">.</span><span class="n">XrefsTo</span><span class="p">(</span><span class="n">start_ea</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">block</span> <span class="o">=</span> <span class="n">ida_get_bb</span><span class="p">(</span><span class="n">xrefs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">start_ea</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">block_list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">block_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">start_ea</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">block_list</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">ida_get_bb</span><span class="p">(</span><span class="n">ea</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f_blocks</span> <span class="o">=</span> <span class="n">idaapi</span><span class="o">.</span><span class="n">FlowChart</span><span class="p">(</span><span class="n">idaapi</span><span class="o">.</span><span class="n">get_func</span><span class="p">(</span><span class="n">ea</span><span class="p">),</span> <span class="n">flags</span><span class="o">=</span><span class="n">idaapi</span><span class="o">.</span><span class="n">FC_PREDS</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">f_blocks</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">start_ea</span> <span class="o">&lt;=</span> <span class="n">ea</span> <span class="ow">and</span> <span class="n">ea</span> <span class="o">&lt;</span> <span class="n">block</span><span class="o">.</span><span class="n">end_ea</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">block</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">None</span>
+</span></span></code></pre></div><p><code>debcf_hikari_find_all</code>​ 函数在 IDA 里面调用，返回所有含有 BCF 混淆的基本块地址列表。</p>
+<h3 id="分析流程">分析流程<a hidden class="anchor" aria-hidden="true" href="#分析流程">#</a></h3>
+<p>‍以基本块为单位，构建一个分析函数 <code>debcf_hikari(proj, addr, taint_area)</code>​，addr 是基本块地址，<code>taint_area</code>​ 是 BCF 的全局变量区间。该函数的目标是分析一个基本块，找出所有 BCF 相关的指令，特别是 BCF 相关的条件跳转，并分析条件跳转的目标地址，以便于后续的修补工作。</p>
+<pre tabindex="0"><code># addr = bcf 基本块开始地址  
+init_state = proj.factory.blank_state(addr=addr)  
+init_state.options.add(angr.options.CALLLESS) # 忽略函数调用  
+init_state.options.add(angr.options.LAZY_SOLVES) # 延迟求解  
+init_state.options.add(angr.options.ZERO_FILL_UNCONSTRAINED_MEMORY) # 未初始化内存设置 0  
+init_state.options.add(angr.options.ZERO_FILL_UNCONSTRAINED_REGISTERS)# 未初始化寄存器设置 0
+</code></pre><p>‍污点分析、模拟执行混合</p>
+<pre tabindex="0"><code>trace_state = init_state.copy() # 用于追踪，trace 实际运行值  
+taint_state = init_state.copy() # 用于污点分析，查找 BCF 相关指令
+</code></pre><p>‍taint 污点源标记，标记 BCF 全局变量区间</p>
+<pre tabindex="0"><code>taint_memory(taint_state, taint_area[0], taint_area[1] - taint_area[0])
+</code></pre><p>‍分析过程</p>
+<p>污点分析，模拟执行同步进行，每次循环分析一条指令。</p>
+<p>首先污点分析执行一条指令，然后模拟执行执行一条指令，接下来做 sink 检查</p>
+<ul>
+<li>
+<p>如果污点分析当前指令被污点感染，则将当前指令地址视为垃圾指令</p>
+</li>
+<li>
+<p>如果污点分析当前指令被污点感染且是条件跳转指令，从 trace 中取出目标跳转地址</p>
+</li>
+</ul>
+<p>整个分析过程的循环直到遇到跳转指令结束（或者 csel）。‍</p>
+<p>对于每一条指令，下面是代码过程</p>
+<p>污点分析执行一条指令</p>
+<pre tabindex="0"><code># 执行指令（taint）  
+taint_successors, tainted_list = taint_step(proj, taint_state, check_every_inst=True, num_inst=1)
+</code></pre><p>模拟执行执行一条指令</p>
+<pre tabindex="0"><code># 执行指令（trace）  
+trace_successors = trace_step(proj, trace_state, num_inst=1)
+</code></pre><p>sink 检查</p>
+<pre tabindex="0"><code>if len(tainted_list) == 1 and len(trace_successors) &gt;= 1 and len(taint_successors) &gt;= 1:  
+    junk_code_list.append(tainted_list[0])  
+    if insn.mnemonic.startswith(&#39;b.&#39;):  
+        patch_list.append((insn.address, &#39;B&#39;, trace_successors[0].addr))  
+        break # 结束分析
+</code></pre><p>最后切换下一条指令执行</p>
+<pre tabindex="0"><code>trace_state = trace_successors[0]  
+taint_state = taint_successors[0]
+</code></pre><p>‍</p>
+<p>完整实现</p>
+<pre tabindex="0"><code>def debcf_hikari(proj, addr, taint_area):  
+    &#34;&#34;&#34;  
+    addr: the address of the block to analyize  
+    taint_area: a tuple (start_addr, end_addr)  
+    &#34;&#34;&#34;  
+    patch_list = []  
+    junk_code_list = []  
+    init_state = proj.factory.blank_state(addr=addr)  
+    init_state.options.add(angr.options.CALLLESS)  
+    init_state.options.add(angr.options.LAZY_SOLVES)  
+    init_state.options.add(angr.options.ZERO_FILL_UNCONSTRAINED_MEMORY)  
+    init_state.options.add(angr.options.ZERO_FILL_UNCONSTRAINED_REGISTERS)  
+    
+    trace_state = init_state.copy()  
+    taint_state = init_state.copy()  
+    
+    taint_memory(taint_state, taint_area[0], taint_area[1] - taint_area[0])  
+    
+    while True:    
+        insn = trace_state.block().capstone.insns[0]  
+        regs_read_ids, regs_write_ids = insn.regs_access()  
+      
+        reg_write_list = [insn.reg_name(r) for r in regs_write_ids]  
+        reg_read_list = [insn.reg_name(r) for r in regs_read_ids]  
+      
+        if &#39;nzcv&#39; in reg_write_list:  
+            reg_write_list.remove(&#39;nzcv&#39;)  
+      
+        logger.info(&#34;debcf_hikari: pc: %x %s %s&#34; % (trace_state.addr, insn.mnemonic, insn.op_str))  
+    
+        # 执行指令（taint）  
+        taint_successors, tainted_list = taint_step(proj, taint_state, check_every_inst=True, num_inst=1)  
+      
+        # 处理 taint csel 指令  
+        if len(tainted_list) == 1 and insn.mnemonic == &#39;csel&#39;:  
+            setattr(trace_state.regs, reg_read_list[1], 1)  
+            setattr(trace_state.regs, reg_read_list[2], 2)  
+      
+        # 执行指令（trace）  
+        trace_successors = trace_step(proj, trace_state, num_inst=1)  
+      
+        if len(tainted_list) == 1 and len(trace_successors) &gt;= 1 and len(taint_successors) &gt;= 1: # 如果 taint 成功，则说明是 junk code  
+            logger.info(&#34;debcf_hikari: junk code pc: %x&#34; % tainted_list[0])  
+            junk_code_list.append(tainted_list[0])  
+          
+            if insn.mnemonic == &#39;csel&#39;:  
+                operands = insn.operands  
+                dst_reg  = insn.reg_name(operands[0].value.reg)  
+                src1_reg = insn.reg_name(operands[1].value.reg)  
+                src2_reg = insn.reg_name(operands[2].value.reg)  
+                # trace_state 是指令执行前的状态，trace_successors[0] 是指令执行后的状态  
+                dst_val = trace_successors[0].regs.get(dst_reg)  
+                src1_val = trace_state.regs.get(src1_reg)  
+                src2_val = trace_state.regs.get(src2_reg)  
+                dst_val =  trace_successors[0].solver.eval(dst_val)  
+                src1_val = trace_state.solver.eval(src1_val)  
+                src2_val = trace_state.solver.eval(src2_val)  
+                if dst_val == src1_val:  
+                    patch_list.append((insn.address, &#39;MOV-REG-REG&#39;, dst_reg, src1_reg))  
+                elif dst_val == src2_val:  
+                    patch_list.append((insn.address, &#39;MOV-REG-REG&#39;, dst_reg, src2_reg))  
+                else:  
+                    logger.error(&#34;debcf_hikari: unknown csel pc: %x&#34; % insn.address)  
+                break  
+          
+            if insn.mnemonic.startswith(&#39;b.&#39;):  
+                if len(trace_successors) != 1:  
+                    logger.warning(&#34;debcf_hikari: more than one successor in %x&#34; % insn.address)  
+                else:  
+                    patch_list.append((insn.address, &#39;B&#39;, trace_successors[0].addr))  
+                logger.info(&#34;debcf_hikari: find cond branch pc: %x&#34; % insn.address)  
+                break  
+          
+        if insn.mnemonic in [&#39;ret&#39;, &#39;b&#39;]:  
+            logger.info(&#34;debcf_hikari: find branch pc: %x&#34; % insn.address)  
+            break  
+      
+        if len(trace_successors) != 1:  
+            break  
+        else:  
+            trace_state = trace_successors[0]  
+            taint_state = taint_successors[0]  
+    
+    return patch_list, junk_code_list
+</code></pre><p>这段代码能够完美处理 hikari 编译的 aarch64 cff+bcf，即使有控制流平坦化 cff 也能正常工作，且 patch 完成后不影响程序的正常逻辑，在 miniz 压缩算法库完成测试。</p>
+<h3 id="d810-去除">D810 去除<a hidden class="anchor" aria-hidden="true" href="#d810-去除">#</a></h3>
+<p>打开 D810 后，同样选择第二个规则。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250609104733.png" style="max-width: 100%; height: auto;"></p>
+<p>然后点击 start，等到右边出现绿色的loaded。</p>
+<h2 id="指令替换">指令替换<a hidden class="anchor" aria-hidden="true" href="#指令替换">#</a></h2>
+<p>指令替换去除可以通过 D810 去除，但是也不能完全去除，效果不是很好。</p>
+<h2 id="字符串加密">字符串加密<a hidden class="anchor" aria-hidden="true" href="#字符串加密">#</a></h2>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E5%BC%80%E5%8F%91/">加固开发</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

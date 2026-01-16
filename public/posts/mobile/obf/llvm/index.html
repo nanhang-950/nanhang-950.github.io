@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>初探LLVM框架 | 南行&#39;s Blog</title>
+<meta name="keywords" content="加固开发">
+<meta name="description" content="简介
+LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/obf/llvm/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/obf/llvm/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      初探LLVM框架
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a2%84%e7%bc%96%e8%af%91%e5%8c%85%e5%ae%89%e8%a3%85" aria-label="预编译包安装">预编译包安装</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91%e5%ae%89%e8%a3%85" aria-label="编译安装">编译安装</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86" aria-label="基础知识">基础知识</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%89%8d%e7%ab%af%e7%9a%84%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90" aria-label="前端的语法分析">前端的语法分析</a></li>
+                    <li>
+                        <a href="#%e5%89%8d%e7%ab%af%e7%94%9f%e6%88%90%e4%b8%ad%e9%97%b4%e4%bb%a3%e7%a0%81" aria-label="前端生成中间代码">前端生成中间代码</a></li>
+                    <li>
+                        <a href="#ir%e4%bc%98%e5%8c%96" aria-label="IR优化">IR优化</a></li>
+                    <li>
+                        <a href="#%e8%bf%90%e8%a1%8cir" aria-label="运行IR">运行IR</a></li>
+                    <li>
+                        <a href="#%e5%90%8e%e7%ab%af%e7%94%9f%e6%88%90%e6%b1%87%e7%bc%96%e4%bb%a3%e7%a0%81" aria-label="后端生成汇编代码">后端生成汇编代码</a></li>
+                    <li>
+                        <a href="#bc-%e7%94%9f%e6%88%90-ll" aria-label="bc 生成 ll">bc 生成 ll</a></li>
+                    <li>
+                        <a href="#ll-%e7%94%9f%e6%88%90-bc" aria-label="ll 生成 bc">ll 生成 bc</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#llvm-ir" aria-label="LLVM IR">LLVM IR</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e6%a6%82%e5%bf%b5" aria-label="基本概念">基本概念</a></li>
+                    <li>
+                        <a href="#ir%e8%a1%a8%e7%a4%ba" aria-label="IR表示">IR表示</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%a8%8b%e5%ba%8f" aria-label="基本程序">基本程序</a></li>
+                    <li>
+                        <a href="#%e7%9b%ae%e6%a0%87%e5%b9%b3%e5%8f%b0" aria-label="目标平台">目标平台</a></li>
+                    <li>
+                        <a href="#%e9%80%92%e5%bd%92%e9%98%b6%e4%b9%98" aria-label="递归阶乘">递归阶乘</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e8%a1%a8%e7%a4%ba" aria-label="数据表示">数据表示</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e5%8c%ba%e5%92%8c%e7%ac%a6%e5%8f%b7%e8%a1%a8" aria-label="数据区和符号表">数据区和符号表</a></li>
+                    <li>
+                        <a href="#%e5%af%84%e5%ad%98%e5%99%a8%e5%92%8c%e6%a0%88" aria-label="寄存器和栈">寄存器和栈</a></li>
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e7%9a%84%e4%bd%bf%e7%94%a8" aria-label="数据的使用">数据的使用</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%b1%bb%e5%9e%8b%e7%b3%bb%e7%bb%9f" aria-label="类型系统">类型系统</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%9a%84%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b" aria-label="基本的数据类型">基本的数据类型</a></li>
+                    <li>
+                        <a href="#%e6%8c%87%e9%92%88%e7%b1%bb%e5%9e%8b" aria-label="指针类型">指针类型</a></li>
+                    <li>
+                        <a href="#%e8%81%9a%e5%90%88%e7%b1%bb%e5%9e%8b" aria-label="聚合类型">聚合类型</a></li>
+                    <li>
+                        <a href="#%e9%9d%99%e6%80%81%e5%8d%95%e5%88%86%e9%85%8dssa" aria-label="静态单分配（SSA）">静态单分配（SSA）</a></li>
+                    <li>
+                        <a href="#%e8%81%9a%e5%90%88%e7%b1%bb%e5%9e%8b%e6%95%b0%e7%bb%84" aria-label="聚合类型：数组">聚合类型：数组</a></li>
+                    <li>
+                        <a href="#%e8%81%9a%e5%90%88%e7%b1%bb%e5%9e%8b%e7%bb%93%e6%9e%84" aria-label="聚合类型：结构">聚合类型：结构</a></li>
+                    <li>
+                        <a href="#%e8%99%9a%e6%8b%9f%e5%af%84%e5%ad%98%e5%99%a8" aria-label="虚拟寄存器">虚拟寄存器</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e6%b5%81" aria-label="控制流">控制流</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%8e%a7%e5%88%b6%e8%af%ad%e5%8f%a5" aria-label="控制语句">控制语句</a></li>
+                    <li>
+                        <a href="#%e5%87%bd%e6%95%b0" aria-label="函数">函数</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e5%9d%97" aria-label="基本块">基本块</a></li>
+                    <li>
+                        <a href="#cfg" aria-label="CFG">CFG</a></li></ul>
+                    </li></ul>
+                    </li>
+                    <li>
+                        <a href="#llvm-pass" aria-label="LLVM Pass">LLVM Pass</a><ul>
+                            
+                    <li>
+                        <a href="#pass-%e4%bb%8b%e7%bb%8d" aria-label="Pass 介绍">Pass 介绍</a></li>
+                    <li>
+                        <a href="#pass-%e5%88%86%e7%b1%bb" aria-label="Pass 分类">Pass 分类</a></li>
+                    <li>
+                        <a href="#pass-%e7%bc%96%e7%a8%8b%e6%a8%a1%e5%9e%8b" aria-label="Pass 编程模型">Pass 编程模型</a></li>
+                    <li>
+                        <a href="#llvm-api" aria-label="LLVM API">LLVM API</a></li>
+                    <li>
+                        <a href="#llvm-type" aria-label="LLVM Type">LLVM Type</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e7%b1%bb%e5%9e%8b%e7%9a%84%e5%88%9b%e5%bb%ba" aria-label="基础类型的创建">基础类型的创建</a></li>
+                    <li>
+                        <a href="#%e7%b1%bb%e5%9e%8b%e6%a3%80%e6%9f%a5%e4%b8%8e%e8%bd%ac%e6%8d%a2" aria-label="类型检查与转换">类型检查与转换</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#llvm-constant" aria-label="LLVM Constant">LLVM Constant</a></li>
+                    <li>
+                        <a href="#llvm-ir-builder" aria-label="LLVM IR Builder">LLVM IR Builder</a></li>
+                    <li>
+                        <a href="#llvm-function" aria-label="LLVM Function">LLVM Function</a></li>
+                    <li>
+                        <a href="#llvm-basicblock" aria-label="LLVM BasicBlock">LLVM BasicBlock</a></li>
+                    <li>
+                        <a href="#llvm-instruction" aria-label="LLVM Instruction">LLVM Instruction</a></li>
+                    <li>
+                        <a href="#%e6%ba%90%e7%a0%81%e5%86%85%e7%bc%96%e8%af%91" aria-label="源码内编译">源码内编译</a></li>
+                    <li>
+                        <a href="#%e6%ba%90%e7%a0%81%e5%a4%96%e7%bc%96%e8%af%91" aria-label="源码外编译">源码外编译</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%91%bd%e4%bb%a4%e8%a1%8c%e7%bc%96%e8%af%91" aria-label="命令行编译">命令行编译</a></li>
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8cmake%e7%bc%96%e8%af%91" aria-label="使用cmake编译">使用cmake编译</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%bf%90%e8%a1%8cpass" aria-label="运行Pass">运行Pass</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8opt%e8%bf%90%e8%a1%8cpass" aria-label="使用opt运行Pass">使用opt运行Pass</a></li>
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8clang%e8%bf%90%e8%a1%8cpass" aria-label="使用Clang运行Pass">使用Clang运行Pass</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%b0%86pass%e6%b3%a8%e5%86%8c%e5%88%b0clang" aria-label="将Pass注册到Clang">将Pass注册到Clang</a><ul>
+                            
+                    <li>
+                        <a href="#%e8%87%aa%e5%8a%a8%e5%8a%a0%e8%bd%bdpass%e5%88%b0clang" aria-label="自动加载Pass到clang">自动加载Pass到clang</a></li>
+                    <li>
+                        <a href="#%e4%bd%bf%e7%94%a8%e7%8e%af%e5%a2%83%e5%8f%98%e9%87%8f%e8%87%aa%e5%8a%a8%e5%8c%96%e7%bc%96%e8%af%91" aria-label="使用环境变量自动化编译">使用环境变量自动化编译</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99clang-wrapper%e8%84%9a%e6%9c%ac" aria-label="编写clang Wrapper脚本">编写clang Wrapper脚本</a></li></ul>
+                    </li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a></li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。</p>
+<p>目前许多现代编程语言（例如 Rust、Swift、Julia 等）都使用 LLVM 作为其核心的优化和代码生成后端。</p>
+<p>本文所讨论的 LLVM 版本为 LLVM-18.1.8，与旧版本相比，引入了包括新的 Pass 管理器在内的一系列更新与改进。</p>
+<p>LLVM 三段式架构：</p>
+<ul>
+<li><strong>前端</strong>：解析源代码，由语法分析器和语义分析协同工作，检查错误，并构建特定于语言的抽象语法树来表示输入代码。然后将分析好的代码转化为 LLVM 的中间表示 IR。</li>
+<li><strong>优化器</strong>：通过 Pass 对中间代码 IR 进行优化，改善改名的运行时间使代码更高效。</li>
+<li><strong>后端</strong>：负责将优化器优化后的中间代码 IR 转换为目标机器的代码。</li>
+</ul>
+<p><img decoding="async" loading="lazy" src="assets/LLVM%E7%9A%84%E7%BB%93%E6%9E%84.png" style="max-width: 100%; height: auto;"></p>
+<p>LLVM IR 作为整个架构的核心枢纽，具有以下关键特性：</p>
+<ul>
+<li>强类型静态单赋值（SSA）形式</li>
+<li>三种等价表达方式：内存架构、Bitcode二进制格式、可读文本格式</li>
+<li>丰富的元数据支持调试和优化信息</li>
+</ul>
+<p>LLVM 和传统的 gcc 的区别：</p>
+<ul>
+<li>架构和设计
+<ul>
+<li>LLVM编译器是基于模块化、可扩展的设计，它将编译过程划分为多个独立的阶段，。并使用中间表示（IR）作为通用的数据结构进行代码优化和生成。而 GCC 编译器则是集成了多个前端和后端的传统编译器，其设计更加紧密一体化</li>
+</ul>
+</li>
+<li>开发语言和前端支持
+<ul>
+<li>LLVM 编译器使用 C++ 开发，并提供了广泛的前端支持，可以处理多种编程语言（如C、C++、Rust等），这使得开发者能够使用统一的编译框架来处理不同的语言。GCC编译器则使用C语言开发，并对各种编程语言提供了广泛的前端支持。</li>
+</ul>
+</li>
+<li>优化功能
+<ul>
+<li>LLVM 编译器一起高度模块化的中间表示（IR）为基础，具备强大的代码优化能力。同时，LLVM的设计也使得优化部分可以在编译过程的各个阶段进行，从而实现更细粒度的优化。GCC 编译器也提供了一系列的优化选项，但其优化能力相对较低。</li>
+</ul>
+</li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<h3 id="预编译包安装">预编译包安装<a hidden class="anchor" aria-hidden="true" href="#预编译包安装">#</a></h3>
+<p>在系统上直接通过包管理安装，这样会直接安装系统默认版本的 LLVM。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">apt install clang
+</span></span><span class="line"><span class="cl">apt install llvm
+</span></span></code></pre></div><h3 id="编译安装">编译安装<a hidden class="anchor" aria-hidden="true" href="#编译安装">#</a></h3>
+<p>下载项目，然后在构建目录中运行以下命令，根据 cmake 编译安装指定架构的 Release 版本的 llvm 和 clang。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir build <span class="o">&amp;&amp;</span> <span class="nb">cd</span> build
+</span></span><span class="line"><span class="cl">cmake -G <span class="s2">&#34;Unix Makefiles&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -DLLVM_ENABLE_PROJECTS<span class="o">=</span><span class="s2">&#34;clang;llvm;&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -DCMAKE_BUILD_TYPE<span class="o">=</span>Release <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -DLLVM_TARGETS_TO_BUILD<span class="o">=</span><span class="s2">&#34;X86&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -DBUILD_SHARED_LIBS<span class="o">=</span>On <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -DLLVM_ENABLE_LLD<span class="o">=</span>ON <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    ../llvm
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>
+</span></span><span class="line"><span class="cl">make install
+</span></span></code></pre></div><h2 id="基础知识">基础知识<a hidden class="anchor" aria-hidden="true" href="#基础知识">#</a></h2>
+<p>LLVM 编译流程可以大致分为前端处理、IR 优化和后端生成三个阶段，下面是具体步骤。</p>
+<h3 id="前端的语法分析">前端的语法分析<a hidden class="anchor" aria-hidden="true" href="#前端的语法分析">#</a></h3>
+<p>将源代码转经过 Clang 前端的预处理、语法分析、语义分析转换成 AST 树。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang -Xclang -ast-dump -fsyntax-only test.c
+</span></span></code></pre></div><h3 id="前端生成中间代码">前端生成中间代码<a hidden class="anchor" aria-hidden="true" href="#前端生成中间代码">#</a></h3>
+<p>根据内存中的抽象语法树 AST 生成 LLVM IR 中间代码（有的比较新的编译器还会先将 AST 转换为 MLIR 再转换为 IR）。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang -S -emit-llvm test.c
+</span></span></code></pre></div><h3 id="ir优化">IR优化<a hidden class="anchor" aria-hidden="true" href="#ir优化">#</a></h3>
+<p>通过 opt 优化 LLVM IR。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">opt test.ll -S --O3
+</span></span><span class="line"><span class="cl">clang -S -emit-llvm -O3 test.c
+</span></span></code></pre></div><h3 id="运行ir">运行IR<a hidden class="anchor" aria-hidden="true" href="#运行ir">#</a></h3>
+<pre tabindex="0"><code>lli test.ll
+</code></pre><h3 id="后端生成汇编代码">后端生成汇编代码<a hidden class="anchor" aria-hidden="true" href="#后端生成汇编代码">#</a></h3>
+<p> 将 LLVM IR 转成目标机器汇编代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llc test.ll
+</span></span></code></pre></div><h3 id="bc-生成-ll">bc 生成 ll<a hidden class="anchor" aria-hidden="true" href="#bc-生成-ll">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llvm-dis demo.bc
+</span></span></code></pre></div><h3 id="ll-生成-bc">ll 生成 bc<a hidden class="anchor" aria-hidden="true" href="#ll-生成-bc">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">llvm-as demo.ll -o demo.bc
+</span></span></code></pre></div><h2 id="llvm-ir">LLVM IR<a hidden class="anchor" aria-hidden="true" href="#llvm-ir">#</a></h2>
+<p>IR 是一种低级编程语言。能够代表高层次的想法。即高级语言可以清晰地映射到 IR。实现高效的代码优化。</p>
+<p><img decoding="async" loading="lazy" src="assets/LLVM%20Flow.drawio.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="基本概念">基本概念<a hidden class="anchor" aria-hidden="true" href="#基本概念">#</a></h3>
+<p>高级语言经过 Clang 前端会将代码解析为平台无关的中间表示语言（IR），使编译器能够在编译、链接、以及代码生成的各个阶段忽略语言特性，进行全面有效的优化和分析。</p>
+<p>LLVM 基于统一的中间表示来实现优化遍，中间表示采用静态单赋值形式，该形式的虚拟指令集能够高效的表示高级语言，具有灵活性好、类型安全、底层操作等特点。如图所示，当同一变量出现多次赋值时，通过 SSA 变量重命名的方式加以区分，可以避免出现多次定义的情况。</p>
+<p>IR 的设计很大程度体现着 LLVM 插件化、模块化的设计哲学，LLVM 的各种 Pass 其实都是作用在 LLVM IR 上的。通常情况下，设计一门新的编程语言只需要完成能够生成 LLVM IR 的编译器前端即可，然后就可以轻松使用 LLVM IR 的各种编译优化、JIT 支持、目标代码生成等功能。</p>
+<p>LLVM 目标无关代码生成器是一个框架，它提供了一套可重用组件，用于将 LLVM 内部表示转换为指定目标的机器代码，可以是汇编形式（适用于静态编译器），也可以是二进制机器代码格式（适用于 JIT 编译器）。</p>
+<p>LLVM 后端的主要功能是代码生成，因此也叫代码生成器。后端包括若干个代码生成分析转换 Pass 将 LLVM IR 转换成特定目标架构的机器代码。</p>
+<ul>
+<li>源码结构：
+<ul>
+<li>特定目标的抽象目标描述接口的实现。这些机器描述使用 LLVM 提供的组件，并可以选择提供定制的特定于目标的传递，为特定目标构建完整的代码生成器。目标描述位于<code>lib/Target</code>中。</li>
+<li>用于实现本机代码生成的各个阶段（寄存器分配、调度、堆栈帧表示等）的目标无关算法。此代码位于<code>lib/COdeGen</code>中。</li>
+<li>目标独立组件 JIT 组件。LLVM JIT 完全独立于目标（使用 TargetJITInfo 结构来处理特定于目标的问题。独立于目标的 JIT 的代码位于<code>lib/ExecvtionEngine/JIT</code>中）</li>
+</ul>
+</li>
+</ul>
+<p>LLVM IR 里面的变量不等于编译代码中的变量，源代码中的局部变量存放在栈内存中，需要用 LLVM 的栈分配指令<code>alloca</code>分配栈内存，LLVM IR 变量存放分配后的 位置信息，类似于原变量的指针。对于原始变量的存取则需要内存操作指令<code>load</code>和<code>store</code>指令。</p>
+<p><img decoding="async" loading="lazy" src="assets/LLVM%20IR.drawio.png" style="max-width: 100%; height: auto;"></p>
+<p>Module 代表一个变异模块（如一个 cpp 文件），Function 就是一个函数，BasicBlock 指的是可连续执行的基本块（没有跳转等中断的指令集合），在 Pass 中可以选一个维度进行操作，比如可以遍历 Function 对每个 Function 进行操作。</p>
+<h3 id="ir表示">IR表示<a hidden class="anchor" aria-hidden="true" href="#ir表示">#</a></h3>
+<p>LLVM IR 有三种形式：</p>
+<ul>
+<li>内存中的表示形式</li>
+<li>bitcode 形式</li>
+<li>LLVM 汇编文件格式</li>
+</ul>
+<p>IR表示：</p>
+<ul>
+<li>Module类，Module 可以理解为一个完整的编译单元。一般来说，这个编译单元就是一个源码文件。</li>
+<li>Function类，这个类顾名思义就是对应于一个函数单元。Function 可以描述两种情况，分别是函数定义和函数声明。</li>
+<li>BasicBlock类，这个类表示一个基本代码块，“基本代码块”就是一段没有控制流逻辑的基本流程，就相当于程序流程图中的基本过程。</li>
+<li>Instruction类，指令类就是 LLVM 中定义的基本操作，比如加减乘除这种算数指令、函数调用指令、跳转指令、返回指令等等。</li>
+</ul>
+<h4 id="基本程序">基本程序<a hidden class="anchor" aria-hidden="true" href="#基本程序">#</a></h4>
+<p>基本概念：</p>
+<ul>
+<li>注释：首先第一行是一个注释，IR 中注释以<code>;</code>开头，IR 只有行注释没有块注释</li>
+<li>主程序：主程序是可执行程序执行的入口点，所以任何可执行程序都需要<code>main</code>函数才能运行。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="p">;</span> <span class="n">main</span><span class="p">.</span><span class="n">ll</span>
+</span></span><span class="line"><span class="cl"><span class="n">define</span> <span class="n">i32</span> <span class="err">@</span><span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="n">i32</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h4 id="目标平台">目标平台<a hidden class="anchor" aria-hidden="true" href="#目标平台">#</a></h4>
+<p>LLVM 解决的一大问题是可移植性，通过</p>
+<p>CPU-vendor-OS 这三者决定了一个平台，只要这三者一致，我们生成的二进制程序往往就可以确定了。</p>
+<pre tabindex="0"><code>target triple = &#34;x86_64-unknown-linux-gnu&#34;
+</code></pre><ul>
+<li>目标数据布局</li>
+</ul>
+<p>除了目标平台外，我们还可以声明目标数据布局。</p>
+<p>LLVM 也支持我们手动定制这样的数据布局：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">target</span> <span class="n">datalayout</span> <span class="o">=</span> <span class="s">&#34;e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">target</span> <span class="n">triple</span> <span class="o">=</span> <span class="s">&#34;x86_64-unknown-linux-gnu&#34;</span>
+</span></span></code></pre></div><p>这一长串文字就定义了目标的数据布局：</p>
+<ul>
+<li><code>e</code>：小端序；</li>
+<li><code>m:e</code>：符号表中使用 ELF 格式的符号修饰；</li>
+<li><code>p270:32:32-p271:32:32-p272:64:64</code>：地址空间布局；</li>
+<li>i64:64：将i64类型的变量采用64位的 ABI 对齐</li>
+<li>f80:128：将 long double 类型的变量采用 128 位的 ABI 对齐</li>
+<li>n8:16:32:64：目标 CPU 的原生类型包含8位、16位、32位和64位</li>
+<li><code>S128</code>：栈以 128 位自然对齐；</li>
+<li>目标三元组<code>x86_64-unknown-linux-gnu</code>：
+<ul>
+<li>架构：<code>x86_64</code></li>
+<li>厂商：<code>unknown</code></li>
+<li>系统：<code>linux</code></li>
+<li>ABI：<code>gnu</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="递归阶乘">递归阶乘<a hidden class="anchor" aria-hidden="true" href="#递归阶乘">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">factorial</span><span class="p">(</span><span class="kt">int</span> <span class="n">val</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span><span class="p">(</span><span class="n">val</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">val</span><span class="o">*</span><span class="nf">factorial</span><span class="p">(</span><span class="n">val</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">factorial</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><pre tabindex="0"><code>; ModuleID = &#39;jc.c&#39;
+source_filename = &#34;jc.c&#34;
+target datalayout = &#34;e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128&#34;
+target triple = &#34;x86_64-unknown-linux-gnu&#34;
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @factorial(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  store i32 %0, ptr %3, align 4
+  %4 = load i32, ptr %3, align 4
+  %5 = icmp eq i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %1
+  store i32 1, ptr %2, align 4
+  br label %13
+
+7:                                                ; preds = %1
+  %8 = load i32, ptr %3, align 4
+  %9 = load i32, ptr %3, align 4
+  %10 = sub nsw i32 %9, 1
+  %11 = call i32 @factorial(i32 noundef %10)
+  %12 = mul nsw i32 %8, %11
+  store i32 %12, ptr %2, align 4
+  br label %13
+
+13:                                               ; preds = %7, %6
+  %14 = load i32, ptr %2, align 4
+  ret i32 %14
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @main() #0 {
+  %1 = alloca i32, align 4
+  store i32 0, ptr %1, align 4
+  %2 = call i32 @factorial(i32 noundef 3)
+  ret i32 0
+}
+
+attributes #0 = { noinline nounwind optnone uwtable &#34;frame-pointer&#34;=&#34;all&#34; &#34;min-legal-vector-width&#34;=&#34;0&#34; &#34;no-trapping-math&#34;=&#34;true&#34; &#34;stack-protector-buffer-size&#34;=&#34;8&#34; &#34;target-cpu&#34;=&#34;x86-64&#34; &#34;target-features&#34;=&#34;+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87&#34; &#34;tune-cpu&#34;=&#34;generic&#34; }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4}
+!llvm.ident = !{!5}
+
+!0 = !{i32 1, !&#34;wchar_size&#34;, i32 4}
+!1 = !{i32 8, !&#34;PIC Level&#34;, i32 2}
+!2 = !{i32 7, !&#34;PIE Level&#34;, i32 2}
+!3 = !{i32 7, !&#34;uwtable&#34;, i32 2}
+!4 = !{i32 7, !&#34;frame-pointer&#34;, i32 2}
+!5 = !{!&#34;clang version 18.1.8&#34;}
+</code></pre><h3 id="数据表示">数据表示<a hidden class="anchor" aria-hidden="true" href="#数据表示">#</a></h3>
+<ul>
+<li>汇编层次的数据表示</li>
+</ul>
+<p>IR 是最接近汇编语言的一层抽象，所以我们需要</p>
+<p>在内存中的数据按其表示来说，一共分为两类</p>
+<p>栈上的数据和堆上的数据</p>
+<p>除了内存之外，还有一个存储数据的地方，那就是寄存器。因此，我们在程序中可以用来表示的数据，一共分为三类：</p>
+<p>寄存器中的数据、栈上的数据、数据区里的数据</p>
+<h4 id="数据区和符号表">数据区和符号表<a hidden class="anchor" aria-hidden="true" href="#数据区和符号表">#</a></h4>
+<p>LLVM IR 中定义一共存储在数据区中的全局变量，其格式为：</p>
+<pre tabindex="0"><code>@global_variable = global i32 0
+</code></pre><p>这个语句定义了一共 i32 类型的全局变量<code>@global_variable</code>，并且将其初始化为 0。</p>
+<p>如果是只读的全局变量，也就是常量，我们可以用<code>constant</code>来代替<code>global</code>：</p>
+<pre tabindex="0"><code>@global_constant = constant i32 0
+</code></pre><p>这个语句定义了一共 i32 类型的全局变量<code>@global_constant</code>，并将其初始化为 0。</p>
+<ul>
+<li>符号与符号表</li>
+</ul>
+<p>讲到了数据区，就顺便讲讲符号表。在 LLVM IR 中，所有的全局变量的名称都需要用<code>@</code>开头。我们有一共这样的 LLVM IR：</p>
+<pre tabindex="0"><code>; global_variable_test.ll
+@global_variable = global i32 0
+
+define i32 @main(){
+	ret i32 0
+}
+</code></pre><p>也就是说，在之前最基本的程序的基础上，新增了一共全局变量<code>@global_variable</code>。我们将其直接编译成可执行文件：</p>
+<pre tabindex="0"><code>clang global_var.ll -o global_variable_test
+</code></pre><p>直接定义的全局变量，其名称会出现在符号表之中。</p>
+<p>对于动态链接的程序而言，在程序加载、运行时，也会由动态链接器将相应的库动态链接进程序之中。</p>
+<p>编译器生成的结果需要给链接器和动态链接器进行处理。在这一过程中，就需要符号表出马了。在上述的过程中，编译器的输入是一共编译单元，而输出是一共目标文件。如果我们在源代码中调用了别的文件中实现的函数，编译器并不知道别的函数在哪。因此，编译器选择的策略是将这个函数的调用用一共符号代替，在将来链接以及动态链接的适合，再进行替换。</p>
+<p>粗略来讲，整体的符号处理的过程为：</p>
+<ol>
+<li>编译器对源代码按文件进行编译。对于每个文件中的未知函数，记录其符号；对于这个文件中实现的函数，暴露其符号</li>
+<li>链接器收集所有的目标文件，对于每个文件而言，将其记录下的未知函数的符号，与其他文件中暴露出的符号相对比，如果找到匹配的，就成功地解析了符号</li>
+<li>部分符号在程序加载、执行时，由动态链接库给出。动态链接器将在这些阶段，进行类似的符号解析。</li>
+</ol>
+<p>一个符号本身，就是一个字符串。那么我们在写一个 C 语言的项目时，如果希望有的函数在别的文件中被调用，按照上述过程，似乎就是暴露一下符号就行。但是，一个 C 语言的项目，往往会链接 很多第三方库。如果我们想暴露的函数名与其他第三方库里的函数名重复了，会怎样呢？如果不加处理，链接器会直接报错。那难道我们起一个名字，需要注意与别的所有的库里的函数都不重复吗？此外，一个程序会有成千上万个符号，一些简单的，只在一个文件里用到的符号，比如说 cmp 、max，难道也要放在符号表中吗？ 在LLVM IR中，解决这些问题，与两个概念密切相关：链接与可见性，LLVM IR也提供了Linkage Type和Visibility Styles这两个修饰符来控制相应的行为。</p>
+<ul>
+<li>链接类型</li>
+</ul>
+<p>对于链接类型，我们常用的主要有声明都不加（默认为<code>external</code>）、<code>private</code>和<code>internal</code>。</p>
+<p>什么都不加的话，就像我们刚刚那样，直接把全局变量的名字放在了符号表中。这样的话，这个函数可以在链接时被其他编译单元看到。</p>
+<p>用<code>private</code>，则代表这个变量的名字不好出现在符号表中。我们将原来的代码改成：</p>
+<pre tabindex="0"><code>@global_variable = private global i32 0
+</code></pre><p>那么，用<code>nm</code>查看其编译出的可执行文件，这个变量的名字就消失了。</p>
+<p>用<code>internal</code>则表示这个变量是以局部符号的身份出现（全局变量的局部符号，可以理解成 C 中的<code>static</code>关键字）我们将原来的代码改成：</p>
+<pre tabindex="0"><code>@global_variable = internal global i32 0
+</code></pre><p>那么再次将其编译成可执行程序，并用<code>nm</code>查看，可以看到这个符号。但是，在链接过程中，这个符号并不会参与符号解析。</p>
+<ul>
+<li>可见性</li>
+</ul>
+<p>可见性在实际使用中则比较少，主要分为三种<code>default</code>、<code>hidden</code>和<code>protected</code>，这里主要的区别在于符号能否被重载。<code>default</code>的符号可以被重载，而<code>protected</code>的符号则不可用；此外，<code>hidden</code>则不将变量放在动态符号表中，因此其它的模块不可以直接引用这个符号。</p>
+<ul>
+<li>可抢占性</li>
+</ul>
+<p>在我们日常看到的 LLVM IR 中，会经常见到<code>dso_local</code>这样的修饰符，在 LLVM 中被称作运行时抢 占性修饰符。如果需要深入理解这个概念，可以参考国人大神写的ELF interposition and Bsymbolic 、<code>-fno-semantic-interposition</code> 。简单来说，<code>dso_local</code>保证了程序像我们想象中的一样运行。</p>
+<p>C语言中的static，也就是当前文件中定义，别的文件不可以用的，都会加上internal修饰符。C语言中的extern，也就是别的文件中定义的，全局变量会加上external修饰符，函数会 使用declare。C语言中定义的，可以给别的文件使用的全局变量或函数，不会加上链接类型修饰符，并且 会加上dso_local保证不会被抢占。</p>
+<h4 id="寄存器和栈">寄存器和栈<a hidden class="anchor" aria-hidden="true" href="#寄存器和栈">#</a></h4>
+<p>大多数对数据的操作，如加减乘除、比大小等，都需要操作的是寄存器内的数据。之所以要不数据放在栈上，主要是因为寄存器数量不够和需要操作内存地址。</p>
+<p>如果我们一个函数内有三四十个局部变量，但是一般CPU也就十几个寄存器，所以我们不可能把所有变量都放在寄存器中。因此我们需要把一部分数据放在内存中，栈就是一个很好的存储数据的地方；此外，有时候我们需要直接操作内存地址，但是寄存器并没有通用的地址表示，所以只能把数据放在栈上来完成对地址的操作。</p>
+<p>因此，在不操作内存地址的前提下，栈只是寄存器的一共替代品。</p>
+<p>如果寄存器的数量足够，并且代码中没有需要操作内存地址的时候，寄存器是足够胜任的，并且更加高效。</p>
+<ul>
+<li>寄存器</li>
+</ul>
+<p>正因为如此，LLVM IR 引入了虚拟寄存器的概念。在 LLVM IR 中，一个函数的局部变量可以是寄存器或者栈上的变量。对于寄存器而言，我们只需要普通的赋值语句一样操作，但需要注意名字必须以<code>%</code>开头：</p>
+<pre tabindex="0"><code>%local_variable = add i32 1,2
+</code></pre><p>此时，%local_variable这个变量就代表一个寄存器，它此时的值就是1和2相加的结果。我们 可以写一个简单的程序验证这一点：</p>
+<pre tabindex="0"><code>;register_test.ll
+define i32 @main(){
+	%local_variable = add i32 1,2
+	ret i32 %local_variable
+}
+</code></pre><p>我们查看其编译出的汇编代码，其主函数为：</p>
+<pre tabindex="0"><code>main: 
+	movl $2, %eax addl 
+	$1, %eax retq
+</code></pre><p>确实这个局部变量变成了寄存器<code>eax</code>。</p>
+<p>关于寄存器，我们还需了解一点。在不同的 ABI 下，会有一些callee-saved register和caller-saved register。简单来说，就是在函数内部，某些寄存器的值不能改变。或者说，在函数返回时，某些寄存器的值要和进入函数前相同。比如，在 System V的ABI下，rbp, rbx, r12, r13, r14, r15 都需要满足这一条件，这在System V的ABI下被称作callee-saved registe。由于LLVM IR是面向多 平台的，所以我们需要一份代码适用于多种ABI。因此，LLVM IR内部自动帮我们做了这些事。如 果我们把所有没有被保留的寄存器都用光了，那么LLVM IR会帮我们把这些被保留的寄存器放在栈 上，然后继续使用这些被保留寄存器。当函数退出时，会帮我们自动从栈上获取到相应的值放回寄 存器内。</p>
+<p>那么，如果所有通用寄存器都用光了，该怎么办？LLVM IR会帮我们把剩余的值放在栈上，但是对 我们用户而言，实际上都是虚拟寄存器，用户是感觉不到差别的。</p>
+<p>因此，我们可以粗略地理解 LLVM IR 对寄存器的使用：当所需寄存器数量较少时，直接使用caller-saved register，即不需要保留的寄存器。当caller-saved register不够时，将caller-saved register原本的值压栈，然后使用caller-saved register。当寄存器用光以后，就把多的虚拟寄存器的值压栈。</p>
+<p>因此，我们还可以注意到，如果在调用别的函数的过程中，如果调用方的非callee-saved register 中存有一些后续需要用到的数据，需要将这些数据放入栈上，在函数调用结束后，再从栈上将这些值放回相应的寄存器中。</p>
+<p>我们可以写一个简单的程序验证。对于x86_64架构下，我们只需要使用15个虚拟寄存器就可以验 证这件事。</p>
+<ul>
+<li>栈</li>
+</ul>
+<p>我们之前说过，当不需要操作地址并且寄存器数量足够时，我们可以直接使用寄存器。而 LLVM IR 的策略保证了我们可以使用无数的虚拟寄存器。那么，在需要操作地址以及需要可变变量（之后会 提到为什么）时，我们就需要使用栈。</p>
+<p>LLVM IR 对栈的使用十分简单，直接使用 alloca 指令即可。如：</p>
+<pre tabindex="0"><code>%local_variable = alloca i32
+</code></pre><p>就可以声明一个在栈上的变量了。</p>
+<h4 id="数据的使用">数据的使用<a hidden class="anchor" aria-hidden="true" href="#数据的使用">#</a></h4>
+<ul>
+<li>全局变量和栈上变量皆制作</li>
+</ul>
+<p>下面，我们就需要讲怎样使用全局变量和栈上的变量。这两种变量实际上是类似的，LLVM IR 把它们都看作指针。也就是说，对于全局变量：</p>
+<pre tabindex="0"><code>@global_variable=global i32 0
+</code></pre><p>和栈上变量</p>
+<pre tabindex="0"><code>%local_variable=alloca i32
+</code></pre><p>这两个变量实际上都是 ptr 指针，指向它们所处的一个<code>i32</code>大小的内存区域。所以，我们不能这样：</p>
+<pre tabindex="0"><code>%1 = add i32 1,@global_variable ; Wrong!
+</code></pre><p>因为<code>@global_variable</code>只是一个指针。</p>
+<p>如果要操作这些值，必须使用<code>load</code>和<code>store</code>这两个命令。如果我们需要获取<code>@global_variable</code>的值，就需要</p>
+<pre tabindex="0"><code>%1 = load i32 @global_variable
+</code></pre><p>这个指令的意思是，把一个<code>ptr</code>指针<code>@global_variable</code>的<code>i32</code>类型的值赋给虚拟寄存器<code>%1</code>，然后我们就能愉快地</p>
+<pre tabindex="0"><code>%2=add i32 1,%1
+</code></pre><p>类似地，如果我们要将值存储到全局变量或栈上变量里，会需要store命令：</p>
+<pre tabindex="0"><code>store i32 1,ptr @global_variable
+</code></pre><p>这个代表<code>i32</code>类型的值 1 赋给<code>ptr</code>类型的全局变量<code>@global_variable</code>所指的内存区域中。</p>
+<ul>
+<li>SSA</li>
+</ul>
+<p>LLVM IR是一个严格遵守SSA(Static Single Assignment)策略的语言。SSA的要求很简单：每个变量 只被赋值一次。也就是说，你不能</p>
+<pre tabindex="0"><code>%1 = add i32 1, 2 
+%1 = add i32 3, 4
+</code></pre><p>对%1同时赋值两次是不被允许的。 SSA作为一个历史悠久的概念，已经有了相当成熟的相关技术。通过使用SSA，编译器可以进行更 好的优化，应用更成熟的算法，得到更好的结果。这里因为个人能力有限，就不再多对SSA进行介 绍。我们只需要知道，通过约束每个变量只被赋值一次，可以让LLVM更好地优化。</p>
+<p>上面这个例子好做，直接把3加4的结果赋值给一个新的虚拟寄存器就好了。但是，并非所有的情 况都这么简单。在一些复杂情况下，将值存储在栈上再取出来，或者使用phi指令（见之后控制 语句一章），也是一个更好的选择</p>
+<h3 id="类型系统">类型系统<a hidden class="anchor" aria-hidden="true" href="#类型系统">#</a></h3>
+<p>我们知道，汇编语言是弱类型的，我们操作汇编语言的时候，实际上考虑的是一些二进制序列。但 是，LLVM IR却是强类型的，在LLVM IR中所有变量都必须有类型。这是因为，我们在使用高级语 言编程的时候，往往都会使用强类型的语言，弱类型的语言无必要性，也不利于维护。因此，使用 强类型语言，LLVM IR可以更好地进行优化</p>
+<h4 id="基本的数据类型">基本的数据类型<a hidden class="anchor" aria-hidden="true" href="#基本的数据类型">#</a></h4>
+<p>LLVM IR 中比较基本的数据类型包括：</p>
+<ul>
+<li>空类型（void）</li>
+<li>整型（iN）</li>
+<li>浮点型（float、double等）</li>
+</ul>
+<p>空类型一般是作为不返回值的函数的返回类型，没有特别的含义，就代表什么都没有。</p>
+<p>整型是指i1, i8, i16, i32 , i64 这类的数据类型。这里iN的N可以是任意正整数，可以是 i3 ，i1942652 。但最常用，最符合常理的就是i1以及8的整数倍。i1有两个值：true和 false 。也就是说，下面的代码可以正确编译：</p>
+<pre tabindex="0"><code>%boolean_variable = alloca i1 
+store i1 true, ptr %boolean_variable
+</code></pre><p>对于大于1位的整型，也就是如i8, i16等类型，我们可以直接用数字字面量赋值：</p>
+<pre tabindex="0"><code>%integer_variable = alloca i32 
+store i32 128, ptr %integer_variable 
+store i32 -128, ptr %integer_variable
+</code></pre><ul>
+<li>符号</li>
+</ul>
+<p>有一点需要注意的是，在LLVM IR中，整型默认是有符号整型，也就是说我们可以直接将-128以 补码形式赋值给i32类型的变量。在LLVM IR中，整型的有无符号是体现在操作指令而非类型上 的，比方说，对于两个整型变量的除法，LLVM IR分别提供了udiv和sdiv指令分别适用于无符号 整型除法和有符号整型除法：</p>
+<pre tabindex="0"><code>%1 = udiv i8 -6, 2 ; Get (256 - 6) / 2 = 125 
+%2 = sdiv i8 -6, 2 ; Get (-6) / 2 = -3
+</code></pre><p>我们可以用这样一个简单的程序验证：</p>
+<pre tabindex="0"><code>; div_test.ll
+define i8 @main(){
+	%1 = udiv i8 -6,2
+	%2 = sdiv i8 -6,2
+}
+</code></pre><p>分别将<code>ret</code>语句的参数换成<code>%1</code>和<code>%2</code>以后，将代码编译成可执行文件，在终端下运行并查看返回 值即可。</p>
+<p>总结一下就是，LLVM IR中的整型默认按有符号补码存储，但一个变量究竟是否要被看作有无符号 数需要看其参与的指令。</p>
+<ul>
+<li>转换指令</li>
+</ul>
+<p>与整型密切相关的就是转换指令，比如说，将<code>i8</code>类型的数<code>-127</code>转换成<code>i32</code>类型的数，将<code>i32</code>类型的数<code>257</code>转换成<code>i8</code>类型的数等。总的来说，LLVM IR中提供三种指令：<code>trunc .. to</code>指令， <code>zext .. to</code>指令和<code>sext .. to</code>指令。 将长的整型转换成短的整型很简单，直接把多余的高位去掉就行，LLVM IR提供的是trunc .. to 指令：</p>
+<pre tabindex="0"><code>%trunc_integer = trunc i32 257 to i8 ; Trunc 32 bit 100000001 to 8 bit, get 1
+</code></pre><p>将短的整型变成长的整型则相对比较复杂。这是因为，在补码中最高位是符号位，并不表示实际的数值。因此，如果单纯地在更高位补0，那么i8类型的-1（补码为11111111）就会变成i32的 255 。这虽然符合道理，但有时候我们需要i8类型的-1扩展到i32时仍然是-1。LLVM IR为我 们提供了两种指令：零扩展的<code>zext .. to</code>指令和符号扩展的<code>sext .. to</code>指令。</p>
+<p>零扩展就是最简单的，直接在高位补0，而符号扩展则是用原数的符号位来填充。也就是说我们如 下的代码：</p>
+<pre tabindex="0"><code>%zext_integer = zext i8 -1 to i32 ; Extend 8 bit 0xFF to 32 bit 0x000000FF, get 255 %sext_integer = sext i8 -1 to i32 ; Extend 8 bit 0xFF to 32 bit 0xFFFFFFFF, get -
+</code></pre><p>类似地，浮点型的数和整型的数也可以相互转换，使用<code>fptoui .. to</code>, <code>fptosi .. to</code>, <code>uitofp .. to</code> , <code>sitofp .. to</code>可以分别将浮点数转换为无符号、有符号整型，将无符号、有符号整型转换为 浮点数。不过有一点要注意的是，如果将大数转换为小的数，那么并不保证截断，如将浮点型的 257.1 转换成i8（上限为128），那么就会产生未定义行为。所以，在浮点型和整型相互转换的 时候，需要在高级语言层面做一些调整，如使用饱和转换等，具体方案可以看Rust最近1.45.0的更 新Announcing Rust 1.45.0和GitHub上的PR：Out of range float to int conversions using as has been defined as a saturating conversion.。</p>
+<h4 id="指针类型">指针类型<a hidden class="anchor" aria-hidden="true" href="#指针类型">#</a></h4>
+<p>LLVM IR中的指针类型就是ptr。与C语言不同，LLVM IR中的指针不含有其指向内容的类型，也 就是说，类似于C语言中的void * 。我们之前提到，LLVM IR中的全局变量和栈上分配的变量都是 指针，所以其类型都是指针类型。</p>
+<p>在高级语言中，直接操作裸指针的机会都比较少，除非在性能极其敏感的场景下，由最厉害的大佬 才能操作裸指针。这是因为，裸指针极其危险，稍有不慎就会出现段错误等致命错误，所以我们使 用指针时应该慎之又慎。</p>
+<p>LLVM IR为大佬们提供了操作裸指针的一些指令。在C语言中，我们会遇到这种场景：</p>
+<pre tabindex="0"><code>int x, y; 
+size_t address_of_x = (size_t)&amp;x; 
+size_t address_of_y = address_of_x - sizeof(int); 
+int also_y = *(int *)address_of_y;
+</code></pre><p>这种场景比较无脑，但确实是合理的，需要将指针看作一个具体的数值进行加减。到x86_64的汇 编语言层次，取地址就变成了lea命令，解引用倒是比较正常，就是一个简单的mov。</p>
+<p>在LLVM IR层次，为了使指针能像整型一样加减，提供了<code>ptrtoint .. to</code>指令和<code>inttoptr .. to</code>指令，分别解决将指针转换为整型，和将整型转换为指针的功能。也就是说，我们可以粗略地将上 面的程序转写为</p>
+<pre tabindex="0"><code>%x = alloca i32 ; %x is of type ptr, which is the address of variable x 
+%y = alloca i32 ; %y is of type ptr, which is the address of variable y %address_of_x = ptrtoint ptr %x to i64 
+%address_of_y = sub i64 %address_of_x, 4 
+%also_y = inttoptr i64 %address_of_y to ptr ; %also_y is of type ptr, which is the address of variable y
+</code></pre><h4 id="聚合类型">聚合类型<a hidden class="anchor" aria-hidden="true" href="#聚合类型">#</a></h4>
+<p>比起指针类型而言，更重要的是聚合类型。我们在 C 语言中常见的聚合类型有数组和结构体， LLVM IR也为我们提供了相应的支持。</p>
+<p>数组类型很简单，我们要声明一个类似C语言中的int a[4]，只需要</p>
+<pre tabindex="0"><code>%a = alloca [4 x i32]
+</code></pre><p>也就是说，C语言中的<code>int[4]</code>类型在LLVM IR中可以写成<code>[4 x i32]</code>。注意，这里面是个<code>x</code>不是<code>*</code>。</p>
+<p>我们也可以使用类似地语法进行初始化：</p>
+<pre tabindex="0"><code>@global_array = global [4 x i32] [i32 0, i32 1, i32 2, i32 3]
+</code></pre><p>特别地，我们知道，字符串在底层可以看作字符组成的数组，所以LLVM IR为我们提供了语法糖：</p>
+<pre tabindex="0"><code>@global_string = global [12 x i8] c&#34;Hello world\00&#34;
+</code></pre><p>在字符串中，转义字符必须以<code>\xy</code>的形式出现，其中<code>xy</code>是这个转义字符的ASCII码。比如说，字符 串的结尾，C语言中的<code>\0</code>，在LLVM IR中就表现为<code>\00</code>。</p>
+<ul>
+<li>结构体</li>
+</ul>
+<p>结构体的类型也相对比较简单，在C语言中的结构体</p>
+<pre tabindex="0"><code>struct MyStruct { 
+	int x; 
+	char y; 
+}; 
+</code></pre><p>在LLVM IR中就成了</p>
+<pre tabindex="0"><code> %MyStruct = type { 
+	 i32, 
+	 i8 
+}
+</code></pre><p>我们初始化一个结构体也很简单：</p>
+<pre tabindex="0"><code>@global_structure = global %MyStruct { i32 1, i8 0 } 
+; or 
+@global_structure = global { i32, i8 } { i32 1, i8 0 }
+</code></pre><p>值得注意的是，无论是数组还是结构体，其作为全局变量或栈上变量，依然是指针，也就是说，<code>@global_array</code>的类型是<code>ptr</code>，<code>@global_structure</code>的类型也是<code>ptr</code>。接下来的问题就是，我们如何对聚合类型进行操作呢？</p>
+<p>在 LLVM IR 中，如果我们相对一个聚合类型的某些字段进行操作，需要区分这个聚合类型是指针形式的，也就是以全局变量或者栈形式存储，还是值形式的，也就是以寄存器形式存储。</p>
+<ul>
+<li><code>getelementptr</code></li>
+</ul>
+<p>首先，我们将介绍以指针形式存储的聚合类型，该如何访问其字段。</p>
+<ul>
+<li>访问数组元素字段</li>
+</ul>
+<p>我们先来看一个最直观的例子：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">MyStruct</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="nc">MyStruct</span> <span class="o">*</span><span class="n">my_structs_ptr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">my_y</span> <span class="o">=</span> <span class="n">my_structs_ptr</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们有一个<code>foo</code>函数，其接收了一个参数<code>my_structs_ptr</code>。从函数体的语义可知，这里这个参数，实际上指向了一个数组，我们要取这个数组的第三个元素的<code>y</code>字段。</p>
+<p>我们先直接看结论，用 LLVM IR 来表示为</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="o">%</span><span class="n">MyStruct</span> <span class="o">=</span> <span class="n">type</span><span class="p">{</span><span class="n">i32</span><span class="p">,</span><span class="n">i32</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">(</span><span class="n">ptr</span> <span class="o">%</span><span class="n">my_structs_ptr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_in_stack</span> <span class="o">=</span> <span class="n">alloca</span> <span class="n">i32</span> 
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_ptr</span> <span class="o">=</span> <span class="n">getelementptr</span> <span class="o">%</span><span class="n">MyStruct</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_structs_ptr</span><span class="p">,</span> <span class="n">i64</span> <span class="mi">2</span><span class="p">,</span> <span class="n">i32</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_val</span> <span class="o">=</span> <span class="n">load</span> <span class="n">i32</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_y_ptr</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">store</span> <span class="n">i32</span> <span class="o">%</span><span class="n">my_y_val</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_y_in_stack</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们可以注意到，最核心的就是<code>getelementptr</code>指令了。它的四个参数的语义分别为</p>
+<ul>
+<li><code>MyStruct</code></li>
+</ul>
+<p>我们要取地址的指针，它指向区域的类型为<code>%MyStruct</code></p>
+<ul>
+<li><code>ptr %my_structs_ptr</code></li>
+</ul>
+<p>我们要操作的指针，是<code>ptr %my_structs_ptr</code></p>
+<ul>
+<li><code>i64 2</code></li>
+</ul>
+<p>取偏移量为 2 的那个元素，也就是<code>my_structs_ptr[2]</code></p>
+<ul>
+<li>i32 1</li>
+</ul>
+<p>对于获得到的那个元素，取索引为 1 的字段，也就是<code>my_structs_ptr[2].y</code></p>
+<p>通过这个指令，我们获得了<code>my_structs_ptr[2].y</code>的地址，随后的 LLVM IR 指令就是将这个地址的值放到了局部变量中。</p>
+<ul>
+<li>访问指针字段</li>
+</ul>
+<p>接下来，我们看这样一个例子：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">MyStruct</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="k">struct</span> <span class="nc">MyStruct</span> <span class="o">*</span><span class="n">my_structs_ptr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">my_y</span> <span class="o">=</span> <span class="n">my_structs_ptr</span><span class="o">-&gt;</span><span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>其对应的 LLVM IR 为</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="o">%</span><span class="n">MyStruct</span> <span class="o">=</span> <span class="n">type</span> <span class="p">{</span> <span class="n">i32</span><span class="p">,</span> <span class="n">i32</span> <span class="p">}</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">(</span><span class="n">ptr</span> <span class="o">%</span><span class="n">my_structs_ptr</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_in_stack</span> <span class="o">=</span> <span class="n">alloca</span> <span class="n">i32</span> 
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_ptr</span> <span class="o">=</span> <span class="n">getelementptr</span> <span class="o">%</span><span class="n">MyStruct</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_structs_ptr</span><span class="p">,</span> <span class="n">i64</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i32</span> <span class="mi">1</span> 
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">my_y_val</span> <span class="o">=</span> <span class="n">load</span> <span class="n">i32</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_y_ptr</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">store</span> <span class="n">i32</span> <span class="o">%</span><span class="n">my_y_val</span><span class="p">,</span> <span class="n">ptr</span> <span class="o">%</span><span class="n">my_y_in_stack</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="kt">void</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>唯一的改动，就是将之前的偏移量<code>i64 2</code>改为<code>i64 0</code>。</p>
+<p>这看上去挺符号直觉的。等等，符合直觉吗？</p>
+<p>我们发现，即使是将<code>my_structs_ptr</code>看作是指向结构体的指针，而非指向数组的指针，仍然要加一个偏移量 0。这是因为，C语言中，对于一个数组<code>array</code>，<code>&amp;array[0]</code>和指向首元素的<code>array_ptr</code>是同一个东西。为了兼容C语言这个特性，LLVM IR 在<code>getelementptr</code>中，将所有的指针都看作一个指向数组首地址的指针。因此，我们需要额外加一个<code>i64 0</code>的偏移量来解决这个问题。</p>
+<ul>
+<li>级联访问</li>
+</ul>
+<p>此外，<code>getelementptr</code>还可以接多个参数，类似于级联调用。我有C程序：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">MyStruct</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">y</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">MyStruct</span> <span class="n">my_structs</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+</span></span></code></pre></div><p>那么如果我们想获得<code>my_structs[2].y[3]</code>的地址，只需要</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="o">%</span><span class="n">MyStruct</span> <span class="o">=</span> <span class="n">type</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i32</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">[</span><span class="mi">5</span> <span class="n">x</span> <span class="n">i32</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">%</span><span class="n">my_structs</span> <span class="o">=</span> <span class="n">alloca</span> <span class="p">[</span><span class="mi">4</span> <span class="n">x</span> <span class="o">%</span><span class="n">MyStruct</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">getelementptr</span> <span class="o">%</span><span class="n">MyStruct</span><span class="p">,</span><span class="n">ptr</span> <span class="o">%</span><span class="n">my_structs</span><span class="p">,</span><span class="n">i64</span> <span class="mi">2</span><span class="p">,</span><span class="n">i32</span> <span class="mi">1</span><span class="p">,</span><span class="n">i64</span> <span class="mi">3</span>
+</span></span></code></pre></div><ul>
+<li><code>extractvalue</code>和<code>insertvalue</code></li>
+</ul>
+<p>除了我们上面讲的这种情况，也就是把结构体分配在栈或者全局变量，然后操作其指针以外，</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="p">;</span><span class="n">extract_insert_value</span><span class="p">.</span><span class="n">ll</span>
+</span></span><span class="line"><span class="cl"><span class="o">%</span><span class="n">MyStruct</span> <span class="o">=</span> <span class="n">type</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i32</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">i32</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="err">@</span><span class="n">my_struct</span> <span class="o">=</span> <span class="n">global</span> <span class="o">%</span><span class="n">MyStruct</span> <span class="p">{</span> <span class="n">i32</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i32</span> <span class="mi">2</span> <span class="p">}</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">define</span> <span class="n">i32</span> <span class="err">@</span><span class="n">main</span><span class="p">()</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">load</span> <span class="o">%</span><span class="n">MyStruct</span><span class="p">,</span> <span class="n">ptr</span> <span class="err">@</span><span class="n">my_struct</span> 
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="n">i32</span> <span class="mi">0</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这时，我们的结构体是直接放在虚拟寄存器<code>%1</code>里，<code>%1</code>并不是存储<code>@my_struct</code>的指针，而是直接 存储这个结构体的值。这时，我们并不能用<code>getelementptr</code>来操作<code>%1</code>，因为这个指令需要的是一 个指针。因此，LLVM IR提供了<code>extractvalue</code>和<code>insertvalue</code>指令。</p>
+<p>因此，如果要获得<code>@my_struct</code>第二个字段的值，我们需要</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="o">%</span><span class="mi">2</span> <span class="o">=</span> <span class="n">extractvalue</span> <span class="o">%</span><span class="n">MyStruct</span> <span class="o">%</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+</span></span></code></pre></div><p>这里的 1 就代表第二个字段（从0开始）。</p>
+<p>类似地，如果要将<code>%1</code>的第二个字段赋值为 233，只需要</p>
+<pre tabindex="0"><code>%3 = insertvalue %MyStruct %1,i32 233,1
+</code></pre><p>然后<code>%3</code>就会是<code>%1</code>讲第二个字段赋值为 233 后的值。</p>
+<p><code>extractvalue</code>和<code>insertvalue</code>并不只适用于结构体，也同样适用于存储在虚拟寄存器中的数组，这里不再赘述。</p>
+<ul>
+<li>标签类型</li>
+</ul>
+<p>在汇编语言中，一切的控制语句、函数调用都是由标签来控制的，在 LLVM IR 中，控制语句也是需要标签来完成的。</p>
+<ul>
+<li>元数据类型</li>
+</ul>
+<p>在我们使用 Clang 将 C语言程序输出成 LLVM IR 时，会发现代码的最后几行有</p>
+<pre tabindex="0"><code>!llvm.module.flags = !{!0, !1, !2, !3} 
+!llvm.ident = !{!4} 
+
+!0 = !{i32 1, !&#34;wchar_size&#34;, i32 4} 
+!1 = !{i32 8, !&#34;PIC Level&#34;, i32 2} 
+!2 = !{i32 7, !&#34;PIE Level&#34;, i32 2} 
+!3 = !{i32 7, !&#34;uwtable&#34;, i32 2} 
+!4 = !{!&#34;Homebrew clang version 16.0.6&#34;}
+</code></pre><p>类似于这样的东西。在 LLVM IR 中，以<code>!</code>开头的标识符为元数据。元数据是为了将额外的信息附加在程序中传递给 LLVM 后端，使后端能够好地优化或生成代码。用于 Debug 的信息就是通过元数据形式传递的。我们可以使用 -g 选项：</p>
+<pre tabindex="0"><code>clang -S -emit-llvm -g test.c
+</code></pre><p>来在 llvm ir 中附加额外的 Debug 信息。关于元数据，在后续的章节里会有更具体的介绍。</p>
+<ul>
+<li>属性</li>
+</ul>
+<p>最后，还有一种叫做属性的概念。属性并不是类型，其一般用于函数。比如说，告诉编译器这个函数不会抛出错误，不需要某些优化等等。我们可以看到</p>
+<pre tabindex="0"><code>define void @foo() nounwind {
+	;...
+}
+</code></pre><p>这里nounwind 就是一个属性。</p>
+<p>有时候，一个函数的属性会特别特别多，并且有多个函数都有相同的属性。那么，就会有大量重复 的篇幅用来给每一个函数说明属性。因此，LLVM IR引入了属性组的概念，我们在将一个简单的C 程序编译成LLVM IR时，会发现代码中有</p>
+<pre tabindex="0"><code>attributes #0 = { noinline nounwind optnone ssp uwtable &#34;correctly-rounded divide-sqrt-fp-math&#34;=&#34;false&#34; &#34;darwin-stkchk-strong-link&#34; &#34;disable-tail calls&#34;=&#34;false&#34; &#34;frame-pointer&#34;=&#34;all&#34; &#34;less-precise-fpmad&#34;=&#34;false&#34; &#34;min-legal vector-width&#34;=&#34;0&#34; &#34;no-infs-fp-math&#34;=&#34;false&#34; &#34;no-jump-tables&#34;=&#34;false&#34; &#34;no-nans fp-math&#34;=&#34;false&#34; &#34;no-signed-zeros-fp-math&#34;=&#34;false&#34; &#34;no-trapping-math&#34;=&#34;false&#34; &#34;probe-stack&#34;=&#34;___chkstk_darwin&#34; &#34;stack-protector-buffer-size&#34;=&#34;8&#34; &#34;target cpu&#34;=&#34;penryn&#34; &#34;target features&#34;=&#34;+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87&#34; &#34;unsafe-fp-math&#34;=&#34;false&#34; &#34;use-soft-float&#34;=&#34;false&#34; }
+</code></pre><p>这种一大长串的，就是属性组。属性组总是以#开头。当我们函数需要它的时候，只需要</p>
+<pre tabindex="0"><code>define void @foo #0 {
+	;...
+}
+</code></pre><p>直接使用#0即可。关于属性，后续也会有专门的章节进行介绍。</p>
+<h4 id="静态单分配ssa">静态单分配（SSA）<a hidden class="anchor" aria-hidden="true" href="#静态单分配ssa">#</a></h4>
+<ul>
+<li>
+<p>每个变量只分配一次</p>
+</li>
+<li>
+<p>每个变量在使用前都会被定义</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">factorial</span><span class="p">(</span><span class="kt">int</span> <span class="n">val</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">val</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="n">temp</span> <span class="o">*=</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">temp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Pnis to the rescue</p>
+<pre tabindex="0"><code>result = phi &lt;ty&gt; [&lt;val0&gt; &lt;label0&gt;], [&lt;vall&gt;, &lt;label1&gt;]
+</code></pre><p>根据先前执行的基本块选择一个值</p>
+<p>Allocas 为函数作用域分配内存</p>
+<p>全局变量以静态方式填充模块的角色</p>
+<p>它们总是指针，就像Allocas 返回的值一样</p>
+<p>全局变量：</p>
+<ul>
+<li>名称以<code>@</code>为前缀</li>
+<li>必须具有类型</li>
+<li>必须进行初始化</li>
+<li>使用<code>global</code>关键字：<code>@gv = global i8 42</code></li>
+<li>或使用<code>constant</code>（表示不可被修改）：<code>@gv = constant i8 42</code></li>
+</ul>
+<p>总是指针</p>
+<pre tabindex="0"><code>@gv = global i16 46
+
+%load = load i16, i16* @gv
+store i16 0, i16* @gv
+</code></pre><h4 id="聚合类型数组">聚合类型：数组<a hidden class="anchor" aria-hidden="true" href="#聚合类型数组">#</a></h4>
+<p>聚合类型数组：</p>
+<ul>
+<li>a constant size</li>
+<li>an element type</li>
+<li>[for GVs] an ir initializer：<code>@array = global [17 x i8] zeroinitializer</code></li>
+</ul>
+<p>The Get Element Pointer（GEP）instruction：</p>
+<ul>
+<li>Provides a way to calculate pointer offsets</li>
+<li>Abstracts away details like:
+<ul>
+<li>size of types</li>
+<li>padding inside structs</li>
+</ul>
+</li>
+<li>Intuitive to use
+<ul>
+<li>once you understand a few basic principles.</li>
+</ul>
+</li>
+</ul>
+<p>Manipulatin pointers</p>
+<p>The Get Element Pointer（GEP）instruction：</p>
+<pre tabindex="0"><code>&lt;result&gt; = getelementptr &lt;ty&gt;, &lt;ty&gt;* &lt;ptrval&gt;, [i32 &lt;idx&gt;]
+</code></pre><pre tabindex="0"><code>%new_ptr = getelementptr i32,i32* %base, i32 1
+</code></pre><p>GEP fundamentals</p>
+<ol>
+<li>Understand the first index：
+<ol>
+<li>It does NOT change the resulting pointer type</li>
+<li>It offsets by the base type.</li>
+</ol>
+</li>
+<li>Further indices:
+<ol>
+<li>Offset inside aggregate types.</li>
+<li>Change the pointer type by removing one layer of aggregation</li>
+</ol>
+</li>
+</ol>
+<pre tabindex="0"><code>@a_gv = global [6 x i8] zeroinitializer
+%new_ptr = getelementptr [6 x i8],[6 x i8]* @a_gv,i32 0
+</code></pre><pre tabindex="0"><code>@a_gv = global [6 x i8] zeroinitializer
+%new_ptr = getelementptr [6 x i8],[6 x i8]* @a_gv,i32 0
+%elem_pt = getelementptr [6 x i8],[6 x i8]* @a_gv,i32 0,i32 0
+</code></pre><h4 id="聚合类型结构">聚合类型：结构<a hidden class="anchor" aria-hidden="true" href="#聚合类型结构">#</a></h4>
+<p>Defined by</p>
+<ul>
+<li>A name</li>
+<li>Keyword type</li>
+<li>A list of types</li>
+</ul>
+<p>GEPS with structs</p>
+<pre tabindex="0"><code>%MyStruct = type {i8, i32, [3 x i32]}
+@a_gv = global %MyStruct {i8 99, i32 17, [3 x i32] [i32 1, i32 2, i32 3]}
+%new_ptr = getelementptr %MyStruct*,%MyStruct* @a_gv,i32 1
+</code></pre><p>struct indices must be constants</p>
+<pre tabindex="0"><code>@gv1 = global [4 x i8]
+</code></pre><ol start="4">
+<li>GEPs never load form memory</li>
+</ol>
+<pre tabindex="0"><code></code></pre><h4 id="虚拟寄存器">虚拟寄存器<a hidden class="anchor" aria-hidden="true" href="#虚拟寄存器">#</a></h4>
+<p>虚拟寄存器（Virtual Registers）</p>
+<p>Those are local variables</p>
+<p>Two flavors of names:</p>
+<ul>
+<li>Unnamed：<code>%&lt;number&gt;</code></li>
+<li>Named：<code>%&lt;name&gt;</code></li>
+</ul>
+<p>LLVM IR has infnite registers</p>
+<pre tabindex="0"><code>declare i32 @factorial(i32)
+
+define i32 @main(){
+	%1 = call i32 @factorial(i32 2)
+	%2 = mul i32 %1,7
+	%3 = icmp eq i32 %2,42
+	%result = zext i1 %3 to i32
+	ret i32 %result
+}
+</code></pre><p>Type，types everywhere</p>
+<p>The instructions explicitly dictate the types expected.</p>
+<p>Easy to figure out argument types</p>
+<p>Easy to figure out return types</p>
+<p>没有隐式转换。</p>
+<p>要检查这是否是有效的 IR。</p>
+<pre tabindex="0"><code>declare i32 @factorial(i32)
+
+define i32 @main(){
+	%1 = call i32 @factorial(i32 2)
+	%2 = mul i32 %1,7
+	%3 = icmp eq i32 %2,42
+	ret i32 %3
+}
+</code></pre><p>The LangRef is your friend</p>
+<p>call instruction</p>
+<pre tabindex="0"><code>%! = call i32 @factorial(i32 2)
+</code></pre><h3 id="控制流">控制流<a hidden class="anchor" aria-hidden="true" href="#控制流">#</a></h3>
+<p>在汇编语言中跳转和函数没有太大的区别，然而到了 LLVM IR 中，这两者就有了比较大的区别。</p>
+<p>在程序分析领域，往往会强调一对概念：数据流与控制流。所谓数据流，就是指一个程序中的数据，从硬盘到内存，从内存到寄存器，等等一系列的数据搬运、处理的过程。</p>
+<p>而控制流，则是指程序执行指令的顺序。最简单的，我们的程序在除了顺序执行指令，还可以通过<code>if</code>语句进行条件跳转，通过<code>for</code>、<code>while</code>语句进行循环，还可以通过函数调用进入到别的函数。凡此种种，都是程序控制流的变化。</p>
+<p>在使用 LLVM 作为编译器的时候，控制流往往就意味着更多的优化可能，如分支不仅、函数内联。在使用 LLVM 作为静态分析工具的过程中，控制流也意味着更高的复杂度，如间接跳转、间接调用的识别和恢复。</p>
+<h4 id="控制语句">控制语句<a hidden class="anchor" aria-hidden="true" href="#控制语句">#</a></h4>
+<p>在控制流中，最基础的就是控制语句，也就是与汇编中的跳转相关的。</p>
+<ul>
+<li>汇编层面的控制语句</li>
+</ul>
+<p>在大多数语言中，常见的控制语句主要有四种：</p>
+<ul>
+<li><code>if...else</code></li>
+<li><code>for</code></li>
+<li><code>while</code></li>
+<li><code>switch</code></li>
+</ul>
+<p>在汇编语言层面，控制语句则被分解为两种核心的指令：条件跳转与无条件跳转（<code>switch</code>其实还有一些工作，之后会提到）。我们下面分别来看看在汇编层面是怎样实现控制语句的。</p>
+<p><code>if...else</code></p>
+<p>我们有如下C 代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="c1">// Do something A 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span> <span class="k">else</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="c1">// Do something B 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span> 
+</span></span><span class="line"><span class="cl"><span class="c1">// Do something C
+</span></span></span></code></pre></div><p>为了将这个指令改写成汇编指令，我们同时需要条件跳转与无条件跳转。我们用伪代码表示其汇编 指令为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl">	<span class="n">Compare</span> <span class="n">a</span> <span class="n">and</span> <span class="n">b</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="n">B</span> <span class="k">if</span> <span class="n">comparison</span> <span class="n">is</span> <span class="n">a</span> <span class="n">is</span> <span class="n">not</span> <span class="n">greater</span> <span class="n">than</span> <span class="n">b</span> <span class="c1">// conditional 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">jump</span> 
+</span></span><span class="line"><span class="cl"><span class="n">label</span> <span class="nl">A</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Do</span> <span class="n">something</span> <span class="n">A</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="n">C</span> <span class="c1">// unconditional jump 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">label</span> <span class="nl">B</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Do</span> <span class="n">something</span> <span class="n">B</span> 
+</span></span><span class="line"><span class="cl"><span class="n">label</span> <span class="nl">C</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Do</span> <span class="n">something</span> <span class="n">C</span>
+</span></span></code></pre></div><p>汇编语言通过条件跳转、无条件跳转和三个标签（label A标签实际上没有作用，只不过让代码 更加清晰）实现了高级语言层面的if .. else语句。</p>
+<p><code>for</code></p>
+<p>我们有以下C代码：</p>
+<pre tabindex="0"><code>for (int i = 0; i &lt; 4; i++) { 
+	// Do something A 
+} 
+// Do something B
+</code></pre><p>为了将这个指令改写为汇编指令，我们同样地需要跳转与无条件跳转：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span> 
+</span></span><span class="line"><span class="cl"><span class="n">label</span> <span class="nl">start</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Compare</span> <span class="n">i</span> <span class="n">and</span> <span class="mi">4</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="n">B</span> <span class="k">if</span> <span class="n">comparison</span> <span class="n">is</span> <span class="n">i</span> <span class="n">is</span> <span class="n">not</span> <span class="n">less</span> <span class="n">than</span> <span class="mi">4</span> <span class="c1">// conditional jump 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">label</span> <span class="nl">A</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Do</span> <span class="n">something</span> <span class="n">A</span> <span class="n">i</span><span class="o">++</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="n">start</span> <span class="c1">// unconditional jump label B: Do something B
+</span></span></span></code></pre></div><p>而<code>while</code>与<code>for</code>则极其类似，只不过少了初始化与自增的操作，这里不再赘述。</p>
+<p>根据我们在汇编语言中积累的经验，我们得出，要实现大多数高级语言的控制语句，我们需要四个东西：</p>
+<ul>
+<li>
+<p>标签</p>
+</li>
+<li>
+<p>无条件跳转</p>
+</li>
+<li>
+<p>比较大小的指令</p>
+</li>
+<li>
+<p>条件跳转</p>
+</li>
+<li>
+<p>LLVM IR 层面的控制语句</p>
+</li>
+</ul>
+<p>下面就以我们上面的for循环的C语言版本为例，解释如何写其对应的LLVM IR语句。</p>
+<p>首先，我们对应的LLVM IR的基本框架为</p>
+<pre tabindex="0"><code>%i = alloca i32 ; int i = ... 
+store i32 0, ptr %i ; ... = 0 
+%i_value = load i32, ptr %i 
+; Do something A 
+%1 = add i32 %i_value, 1 ; ... = i + 1 
+store i32 %1, ptr %i ; i = ... 
+; Do something B
+</code></pre><p>这个程序缺少了一些必要的步骤，而我们之后会将其慢慢补上。</p>
+<ul>
+<li>标签</li>
+</ul>
+<p>在LLVM IR中，标签与汇编语言的标签一致，也是以:结尾作标记。我们依照之前写的汇编语言的 伪代码，给这个程序加上标签：</p>
+<pre tabindex="0"><code>	%i = alloca i32                   ; int i = ... 
+	store i32 0, ptr %i               ; ... = 0 
+start: 
+	%i_value = load i32, ptr %i 
+A: 
+	; Do something A 
+	%1 = add i32 %i_value, 1          ; ... = i + 1 
+	store i32 %1, ptr %i              ; i = ... 
+B: 
+	; Do something B
+</code></pre><ul>
+<li>比较指令</li>
+</ul>
+<p>LLVM IR提供的比较指令为icmp。其接受三个参数：比较方案以及两个比较参数。这样讲比较抽 象，我们就来看一下一个最简单的比较指令的例子：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="o">%</span><span class="n">comparison_result</span> <span class="o">=</span> <span class="n">icmp</span> <span class="n">uge</span> <span class="n">i32</span> <span class="o">%</span><span class="n">a</span><span class="p">,</span> <span class="o">%</span><span class="n">b</span>
+</span></span></code></pre></div><p>这个例子转换为 C++ 语言就是</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">bool</span> <span class="n">comparison_result</span> <span class="o">=</span> <span class="p">((</span><span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span><span class="n">a</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span><span class="n">b</span><span class="p">);</span>
+</span></span></code></pre></div><p>这里，<code>uge</code>比较方案，<code>%a</code>和<code>%b</code>就是用来比较的两个数，而<code>icmp</code>则返回一个<code>i1</code>类型的值，也就是 C++ 中的值<code>bool</code>值，用来表示结果是否为真。</p>
+<p><code>icmp</code>支持的比较方案很广泛：</p>
+<ul>
+<li>首先，最简单的是<code>eq</code>与<code>ne</code>，分别代表不等或不相等。</li>
+<li>然后，是无符号的比较<code>ugt</code>，<code>uge</code>，<code>ult</code>，<code>ule</code>，分别代表大于、大于等于、小于、小于等于。我们之前在数的表示中提到，LLVM IR 中一个整型变量本身的符号是没有意义的，而是需要看其在参与的指令中被看作是什么符号。每个方案的<code>u</code>就代表以无符号的形式进行比较。</li>
+<li>最后，是有符号的比较<code>sgt</code>、<code>sge</code>、<code>slt</code>、<code>sle</code>，分别是其无符号版本的有符号对应。</li>
+</ul>
+<p>加上比较指令之后，我们的例子就变成了：</p>
+<pre tabindex="0"><code>	%i = alloca i32       ; int i = ... 
+	store i32 0, ptr %i   ; ... = 0 
+start: 
+	%i_value = load i32, ptr %i %comparison_result = icmp slt i32 %i_value, 4 ; Test if i &lt; 4 A: 
+	; Do something A 
+	%1 = add i32 %i_value, 1        ; ... = i + 1 
+	store i32 %1, ptr %i            ; i = ... B: 
+	; Do something B
+</code></pre><ul>
+<li>条件跳转</li>
+</ul>
+<p>在比较完之后，我们需要条件跳转。我们来看一下我们此刻的目的：若<code>%comparison_result</code>是<code>true</code>，那么跳转到<code>A</code>，否则跳转到<code>B</code>。</p>
+<p>LLVM IR 为我们提供的条件跳转指令是<code>br</code>，其接受三个参赛，第一个参数是<code>i1</code>类型的值，用于作判断；第二和第三个参数分别为<code>true</code>和<code>false</code>时需要跳转到的标签。</p>
+<p>比如，在我们的例子中，就应该是</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">br</span> <span class="n">i1</span> <span class="o">%</span><span class="n">comparison_result</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">A</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">B</span>
+</span></span></code></pre></div><p>我们把它加入我们的例子：</p>
+<pre tabindex="0"><code>  %i = alloca i32         ;int i = ... 
+  store i32 0, ptr %i     ; ... = 0 
+start: 
+	%i_value = load i32, ptr %i 
+	%comparison_result = icmp slt i32 %i_value, 4 ; Test if i &lt; 4 
+	br i1 %comparison_result, label %A, label %B A: 
+	; Do something A 
+	%1 = add i32 %i_value, 1 ; ... = i + 1 
+	store i32 %1, ptr %i ; i = ... 
+B: 
+	; Do something B
+</code></pre><ul>
+<li>无条件跳转</li>
+</ul>
+<p>无条件跳转更好理解，直接跳转到某一标签处。在 LLVM IR 中，我们同样可以使用<code>br</code>进行无条件跳转。如，我们要直接跳转到<code>start</code>标签处，则可以</p>
+<pre tabindex="0"><code>br label %start
+</code></pre><p>我们也把这个加入我们的例子：</p>
+<pre tabindex="0"><code>	%i = alloca i32 ; int i = ... store i32 0, ptr %i ; ... = 0 
+start: 
+	%i_value = load i32, ptr %i 
+	%comparison_result = icmp slt i32 %i_value, 4 ; Test if i &lt; 4 
+	br i1 %comparison_result, label %A, label %B 
+A: 
+	; Do something A 
+	%1 = add i32 %i_value, 1 ; ... = i + 1 
+	store i32 %1, ptr %i ; i = ... 
+	br label %start 
+B: 
+	; Do something B
+</code></pre><p>这样看上去就结束了，然而如果大家把这个代码交给<code>llc</code>的话，并不能编译通过，这是为什么呢？</p>
+<ul>
+<li>Basic block</li>
+</ul>
+<p>一个函数由许多基本块组成。每个基本块包含：开头的标签、一系列标签、结尾是终结指令。一个基本块没有标签时，会自动赋给它一个标签。</p>
+<p>所谓终结指令，就是指改变顺序的指令，如跳转、返回等。</p>
+<p>我们来看看我们之前写好的程序是不是符号这个规定。<code>start</code>开头的基本块，在一系列指令后，以：</p>
+<pre tabindex="0"><code>br i1 %comparison_result,label %A,label %B
+</code></pre><p>结尾，是一个终结指令，<code>A</code>开头的基本块，在一系列指令后，以</p>
+<pre tabindex="0"><code>br label %start
+</code></pre><p>结尾，也是一个终结指令。<code>B</code>开头的基本块，在最后总归是需要函数返回的，所以也一定会带有一个终结指令。</p>
+<p>一个基本块是可以没有名字的，所以，实际上还有一个基本块没有考虑到，就是函数开头的：</p>
+<pre tabindex="0"><code>%i = alloca i32     ;int i = ...
+store i32 0,ptr %i  ;... = 0
+</code></pre><p>这个基本块，它并没有以终结指令结尾！</p>
+<p>所以，我们把一个终结指令补充在这个基本块的结尾：</p>
+<pre tabindex="0"><code>%i = alloca i32
+store i32 0, ptr %i
+br label %start
+</code></pre><p>这样就完成了我们的例子，大家可以在本系列的 Github 的仓库中查看对应的代码<code>for.ll</code>。</p>
+<ul>
+<li>可视化</li>
+</ul>
+<p>LLVM 的工具链甚至为我们提供了可视化控制语句的方法。我们使用之前提到的 LLVM 工具链中用于优化的<code>opt</code>工具：</p>
+<pre tabindex="0"><code>opt -p dot-cfg for.ll
+</code></pre><p>然后会生成一个<code>.main.dot</code>的文件，如果我们在计算机上装有 Graphviz，那么就可以用</p>
+<pre tabindex="0"><code>dot .main.dot -Tpng -o for.png
+</code></pre><p>生成其可视化的控制流图（CFG）</p>
+<ul>
+<li>switch</li>
+</ul>
+<p>下面我们来讲讲<code>switch</code>语句。我们有如下程序：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">switch</span> <span class="p">(</span><span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">		<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们先直接看看其转换成 LLVM IR 是什么样子的：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">switch</span> <span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">C</span> <span class="p">[</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">i32</span> <span class="mi">0</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">A</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">i32</span> <span class="mi">1</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">B</span> 
+</span></span><span class="line"><span class="cl"><span class="p">]</span> 
+</span></span><span class="line"><span class="cl"><span class="nl">A</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="p">;</span> <span class="n">Do</span> <span class="n">something</span> <span class="n">A</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span> 
+</span></span><span class="line"><span class="cl"><span class="nl">B</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="p">;</span> <span class="n">Do</span> <span class="n">something</span> <span class="n">B</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span> 
+</span></span><span class="line"><span class="cl"><span class="nl">C</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="p">;</span> <span class="n">Do</span> <span class="n">something</span> <span class="n">C</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span> <span class="nl">end</span><span class="p">:</span> 
+</span></span><span class="line"><span class="cl">	<span class="p">;</span> <span class="n">Do</span> <span class="n">something</span> <span class="k">else</span>
+</span></span></code></pre></div><p>其核心就是第一行的<code>switch</code>指令。其第一个参数<code>i32 %x</code>是用来判断的，也就是我们C语言中的<code>x</code>。第二个参数<code>label %C</code>是C语言中的<code>default</code>分支，这是必须要有的参数。也就是说，我们的<code>switch</code>必须要有<code>default</code>来处理。接下来是一个数组，其意义已经很显然了，如果<code>%x</code>值是<code>0</code>，就去<code>label %A</code>，如果值是1，就去<code>label %B</code>。</p>
+<p>LLVM后端对switch语句具体到汇编层面的实现则通常有两种方案：用一系列条件语句或跳转表。</p>
+<p>一系列条件语句的实现方式最简单，用伪代码来表示的话就是</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="o">%</span><span class="n">A</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="o">%</span><span class="n">B</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="k">else</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="o">%</span><span class="n">C</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这是十分符合常理的。然而，我们需要注意到，如果这个switch语句一共有n个分支，那么其查 找效率实际上是O(n)。那么，这种实现方案下的switch语句仅仅是if .. else的语法糖，除了增 加可维护性，并不会优化什么性能。</p>
+<p>跳转表则是一个可以优化性能的switch语句实现方案，其伪代码为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="o">%</span><span class="n">A</span><span class="p">,</span><span class="n">label</span> <span class="o">%</span><span class="n">B</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span> <span class="o">||</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">label</span> <span class="o">%</span><span class="n">C</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Jump</span> <span class="n">to</span> <span class="n">labels</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这只是一个极其粗糙的近似的实现，我们需要的是理解其基本思想。跳转表的思想就是利用内存中 数组的索引是O(1)复杂度的，所以我们可以根据目前的x值去查找应该跳转到哪一个地址，这就是 跳转表的基本思想。</p>
+<p>根据目标平台和switch语句的分支数，LLVM后端会自动选择不同的实现方式去实现switch语 句。</p>
+<ul>
+<li>select</li>
+</ul>
+<p>我们经常会遇到一种情况，某一变量的值需要根据条件进行赋值，比如说以下C语言的函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>	
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">y</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="o">%</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>如果<code>x</code>大于0，则<code>y</code>为1，否则<code>y</code>为2。这一情况很常见，然而在C语言中，如果要实现这种功能，<code>y</code>需要被实现为可变变量，但实际上无论<code>x</code>如何取值，<code>y</code>只会被赋值一次，并不应该是可变的。</p>
+<p>我们知道，LLVM IR 中由于SSA的限制，局部可变变量都必须分配在栈上，虽然 LLVM 后端最终会进行一定的优化，但写起代码来还需要冗长的<code>alloca</code>、<code>load</code>、<code>store</code>等语句。如果我们按照C语言的思路来写 LLVM IR，那么就会是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">(</span><span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">y</span> <span class="o">=</span> <span class="n">alloca</span> <span class="n">i32</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">icmp</span> <span class="n">sgt</span> <span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">i1</span> <span class="o">%</span><span class="mi">1</span><span class="p">,</span><span class="n">label</span> <span class="o">%</span><span class="n">bture</span><span class="p">,</span><span class="n">label</span> <span class="o">%</span><span class="n">bfalse</span>
+</span></span><span class="line"><span class="cl"><span class="nl">bture</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">store</span> <span class="n">i32</span> <span class="mi">1</span><span class="p">,</span><span class="n">ptr</span> <span class="o">%</span><span class="n">y</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span>
+</span></span><span class="line"><span class="cl"><span class="nl">bfalse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">store</span> <span class="n">i32</span> <span class="mi">2</span><span class="p">,</span><span class="n">ptr</span> <span class="o">%</span><span class="n">y</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span>
+</span></span><span class="line"><span class="cl"><span class="nl">end</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们来看看其编译出的汇编语言是怎样的：</p>
+<pre tabindex="0"><code>foo: 
+# %bb.0: 
+	cmpl  $0,%edi
+	jle   .LBB0_2
+# %bb.1: 
+	movl  $1, -4(%rsp)
+	jmp   .LBB0_3:
+.LBB0_2: 
+	movl   $2, -4(%rsp)
+.LBB0_3
+	retq
+</code></pre><p>算上注释，C语言代码9行，汇编代码11行，LLVM IR 代码14行。这 LLVM IR 同时比低层次和高层次的代码都长，而且这种模式在真实的代码中出现的次数会非常多，这显然是不可用接受的。究其原因，就是这里把<code>y</code>看成了可变变量。那么，有没有什么办法让<code>y</code>不可变但仍然能实现这个功能呢？</p>
+<p>我们来看看同样区分可变变量与不可变变量的 Rust 是怎么做的：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="cl"><span class="k">fn</span> <span class="nf">foo</span><span class="p">(</span><span class="n">x</span>: <span class="kt">i32</span><span class="p">){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="kd">let</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">x</span><span class="o">&gt;</span><span class="mi">0</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="p">{</span><span class="mi">2</span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>让代码简短的方式很简单，把<code>y</code>看作不可变变量，但同时需要语言支持把<code>if</code>语句视作表达式，当<code>x</code>大于0时，这个表达式返回 1，否则返回 2。这样，就很简单地实现了我们的需求。</p>
+<p>LLVM IR 中同样也有这样的指令，那就是<code>select</code>，我们来吧上面的例子用<code>select</code>改写：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">(</span><span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">result</span> <span class="o">=</span> <span class="n">icmp</span> <span class="n">sgt</span> <span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">y</span> <span class="o">=</span> <span class="n">select</span> <span class="n">i1</span> <span class="o">%</span><span class="n">result</span><span class="p">,</span> <span class="n">i32</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i32</span> <span class="mi">2</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><code>select</code>指令接受三个参数。第一个参数是用来判断的布尔值，也就是<code>i1</code>类型的<code>icmp</code>判断的结果，如果其为<code>true</code>，则返回第二个参数，否则返回第三个参数。极其合理。</p>
+<p><code>select</code>不仅可以简化 LLVM 代码，也可以优化生成的二进制程序。在大部分情况下，在AMD64架构中，LLVM 会将<code>select</code>指令编译为<code>CMOV CC</code>指令，也就是条件赋值，从而优化了生成的二进制代码</p>
+<ul>
+<li>phi</li>
+</ul>
+<p><code>select</code>只能支持两个选择，<code>true</code>选择一个分支，<code>false</code>选择另一个分支，我们是不是可以有支持多种选择的类似<code>switch</code>的版本呢？同时，我们也可以换个角度思考，<code>select</code>是根据<code>i1</code>的值来进行判断，我们其实可以根据控制流进行判断。这就是在 SSA 技术中大名鼎鼎的 phi 指令。</p>
+<p>为了方便起见，我们首先先来看用 phi 指令实现的我们上面这个代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">(</span><span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">result</span> <span class="o">=</span> <span class="n">icmp</span> <span class="n">sgt</span> <span class="n">i32</span> <span class="o">%</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">i1</span> <span class="o">%</span><span class="n">result</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">btrue</span><span class="p">,</span> <span class="n">label</span> <span class="o">%</span><span class="n">bfalse</span>
+</span></span><span class="line"><span class="cl"><span class="nl">btrue</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span>
+</span></span><span class="line"><span class="cl"><span class="nl">bfalse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">br</span> <span class="n">label</span> <span class="o">%</span><span class="n">end</span>
+</span></span><span class="line"><span class="cl"><span class="nl">end</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="o">%</span><span class="n">y</span> <span class="o">=</span> <span class="n">phi</span> <span class="n">i32</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">%</span><span class="n">btrue</span><span class="p">],[</span><span class="n">t</span><span class="p">,</span><span class="o">%</span><span class="n">bfalse</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="kt">void</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们看到，phi 的第一个参数是一个类型，这个类型表示其返回类型为 i32。接下来则是两个数组，其表示，如果当前的 basic block 执行的时候，前一个 basic block 是<code>%btrue</code>，那么返回 1，如果前一个 basic block 是<code>%bfalse</code>，那么返回 2。</p>
+<p>也就是说，<code>select</code>是根据其第一个参数<code>i1</code>类型的变量的值来决定返回哪个值，而<code>phi</code>则是根据其之前是哪个 basic block 来决定其返回值。此外，phi 之后可以跟无数的分支，如<code>phi i32 [1,%a]</code>，<code>[2,%b]</code>，<code>[3,%c]</code>等，从而可以支持多分支的赋值。</p>
+<h4 id="函数">函数<a hidden class="anchor" aria-hidden="true" href="#函数">#</a></h4>
+<p>定义与声明</p>
+<ul>
+<li>函数定义</li>
+</ul>
+<p>在 LLVM 中，一个最基本的函数定义的样子我们之前已经遇到过多次，就是<code>@main</code>函数的样子：</p>
+<pre tabindex="0"><code>define i32 @main(){
+	ret i32 0
+}
+</code></pre><p>在函数名之前可以加上参数列表，如：</p>
+<pre tabindex="0"><code>define i32 @foo(i32 %a,i64 %b){
+	ret i32 0
+}
+</code></pre><p>一个函数定义最基本的框架，就是返回值（i32）+ 函数名（@foo）+参数列表（（i32 %a，i64 %b））+函数体（{ret i32 0}）。</p>
+<p>我们可以看到，函数的名称和全局变量一样，都是以<code>@</code>开头的。并且，如果我们查看符号表的话，也会发现其和全局变量一样进入了符号表。因此，函数也有和全局变量完全一致的 Linkage Types和Visibility Style，来控制函数名在符号表中的出现情况，因此，可以出现如</p>
+<pre tabindex="0"><code>define private i32 @foo(){
+	;...
+}
+</code></pre><p>这样的修饰符。</p>
+<ul>
+<li>属性</li>
+</ul>
+<p>此外，我们还可以在参数列表之后加上属性，也就是控制优化器和代码生成器的指令。如果我们单纯编译一个简短的C代码：</p>
+<pre tabindex="0"><code>void foo(){}
+</code></pre><p>其编译出的 LLVM IR 实际上是</p>
+<pre tabindex="0"><code>define dso_local void @foo() #0{
+	ret void
+}
+</code></pre><pre tabindex="0"><code>attributes #0 = { noinline nounwind optnone uwtable &#34;frame-pointer&#34;=&#34;all&#34; &#34;min legal-vector-width&#34;=&#34;0&#34; &#34;no-trapping-math&#34;=&#34;true&#34; &#34;stack-protector-buffer size&#34;=&#34;8&#34; &#34;target-cpu&#34;=&#34;x86-64&#34; &#34;target features&#34;=&#34;+cx8,+fxsr,+mmx,+sse,+sse2,+x87&#34; &#34;tune-cpu&#34;=&#34;generic&#34; }
+</code></pre><p>这里的#0就是一个属性组，其包含了noinline、nounwind等若干个函数的属性。这些属性可以 控制LLVM在优化和生成函数时的行为。大部分的属性可以在Function Attributes一节看到。</p>
+<p>当函数的属性比较少时，我们可以直接把属性写在函数定义后面，而不用以属性的形式来写。例如下面这两种写法都是对的：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">()</span> <span class="n">nounwind</span> <span class="p">{</span><span class="n">ret</span> <span class="kt">void</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span> <span class="n">or</span>
+</span></span><span class="line"><span class="cl"><span class="n">define</span> <span class="kt">void</span> <span class="err">@</span><span class="n">foo</span><span class="p">()</span> <span class="err">#</span><span class="mi">0</span> <span class="p">{</span><span class="n">ret</span> <span class="kt">void</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">attributes</span> <span class="err">#</span><span class="mi">0</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">nounwind</span> <span class="p">;...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们知道，无论是在代码编译还是在程序分析的过程中，我们最常处理的都在函数级别。因此，属 性在这一过程中就是一个非常关键的概念。我们在编译器前端分析的过程中，遇到了特定的函数， 给它加上相应的属性；在编译器后端生成代码时，则判断当前函数是否有相应的属性，从而可以在 编译器前后端之间传递信息。</p>
+<ul>
+<li>函数声明</li>
+</ul>
+<p>除了函数定义之外，还有一种情况十分常见，那就是函数声明。我们在一个编译单元（模块）下， 可以使用别的模块的函数，这时候就需要在本模块先声明这个函数，才能保证编译时不出错，从而 在链接时正确将声明的函数与别的模块下其定义进行链接。</p>
+<p>函数声明也相对比较简单，就是使用<code>declare</code>关键词替换<code>define</code>：</p>
+<pre tabindex="0"><code>declare i32 @printf(i8*,...) #1 
+</code></pre><p>这个就是在 C 代码中调用<code>stdio.h</code>库的<code>printf</code>函数时，在 LLVM IR 代码中可以看到的函数声明，其中<code>#1</code>就是又一大串属性组成的属性组。</p>
+<ul>
+<li>函数的调用</li>
+</ul>
+<p>在 LLVM IR 中，函数的调用与高级语言几乎没有什么区别：</p>
+<pre tabindex="0"><code>define i32 @foo(i32 %a){
+	;...
+}
+
+define void @bar(){
+	%1 = call i32 @foo(i32 1)
+}
+</code></pre><p>使用<code>call</code>指令可以像高级语言那样直接调用函数。我们来仔细分析一下这里做了哪几件事：传递参数、执行函数、获得返回值</p>
+<ul>
+<li>执行函数</li>
+</ul>
+<p>我们知道，如果一个函数没有任何参数，返回值也是void类型，也就是说在C语言下这个函数是</p>
+<pre tabindex="0"><code>void foo(void) { 
+	// ... 
+}
+</code></pre><p>那么调用这个函数就没有了传递参数和获得返回值这两件事，只剩下执行函数，而这是一个最简单 的事，以AMD64架构为例：</p>
+<ol>
+<li>把函数返回地址压栈</li>
+<li>跳转到对应函数的地址</li>
+</ol>
+<p>函数返回也是一个简单是事：</p>
+<ol>
+<li>弹栈获得函数返回地址</li>
+<li>跳转到相应的返回地址</li>
+</ol>
+<ul>
+<li>传递参数与获得返回值</li>
+</ul>
+<p>谈到这两点，就不得不说调用约定了。我们知道，在汇编语言中，是没有参数传递和返回值的概念 的，有的仅仅是让当前的控制流跳转到指定函数执行。所以，一切的参数传递和返回值都需要我们 人为约定。也就是说，我们需要约定两件事：</p>
+<ul>
+<li>被调用的函数知道参数是放在哪里的</li>
+<li>调用者希望知道调用函数的返回值是放在哪里的</li>
+</ul>
+<p>这就是调用约定。不同的调用约定会产生不同的特效，也就产生了许多高级语言的feature。</p>
+<p><strong>C调用约定</strong></p>
+<p>最广泛使用的调用约定是 C 调用约定，也就是各个操作系统的标准库使用的调用约定。在 AMD64 架构下，C 调用约定是 System V 版本的，所有参数按顺序放入指定寄存器，如果寄存器不够，剩余的则从右往左顺序压栈。而返回值则是按先后顺序放入寄存器或者放入调用者分配的空间中，如果只有一个返回值，那么就会放在<code>rax</code>里。</p>
+<p>在 LLVM IR 中，函数的调用默认使用 C 调用约定。为了验证，我们可以写一个简单的程序：</p>
+<pre tabindex="0"><code>; calling_convention_test.ll 
+%ReturnType = type { i32, i32 } 
+define %ReturnType @foo(i32 %a1, i32 %a2, i32 %a3, i32 %a4, i32 %a5, i32 %a6, i32 %a7, i32 %a8) { ret %ReturnType { i32 1, i32 2 } } define i32 @main() { %1 = call %ReturnType @foo(i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8) ret i32 0 }
+</code></pre><p><strong>fastcc</strong></p>
+<p>可视化</p>
+<h4 id="基本块">基本块<a hidden class="anchor" aria-hidden="true" href="#基本块">#</a></h4>
+<p>基本块（Basic Blocks）</p>
+<ul>
+<li>Branch - <code>br</code></li>
+<li>Return - <code>ret</code></li>
+</ul>
+<pre tabindex="0"><code>define i32 @factorial(i32 %val){
+	%is_base_case = icmp eq i32 %val,0
+	br i1 %is_base_case,label %base_case,label %recursive_case
+base_case:
+	ret i32 1
+recursive_case:
+	%1 = add i32 -1, %val
+	%2 = call i32 @factorial(i32 %0)
+	%3 = mul i32 %val, %1
+	ret i32 %2
+}
+</code></pre><p>calling function</p>
+<ul>
+<li>another Basic Blocks</li>
+</ul>
+<h4 id="cfg">CFG<a hidden class="anchor" aria-hidden="true" href="#cfg">#</a></h4>
+<p>执行流程图</p>
+<p>控制流图CFG：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">opt -analyze -dot-cfg-only test.ll
+</span></span><span class="line"><span class="cl">opt -analyze -dot-cfg test.ll
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">dot -Tpng xxx.dot -o 1.png
+</span></span><span class="line"><span class="cl">sz 1.png
+</span></span></code></pre></div><pre tabindex="0"><code>define i32 @factorial(i32 %val){
+	%is_base_case = icmp eq i32 %val,0
+	br i1 %is_base_case,label %base_case,label %recursive_case
+base_case:       ; preds = %entry
+	ret i32 1
+recursive_case:  ; preds = %entry
+	%1 = add i32 -1, %val
+	%2 = call i32 @factorial(i32 %0)
+	%3 = mul i32 %val, %1
+	ret i32 %2
+}
+</code></pre><pre tabindex="0"><code>opt -analyze -dot-cfg-only input.ll
+</code></pre><ul>
+<li>-dot-cfg=Generate.dot files.</li>
+</ul>
+<p>Every Basic Block has a label</p>
+<pre tabindex="0"><code>define i32 @factorial(i32 %val){
+	%0: ;Implicit label
+	%is_base_case = icmp eq i32 %val,0
+	br i1 %is_base_case,label %base_case,label %recursive_case
+base_case:       
+	ret i32 1
+recursive_case:
+	%1 = add i32 -1, %val
+	%2 = call i32 @factorial(i32 %0)
+	%3 = mul i32 %val, %1
+	ret i32 %2
+}
+</code></pre><h2 id="llvm-pass">LLVM Pass<a hidden class="anchor" aria-hidden="true" href="#llvm-pass">#</a></h2>
+<h3 id="pass-介绍">Pass 介绍<a hidden class="anchor" aria-hidden="true" href="#pass-介绍">#</a></h3>
+<p>Pass 用于处理代码编译中的中间代码，将中间代码经过 Pass 处理后编译成目标文件。</p>
+<p><img decoding="async" loading="lazy" src="assets/LLVM.drawio.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="pass-分类">Pass 分类<a hidden class="anchor" aria-hidden="true" href="#pass-分类">#</a></h3>
+<ul>
+<li>ModulePass</li>
+</ul>
+<p>模块级 Pass（ModulePass）作用于整个 LLVM 模块，它可以跨函数甚至跨全局数据进行分析和转换。这使得 ModulePass 能够做一些全局性的优化或检查，例如死代码消除、内联优化、全局变量优化等。</p>
+<p>当优化或分析需要全局视角（例如跨函数分析、跨模块优化、函数内联决策等）时，通常选择实现 ModulePass。例如，LLVM 内部的许多 IPO（过程间优化）都是通过模块级 Pass 来实现的。</p>
+<ul>
+<li>FunctionPass</li>
+</ul>
+<p>函数级 Pass（FunctionPass）只针对单个函数内部进行处理，即每次仅处理模块中的一个函数。这种 Pass 适用于局部优化，如局部常量传播、局部死代码消除、指令合并等。</p>
+<p>对于那些仅需要在函数内部进行局部转换或分析的优化，使用函数级 Pass 是比较理想的选择。例如，LLVM 内部常见的优化如指令选择、局部 SSA 转换、简单的算术优化等大多以 FunctionPass 形式实现。</p>
+<p>大部分混淆变换 Pass 类型是 Function Pass。</p>
+<ul>
+<li>LoopPass</li>
+</ul>
+<p>循环级 Pass</p>
+<ul>
+<li>CGSCCPass</li>
+</ul>
+<h3 id="pass-编程模型">Pass 编程模型<a hidden class="anchor" aria-hidden="true" href="#pass-编程模型">#</a></h3>
+<p>接下来我们通过项目中的 Hello Pass 来学习 Pass 的基本结构，学习如何编写我们自己的 Pass。</p>
+<p>LLVM18 中使用了新的 Pass Manger，所以我们需要使用新的pass Manger 来编写Pass。</p>
+<ul>
+<li>头文件</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">//包含 LLVM 旧版pass管理器的定义
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/LegacyPassManager.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="c1">//引入 LLVM 的新pass管理器的构建工具
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#include</span> <span class="cpf">&#34;llvm/Passes/PassBuilder.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="c1">//包含定义用于插件化pass的接口
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#include</span> <span class="cpf">&#34;llvm/Passes/PassPlugin.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="c1">//提供LLVM的输出流支持
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#include</span> <span class="cpf">&#34;llvm/Support/raw_ostream.h&#34;</span><span class="cp">
+</span></span></span></code></pre></div><p>要实现一个 Function Pass 只需要继承 FunctionPass 类，并实现<code>run</code>方法。LLVM Pass 机制在编译阶段对每一个函数调用<code>run</code>，这使得 FunctionPass 能够处理每一个函数。</p>
+<p><code>run</code>传入的参数是<code>llvm::Function</code>对象，这个对象包含了待分析函数的全部信息包括局部变量、基本块以及所有的指令。</p>
+<p>可以这样理解，Function 由 BasicBlock 组成，BasicBlock 由 Instruction 组成。</p>
+<p>例如遍历 Function 中的所有基本块代码如下</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="n">BasicBlock</span> <span class="o">&amp;</span><span class="nl">BB</span> <span class="p">:</span> <span class="n">F</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><p>同样，也可以对基本块中的指令遍历</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">for</span><span class="p">(</span><span class="n">Instruction</span> <span class="o">&amp;</span><span class="nl">I</span> <span class="p">:</span> <span class="n">BB</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">//对指令 I 进行操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><h3 id="llvm-api">LLVM API<a hidden class="anchor" aria-hidden="true" href="#llvm-api">#</a></h3>
+<p>在 LLVM 中，llvm:Value 是一个抽象基类，代表 IR 中所有具有 值 属性的对象。简言之，所有可以出现在指令操作数位置的数据（无论是常量、变量、函数、指针、结构体等）都可看作是一种值，因此都继承自 llvm:Value。它定义了许多通用的接口，如获取该值的类型、名称、是否为常量、是否具有内部链接性等。</p>
+<p>在 LLVM 的设计中，利用单一的基类 llvm:Value 帮助统一管理各种 IR 实体，使得在很多情况下，算法或 Pass 处理数据时都可以以 llvm:Value 为统一入口，而无需关注具体对象的种类。这种设计不仅使代码更加简洁，还大大降低了对不同 IR 对象进行操作时的复杂性。</p>
+<p>LLVM 中的许多重要类都是从 llvm:Value 继承而来，包括但不限于：</p>
+<ul>
+<li>
+<p><strong>llvm::Type</strong>：虽然类型系统在一定程度上独立于值，但在某些场合也可以视为值的描述信息。部分 API 会返回与 llvm::Value 相关的类型信息。</p>
+</li>
+<li>
+<p><strong>llvm::Constant</strong>：代表常量值，其子类如 llvm::ConstantInt、llvm::ConstantFP、llvm::UndefValue 等都描述了常量。</p>
+</li>
+<li>
+<p><strong>llvm::Function</strong>：表示函数，在 LLVM IR 中函数也是一种值（它们有名称，可以被引用），因此 llvm::Function 继承自 llvm::Value。</p>
+</li>
+<li>
+<p><strong>llvm::GlobalVariable</strong>：全局变量也属于值，并通过 llvm::GlobalVariable 表示。</p>
+</li>
+<li>
+<p><strong>llvm::Instruction</strong>：每条 IR 指令也是一个值；它们计算出一个结果（在 SSA 形式下，每个指令产生一个唯一的、不可变的值）。</p>
+</li>
+</ul>
+<h3 id="llvm-type">LLVM Type<a hidden class="anchor" aria-hidden="true" href="#llvm-type">#</a></h3>
+<p>LLVM 中的一切数据都具有严格的类型信息，这对生成正确、类型安全的 IR 至关重要。<strong>llvm::Type</strong> 就是这一切类型的基类，它提供了一个统一的接口，让编译器能够查询和操作类型信息。无论是整数、浮点数、指针、数组、结构体还是函数类型，都可以通过 llvm::Type 来描述。</p>
+<h4 id="基础类型的创建">基础类型的创建<a hidden class="anchor" aria-hidden="true" href="#基础类型的创建">#</a></h4>
+<p>一些基础类型的 Type 对象，可以用 Builder 来直接创建。</p>
+<table>
+  <thead>
+      <tr>
+          <th>Type</th>
+          <th><code>llvm::Type*</code>​</th>
+          <th>Explanation</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>void</td>
+          <td>Builder.getVoidTy()</td>
+          <td>just a void type</td>
+      </tr>
+      <tr>
+          <td>int</td>
+          <td>Builder.getInt32Ty()</td>
+          <td>assume 32 bit integers</td>
+      </tr>
+      <tr>
+          <td>bool</td>
+          <td>Builder.getInt1Ty()</td>
+          <td>a one bit integer</td>
+      </tr>
+      <tr>
+          <td>string</td>
+          <td>Builder.getInt8PtrTy()</td>
+          <td>pointer to array of bytes (int8)</td>
+      </tr>
+  </tbody>
+</table>
+<h4 id="类型检查与转换">类型检查与转换<a hidden class="anchor" aria-hidden="true" href="#类型检查与转换">#</a></h4>
+<p>LLVM 提供了一系列类型查询和转换函数，如 <code>isa&lt;&gt;</code>​、<code>cast&lt;&gt;</code>​ 和 <code>dyn_cast&lt;&gt;</code>​，用于判断一个 llvm::Type 指针是否属于某个特定子类，以及进行安全转换。例如：</p>
+<pre tabindex="0"><code>llvm::Type *ty = ...;  
+if (llvm::isa&lt;llvm::IntegerType&gt;(ty)) {  
+    llvm::IntegerType *intTy = llvm::cast&lt;llvm::IntegerType&gt;(ty);  
+    // 处理整数类型  
+}
+</code></pre><h3 id="llvm-constant">LLVM Constant<a hidden class="anchor" aria-hidden="true" href="#llvm-constant">#</a></h3>
+<p>LLVM Constant 的子类涵盖了各种类型的常量，主要包括：数值常量、指针和空常量以及复合常量等。在 llvm ir api 中常用 <code>llvm::Constant*</code>​ 是所有常量类型的基类。</p>
+<p>例如创建一个整数常量的代码如下</p>
+<pre tabindex="0"><code>ConstantInt::get(context, APInt(bitWidth, value));
+</code></pre><h3 id="llvm-ir-builder">LLVM IR Builder<a hidden class="anchor" aria-hidden="true" href="#llvm-ir-builder">#</a></h3>
+<p>在 LLVM 中，<strong>IRBuilder</strong> 是一个用于简化生成中间表示（Intermediate Representation, IR）的辅助类。它提供了一个统一的 API，方便开发者在指定的插入点创建和插入指令，而无需直接操作底层的 LLVM API。</p>
+<p><strong>主要功能：</strong></p>
+<ul>
+<li>
+<p><strong>插入点管理：</strong> IRBuilder 跟踪当前指令的插入位置，可以是基本块的末尾或特定的指令之前。通过设置插入点，后续生成的指令会被插入到该位置。</p>
+</li>
+<li>
+<p><strong>指令生成：</strong> 提供了丰富的方法来生成各种类型的指令，包括算术运算、逻辑运算、控制流指令（如条件分支、跳转）和内存操作（如加载和存储）。</p>
+</li>
+<li>
+<p><strong>上下文管理：</strong> IRBuilder 与 LLVM 上下文关联，确保所有生成的 IR 都在同一个上下文中，这对于内存管理和类型一致性至关重要。</p>
+</li>
+</ul>
+<p>代码例子：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">IRBuilder</span><span class="o">&lt;&gt;</span> <span class="n">Builder</span><span class="p">(</span><span class="n">Context</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="c1">// 创建基本块并设置插入点  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">BasicBlock</span> <span class="o">*</span><span class="n">BB</span> <span class="o">=</span> <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">Context</span><span class="p">,</span> <span class="s">&#34;entry&#34;</span><span class="p">,</span> <span class="n">Func</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="n">Builder</span><span class="p">.</span><span class="n">SetInsertPoint</span><span class="p">(</span><span class="n">BB</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="c1">// 创建返回常量 42 的指令  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">Value</span> <span class="o">*</span><span class="n">RetVal</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">.</span><span class="n">getInt32</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="n">Builder</span><span class="p">.</span><span class="n">CreateRet</span><span class="p">(</span><span class="n">RetVal</span><span class="p">);</span>
+</span></span></code></pre></div><p>‍</p>
+<h3 id="llvm-function">LLVM Function<a hidden class="anchor" aria-hidden="true" href="#llvm-function">#</a></h3>
+<p>LLVM 中每个函数都由一个 llvm::Function 对象表示。它既可以表示只包含函数原型的外部声明（declaration），也可以表示完整的函数定义（definition，包括函数体）。</p>
+<p>具体来说，llvm::Function 具备以下几个特点：</p>
+<ul>
+<li>
+<p><strong>全局对象</strong>：llvm::Function 继承自 llvm::GlobalObject（以及 llvm::GlobalValue），这意味着函数是模块级（Module-level）的全局实体，具有独立的名称、链接类型和属性，可以被其他模块引用或链接。</p>
+</li>
+<li>
+<p><strong>继承自 llvm::Value</strong>：作为 llvm::Value 的子类，函数具有类型信息（其类型总是一个指向函数类型的指针）和 use-def 链（用于优化和数据流分析）。</p>
+</li>
+<li>
+<p><strong>容纳基本块</strong>：在函数定义中，函数内部由多个基本块（llvm::BasicBlock）组成，每个基本块是一串顺序执行的指令。函数对象提供了迭代器接口来遍历其包含的基本块，这对于许多优化 Pass 来说十分重要。</p>
+</li>
+</ul>
+<p>通过 llvm::Function，我们可以获取和设置函数的调用约定、函数属性（如 noinline、nounwind、optnone 等）以及链接类型（如 ExternalLinkage、InternalLinkage 等）。这些信息在代码生成和优化阶段都起到了关键作用。</p>
+<p>‍</p>
+<h3 id="llvm-basicblock">LLVM BasicBlock<a hidden class="anchor" aria-hidden="true" href="#llvm-basicblock">#</a></h3>
+<p>在 LLVM 的中间表示（IR）中，<strong>基本块（BasicBlock）</strong> 是函数的基本组成单元。</p>
+<p>每个基本块是一系列顺序执行的指令序列，具有单一的入口和出口。</p>
+<p>基本块之间通过控制流指令（如条件跳转和无条件跳转）连接，形成控制流图（CFG），描述程序的执行路径。</p>
+<p><strong>基本块的主要特点：</strong></p>
+<ul>
+<li>
+<p><strong>唯一入口和出口：</strong> 每个基本块从特定的入口开始，按顺序执行其中的指令，直到遇到终止指令（如 <code>return</code>​、<code>br</code>​ 等）为止。</p>
+</li>
+<li>
+<p><strong>指令容器：</strong> 基本块是指令的容器，包含了程序执行过程中的操作指令。</p>
+</li>
+</ul>
+<p>在 LLVM 的 C++ API 中，可以使用 <code>llvm::BasicBlock</code>​ 类来创建和操作基本块。</p>
+<p>以下是一个简单的示例，展示如何创建一个基本块并将其添加到函数中：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/BasicBlock.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/Function.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/IRBuilder.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/LLVMContext.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/Module.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/Verifier.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">llvm</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">LLVMContext</span> <span class="n">context</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">Module</span><span class="o">*</span> <span class="n">module</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Module</span><span class="p">(</span><span class="s">&#34;MyModule&#34;</span><span class="p">,</span> <span class="n">context</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建返回类型为 void，无参数的函数类型  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">FunctionType</span><span class="o">*</span> <span class="n">funcType</span> <span class="o">=</span> <span class="n">FunctionType</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Type</span><span class="o">::</span><span class="n">getVoidTy</span><span class="p">(</span><span class="n">context</span><span class="p">),</span> <span class="nb">false</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建函数  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Function</span><span class="o">*</span> <span class="n">function</span> <span class="o">=</span> <span class="n">Function</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">funcType</span><span class="p">,</span> <span class="n">Function</span><span class="o">::</span><span class="n">ExternalLinkage</span><span class="p">,</span> <span class="s">&#34;MyFunction&#34;</span><span class="p">,</span> <span class="n">module</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建基本块，并将其添加到函数中  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BasicBlock</span><span class="o">*</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s">&#34;entry&#34;</span><span class="p">,</span> <span class="n">function</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 使用 IRBuilder 在基本块中插入指令  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">IRBuilder</span><span class="o">&lt;&gt;</span> <span class="n">builder</span><span class="p">(</span><span class="n">entry</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">builder</span><span class="p">.</span><span class="n">CreateRetVoid</span><span class="p">();</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 验证函数的正确性  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">verifyFunction</span><span class="p">(</span><span class="o">*</span><span class="n">function</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 输出模块的 IR  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">module</span><span class="o">-&gt;</span><span class="n">print</span><span class="p">(</span><span class="n">outs</span><span class="p">(),</span> <span class="k">nullptr</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">delete</span> <span class="n">module</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>‍</p>
+<p>上述代码创建了一个名为 <code>MyFunction</code>​ 的函数，并在其中添加了一个名为 <code>entry</code>​ 的基本块。在该基本块中，使用 <code>IRBuilder</code>​ 插入了一条返回指令。最后，验证函数的正确性并输出生成的 IR。</p>
+<p>‍</p>
+<p><strong>基本块的遍历：</strong></p>
+<p>在 LLVM 中，可以通过函数对象遍历其包含的基本块。例如，给定一个函数 <code>F</code>​，可以使用以下代码遍历其中的基本块：</p>
+<pre tabindex="0"><code>for (BasicBlock &amp;BB : F) {  
+    // 对基本块 BB 进行操作  
+}
+</code></pre><p>同样地，可以遍历基本块中的指令：</p>
+<pre tabindex="0"><code>for (Instruction &amp;I : BB) {  
+    // 对指令 I 进行操作  
+}
+</code></pre><p>这种遍历方式对于分析和优化 Pass 非常常见。</p>
+<p><strong>基本块的前驱和后继：</strong></p>
+<p>在控制流图中，基本块之间通过前驱（predecessors）和后继（successors）关系连接。可以使用以下方法获取基本块的前驱和后继：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">// 获取前驱基本块  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">for</span> <span class="p">(</span><span class="n">BasicBlock</span> <span class="o">*</span><span class="nl">Pred</span> <span class="p">:</span> <span class="n">predecessors</span><span class="p">(</span><span class="o">&amp;</span><span class="n">BB</span><span class="p">))</span> <span class="p">{</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 对前驱基本块 Pred 进行操作  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="c1">// 获取后继基本块  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">for</span> <span class="p">(</span><span class="n">BasicBlock</span> <span class="o">*</span><span class="nl">Succ</span> <span class="p">:</span> <span class="n">successors</span><span class="p">(</span><span class="o">&amp;</span><span class="n">BB</span><span class="p">))</span> <span class="p">{</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 对后继基本块 Succ 进行操作  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><p>这些函数在遍历控制流图时非常有用。</p>
+<p><strong>基本块的插入和删除：</strong></p>
+<p>可以使用 <code>BasicBlock</code>​ 类的成员函数来插入和删除基本块。例如，使用 <code>splitBasicBlock</code>​ 可以将一个基本块拆分为两个，使用 <code>eraseFromParent</code>​ 可以将基本块从所属的函数中移除并删除。</p>
+<p>需要注意的是，操作基本块时应确保控制流的正确性，避免生成不合法的 IR。</p>
+<h3 id="llvm-instruction">LLVM Instruction<a hidden class="anchor" aria-hidden="true" href="#llvm-instruction">#</a></h3>
+<p>在 LLVM 的中间表示（Intermediate Representation, IR）中，<strong>指令（Instruction）</strong> 是构成程序逻辑的基本单元。每条指令表示一个操作，如算术运算、内存访问或控制流操作。在 LLVM 的 C++ API 中，<code>llvm::Instruction</code>​ 类是所有指令的基类，提供了统一的接口来处理不同类型的指令。</p>
+<p><strong>​<code>llvm::Instruction</code>​</strong>​ <strong>类的主要特点：</strong></p>
+<ul>
+<li>
+<p><strong>继承关系：</strong> <code>llvm::Instruction</code>​ 继承自 <code>llvm::User</code>​，而 <code>llvm::User</code>​ 又继承自 <code>llvm::Value</code>​。这意味着每条指令既是一个值（可以被其他指令引用），也是一个用户（可以使用其他值作为操作数）。</p>
+</li>
+<li>
+<p><strong>操作码（Opcode）：</strong> 每条指令都有一个操作码，表示指令的类型。可以使用 <code>getOpcode()</code>​ 方法获取指令的操作码，并通过 <code>Instruction::Add</code>​、<code>Instruction::Sub</code>​ 等枚举值进行比较。</p>
+</li>
+<li>
+<p><strong>操作数：</strong> 指令可以有多个操作数，这些操作数是指令所操作的值。可以使用 <code>getOperand()</code>​ 方法获取特定的操作数。</p>
+</li>
+<li>
+<p><strong>基本块：</strong> 每条指令都属于一个基本块（<code>llvm::BasicBlock</code>​），可以通过 <code>getParent()</code>​ 方法获取所属的基本块。</p>
+</li>
+</ul>
+<p>‍</p>
+<p><strong>常见的指令类型：</strong></p>
+<p><code>llvm::Instruction</code>​ 类有多个子类，每个子类表示特定类型的指令。例如：</p>
+<ul>
+<li>
+<p><strong>算术指令：</strong> 如 <code>llvm::BinaryOperator</code>​，用于表示加法、减法等二元运算。</p>
+</li>
+<li>
+<p><strong>内存指令：</strong> 如 <code>llvm::LoadInst</code>​ 和 <code>llvm::StoreInst</code>​，用于表示内存的加载和存储操作。</p>
+</li>
+<li>
+<p><strong>控制流指令：</strong> 如 <code>llvm::BranchInst</code>​ 和 <code>llvm::ReturnInst</code>​，用于表示分支和返回操作。</p>
+</li>
+</ul>
+<p>以下是一个使用 LLVM C++ API 创建加法指令的示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/IRBuilder.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/LLVMContext.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/Module.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/Function.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;llvm/IR/BasicBlock.h&#34;</span><span class="cp">  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">llvm</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">LLVMContext</span> <span class="n">Context</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">Module</span> <span class="o">*</span><span class="n">M</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Module</span><span class="p">(</span><span class="s">&#34;my_module&#34;</span><span class="p">,</span> <span class="n">Context</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">IRBuilder</span><span class="o">&lt;&gt;</span> <span class="n">Builder</span><span class="p">(</span><span class="n">Context</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建函数签名  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">FunctionType</span> <span class="o">*</span><span class="n">FuncType</span> <span class="o">=</span> <span class="n">FunctionType</span><span class="o">::</span><span class="n">get</span><span class="p">(</span><span class="n">Builder</span><span class="p">.</span><span class="n">getInt32Ty</span><span class="p">(),</span> <span class="nb">false</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">Function</span> <span class="o">*</span><span class="n">Func</span> <span class="o">=</span> <span class="n">Function</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">FuncType</span><span class="p">,</span> <span class="n">Function</span><span class="o">::</span><span class="n">ExternalLinkage</span><span class="p">,</span> <span class="s">&#34;my_function&#34;</span><span class="p">,</span> <span class="n">M</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建基本块  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">BB</span> <span class="o">=</span> <span class="n">BasicBlock</span><span class="o">::</span><span class="n">Create</span><span class="p">(</span><span class="n">Context</span><span class="p">,</span> <span class="s">&#34;entry&#34;</span><span class="p">,</span> <span class="n">Func</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">Builder</span><span class="p">.</span><span class="n">SetInsertPoint</span><span class="p">(</span><span class="n">BB</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建常量值  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Value</span> <span class="o">*</span><span class="n">LHS</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">.</span><span class="n">getInt32</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl">    <span class="n">Value</span> <span class="o">*</span><span class="n">RHS</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">.</span><span class="n">getInt32</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建加法指令  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Value</span> <span class="o">*</span><span class="n">Sum</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">.</span><span class="n">CreateAdd</span><span class="p">(</span><span class="n">LHS</span><span class="p">,</span> <span class="n">RHS</span><span class="p">,</span> <span class="s">&#34;sum&#34;</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建返回指令  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">Builder</span><span class="p">.</span><span class="n">CreateRet</span><span class="p">(</span><span class="n">Sum</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="c1">// 输出 IR  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">M</span><span class="o">-&gt;</span><span class="n">print</span><span class="p">(</span><span class="n">outs</span><span class="p">(),</span> <span class="k">nullptr</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="err">​</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">delete</span> <span class="n">M</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl"><span class="p">}</span>  
+</span></span></code></pre></div><p>‍</p>
+<p>比如在控制流平坦化混淆中，最常见的是获取基本块尾部的结尾指令并判断指令的类型。</p>
+<pre tabindex="0"><code>if (!isa&lt;BranchInst&gt;(BB.getTerminator()) &amp;&amp; !isa&lt;ReturnInst&gt;(BB.getTerminator()))  
+    return;
+</code></pre><p>如果基本块结尾的指令(<code>BB.getTerminator()</code>​) 不是跳转分支指令，并且也不是返回指令，则不混淆当前函数。</p>
+<p>llvm api 中常用 <code>isa&lt;X&gt;(Y)</code>​ 来判断 Y 是不是 X 类型的一个实例。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">llvm</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//将所有代码放在匿名空间中，避免与其他代码冲突
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">namespace</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 该方法实现了该 pass 的功能。
+</span></span></span><span class="line"><span class="cl"><span class="c1">//访问器函数
+</span></span></span><span class="line"><span class="cl"><span class="c1">//visitor函数：该函数被调用以打印每个函数的名称和参数数量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">visitor</span><span class="p">(</span><span class="n">Function</span> <span class="o">&amp;</span><span class="n">F</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">errs</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;(llvm-tutor) Hello from: &#34;</span><span class="o">&lt;&lt;</span> <span class="n">F</span><span class="p">.</span><span class="n">getName</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">errs</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;(llvm-tutor)   number of arguments: &#34;</span> <span class="o">&lt;&lt;</span> <span class="n">F</span><span class="p">.</span><span class="n">arg_size</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 新的 PM 实现
+</span></span></span><span class="line"><span class="cl"><span class="c1">//pass实现
+</span></span></span><span class="line"><span class="cl"><span class="c1">//HelloWorld结构体: 实现了 PassInfoMixin，包含了 run 方法，执行对每个函数的分析。
+</span></span></span><span class="line"><span class="cl"><span class="c1">//isRequired: 此函数确保即使函数被标记为 optnone，该pass仍会被执行。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">HelloWorld</span> <span class="o">:</span> <span class="n">PassInfoMixin</span><span class="o">&lt;</span><span class="n">HelloWorld</span><span class="o">&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 主入口点，接受要运行该 Pass 的 IR 单元（&amp;F）和相应的 Pass 管理器（如果需要可以查询）。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">PreservedAnalyses</span> <span class="nf">run</span><span class="p">(</span><span class="n">Function</span> <span class="o">&amp;</span><span class="n">F</span><span class="p">,</span> <span class="n">FunctionAnalysisManager</span> <span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">visitor</span><span class="p">(</span><span class="n">F</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">PreservedAnalyses</span><span class="o">::</span><span class="n">all</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 如果 isRequired 返回 false，那么这个 pass 将会被跳过，针对带有 `optnone` LLVM 属性的函数。请注意，`clang -O0` 会将所有函数标记为 `optnone`。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">static</span> <span class="kt">bool</span> <span class="nf">isRequired</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="nb">true</span><span class="p">;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="c1">// namespace
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//-----------------------------------------------------------------------------
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 新的 PM 注册
+</span></span></span><span class="line"><span class="cl"><span class="c1">//-----------------------------------------------------------------------------
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//pass注册
+</span></span></span><span class="line"><span class="cl"><span class="c1">//插件信息注册：定义了如何注册pass的插件信息。使用 registerPipelineParsingCallback 注册 hello-world 名称的pass
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">llvm</span><span class="o">::</span><span class="n">PassPluginLibraryInfo</span> <span class="n">getHelloWorldPluginInfo</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">{</span><span class="n">LLVM_PLUGIN_API_VERSION</span><span class="p">,</span> <span class="s">&#34;HelloWorld&#34;</span><span class="p">,</span> <span class="n">LLVM_VERSION_STRING</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//Lambda表达式
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>          <span class="p">[](</span><span class="n">PassBuilder</span> <span class="o">&amp;</span><span class="n">PB</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">//注册回调
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="c1">//参数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="c1">//StringRef Name: 命令行中传入的pass名称。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="c1">//FunctionPassManager &amp;FPM: 用于管理函数pass的工具。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="c1">//ArrayRef&lt;PassBuilder::PipelineElement&gt;: 管道元素的数组，包含在命令行中指定的pass元素。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">PB</span><span class="p">.</span><span class="n">registerPipelineParsingCallback</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="p">[](</span><span class="n">StringRef</span> <span class="n">Name</span><span class="p">,</span> <span class="n">FunctionPassManager</span> <span class="o">&amp;</span><span class="n">FPM</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="n">ArrayRef</span><span class="o">&lt;</span><span class="n">PassBuilder</span><span class="o">::</span><span class="n">PipelineElement</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">               
+</span></span><span class="line"><span class="cl">               <span class="c1">//条件判断，检查传入的名称是否为hello-world，如果匹配则调用FPM.addPass将HelloWorld pass添加到功能pass 管理器中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                  <span class="k">if</span> <span class="p">(</span><span class="n">Name</span> <span class="o">==</span> <span class="s">&#34;hello-world&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">FPM</span><span class="p">.</span><span class="n">addPass</span><span class="p">(</span><span class="n">HelloWorld</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                  <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="p">});</span>
+</span></span><span class="line"><span class="cl">          <span class="p">}};</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>入口函数</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="c1">// 这是 pass 插件的核心接口。它确保 opt 在命令行中通过 -passes=hello-world 添加到 pass 流水线时能够识别 HelloWorld。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//入口函数
+</span></span></span><span class="line"><span class="cl"><span class="c1">//插件接口：这是LLVM加载pass时调用的接口，确保LLVM能够识别 HelloWorld pass
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="n">LLVM_ATTRIBUTE_WEAK</span> <span class="o">::</span><span class="n">llvm</span><span class="o">::</span><span class="n">PassPluginLibraryInfo</span>
+</span></span><span class="line"><span class="cl"><span class="n">llvmGetPassPluginInfo</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="nf">getHelloWorldPluginInfo</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>
+<p>入口函数</p>
+</li>
+<li>
+<p>Pass注册</p>
+</li>
+</ul>
+<h3 id="源码内编译">源码内编译<a hidden class="anchor" aria-hidden="true" href="#源码内编译">#</a></h3>
+<p>源码内编译我们需要将我们自己编写的 Pass 作为源码项目的一部分。</p>
+<p>我们在<code>project/llvm/lib/Transforms/</code>下新建一个目录存放我们的 Pass。</p>
+<p>然后我们需要在我们的 Pass 目录下新建一个cmake文件。</p>
+<pre tabindex="0"><code>llvm
+</code></pre><p>然后我们需要在上一级目录即<code>Transforms</code>下的<code>CMakeLists.txt</code>文件中添加一行，即我们自己编写的Pass。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">EncodeFunctionName</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>然后在构建目录中重新执行<code>make</code>编译（不用删除已编译文件）。</p>
+<p>可以从 LLVM 的源代码树中开发 LLVM Pass</p>
+<pre tabindex="0"><code>&lt;project dir&gt;/
+    |
+    CMakeLists.txt
+    &lt;pass name&gt;/
+        |
+        CMakeLists.txt
+        Pass.cpp
+        ...
+</code></pre><p>内容 ：<code>&lt;project dir&gt;/CMakeLists.txt</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">find_package</span><span class="p">(</span><span class="s">LLVM</span> <span class="s">REQUIRED</span> <span class="s">CONFIG</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_definitions</span><span class="p">(</span><span class="o">${</span><span class="nv">LLVM_DEFINITIONS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">LLVM_INCLUDE_DIRS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">&lt;pass</span> <span class="s">name&gt;</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>内容 ：<code>&lt;project dir&gt;/&lt;pass name&gt;/CMakeLists.txt</code></p>
+<p>add_library(LLVMPassname MODULE Pass.cpp)</p>
+<p>请注意，如果您打算将此通道合并到 LLVM 源代码树中，请在 将来，将 LLVM 的内部函数与 MODULE 参数一起使用可能更有意义，而不是通过&hellip;<code>add_llvm_library</code></p>
+<p>将以下内容添加到 （在<code>&lt;project dir&gt;/CMakeLists.txt``find_package(LLVM ...)</code>)</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">list</span><span class="p">(</span><span class="s">APPEND</span> <span class="s">CMAKE_MODULE_PATH</span> <span class="s2">&#34;${LLVM_CMAKE_DIR}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include</span><span class="p">(</span><span class="s">AddLLVM</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>然后更改为<code>&lt;project dir&gt;/&lt;pass name&gt;/CMakeLists.txt</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">add_llvm_library</span><span class="p">(</span><span class="s">LLVMPassname</span> <span class="s">MODULE</span>
+</span></span><span class="line"><span class="cl">  <span class="s">Pass.cpp</span>
+</span></span><span class="line"><span class="cl">  <span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>完成 pass 的开发后，您可能希望将其集成 添加到 LLVM 源代码树中。您可以通过两个简单的步骤来实现它：</p>
+<ol>
+<li>正在将文件夹复制到目录中。<code>&lt;pass name&gt;``&lt;LLVM root&gt;/lib/Transform</code></li>
+<li>向 中添加行。<code>add_subdirectory(&lt;pass name&gt;)``&lt;LLVM root&gt;/lib/Transform/CMakeLists.txt</code></li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">list</span><span class="p">(</span><span class="s">APPEND</span> <span class="s">CMAKE_MODULE_PATH</span> <span class="s2">&#34;${LLVM_CMAKE_DIR}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><ul>
+<li><strong>作用</strong>：将 LLVM 的 CMake 目录添加到 <code>CMAKE_MODULE_PATH</code> 中，这样 CMake 可以找到与 LLVM 相关的模块。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="c"># 设置最低cmake版本
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.20.0</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 定义项目名称
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">project</span><span class="p">(</span><span class="s">SimpleProject</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 查找 LLVM：使用 find_package 命令查找 LLVM。REQUIRED 表示如果找不到 LLVM，将报错并停止配置过程。CONFIG 表示使用 LLVM 的配置文件。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">find_package</span><span class="p">(</span><span class="s">LLVM</span> <span class="s">REQUIRED</span> <span class="s">CONFIG</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 打印找到的 LLVM 版本：输出找到的 LLVM 版本信息，${LLVM_PACKAGE_VERSION} 是由 find_package 设置的变量。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">message</span><span class="p">(</span><span class="s">STATUS</span> <span class="s2">&#34;Found LLVM ${LLVM_PACKAGE_VERSION}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 打印配置文件路径：输出正在使用的 LLVMConfig.cmake 的路径，${LLVM_DIR} 是包含该文件的目录。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">message</span><span class="p">(</span><span class="s">STATUS</span> <span class="s2">&#34;Using LLVMConfig.cmake in: ${LLVM_DIR}&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">LLVM_INCLUDE_DIRS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">separate_arguments</span><span class="p">(</span><span class="s">LLVM_DEFINITIONS_LIST</span> <span class="s">NATIVE_COMMAND</span> <span class="o">${</span><span class="nv">LLVM_DEFINITIONS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 添加编译定义：将之前分离出的 LLVM 定义添加到编译器选项中，确保在编译时包含所需的宏定义。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_definitions</span><span class="p">(</span><span class="o">${</span><span class="nv">LLVM_DEFINITIONS_LIST</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 创建可执行文件：定义一个可执行文件 simple-tool，其源代码为 tool.cpp。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s">simple-tool</span> <span class="s">tool.cpp</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 映射 LLVM 组件到库名：使用 llvm_map_components_to_libnames 将指定的 LLVM 组件（support, core, irreader）映射到相应的库名，并存储在 llvm_libs 变量中。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">llvm_map_components_to_libnames</span><span class="p">(</span><span class="s">llvm_libs</span> <span class="s">support</span> <span class="s">core</span> <span class="s">irreader</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">simple-tool</span> <span class="o">${</span><span class="nv">llvm_libs</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 链接库：将映射到的 LLVM 库链接到可执行文件 simple-tool，确保在编译时可以找到和使用这些库。
+</span></span></span></code></pre></div><h3 id="源码外编译">源码外编译<a hidden class="anchor" aria-hidden="true" href="#源码外编译">#</a></h3>
+<p>源码外编译分为两种方式，一种是命令行编译，一种是cmake编译。</p>
+<h4 id="命令行编译">命令行编译<a hidden class="anchor" aria-hidden="true" href="#命令行编译">#</a></h4>
+<p>命令行编译是最简单的方法。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">clang <span class="sb">`</span>llvm-config --cxxflags<span class="sb">`</span> -Wl,-znodelete -fno-rtti -fPIC -shared Hello.cpp -o LLVMHello.so <span class="sb">`</span>llvm-config --ldflags<span class="sb">`</span>
+</span></span></code></pre></div><p>其中</p>
+<ul>
+<li><code>llvm-config</code>提供了<code>CXXFLAGS</code>与<code>LDFLAGS</code>参数方便查找LLVM的头文件与库文件。 如果链接有问题，还可以用<code>llvm-config --libs</code>提供动态链接的LLVM库。 具体<code>llvm-config</code>打印了什么，请自行尝试或查找官方文档。</li>
+<li><code>-fPIC -shared</code> 显然是编译动态库的必要参数。</li>
+<li>因为LLVM没用到RTTI，所以用<code>-fno-rtti</code> 来让我们的Pass与之一致。</li>
+<li><code>-Wl,-znodelete</code>主要是为了应对LLVM 5.0+中加载ModulePass引起segmentation fault的bug。如果你的Pass继承了ModulePass，还请务必加上。</li>
+</ul>
+<p>现在，你手中应该有一份编译好的LLVMHello.so了。根据刚才阅读过的官方文档的介绍，你知道可以通过命令</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ clang -c -emit-llvm main.c -o main.bc <span class="c1"># 随意写一个C代码并编译到bc格式</span>
+</span></span></code></pre></div><p>来使用它。</p>
+<h4 id="使用cmake编译">使用cmake编译<a hidden class="anchor" aria-hidden="true" href="#使用cmake编译">#</a></h4>
+<p>项目结构</p>
+<pre tabindex="0"><code></code></pre><p>在 Pass 目录中编写 Pass 的 CMakeLists.txt</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">3.10</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 项目
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">project</span><span class="p">(</span><span class="s">MyLLVMProject</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 查找 LLVM 包。REQUIRED 表示如果找不到 LLVM，CMake会报错并停止构建。
+</span></span></span><span class="line"><span class="cl"><span class="c"># CONFIG 指示 CMake 查找 LLVM 的配置文件。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">find_package</span><span class="p">(</span><span class="s">LLVM</span> <span class="s">REQUIRED</span> <span class="s">CONFIG</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 将 LLVM 的头文件路径添加到编译器的搜索路径中。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">LLVM_INCLUDE_DIRS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 创建一个名为 MyPass 的动态库。
+</span></span></span><span class="line"><span class="cl"><span class="c"># 并指定源文件，MODULE 表示该库不会生成可执行文件，而是用于动态加载的插件。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_library</span><span class="p">(</span><span class="s">MyPass</span> <span class="s">MODULE</span> <span class="s">my_pass.cpp</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 将 MyPass 库与 LLVM 库链接。
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">MyPass</span> <span class="s">PRIVATE</span> <span class="o">${</span><span class="nv">LLVM_LIBRARIES</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><h3 id="运行pass">运行Pass<a hidden class="anchor" aria-hidden="true" href="#运行pass">#</a></h3>
+<h4 id="使用opt运行pass">使用opt运行Pass<a hidden class="anchor" aria-hidden="true" href="#使用opt运行pass">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">opt -load-pass-plugin ./LLVMHello.so -passes<span class="o">=</span>hello-world demo.bc -o /dev/null
+</span></span></code></pre></div><h4 id="使用clang运行pass">使用Clang运行Pass<a hidden class="anchor" aria-hidden="true" href="#使用clang运行pass">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang -Xclang -load -Xclang /path/to/libMyPlugin.so -Xclang -plugin -Xclang static-call-counter test.c -o <span class="nb">test</span>
+</span></span></code></pre></div><h3 id="将pass注册到clang">将Pass注册到Clang<a hidden class="anchor" aria-hidden="true" href="#将pass注册到clang">#</a></h3>
+<h4 id="自动加载pass到clang">自动加载Pass到clang<a hidden class="anchor" aria-hidden="true" href="#自动加载pass到clang">#</a></h4>
+<p>首先，假设你已经编写并编译了一个 LLVM Pass，目标是将这个 Pass 集成到 <code>clang</code> 编译流程中，避免每次手动通过 <code>opt</code> 运行。为了实现这个目标，可以使用 <code>-Xclang</code> 参数将 Pass 加载到 <code>clang</code> 中。</p>
+<p>例如，假设你已经有一个编译好的 <code>LLVMHello.so</code> 插件，那么可以通过以下命令将这个 Pass 加载到 <code>clang</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">clang -Xclang -load -Xclang path/to/LLVMHello.so main.c -o main
+</span></span></code></pre></div><h4 id="使用环境变量自动化编译">使用环境变量自动化编译<a hidden class="anchor" aria-hidden="true" href="#使用环境变量自动化编译">#</a></h4>
+<p>如果你在开发过程中使用了 <code>autotools</code> 或类似的构建系统，并且想要在每次编译时自动加载 Pass，可以通过设置 <code>CC</code> 和 <code>CFLAGS</code> 来传递 Pass 插件参数。通过以下命令，你可以将 Pass 插件集成到构建过程中：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ <span class="nv">CC</span><span class="o">=</span>clang <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&#34;-Xclang -load -Xclang path/to/LLVMHello.so&#34;</span> ./configure
+</span></span><span class="line"><span class="cl">$ make
+</span></span></code></pre></div><h4 id="编写clang-wrapper脚本">编写clang Wrapper脚本<a hidden class="anchor" aria-hidden="true" href="#编写clang-wrapper脚本">#</a></h4>
+<p>如果你觉得每次手动输入 <code>-Xclang</code> 参数比较繁琐，可以编写一个 <code>clang</code> 的 wrapper 脚本来自动处理这些参数。这个脚本将接收标准的 <code>clang</code> 参数，并将 Pass 插件的加载参数附加到命令中。</p>
+<p>假设你创建一个名为 <code>hello-clang</code> 的脚本，内容如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="c1"># hello-clang wrapper to add LLVM pass automatically</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 设置插件路径</span>
+</span></span><span class="line"><span class="cl"><span class="nv">PLUGIN_PATH</span><span class="o">=</span><span class="s2">&#34;path/to/LLVMHello.so&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 构造新的命令行参数</span>
+</span></span><span class="line"><span class="cl">clang <span class="s2">&#34;</span><span class="nv">$@</span><span class="s2">&#34;</span> -Xclang -load -Xclang <span class="s2">&#34;</span><span class="nv">$PLUGIN_PATH</span><span class="s2">&#34;</span>
+</span></span></code></pre></div><p>然后你就可以使用 <code>hello-clang</code> 命令来自动加载 Pass 插件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ <span class="nv">CC</span><span class="o">=</span>hello-clang ./configure <span class="o">&amp;&amp;</span> make
+</span></span></code></pre></div><h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>LLVM 项目在二进制安全领域应用广泛，其对中间代码插桩的特性尤其为代码混淆和漏洞挖掘提供了关键技术支撑，催生了 OLLVM 等经典项目，类似思想也被应用于 AFL 等非 LLVM 系工具中。</p>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://evian-zhang.github.io/llvm-ir-tutorial/01-LLVM%E6%9E%B6%E6%9E%84%E7%AE%80%E4%BB%8B.html">LLVM架构简介 - LLVM IR入门指南</a>
+<a href="https://www.bilibili.com/video/BV18j411B7TF/?share_source=copy_web&amp;vd_source=a1e0ec33522dd06cf97338beeab421c6">LLVM编译器入门（一）：LLVM整体设计</a>
+<a href="https://www.bilibili.com/video/BV1Bf3neVEnN/?share_source=copy_web&amp;vd_source=a1e0ec33522dd06cf97338beeab421c6">基于LLVM-18，使用New Pass Manager，编写和使用Pass</a>
+<a href="https://zhuanlan.zhihu.com/p/122522485">LLVM Pass入门导引</a>
+<a href="https://zhuanlan.zhihu.com/p/140462815">LLVM基本概念入门</a>
+<a href="https://link.zhihu.com/?target=https%3A//github.com/imdea-software/LLVM_Instrumentation_Pass/blob/master/InstrumentFunctions/Pass.cpp">​github.com/imdea-software/LLVM_Instrumentation_Pass/blob/master/InstrumentFunctions/Pass.cpp</a>
+<a href="https://link.zhihu.com/?target=https%3A//llvm.org/docs/ProgrammersManual.html%23helpful-hints-for-common-operations">Helpful Hints for Common Operations</a>
+<a href="https://link.zhihu.com/?target=https%3A//llvm.org/docs/ProgrammersManual.html%23the-core-llvm-class-hierarchy-reference">ProgrammersManual - The Core LLVM Class Hierarchy Reference</a>
+<a href="https://github.com/banach-space/llvm-tutor">banach-space/llvm-tutor: A collection of out-of-tree LLVM passes for teaching and learning</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E5%BC%80%E5%8F%91/">加固开发</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

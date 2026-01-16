@@ -5,14 +5,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="noindex, nofollow">
-<title>Agent开发入门 | 南行&#39;s Blog</title>
+<title>LLM Agent 开发入门 | 南行&#39;s Blog</title>
 <meta name="keywords" content="">
-<meta name="description" content="简介
-什么是 Agent
-Agent 定义上是一个：能够推理、规划并与环境交互的 AI 模型。一旦他有了计划，他就必须采取行动。为了执行他的计划，他可以使用他知道的工具列表中的工具。">
+<meta name="description" content="
+无名侠师傅课程的学习笔记
+
+简介
+什么是 LLM
+LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。">
 <meta name="author" content="">
 <link rel="canonical" href="http://localhost:1313/posts/llm/agent/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.e105e5001e5a6a4bdfd2fc39297ee1c1f9ed55bbfa466311bf23402970d44059.css" integrity="sha256-4QXlAB5aakvf0vw5KX7hwfntVbv6RmMRvyNAKXDUQFk=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
@@ -176,9 +179,9 @@ code.has-jax {
   <header class="post-header">
     
     <h1 class="post-title entry-hint-parent">
-      Agent开发入门
+      LLM Agent 开发入门
     </h1>
-    <div class="post-meta"><span title='2025-09-01 16:04:49 +0000 UTC'>2025年9月1日</span>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
 
 </div>
   </header> <aside id="toc-container" class="toc-container wide">
@@ -193,11 +196,9 @@ code.has-jax {
                         <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
                             
                     <li>
-                        <a href="#%e4%bb%80%e4%b9%88%e6%98%af-agent" aria-label="什么是 Agent">什么是 Agent</a></li>
-                    <li>
                         <a href="#%e4%bb%80%e4%b9%88%e6%98%af-llm" aria-label="什么是 LLM">什么是 LLM</a></li>
                     <li>
-                        <a href="#%e6%b6%88%e6%81%af%e5%92%8c%e7%89%b9%e6%ae%8a%e4%bb%a4%e7%89%8c" aria-label="消息和特殊令牌">消息和特殊令牌</a></li>
+                        <a href="#%e4%bb%80%e4%b9%88%e6%98%af-agent" aria-label="什么是 Agent">什么是 Agent</a></li>
                     <li>
                         <a href="#%e4%bb%80%e4%b9%88%e6%98%af%e5%b7%a5%e5%85%b7" aria-label="什么是工具">什么是工具</a></li></ul>
                     </li>
@@ -217,8 +218,6 @@ code.has-jax {
                     </li>
                     <li>
                         <a href="#react" aria-label="ReACT">ReACT</a></li>
-                    <li>
-                        <a href="#%e5%ae%9e%e6%88%98-shell-%e5%91%bd%e4%bb%a4%e6%89%a7%e8%a1%8c%e5%8a%a9%e6%89%8b" aria-label="实战 shell 命令执行助手">实战 shell 命令执行助手</a></li>
                     <li>
                         <a href="#plan-and-execute" aria-label="Plan and Execute">Plan and Execute</a><ul>
                             
@@ -271,11 +270,10 @@ code.has-jax {
                     <li>
                         <a href="#mcp-%e5%b7%a5%e4%bd%9c%e6%b5%81%e7%a8%8b" aria-label="MCP 工作流程">MCP 工作流程</a></li>
                     <li>
-                        <a href="#%e5%ae%9e%e4%be%8b-1" aria-label="实例">实例</a></li></ul>
+                        <a href="#%e5%ae%9e%e4%be%8b-1" aria-label="实例">实例</a>
                     </li>
-                    <li>
-                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a>
-                    </li>
+                </ul>
+                </li>
                 </ul>
             </div>
         </details>
@@ -378,17 +376,21 @@ code.has-jax {
     }
     
 </script>
-  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+  <div class="post-content"><blockquote>
+<p>无名侠师傅课程的学习笔记</p>
+</blockquote>
+<h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<h3 id="什么是-llm">什么是 LLM<a hidden class="anchor" aria-hidden="true" href="#什么是-llm">#</a></h3>
+<p>LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。</p>
+<p>如今，大多数 LLM 都基于 Transformer 架构构建，这是一种基于 “Attention” 算法的深度学习架构，于 2018 年 Google 发布 BERT 以来，该架构引起了人们的极大兴趣。</p>
 <h3 id="什么是-agent">什么是 Agent<a hidden class="anchor" aria-hidden="true" href="#什么是-agent">#</a></h3>
 <p>Agent 定义上是一个：能够推理、规划并与环境交互的 AI 模型。一旦他有了计划，他就必须采取行动。为了执行他的计划，他可以使用他知道的工具列表中的工具。</p>
-<p>比如我们给 ming 一个要求：我想喝杯</p>
-<p>将大语言模型想象成一个大脑，大脑可以进行思考和决策，然后交给四肢去执行。单纯的大脑是做不了什么的，所以我们需要给大预言模型添加四肢。</p>
+<p>将大语言模型想象成一个大脑，大脑可以进行思考和决策，然后交给四肢去执行。单纯的大脑是做不了什么的，所以我们需要给大预言模型添加四肢，而工具代码就是它的四肢。</p>
 <p>所以 Agent 主要有两部分组成：</p>
 <ul>
 <li>大脑（LLM）：LLM 处理推理和规划。它根据情况决定要采取哪些行动。</li>
 <li>身体（功能和工具）：可以做哪些事情在于有哪些功能和工具。例如，人类没有翅膀，所以不能飞行。</li>
 </ul>
-<p>代理的范围</p>
 <p>根据这个定义，Agent 存在于一个不断增加的代理范围内：</p>
 <table>
   <thead>
@@ -432,17 +434,10 @@ code.has-jax {
       </tr>
   </tbody>
 </table>
-<h3 id="什么是-llm">什么是 LLM<a hidden class="anchor" aria-hidden="true" href="#什么是-llm">#</a></h3>
-<p>LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。</p>
-<p>如今，大多数 LLM 都基于 Transformer 架构构建，这是一种基于 “Attention” 算法的深度学习架构，子 2018 年 Google 发布 BERT 以来，该架构引起了人们的极大兴趣。</p>
-<h3 id="消息和特殊令牌">消息和特殊令牌<a hidden class="anchor" aria-hidden="true" href="#消息和特殊令牌">#</a></h3>
 <h3 id="什么是工具">什么是工具<a hidden class="anchor" aria-hidden="true" href="#什么是工具">#</a></h3>
-<p>工具调用就是 LLM 的四肢，通过工具调用大模型可以从外界获取信息，也可以向外界发送信息。</p>
+<p>工具调用（Tool Calling）就是 LLM 的四肢，通过工具调用大模型可以从外界获取信息，也可以向外界发送信息。</p>
 <p>Tool Calling 是一种机制，允许 LLM 在对话过程中，判断是否需要调用外部工具，并构造符合要求的输入，交给系统去执行。</p>
 <p>Tool 本质上是一个带有签名的函数，并且这个函数具有明确定义的输入参数结构（schema）。它像是一个“插件”，可供模型在需要时主动选择并调用。</p>
-<p>模型如何调用工具？</p>
-<p>首先，需要确保模型支持 Tool Calling 能力。</p>
-<p>模型调用工具：需要先定义工具对应的 Python 函数，该函数将由模型来调用。</p>
 <h2 id="langchain">LangChain<a hidden class="anchor" aria-hidden="true" href="#langchain">#</a></h2>
 <p>LangChain 是一个开源的 Python LLM 应用开发框架，它提供了构建基于大模型的 LLM 应用所需的模块和工具。通过 LangChain，开发者开源轻松地与大型语言模型（LLM）集成，完成文本生成、问答、翻译、对话等任务。</p>
 <ul>
@@ -459,9 +454,9 @@ code.has-jax {
 </ul>
 </li>
 <li>
-<p><code>langchain</code>：LangChain的完整版库，集成各种 LLM、Agent、RAG 等功能模块。</p>
+<p><code>langchain</code>：LangChain 的完整版库，集成各种 LLM、Agent、RAG 等功能模块。</p>
 <ul>
-<li>依赖：它依赖 langchain_core作为底层；</li>
+<li>依赖：它依赖 langchain_core 作为底层；</li>
 <li>功能更全：如 chain、memory、tools、加载器、向量存储等；</li>
 <li>适合开发复杂业务逻辑或需要多个模型集成的场景。</li>
 </ul>
@@ -498,72 +493,39 @@ code.has-jax {
       </tr>
   </tbody>
 </table>
-<table>
-  <thead>
-      <tr>
-          <th>模块名</th>
-          <th>功能简介</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>LLMs</strong></td>
-          <td>接入各种大模型（OpenAI, Claude, Cohere, HuggingFace 等）</td>
-      </tr>
-      <tr>
-          <td><strong>Prompt</strong></td>
-          <td>提供 Prompt 模板系统，支持动态变量替换、拼接等</td>
-      </tr>
-      <tr>
-          <td><strong>Chains</strong></td>
-          <td>支持串联多个模型调用或任务逻辑，形成一个完整链路</td>
-      </tr>
-      <tr>
-          <td><strong>Memory</strong></td>
-          <td>记录对话历史，使模型具备“记忆”能力</td>
-      </tr>
-      <tr>
-          <td><strong>Tools</strong></td>
-          <td>接入搜索、数据库、Python REPL、API 调用等外部工具</td>
-      </tr>
-      <tr>
-          <td><strong>Agents</strong></td>
-          <td>类似于自动推理体，根据目标动态调用工具完成任务</td>
-      </tr>
-      <tr>
-          <td><strong>Document Loaders</strong></td>
-          <td>支持加载本地/在线文档（PDF、Notion、网页等）</td>
-      </tr>
-      <tr>
-          <td><strong>Vector Stores</strong></td>
-          <td>支持向量数据库如 FAISS、Pinecone、Milvus（用于 RAG）</td>
-      </tr>
-  </tbody>
-</table>
 <h3 id="安装">安装<a hidden class="anchor" aria-hidden="true" href="#安装">#</a></h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install langchain
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip3 install langchain
 </span></span></code></pre></div><h3 id="案例">案例<a hidden class="anchor" aria-hidden="true" href="#案例">#</a></h3>
 <p>Prompt + Chain 示例：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.prompts</span> <span class="kn">import</span> <span class="n">PromptTemplate</span>
 </span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.chains</span> <span class="kn">import</span> <span class="n">LLMChain</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.llms</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_openai</span> <span class="kn">import</span> <span class="n">ChatOpenAI</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="n">prompt</span> <span class="o">=</span> <span class="n">PromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;写一首关于 </span><span class="si">{topic}</span><span class="s2"> 的诗&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">chain</span> <span class="o">=</span> <span class="n">LLMChain</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">OpenAI</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用 ChatOpenAI 替代 OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-3.5-turbo&#34;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">chain</span> <span class="o">=</span> <span class="n">LLMChain</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="s2">&#34;topic&#34;</span><span class="p">:</span> <span class="s2">&#34;秋天&#34;</span><span class="p">}))</span>
 </span></span></code></pre></div><p>Agent 示例：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.agents</span> <span class="kn">import</span> <span class="n">initialize_agent</span><span class="p">,</span> <span class="n">load_tools</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.llms</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_openai</span> <span class="kn">import</span> <span class="n">ChatOpenAI</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-3.5-turbo&#34;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="n">tools</span> <span class="o">=</span> <span class="n">load_tools</span><span class="p">([</span><span class="s2">&#34;serpapi&#34;</span><span class="p">,</span> <span class="s2">&#34;llm-math&#34;</span><span class="p">],</span> <span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">agent</span> <span class="o">=</span> <span class="n">initialize_agent</span><span class="p">(</span><span class="n">tools</span><span class="p">,</span> <span class="n">llm</span><span class="p">,</span> <span class="n">agent</span><span class="o">=</span><span class="s2">&#34;zero-shot-react-description&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&#34;中国的首都是哪？它距离南宁有多远？&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">agent</span> <span class="o">=</span> <span class="n">initialize_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="s2">&#34;zero-shot-react-description&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># 添加详细日志以观察思考过程</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&#34;中国的首都是哪？它距离南宁有多远？&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </span></span></code></pre></div><h3 id="langserver">LangServer<a hidden class="anchor" aria-hidden="true" href="#langserver">#</a></h3>
 <p>LangServer 是 LangChain 官方推出的一个服务框架，快速将 LangChain 应用部署为 RESTful API 接口。</p>
 <p>安装：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install langserve<span class="o">[</span>all<span class="o">]</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip3 install langserve<span class="o">[</span>all<span class="o">]</span>
 </span></span></code></pre></div><h3 id="实例">实例<a hidden class="anchor" aria-hidden="true" href="#实例">#</a></h3>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.chains</span> <span class="kn">import</span> <span class="n">LLMChain</span>
 </span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.prompts</span> <span class="kn">import</span> <span class="n">PromptTemplate</span>
@@ -581,11 +543,60 @@ code.has-jax {
 </code></pre><h2 id="react">ReACT<a hidden class="anchor" aria-hidden="true" href="#react">#</a></h2>
 <p>定义工具函数</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_core.tools</span> <span class="kn">import</span> <span class="n">tool</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph.prebuilt</span> <span class="kn">import</span> <span class="n">create_react_agent</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_google_genai</span> <span class="kn">import</span> <span class="n">ChatGoogleGenerativeAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>  <span class="c1"># 添加缺失的导入</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nd">@tool</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span><span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">	<span class="s2">&#34;&#34;&#34;将两个数字相乘&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">tool_nmap</span><span class="p">(</span><span class="n">ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    对目标IP执行 nmap 快速扫描
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 构建nmap命令：-Pn跳过主机发现，-F进行快速扫描</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&#34;nmap&#34;</span><span class="p">,</span> <span class="s2">&#34;-Pn&#34;</span><span class="p">,</span> <span class="s2">&#34;-F&#34;</span><span class="p">,</span> <span class="n">ip</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[Tool] 执行命令：&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 执行nmap命令，设置30秒超时</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 返回扫描结果或错误信息</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行 nmap 扫描失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># 创建ReAct代理，集成LLM和nmap工具</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">llm</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool_nmap</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;请输入 IP 地址开始扫描，或者输入 exit/quit 退出&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># 交互式循环，处理用户输入</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&#34;请输入目标IP地址: &#34;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 检查退出条件</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">user_input</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&#34;exit&#34;</span><span class="p">,</span> <span class="s2">&#34;quit&#34;</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 调用代理执行扫描任务</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">                <span class="c1"># 系统角色定义 - 渗透测试工程师</span>
+</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一名渗透测试工程师，帮助用户执行信息收集并返回结果。&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="c1"># 用户输入</span>
+</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_input</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="p">})</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 输出扫描结果</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;扫描结果：&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;messages&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;content&#39;</span><span class="p">])</span>
 </span></span></code></pre></div><p>当用户问：“3 乘 7 的结果是多少？”，模型识别这个问题与 multiply 工具相关，它会生成如下的调用请求</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
 </span></span><span class="line"><span class="cl">	<span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;multiply&#34;</span><span class="p">,</span>
@@ -602,7 +613,6 @@ code.has-jax {
 <li>模型根据工具调用结果，生成最终回复。</li>
 </ul>
 <p>一个工具调用，涉及到多次模型调用。</p>
-<h2 id="实战-shell-命令执行助手">实战 shell 命令执行助手<a hidden class="anchor" aria-hidden="true" href="#实战-shell-命令执行助手">#</a></h2>
 <p>使用 Tool call 机制，实现一个 shell 命令执行助手。</p>
 <p>输入：用户输入一段自然语言描述系统控制命令，例如 “查找 xxx.txt 文件”。</p>
 <p>输出：执行命令的结果</p>
@@ -1022,7 +1032,7 @@ code.has-jax {
 <p>MCP（Model Context Protocol，模型上下文协议），MCP 是一个开放协议，允许大语言模型与外部工具和服务进行安全、结构化的交互。</p>
 <p>核心思想：让大语言模型能够调用外部工具，扩展其能力边界。统一接口协议，开放更加方便快捷。</p>
 <h3 id="mcp-架构">MCP 架构<a hidden class="anchor" aria-hidden="true" href="#mcp-架构">#</a></h3>
-<img src="assets/Pasted%20image%2020250728134324.png" style="zoom: 60%;" />
+<img src="/assets/Pasted%20image%2020250728134324.png" style="zoom: 60%;" />
 <ul>
 <li>MCP 客户端：与大语言模型集成</li>
 <li>MCP 服务器：提供工具和服务</li>
@@ -1037,7 +1047,7 @@ code.has-jax {
 <p>在 MCP 开发中最重要的就是开发 MCP 的服务。</p>
 <p>FastMCP</p>
 <h3 id="实例-1">实例<a hidden class="anchor" aria-hidden="true" href="#实例-1">#</a></h3>
-<p>创建简单的提供基础数学运算的 MCP 服务器</p>
+<p>创建简单的提供基础数学运算的 MCP Server。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.server.fastmcp</span> <span class="kn">import</span> <span class="n">FastMCP</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="n">mcp</span> <span class="o">=</span> <span class="n">FastMCP</span><span class="p">(</span><span class="s2">&#34;Math&#34;</span><span class="p">)</span>
@@ -1054,47 +1064,7 @@ code.has-jax {
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl">	<span class="n">mcp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">transport</span><span class="o">=</span><span class="s2">&#34;stdio&#34;</span><span class="p">)</span>
-</span></span></code></pre></div><p>LangChain 客户端</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_mcp_adapters.client</span> <span class="kn">import</span> <span class="n">MultiServerMCPClient</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_deepseek</span> <span class="kn">import</span> <span class="n">ChatDeepSeek</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langgraph.prebuilt</span> <span class="kn">import</span> <span class="n">create_react_agent</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">asyncio</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">API_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;GEMINI_API_KEY&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatGoogleGenerativeAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;gemini-1.5-flash&#34;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">API_KEY</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">MultiServerMCPClient</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="s2">&#34;my_mcp&#34;</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="s2">&#34;url&#34;</span><span class="p">:</span> <span class="s2">&#34;http://localhost:8000/mcp&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="s2">&#34;transport&#34;</span><span class="p">:</span> <span class="s2">&#34;streamable_http&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="p">},</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="n">tools</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get_tools</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">agent</span> <span class="o">=</span> <span class="n">create_react_agent</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">llm</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">tools</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">math_response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">ainvoke</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;what&#39;s (3 + 5) x 12?&#34;</span><span class="p">}]}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">math_response</span><span class="p">[</span><span class="s1">&#39;messages&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
-</span></span></code></pre></div><p>cursor 客户端</p>
-<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
-<blockquote>
-<p>huggingface <a href="https://huggingface.co/learn/agents-course/">agents-course</a></p>
-</blockquote>
+</span></span></code></pre></div><p>通过 Cursor 配置 MCP 来连接连接。</p>
 
 
   </div>
@@ -1141,6 +1111,18 @@ code.has-jax {
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>

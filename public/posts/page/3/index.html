@@ -10,7 +10,7 @@
 <meta name="description" content="Posts - 南行&#39;s Blog">
 <meta name="author" content="">
 <link rel="canonical" href="http://localhost:1313/posts/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.e105e5001e5a6a4bdfd2fc39297ee1c1f9ed55bbfa466311bf23402970d44059.css" integrity="sha256-4QXlAB5aakvf0vw5KX7hwfntVbv6RmMRvyNAKXDUQFk=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
@@ -178,33 +178,6 @@ code.has-jax {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">论文笔记：Fuzzing: A Survey for Roadmap
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>0x00 前言 看了 arttnba3 师傅的关于这篇论文的博客想要好好读一下这篇论文，但是没有找到免费的 PDF 文档，而 ACM 官网下载要钱，而且还是doler。所以就直接看 arttnba3 师傅的博客了，这篇文章就是看 arttnba3 师傅的博客记的笔记，几乎就是完全转载了 arttnba3 的博客，仅对格式做了一些小小的修改，特此声明一下。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-08-31 23:16:38 +0000 UTC'>2025年8月31日</span></footer>
-  <a class="entry-link" aria-label="post link to 论文笔记：Fuzzing: A Survey for Roadmap" href="http://localhost:1313/posts/paper/roadmap/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">论文笔记：Fuzzing: Art, Science, and Engineering
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>0x00 前言 论文题目：模糊测试：艺术、科学和工程
-这篇论文是模糊测试领域的一篇具有代表性的综述性工作，系统总结了模糊测试技术的发展历程、关键组成部分、工程挑战以及未来研究趋势。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-08-31 23:16:38 +0000 UTC'>2025年8月31日</span></footer>
-  <a class="entry-link" aria-label="post link to 论文笔记：Fuzzing: Art, Science, and Engineering" href="http://localhost:1313/posts/paper/art/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2 class="entry-hint-parent">论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing
     </h2>
   </header>
@@ -212,20 +185,21 @@ code.has-jax {
     <p>0x00 前言 由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2025-08-31 23:16:38 +0000 UTC'>2025年8月31日</span></footer>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
   <a class="entry-link" aria-label="post link to 论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing" href="http://localhost:1313/posts/paper/llamafuzz/"></a>
 </article>
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Linux Kernel Pwn入门
+    <h2 class="entry-hint-parent">小程序逆向入门
     </h2>
   </header>
   <div class="entry-content">
-    <p></p>
+    <p>前言 现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。
+...</p>
   </div>
-  <footer class="entry-footer"><span title='2025-08-23 23:16:38 +0000 UTC'>2025年8月23日</span></footer>
-  <a class="entry-link" aria-label="post link to Linux Kernel Pwn入门" href="http://localhost:1313/posts/linux/base/"></a>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 小程序逆向入门" href="http://localhost:1313/posts/mobile/js/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">
@@ -271,6 +245,18 @@ code.has-jax {
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>

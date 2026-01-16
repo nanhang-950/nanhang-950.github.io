@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>VSCode调试Linux Kernel | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="前言
+编译内核
+
+安装工具
+
+安装编译链工具：
+sudo apt update
+sudo apt install -y build-essential libncurses-dev flex bison libssl-dev libelf-dev bc
+sudo apt install gcc-aarch64-linux-gnu g&#43;&#43;-aarch64-linux-gnu
+
+下载内核源码
+
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz
+tar -xJf linux-5.15.167.tar.xz
+cd linux-5.15.167
+
+编译
+
+#配置编译工具链
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+
+./scripts/config --enable CONFIG_VIRTUALIZATION
+./scripts/config --enable CONFIG_KVM
+./scripts/config --enable CONFIG_KVM_ARM_HOST
+./scripts/config --enable CONFIG_VIRTIO
+./scripts/config --enable CONFIG_VIRTIO_PCI
+./scripts/config --enable CONFIG_VIRTIO_BLK
+./scripts/config --enable CONFIG_VIRTIO_NET
+./scripts/config --enable CONFIG_VIRTIO_CONSOLE
+
+#更新配置
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig  
+
+#编译
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)    
+编译后的结果如下：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/debug/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/debug/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      VSCode调试Linux Kernel
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91%e5%86%85%e6%a0%b8" aria-label="编译内核">编译内核</a></li>
+                    <li>
+                        <a href="#%e6%9e%84%e5%bb%ba%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f" aria-label="构建文件系统">构建文件系统</a></li>
+                    <li>
+                        <a href="#%e6%a8%a1%e6%8b%9f%e8%bf%90%e8%a1%8c" aria-label="模拟运行">模拟运行</a></li>
+                    <li>
+                        <a href="#%e9%85%8d%e7%bd%aevscode" aria-label="配置vscode">配置vscode</a></li>
+                    <li>
+                        <a href="#%e6%95%88%e6%9e%9c" aria-label="效果">效果</a></li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<h2 id="编译内核">编译内核<a hidden class="anchor" aria-hidden="true" href="#编译内核">#</a></h2>
+<ul>
+<li>安装工具</li>
+</ul>
+<p>安装编译链工具：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt update
+</span></span><span class="line"><span class="cl">sudo apt install -y build-essential libncurses-dev flex bison libssl-dev libelf-dev bc
+</span></span><span class="line"><span class="cl">sudo apt install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+</span></span></code></pre></div><ul>
+<li>下载内核源码</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz
+</span></span><span class="line"><span class="cl">tar -xJf linux-5.15.167.tar.xz
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> linux-5.15.167
+</span></span></code></pre></div><ul>
+<li>编译</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#配置编译工具链</span>
+</span></span><span class="line"><span class="cl">make <span class="nv">ARCH</span><span class="o">=</span>arm64 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>aarch64-linux-gnu- defconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTUALIZATION
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_KVM
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_KVM_ARM_HOST
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTIO
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTIO_PCI
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTIO_BLK
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTIO_NET
+</span></span><span class="line"><span class="cl">./scripts/config --enable CONFIG_VIRTIO_CONSOLE
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#更新配置</span>
+</span></span><span class="line"><span class="cl">make <span class="nv">ARCH</span><span class="o">=</span>arm64 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>aarch64-linux-gnu- olddefconfig  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#编译</span>
+</span></span><span class="line"><span class="cl">make <span class="nv">ARCH</span><span class="o">=</span>arm64 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>aarch64-linux-gnu- -j<span class="k">$(</span>nproc<span class="k">)</span>    
+</span></span></code></pre></div><p>编译后的结果如下：</p>
+<ul>
+<li><code>vmlinux</code>：原始内核文件</li>
+<li><code>bzImage</code>：压缩内核镜像</li>
+</ul>
+<h2 id="构建文件系统">构建文件系统<a hidden class="anchor" aria-hidden="true" href="#构建文件系统">#</a></h2>
+<p>构建文件系统需要使用 busybox，busybox 是一个集成了大量 Unix 工具的精简版系统工具集，常用于嵌入式系统和 initramfs。</p>
+<ul>
+<li>构建 busybox</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#下载源码</span>
+</span></span><span class="line"><span class="cl">wget https://busybox.net/downloads/busybox-1.37.0.tar.bz2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#解压</span>
+</span></span><span class="line"><span class="cl">tar -jxvf busybox-1.37.0.tar.bz2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用默认配置</span>
+</span></span><span class="line"><span class="cl">make defconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用脚本方式开启静态编译选项</span>
+</span></span><span class="line"><span class="cl">sed -i <span class="s1">&#39;s/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/&#39;</span> .config
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#编译</span>
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>  
+</span></span><span class="line"><span class="cl">make install
+</span></span></code></pre></div><p>编译完成后会生成一个 <code>_install</code> 目录，接下来我们将会用它来构建我们的文件系统。</p>
+<ul>
+<li>初始化文件系统</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> _install  
+</span></span><span class="line"><span class="cl">mkdir -pv <span class="o">{</span>bin,sbin,etc,proc,sys,dev,home/ctf,root,tmp,lib64,lib/x86_64-linux-gnu,usr/<span class="o">{</span>bin,sbin<span class="o">}}</span>  
+</span></span><span class="line"><span class="cl">touch etc/inittab  
+</span></span><span class="line"><span class="cl">mkdir etc/init.d  
+</span></span><span class="line"><span class="cl">touch etc/init.d/rcS  
+</span></span><span class="line"><span class="cl">chmod +x ./etc/init.d/rcS
+</span></span></code></pre></div><ul>
+<li>配置初始化脚本</li>
+</ul>
+<p>首先配置<code>etc/inttab</code> ，写入如下内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">::sysinit:/etc/init.d/rcS  
+</span></span><span class="line"><span class="cl">::askfirst:/bin/ash  
+</span></span><span class="line"><span class="cl">::ctrlaltdel:/sbin/reboot  
+</span></span><span class="line"><span class="cl">::shutdown:/sbin/swapoff -a  
+</span></span><span class="line"><span class="cl">::shutdown:/bin/umount -a -r  
+</span></span><span class="line"><span class="cl">::restart:/sbin/init
+</span></span></code></pre></div><p>在上面的文件中指定了系统初始化脚本，因此接下来配置<code>etc/init.d/rcS</code>写入如下内容，主要是挂载各种文件系统：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>mount -t proc none /proc  
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys  
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev  
+</span></span><span class="line"><span class="cl">mount -t tmpfs tmpfs /tmp  
+</span></span><span class="line"><span class="cl">mkdir /dev/pts  
+</span></span><span class="line"><span class="cl">mount -t devpts devpts /dev/pts  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>  
+</span></span><span class="line"><span class="cl">setsid cttyhack setuidgid <span class="m">1000</span> sh  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span> -f
+</span></span></code></pre></div><p>也可以在根目录下创建<code>init</code>文件，写入如下内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>chown -R root:root /  
+</span></span><span class="line"><span class="cl">chmod <span class="m">700</span> /root  
+</span></span><span class="line"><span class="cl">chown -R ctf:ctf /home/ctf  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">mount -t proc none /proc  
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys  
+</span></span><span class="line"><span class="cl">mount -t tmpfs tmpfs /tmp  
+</span></span><span class="line"><span class="cl">mkdir /dev/pts  
+</span></span><span class="line"><span class="cl">mount -t devpts devpts /dev/pts  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/dmesg_restrict  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/kptr_restrict  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> /home/ctf  
+</span></span><span class="line"><span class="cl">su ctf -c sh  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span> -f
+</span></span></code></pre></div><p>并且要添加可执行权限：</p>
+<pre tabindex="0"><code>chmod +x ./init
+</code></pre><ul>
+<li>配置用户组</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;root:x:0:0:root:/root:/bin/sh&#34;</span> &gt; etc/passwd
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;ctf:x:1000:1000:ctf:/home/ctf:/bin/sh&#34;</span> &gt;&gt; etc/passwd
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;root:x:0:&#34;</span> &gt; etc/group
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;ctf:x:1000:&#34;</span> &gt;&gt; etc/group
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;none /dev/pts devpts gid=5,mode=620 0 0&#34;</span> &gt; etc/fstab
+</span></span></code></pre></div><ul>
+<li>配置glibc库</li>
+</ul>
+<p>如果使用的是 glibc，而不是 busybox 内置的 libc，需确定动态链接库路径。</p>
+<pre tabindex="0"><code>ldd /bin/busybox
+</code></pre><ul>
+<li>打包文件系统为 cpio 镜像文件</li>
+</ul>
+<p>打包文件系统为 cpio 格式</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#将当前目录及其子目录下的所有文件打包成一个 cpio 格式的归档文件</span>
+</span></span><span class="line"><span class="cl">find . <span class="p">|</span> cpio -o -H newc &gt; ./rootfs.cpio
+</span></span></code></pre></div><h2 id="模拟运行">模拟运行<a hidden class="anchor" aria-hidden="true" href="#模拟运行">#</a></h2>
+<p>制作好文件系统文件后，我们就可以通过 qemu 工具来模拟运行 Linux 内核。</p>
+<ul>
+<li><strong>环境搭建</strong></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt install qemu-system
+</span></span></code></pre></div><ul>
+<li><strong>模拟内核</strong></li>
+</ul>
+<p>模拟内核我们需要编写一个启动脚本<code>start.sh</code>来使用 qemu。</p>
+<p>使用<code>cpio</code>文件系统：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-aarch64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -machine virt <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -cpu cortex-a57 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -kernel ./arch/arm64/boot/Image <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -initrd ./rootfs.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -append <span class="s2">&#34;root=/dev/ram rdinit=/sbin/init console=ttyAMA0 earlyprintk=serial init=/init&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -smp <span class="m">2</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -no-reboot <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -monitor none <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -fsdev local,id<span class="o">=</span>fs1,path<span class="o">=</span>/tmp,security_model<span class="o">=</span>none <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -device virtio-9p-pci,fsdev<span class="o">=</span>fs1,mount_tag<span class="o">=</span>hostshare <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -s
+</span></span></code></pre></div><h2 id="配置vscode">配置vscode<a hidden class="anchor" aria-hidden="true" href="#配置vscode">#</a></h2>
+<ul>
+<li>C/C++ 调试插件</li>
+</ul>
+<p>首先在内核目录下创建一个<code>.vscode</code>目录，然后在目录中创建一下两个文件：</p>
+<ul>
+<li><code>launch.json</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;version&#34;</span><span class="p">:</span> <span class="s2">&#34;0.2.0&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;configurations&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;kernel-dbg&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;cppdbg&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;request&#34;</span><span class="p">:</span> <span class="s2">&#34;launch&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;preLaunchTask&#34;</span><span class="p">:</span> <span class="s2">&#34;start-kernel-env&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;miDebuggerServerAddress&#34;</span><span class="p">:</span> <span class="s2">&#34;127.0.0.1:1234&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;program&#34;</span><span class="p">:</span> <span class="s2">&#34;${workspaceFolder}/vmlinux&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;args&#34;</span><span class="p">:</span> <span class="p">[],</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;stopAtEntry&#34;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;cwd&#34;</span><span class="p">:</span> <span class="s2">&#34;${workspaceFolder}&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;environment&#34;</span><span class="p">:</span> <span class="p">[],</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;externalConsole&#34;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;logging&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;engineLogging&#34;</span><span class="p">:</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">      <span class="p">},</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;MIMode&#34;</span><span class="p">:</span> <span class="s2">&#34;gdb&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;setupCommands&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;启用漂亮打印&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;text&#34;</span><span class="p">:</span> <span class="s2">&#34;-enable-pretty-printing&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;ignoreFailures&#34;</span><span class="p">:</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;将反汇编风格设置为 Intel&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;text&#34;</span><span class="p">:</span> <span class="s2">&#34;-gdb-set disassembly-flavor intel&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;ignoreFailures&#34;</span><span class="p">:</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li><code>tasks.json</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;version&#34;</span><span class="p">:</span> <span class="s2">&#34;2.0.0&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;tasks&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;label&#34;</span><span class="p">:</span> <span class="s2">&#34;start-kernel-env&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;shell&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;command&#34;</span><span class="p">:</span> <span class="s2">&#34;${workspaceFolder}/start.sh&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;problemMatcher&#34;</span><span class="p">:</span> <span class="p">[],</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;presentation&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;reveal&#34;</span><span class="p">:</span> <span class="s2">&#34;always&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;panel&#34;</span><span class="p">:</span> <span class="s2">&#34;shared&#34;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li><code>start.sh</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-aarch64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -kernel ./arch/arm64/boot/bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -initrd ./rootfs.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -monitor /dev/null <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -append <span class="s2">&#34;root=/dev/ram rdinit=/sbin/init console=ttyS0 oops=panic panic=1 loglevel=3 quiet kaslr&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -cpu kvm64,+smep <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -smp <span class="nv">cores</span><span class="o">=</span>2,threads<span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -s
+</span></span></code></pre></div><h2 id="效果">效果<a hidden class="anchor" aria-hidden="true" href="#效果">#</a></h2>
+<p>在<code>execve</code>系统调用定义处打一个断点，然后 F5 开始调试，然后就可以看到内核断到了这里。</p>
+<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>通过 vscode 调试内核源码，我们就可以很清晰的分析内核源码学习内核。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

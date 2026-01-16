@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Android APP抓包 | 南行&#39;s Blog</title>
+<meta name="keywords" content="抓包">
+<meta name="description" content="简介
+反抓包的对抗：
+
+代理检测
+VPN检测
+SSL Pinning
+双向认证
+
+常用工具：
+
+Yakit：和 burpsuite 差不多的抓包方式。
+Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。
+OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。
+r0Capture：
+eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。
+
+为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/bag/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/bag/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Android APP抓包
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%bb%a3%e7%90%86%e6%a3%80%e6%b5%8b" aria-label="代理检测">代理检测</a></li>
+                    <li>
+                        <a href="#vpn%e6%a3%80%e6%b5%8b" aria-label="VPN检测">VPN检测</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#yakit%e6%8a%93%e5%8c%85" aria-label="Yakit抓包">Yakit抓包</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%85%8d%e7%bd%ae" aria-label="配置">配置</a></li>
+                    <li>
+                        <a href="#%e9%aa%8c%e8%af%81" aria-label="验证">验证</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#reqable%e6%8a%93%e5%8c%85" aria-label="Reqable抓包">Reqable抓包</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%a1%8c%e9%9d%a2%e7%ab%af%e9%85%8d%e7%bd%ae" aria-label="桌面端配置">桌面端配置</a></li>
+                    <li>
+                        <a href="#%e6%89%8b%e6%9c%ba%e7%ab%af%e9%85%8d%e7%bd%ae" aria-label="手机端配置">手机端配置</a></li>
+                    <li>
+                        <a href="#%e6%8a%93%e5%8c%85" aria-label="抓包">抓包</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#hook%e6%8a%93%e5%8c%85" aria-label="Hook抓包">Hook抓包</a><ul>
+                            
+                    <li>
+                        <a href="#okhttp" aria-label="OkHttp">OkHttp</a></li>
+                    <li>
+                        <a href="#r0capture" aria-label="r0Capture">r0Capture</a></li>
+                    <li>
+                        <a href="#ecapture" aria-label="eCapture">eCapture</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>反抓包的对抗：</p>
+<ul>
+<li>代理检测</li>
+<li>VPN检测</li>
+<li>SSL Pinning</li>
+<li>双向认证</li>
+</ul>
+<p>常用工具：</p>
+<ul>
+<li>Yakit：和 burpsuite 差不多的抓包方式。</li>
+<li>Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。</li>
+<li>OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。</li>
+<li>r0Capture：</li>
+<li>eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。</li>
+</ul>
+<p>为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。</p>
+<p>只有在以下情况下，应用才信任用户证书：</p>
+<ol>
+<li>该应用以 Android 6（API 级别 23）或更低版本为目标平台</li>
+<li>或者<a href="https://developer.android.com/privacy-and-security/security-config">网络安全配置</a>专门包括“用户”证书</li>
+</ol>
+<p>Example which trusts &ldquo;user&rdquo; certificates：<code>xml/network_security_config.xml</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;base-config</span> <span class="na">cleartextTrafficPermitted=</span><span class="s">&#34;false&#34;</span><span class="nt">&gt;</span> 
+</span></span><span class="line"><span class="cl">	<span class="nt">&lt;trust-anchors&gt;</span> 
+</span></span><span class="line"><span class="cl">		<span class="nt">&lt;certificates</span> <span class="na">src=</span><span class="s">&#34;system&#34;</span> <span class="nt">/&gt;</span> 
+</span></span><span class="line"><span class="cl">		<span class="nt">&lt;certificates</span> <span class="na">src=</span><span class="s">&#34;user&#34;</span> <span class="nt">/&gt;</span> 
+</span></span><span class="line"><span class="cl">	<span class="nt">&lt;/trust-anchors&gt;</span> 
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/base-config&gt;</span>
+</span></span></code></pre></div><p>当应用程序发送明文流量时，我们可以认为这是一个安全问题。但是，只能通过证书拦截的加密流量并不是安全问题。通过安装 CA，我们故意削弱设备的安全性，以允许我们解密流量。</p>
+<p>安装证书：</p>
+<p>由于默认的网络安全配置规则，大多数应用仅新人系统证书。面向 Android 9 及更高版本的应用默认配置如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;base-config</span> <span class="na">cleartextTrafficPermitted=</span><span class="s">&#34;false&#34;</span><span class="nt">&gt;</span> 
+</span></span><span class="line"><span class="cl">	<span class="nt">&lt;trust-anchors&gt;</span> 
+</span></span><span class="line"><span class="cl">		<span class="nt">&lt;certificates</span> <span class="na">src=</span><span class="s">&#34;system&#34;</span> <span class="nt">/&gt;</span> 
+</span></span><span class="line"><span class="cl">	<span class="nt">&lt;/trust-anchors&gt;</span> 
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/base-config&gt;</span>
+</span></span></code></pre></div><h3 id="代理检测">代理检测<a hidden class="anchor" aria-hidden="true" href="#代理检测">#</a></h3>
+<p>代理检测是用于检测设备是否设置了网络代理。检测的目的是识别设备是否通过代理服务器来转发网络流量，避免被分析 App 的数据包。</p>
+<p>在以下代码中 App 会检查系统设置或网络配置，以确定是否有代理服务器被设置为转发流量。例如，它可能会检查系统属性或调用特定的网络信息 API 来获取当前的网络代理状态。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&#34;http.proxyHost&#34;</span><span class="p">);</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">System</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="s">&#34;http.proxyPort&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// 如果 proxyHost 或 proxyPort 不为空，说明设备设置了代理</span><span class="w">
+</span></span></span></code></pre></div><ul>
+<li>强制不走代理：</li>
+</ul>
+<p>如果在 App 的开发中直接通过代码强制网络流量不走代理，那么就无法通过代理来抓包。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// HttpURLConnection 强制不走代理</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">HttpURLConnection</span><span class="p">)</span><span class="w"> </span><span class="n">url</span><span class="p">.</span><span class="na">openConnection</span><span class="p">(</span><span class="n">Proxy</span><span class="p">.</span><span class="na">NO_PROXY</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// OkHttp 强制不走代理</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">OkHttpClient</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OkHttpClient</span><span class="p">.</span><span class="na">Builder</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">.</span><span class="na">proxy</span><span class="p">(</span><span class="n">Proxy</span><span class="p">.</span><span class="na">NO_PROXY</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">();</span><span class="w">
+</span></span></span></code></pre></div><ul>
+<li>绕过代理检测：</li>
+</ul>
+<p>通过 frida hook 系统类，修改<code>System.getProperty</code>使其返回空绕过代理检测。以下 hook 适用于 Java 层的代理检测。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">function</span><span class="w"> </span><span class="nf">anti_proxy</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="n">GetProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Java</span><span class="p">.</span><span class="na">use</span><span class="p">(</span><span class="s">&#34;java.lang.System&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">GetProperty</span><span class="p">.</span><span class="na">getProperty</span><span class="p">.</span><span class="na">overload</span><span class="p">(</span><span class="s">&#34;java.lang.String&#34;</span><span class="p">).</span><span class="na">implementation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">function</span><span class="p">(</span><span class="n">getprop</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">getprop</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">&#34;http.proxyHost&#34;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">getprop</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">&#34;http.proxyPort&#34;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">getProperty</span><span class="p">(</span><span class="n">getprop</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">function</span><span class="w"> </span><span class="nf">main</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="n">Java</span><span class="p">.</span><span class="na">perform</span><span class="p">(</span><span class="n">function</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">		</span><span class="n">anti_proxy</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">	</span><span class="p">});</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">setImmediate</span><span class="p">(</span><span class="n">main</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></div><p>使用：</p>
+<p>这里仍然通过 Yakit 抓包，在没有</p>
+<pre tabindex="0"><code>frida -U com.zj.wuaipojie -l ./hook_ssl.js
+</code></pre><p><strong>透明代理</strong></p>
+<p>透明代理（Transparent Proxy）是一种特殊的代理服务类型，它可以在客户端（如浏览器或应用程序）不知道的情况下拦截、转发和处理网络请求。与传统的代理服务不同，透明代理不需要客户端进行任何配置就能工作。</p>
+<h3 id="vpn检测">VPN检测<a hidden class="anchor" aria-hidden="true" href="#vpn检测">#</a></h3>
+<p>VPN检测是指应用程序或系统检查用户是否正在使用虚拟专用网络（Virtual Private Network, VPN）的一种技术。当用户使用VPN时，他们的网络流量会被加密并通过一个远程服务器路由，这可以隐藏用户的实际IP地址和位置信息，同时保护数据的安全性和隐私。</p>
+<p>原理：当客户端运行VPN虚拟隧道协议时，会在当前节点创建基于<code>eth</code>之上的<code>tun0</code>接口或<code>ppp0</code>接口。这些接口是用于建立虚拟网络连接的特殊网络接口。</p>
+<p>根据OSI七层模型，二者分别支持的协议:</p>
+<table>
+  <thead>
+      <tr>
+          <th>VPN</th>
+          <th>OpvenVPN、IPsec、IKEv2、PPTP、L2TP、WireGuard等</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>代理</td>
+          <td>HTTP、HTTPS、SOCKS、FTP、RTSP等</td>
+      </tr>
+  </tbody>
+</table>
+<p>VPN 协议大多是作用在 OSI 的第二层和第三层之间，由此可见VPN能抓到代理方式的所有的包</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">Check_Vpn1</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Enumeration</span><span class="o">&lt;</span><span class="n">NetworkInterface</span><span class="o">&gt;</span><span class="w"> </span><span class="n">networkInterfaces</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">NetworkInterface</span><span class="p">.</span><span class="na">getNetworkInterfaces</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">networkInterfaces</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Iterator</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Collections</span><span class="p">.</span><span class="na">list</span><span class="p">(</span><span class="n">networkInterfaces</span><span class="p">).</span><span class="na">iterator</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">it</span><span class="p">.</span><span class="na">hasNext</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">NetworkInterface</span><span class="w"> </span><span class="n">networkInterface</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">NetworkInterface</span><span class="p">)</span><span class="w"> </span><span class="n">it</span><span class="p">.</span><span class="na">next</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">isUp</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getInterfaceAddresses</span><span class="p">().</span><span class="na">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">Log</span><span class="p">.</span><span class="na">d</span><span class="p">(</span><span class="s">&#34;zj595&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;isVpn NetworkInterface Name: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getName</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Intrinsics</span><span class="p">.</span><span class="na">areEqual</span><span class="p">(</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getName</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;tun0&#34;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">Intrinsics</span><span class="p">.</span><span class="na">areEqual</span><span class="p">(</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getName</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;ppp0&#34;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">Intrinsics</span><span class="p">.</span><span class="na">areEqual</span><span class="p">(</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getName</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;p2p0&#34;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">Intrinsics</span><span class="p">.</span><span class="na">areEqual</span><span class="p">(</span><span class="n">networkInterface</span><span class="p">.</span><span class="na">getName</span><span class="p">(),</span><span class="w"> </span><span class="s">&#34;ccmni0&#34;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Throwable</span><span class="w"> </span><span class="n">th</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">th</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="kd">public</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">Check_Vpn2</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">boolean</span><span class="w"> </span><span class="n">z</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">String</span><span class="w"> </span><span class="n">networkCapabilities</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Object</span><span class="w"> </span><span class="n">systemService</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getApplicationContext</span><span class="p">().</span><span class="na">getSystemService</span><span class="p">(</span><span class="s">&#34;connectivity&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Intrinsics</span><span class="p">.</span><span class="na">checkNotNull</span><span class="p">(</span><span class="n">systemService</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;null cannot be cast to non-null type android.net.ConnectivityManager&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">ConnectivityManager</span><span class="w"> </span><span class="n">connectivityManager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ConnectivityManager</span><span class="p">)</span><span class="w"> </span><span class="n">systemService</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">NetworkCapabilities</span><span class="w"> </span><span class="n">networkCapabilities2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connectivityManager</span><span class="p">.</span><span class="na">getNetworkCapabilities</span><span class="p">(</span><span class="n">connectivityManager</span><span class="p">.</span><span class="na">getActiveNetwork</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Log</span><span class="p">.</span><span class="na">i</span><span class="p">(</span><span class="s">&#34;zj595&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;networkCapabilities -&gt; &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">networkCapabilities2</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kt">boolean</span><span class="w"> </span><span class="n">z2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">networkCapabilities2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">networkCapabilities2</span><span class="p">.</span><span class="na">hasTransport</span><span class="p">(</span><span class="n">4</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// 检查网络能力是否包含 &#34;WIFI|VPN&#34; </span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">networkCapabilities2</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">networkCapabilities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">networkCapabilities2</span><span class="p">.</span><span class="na">toString</span><span class="p">())</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">StringsKt</span><span class="p">.</span><span class="na">contains$default</span><span class="p">((</span><span class="n">CharSequence</span><span class="p">)</span><span class="w"> </span><span class="n">networkCapabilities</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">CharSequence</span><span class="p">)</span><span class="w"> </span><span class="s">&#34;WIFI|VPN&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">2</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">Object</span><span class="p">)</span><span class="w"> </span><span class="kc">null</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="o">!</span><span class="n">z</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">z2</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>anti：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">hook_vpn</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">NetworkInterface</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;java.net.NetworkInterface&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">NetworkInterface</span><span class="p">.</span><span class="nx">getName</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">var</span> <span class="nx">name</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getName</span><span class="p">();</span>  <span class="c1">//hook java层的getName方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;name: &#34;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nx">name</span> <span class="o">===</span> <span class="s2">&#34;tun0&#34;</span> <span class="o">||</span> <span class="nx">name</span> <span class="o">===</span> <span class="s2">&#34;ppp0&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;rmnet_data0&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="nx">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">NetworkCapabilities</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;android.net.NetworkCapabilities&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">NetworkCapabilities</span><span class="p">.</span><span class="nx">hasTransport</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nx">NetworkCapabilities</span><span class="p">.</span><span class="nx">appendStringRepresentationOfBitMaskToStringBuilder</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sb</span><span class="p">,</span> <span class="nx">bitMask</span><span class="p">,</span> <span class="nx">nameFetcher</span><span class="p">,</span> <span class="nx">separator</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="nx">bitMask</span> <span class="o">==</span> <span class="mi">18</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;bitMask&#34;</span><span class="p">,</span> <span class="nx">bitMask</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">sb</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s2">&#34;WIFI&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">sb</span><span class="p">,</span> <span class="nx">bitMask</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">this</span><span class="p">.</span><span class="nx">appendStringRepresentationOfBitMaskToStringBuilder</span><span class="p">(</span><span class="nx">sb</span><span class="p">,</span> <span class="nx">bitMask</span><span class="p">,</span> <span class="nx">nameFetcher</span><span class="p">,</span> <span class="nx">separator</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="yakit抓包">Yakit抓包<a hidden class="anchor" aria-hidden="true" href="#yakit抓包">#</a></h2>
+<p>研究一下最近很火的 Yakit 怎么抓真机 App 的包。</p>
+<p>这里电脑和真机处于同一无线网络下。</p>
+<h3 id="配置">配置<a hidden class="anchor" aria-hidden="true" href="#配置">#</a></h3>
+<p>点击 Wifi 网络的右上角的编辑。然后在代理中设置手动代理，设置为电脑的无线网卡地址。</p>
+<img src="/assets/Pasted%20image%2020250721213325.png" style="zoom: 50%;" />
+<p>安装 Yakit 证书，进入高级配置然后选择证书下载。</p>
+<img src="/assets/Pasted%20image%2020250721214047.png" style="zoom: 50%;" />
+<p>将证书导入到手机中，比如直接通过 USB 共享文件复制过去。</p>
+<p>进入手机设置-&gt;安全和隐私-&gt;更多安全设置-&gt;加密与凭据-&gt;安装证书。</p>
+<img src="/assets/Pasted%20image%2020250721214533.png" style="zoom: 50%;" />
+<p>然后选择我们导入到手机的证书文件，点击然后选择证书安装程序。</p>
+<img src="/assets/Pasted%20image%2020250721214343.png" style="zoom: 50%;" />
+<h3 id="验证">验证<a hidden class="anchor" aria-hidden="true" href="#验证">#</a></h3>
+<p>手机打开浏览器，进入百度随便一个网址。</p>
+<img src="/assets/Pasted%20image%2020250721223410.png" style="zoom: 50%;" />
+<p>可以看到 Yakit 已经抓到了数据包。</p>
+<img src="/assets/Pasted%20image%2020250721223443.png" style="zoom: 80%;" />
+<h2 id="reqable抓包">Reqable抓包<a hidden class="anchor" aria-hidden="true" href="#reqable抓包">#</a></h2>
+<p>Reqable 使用经典的中间人（MITM）技术分析 HTTPS 流量，当客户端与 Reqable 的代理服务器（下文简称中间人）进行通信时，中间人需要重签远程服务器的 SSL 证书。为了保证客户端与中间人成功进行 SSL 握手通信，需要将中间人的根证书（简称CA根证书）安装到客户端的证书管理中心。</p>
+<p>Reqable 可以自动绕过对于代理的检测以及对于 VPN 的检测。</p>
+<p>由于 Flutter 网络通信通常绕过系统代理，很多传统抓包工具无法抓取其通信，需要 Reqable VPN 模式。</p>
+<h3 id="桌面端配置">桌面端配置<a hidden class="anchor" aria-hidden="true" href="#桌面端配置">#</a></h3>
+<p>在桌面端启动 Reqable，选择证书-&gt;安装根证书到本机</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250525233140.png" style="max-width: 100%; height: auto;"></p>
+<p>安装成功</p>
+<img src="/assets/Pasted%20image%2020250525233222.png" style="zoom: 50%;" />
+<h3 id="手机端配置">手机端配置<a hidden class="anchor" aria-hidden="true" href="#手机端配置">#</a></h3>
+<p>手机端同样也要安装证书，选择证书-&gt;安装根证书到Android设备，然后在左下角点击导出证书。其余安装流程和 Yakit 差不多，这里就不过多赘述了。</p>
+<img src="/assets/Pasted%20image%2020250724093101.png" style="zoom: 50%;" />
+<p>手机端进入协同模式</p>
+<img src="/assets/Pasted%20image%2020250525233832.png" style="zoom: 50%;" />
+<p>扫描桌面端的二维码。</p>
+<img src="/assets/Pasted%20image%2020250525233909.png" style="zoom: 50%;" />
+<p>点击 ip 旁的手机图标，唤出二维码，然后扫描。</p>
+<img src="/assets/Pasted%20image%2020250525233953.png" style="zoom: 50%;" />
+<p>点击右下角的按钮开始抓包。</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250525234051.png" style="max-width: 100%; height: auto;"></p>
+<p>允许。</p>
+<img src="/assets/Pasted%20image%2020250525234149.png" style="zoom: 50%;" />
+<img src="/assets/Pasted%20image%2020250525234213.png" style="zoom: 50%;" />
+<h3 id="抓包">抓包<a hidden class="anchor" aria-hidden="true" href="#抓包">#</a></h3>
+<p>然后就可以对目标 APP 进行抓包，我们可以选择特定 APP 进行筛选。
+<img src="/assets/Pasted%20image%2020250724233401.png" style="zoom: 50%;" /></p>
+<h2 id="hook抓包">Hook抓包<a hidden class="anchor" aria-hidden="true" href="#hook抓包">#</a></h2>
+<p>Hook 抓包是一种截取应用程序数据包的方法，通过 Hook 应用或系统函数来获取数据流。在应用层 Hook 时，通过查找触发请求的函数来抓包，优点是不受防抓包手段影响，缺点是抓包数据不便于我们分析和筛选。</p>
+<p>可以绕过诸如代理检测、VPN检测、明文解密、可以抓 OkHttp、可以抓 Flutter。</p>
+<h3 id="okhttp">OkHttp<a hidden class="anchor" aria-hidden="true" href="#okhttp">#</a></h3>
+<p>常见安卓网络开发框架：</p>
+<table>
+  <thead>
+      <tr>
+          <th>框架名称</th>
+          <th>描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Volley</td>
+          <td>由 Google 开源的轻量级网络库，支持网络请求处理、小图片的异步加载和缓存等功能</td>
+      </tr>
+      <tr>
+          <td>Android-async-http</td>
+          <td>基于 Apache HttpClient 的一个异步网络请求处理库</td>
+      </tr>
+      <tr>
+          <td>xUtils</td>
+          <td>类似于 Afinal，但被认为是 Afinal 的一个升级版，提供了 HTTP 请求的支持</td>
+      </tr>
+      <tr>
+          <td>OkHttp</td>
+          <td>一个高性能的网络框架，已经被 Google 官方认可，在 Android 6.0 中底层源码已经使用了 OkHttp 来替代 HttpURLConnection</td>
+      </tr>
+      <tr>
+          <td>Retrofit</td>
+          <td>提供了一种类型安全的 HTTP 客户端接口，简化了 HTTP 请求的编写，通常与 OkHttp 配合使用</td>
+      </tr>
+  </tbody>
+</table>
+<p>拦截器是 OkHttp 提供的对 Http 请求和响应进行统一处理的强大机制，它可以实现网络监听、请求以及响应重写、请求失败充实等功能。<br>
+OkHttp 中的 Interceptor 就是典型的责任链的实现，它可以设置任意数量的 Intercepter 来对网络请求及其响应做任何中间处理，比如设置缓存，Https证书认证，统一对请求加密/防篡改社会，打印log，过滤请求等等。  OkHttp 中的拦截器分为 Application Interceptor（应用拦截器） 和 NetWork Interceptor（网络拦截器）两种。</p>
+<p>这里我们学习如何通过 OkHttpLogger-Frida 项目对 OkHttp 框架进行抓包。</p>
+<p>函数：</p>
+<ul>
+<li><code>find()</code>：</li>
+<li><code>hold()</code>：</li>
+</ul>
+<p>将<code>okhttpfind.dex</code>文件复制到<code>/data/local/tmp</code>目录下，并设置可执行权限。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">adb push ./okhttpfind.dex /data/local/tmp
+</span></span><span class="line"><span class="cl">adb shell
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> /data/local/tmp/okhttpfind.dex
+</span></span></code></pre></div><p>官方使用示例：</p>
+<p><img decoding="async" loading="lazy" src="assets/screen.gif" style="max-width: 100%; height: auto;"></p>
+<p>基本使用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida -U woaipojie -l okhttp_poker.js 
+</span></span><span class="line"><span class="cl">hold<span class="o">()</span>
+</span></span></code></pre></div><p>可以看到成功抓到了数据包！</p>
+<p><img decoding="async" loading="lazy" src="assets/Pasted%20image%2020250724212929.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="r0capture">r0Capture<a hidden class="anchor" aria-hidden="true" href="#r0capture">#</a></h3>
+<p>如果 APP 不是使用 OkHttp 框架开发的，或者说它的混淆非常强导致你无法定位到它的发包函数。那么可以使用 r0Capture 这个工具。</p>
+<p>r0Capture 是一个基于 Firda 的 Android 抓包框架脚本，可以通杀 Android 上绝大多数应用层流量协议，并绕过各种证书校验、加固保护、网络层劫持检测，用于动态分析和安全测试。</p>
+<ul>
+<li>仅限安卓平台，测试安卓 7-14 可用；</li>
+<li>无视所有证书校验或绑定；</li>
+<li>通杀 TCP/IP 四层模型中的应用层中的全部协议；</li>
+<li>通杀协议包括：Http,WebSocket,Ftp,Xmpp,Imap,Smtp,Protobuf等等、以及它们的SSL版本；</li>
+<li>通杀所有应用层框架，包括HttpUrlConnection、Okhttp1/3/4、Retrofit/Volley等等；</li>
+<li>无视加固，不管是整体壳还是二代壳或VMP，不用考虑加固的事情；但是对于部分大厂的自定义的 SSL 框架则不支持。</li>
+</ul>
+<p>用法：</p>
+<ul>
+<li>Spawn 模式（启动 App 前 hook）</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">python3 r0capture.py -U -f com.coolapk.market -v
+</span></span></code></pre></div><ul>
+<li>Attach 模式（运行中注入，抓包保存为 pcap）</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">python3 r0capture.py -U 酷安 -v -p iqiyi.pcap
+</span></span></code></pre></div><ul>
+<li><code>-U</code>：连接 USB 真机</li>
+<li><code>-f</code>：指定包名（旧版 Frida）</li>
+<li><code>酷安</code>：新版 Frida 用 App 名（通过 <code>frida-ps -U</code> 查看）</li>
+<li><code>-p</code>：保存为 pcap 文件，便于后续 Wireshark 分析</li>
+</ul>
+<p>我们可以将保存的 pcap 文件通过 Wireshark 进行详细分析。</p>
+<p>r0Capture 虽然适配了大多数的环境，但是对于一些大厂自定义的框架仍然是没有支持的。</p>
+<h3 id="ecapture">eCapture<a hidden class="anchor" aria-hidden="true" href="#ecapture">#</a></h3>
+<p>eCapture 是一个基于内核机制的抓包工具，利用了 eBPF 和 Hook 技术实现内核层的网络抓包。eBPF 是一个运行在 Linux 内核里面的虚拟组件，它可以无需改变内核代码或者加载内核模块的情况下，安全而又高效地扩展内核的功能。
+<img src="/assets/Pasted%20image%2020250724142445.png" style="zoom: 80%;" />
+eCapture 的工作原理涉及到用户态和内核态。用户态就是运行应用程序的地方，比如各种 App。在这个区域中，eCapture 通过一个共享的模块获取应用程序的网络数据。然后，它将这些数据传递给内核态的 eBPF 程序进行分析和处理。在内核空间，eCapture 通过 eBPF 插件捕捉网络层的数据流，比如数据包是从哪里来的、发到了哪里去。这一过程不需要修改应用程序本身，所以对系统性能影响很小。</p>
+<p>安卓设备的内核版本只有在 5.10 版本上才可以进行无任何修改的开箱抓包操作。</p>
+<p>通过以下命令查看系统内核版本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">adb shell uname -r
+</span></span></code></pre></div><p>使用 eCapture 可以在不配置 CA 证书的情况下也能捕获到 https/tls 的通讯明文。</p>
+<ul>
+<li>环境搭建</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#下载文件</span>
+</span></span><span class="line"><span class="cl">adb push ./ecapture /data/local/tmp
+</span></span><span class="line"><span class="cl">chmod +x ./ecapture
+</span></span></code></pre></div><ul>
+<li>基本使用</li>
+</ul>
+<p>捕获 TLS 明文（text模式）</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo ./ecapture tls -m text
+</span></span></code></pre></div><p>捕获 TLS 握手密钥（keylog 模式）</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo ./ecapture tls -m keylog --keylogfile<span class="o">=</span>openssl_keylog.log
+</span></span></code></pre></div><p>该文件可配合 Wireshark 设置 TLS 解密，路径在：  <code>Edit &gt; Preferences &gt; Protocols &gt; TLS &gt; (Pre)-Master-Secret log filename</code></p>
+<p>保存为 pcap 文件（pcap 模式）</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo ./ecapture tls -m pcapng -i eth0 --pcapfile<span class="o">=</span>ecapture.pcapng
+</span></span></code></pre></div><p>然后可用 Wireshark 打开 <code>.pcapng</code> 文件，看到<strong>明文数据包</strong>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">adb shell ps <span class="p">|</span> findstr 应用包名（获取进程pid）
+</span></span><span class="line"><span class="cl">./ecapture tls -p pid -m text
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://ch3nye.top/Android-HTTPS%E8%AE%A4%E8%AF%81%E7%9A%84N%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%92%8C%E5%AF%B9%E6%8A%97%E6%96%B9%E6%B3%95%E6%80%BB%E7%BB%93/">Android HTTPS认证的N种方式和对抗方法总结</a>
+<a href="https://www.bilibili.com/video/BV17AUsYZE8b/?share_source=copy_web&amp;vd_source=a1e0ec33522dd06cf97338beeab421c6">吾爱破解安卓逆向入门教程《安卓逆向这档事》二十二课、一饭三吃(抓包版)</a>
+<a href="https://github.com/httptoolkit/frida-interception-and-unpinning">httptoolkit/frida-interception-and-unpinning: Frida scripts to directly MitM all HTTPS traffic from a target mobile application</a>
+<a href="https://github.com/gojue/ecapture?tab=readme-ov-file">gojue/ecapture：使用 eBPF 捕获没有 CA 证书的 SSL/TLS 明文。在 amd64/arm64 的 Linux/Android 内核上受支持。</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/%E6%8A%93%E5%8C%85/">抓包</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

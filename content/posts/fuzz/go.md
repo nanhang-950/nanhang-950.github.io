@@ -24,7 +24,7 @@ Go官方团队的 go test fuzz 实现借鉴了 go-fuzz 的设计思想，Go 1.18
 
 下面是官方模糊测试的示例，突出显示了其主要的组件。
 
-<img src="assets/Pasted%20image%2020250531230716.png" style="zoom:50%;" />
+<img src="/assets/Pasted%20image%2020250531230716.png" style="zoom:50%;" />
 
 
 使用 go test fuzz，首先需要创建一个以`_test.go`结尾的测试文件。然后我们需要编写它的测试入口函数，要求必须以`Fuzz`字段开头。然后通过`f.Add`指定初始种子，然后通过`f.Fuzz`的`s`参数进行数据的投喂。
@@ -226,7 +226,9 @@ exit status 2
 
 根据崩溃的堆栈信息我们轻易得知这是由于越界访问而导致的崩溃。之后我们通过自底向上的一步步跟踪，可以得知崩溃实际触发在`model.skipStringLit`函数中。
 
-而根本原因是由于`skipStringLit` 没有做边界检查，导致在查找比括号是使用了`bytes.IndexByte`，当输入缺少闭括号时返回 -1，然后被直接用在切片操作，导致了越界访问。
+进一步分析后发现根本原因是由于`skipStringLit` 没有做边界检查，导致在查找比括号是使用了`bytes.IndexByte`，当输入缺少闭括号时返回 -1，然后被直接用在切片操作，导致了越界访问。
+
+我们也可以直接将 Crash 的堆栈信息丢给 AI，让 AI 给我们分析 Crash 原因。
 
 ## 参考
 

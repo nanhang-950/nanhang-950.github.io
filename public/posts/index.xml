@@ -2,28 +2,64 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Posts on 南行&#39;s Blog</title>
-    <link>https://nanhang.top/posts/</link>
+    <link>http://localhost:1313/posts/</link>
     <description>Recent content in Posts on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
-    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="https://nanhang.top/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 01 Jan 2026 13:03:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Android APP脱壳入门</title>
-      <link>https://nanhang.top/posts/android/obf/shell/</link>
+      <title>Linux Kernel modprobe_path覆盖利用技术</title>
+      <link>http://localhost:1313/posts/linux/modprobe_path/</link>
+      <pubDate>Thu, 01 Jan 2026 13:03:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/linux/modprobe_path/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;今年的 ccb&amp;amp;ciscn 初赛有一道 Linux 内核的 Pwn 题，让我这个内核菜鸡被直接“硬控”了。现在初赛都上内核了。。。&lt;/p&gt;
+&lt;p&gt;赛后搞到了 WP，于是正好趁着元旦假期有时间好好复现一下，分析了一下这道题的利用技术的原理，于是就有了这篇文章。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Linux Kernel Double Fetch</title>
+      <link>http://localhost:1313/posts/linux/double_fetch/</link>
+      <pubDate>Tue, 02 Dec 2025 09:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/linux/double_fetch/</guid>
+      <description>&lt;h3 id=&#34;double-fetch简介&#34;&gt;Double Fetch简介&lt;/h3&gt;
+&lt;p&gt;Double Fetch 从漏洞原理上来说，是一种内核态与用户态之间的条件竞争。&lt;/p&gt;
+&lt;p&gt;在 Linux 等现代操作系统中，虚拟内存地址通常被划分为内核空间和用户空间。内核空间负责运行内核、驱动模块代码等，权限较高。而用户空间运行用户代码，并通过系统调用进入内核完成相关功能代码通常情况下，用户空间向内核传递数据时，内核先通过通过&lt;code&gt;copy_from_user&lt;/code&gt;等拷贝函数将用户数据拷贝至内核空间进行校验及相关处理，但在输入数据较为复杂时，内核可能只引用其指针，而将数据暂时保存在用户空间进行后续处理。此时，该数据存在被其他恶意线程篡改风险，造成内核验证通过数据与实际使用数据不一致，导致内核代码执行异常。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Linux Kernel UAF</title>
+      <link>http://localhost:1313/posts/linux/kernel_uaf/</link>
+      <pubDate>Mon, 01 Dec 2025 09:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/linux/kernel_uaf/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;h2 id=&#34;虚拟内存基础&#34;&gt;虚拟内存基础&lt;/h2&gt;
+&lt;p&gt;由于 Slab 分配器是一个相当复杂且高级的主题，但对于开始 Linux 内核编程来说非常必要，我写了这篇文档来解释它是如何工作的。我会先简要说明 Buddy 分配器，以便让大家理解为什么 Slab 分配器在 Linux 内核中很有用，然后再详细介绍 Slab 分配器。本篇文章基于 Linux 5.3.13 内核（撰写本文时的最新稳定版本 — 2019 年 11 月 15 日 22:13:17 CET）。我将以 x86-64 系统为例，页面大小如下：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>AFL模糊测试入门</title>
+      <link>http://localhost:1313/posts/fuzz/afl/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/obf/shell/</guid>
-      <description>&lt;h2 id=&#34;加固简介&#34;&gt;加固简介&lt;/h2&gt;
-&lt;p&gt;Android 应用加固（壳）是为了防止逆向分析、DEX dump、调试和修改，保护代码和资源的完整性与安全。随着技术发展，加固经历了四代演进：&lt;/p&gt;
-&lt;h3 id=&#34;第一代整体-dex-加密&#34;&gt;第一代：整体 Dex 加密&lt;/h3&gt;
-&lt;p&gt;&lt;strong&gt;核心特性：&lt;/strong&gt;&lt;/p&gt;</description>
+      <guid>http://localhost:1313/posts/fuzz/afl/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。&lt;/p&gt;
+&lt;h2 id=&#34;基本概念&#34;&gt;基本概念&lt;/h2&gt;
+&lt;h3 id=&#34;模糊测试简介&#34;&gt;模糊测试简介&lt;/h3&gt;
+&lt;p&gt;Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是&lt;strong&gt;自动生成随机输入&lt;/strong&gt;到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>AFL源码分析</title>
+      <link>http://localhost:1313/posts/fuzz/afl-src/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/fuzz/afl-src/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;熟悉了 AFL 的使用之后，接下来应该分析一下 AFL 的源代码来理解 AFL 的 Fuzz 原理。关于 AFL 的源码分析已经有很多前辈珠玉在前了，所以也想过到底要不要写这篇文章。想了想还是打算动笔，也算是对自己学到的东西做总结。&lt;/p&gt;</description>
     </item>
     <item>
       <title>Android APP抓包</title>
-      <link>https://nanhang.top/posts/android/bag/</link>
+      <link>http://localhost:1313/posts/mobile/bag/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/bag/</guid>
+      <guid>http://localhost:1313/posts/mobile/bag/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;反抓包的对抗：&lt;/p&gt;
 &lt;ul&gt;
@@ -44,74 +80,161 @@
     </item>
     <item>
       <title>Frida攻略</title>
-      <link>https://nanhang.top/posts/android/frida/</link>
+      <link>http://localhost:1313/posts/mobile/frida/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/frida/</guid>
-      <description></description>
+      <guid>http://localhost:1313/posts/mobile/frida/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。&lt;/p&gt;</description>
     </item>
     <item>
       <title>Go Fuzz</title>
-      <link>https://nanhang.top/posts/fuzz/go/</link>
+      <link>http://localhost:1313/posts/fuzz/go/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/go/</guid>
+      <guid>http://localhost:1313/posts/fuzz/go/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzzing 的需求。因此，人们在基于传统的 Fuzz 工具的基础上，逐步为这些语言构建了 Fuzz 工具。&lt;/p&gt;</description>
     </item>
     <item>
       <title>IOS逆向入门</title>
-      <link>https://nanhang.top/posts/ios/base/</link>
+      <link>http://localhost:1313/posts/mobile/ios-base/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/ios/base/</guid>
+      <guid>http://localhost:1313/posts/mobile/ios-base/</guid>
       <description>&lt;h2 id=&#34;越狱&#34;&gt;越狱&lt;/h2&gt;
 &lt;p&gt;我的设备：iPhone X，IOS 16.1.1&lt;/p&gt;
 &lt;p&gt;越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。&lt;/p&gt;</description>
     </item>
     <item>
       <title>libFuzzer浅探</title>
-      <link>https://nanhang.top/posts/fuzz/libfuzzer/</link>
+      <link>http://localhost:1313/posts/fuzz/libfuzzer/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/libfuzzer/</guid>
+      <guid>http://localhost:1313/posts/fuzz/libfuzzer/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。&lt;/p&gt;</description>
     </item>
     <item>
-      <title>LLM安全入门</title>
-      <link>https://nanhang.top/posts/llm/sec/</link>
+      <title>Linux Kernel Pwn入门</title>
+      <link>http://localhost:1313/posts/linux/kernel/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/llm/sec/</guid>
+      <guid>http://localhost:1313/posts/linux/kernel/</guid>
+      <description>&lt;h2 id=&#34;基础知识&#34;&gt;基础知识&lt;/h2&gt;
+&lt;h3 id=&#34;内核是什么&#34;&gt;内核是什么？&lt;/h3&gt;
+&lt;p&gt;操作系统内核是一个特殊的程序，其用来管理软件发起的 IO 请求，将其转换为指令交由 CPU 执行，是现代操作系统最基本的部分。&lt;/p&gt;
+&lt;p&gt;其功能主要有以下两点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;控制并与硬件进行交互；&lt;/li&gt;
+&lt;li&gt;提供应用能运行的环境。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;intel CPU 将 CPU 的特权级别分为 4 个级别：Ring 0、Ring 1、Ring 2、Ring 3。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>LLM Agent 开发入门</title>
+      <link>http://localhost:1313/posts/llm/agent/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/llm/agent/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;无名侠师傅课程的学习笔记&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;h3 id=&#34;什么是-llm&#34;&gt;什么是 LLM&lt;/h3&gt;
+&lt;p&gt;LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>LLM安全入门</title>
+      <link>http://localhost:1313/posts/llm/sec/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/llm/sec/</guid>
       <description>&lt;h2 id=&#34;越狱攻击&#34;&gt;越狱攻击&lt;/h2&gt;
 &lt;p&gt;大模型天生缺乏“指令”和“信息”的边界分辨能力，它倾向于将所有输入视作需要整合的素材，而不是区分哪些是强约束（必须遵守）与弱参考（仅供辅助）的部分。&lt;/p&gt;</description>
     </item>
     <item>
-      <title>Rust Fuzz</title>
-      <link>https://nanhang.top/posts/fuzz/rust/</link>
+      <title>OLLVM混淆和反混淆</title>
+      <link>http://localhost:1313/posts/mobile/confron/ollvm/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/rust/</guid>
+      <guid>http://localhost:1313/posts/mobile/confron/ollvm/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Rust Fuzz</title>
+      <link>http://localhost:1313/posts/fuzz/rust/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/fuzz/rust/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。&lt;/p&gt;</description>
     </item>
     <item>
       <title>Syzkaller初探</title>
-      <link>https://nanhang.top/posts/fuzz/syzkaller/</link>
+      <link>http://localhost:1313/posts/fuzz/syzkaller/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/syzkaller/</guid>
+      <guid>http://localhost:1313/posts/fuzz/syzkaller/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;h3 id=&#34;基本知识&#34;&gt;基本知识&lt;/h3&gt;
 &lt;p&gt;Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 &lt;a href=&#34;https://github.com/dvyukov&#34;&gt;dvyukov&lt;/a&gt; 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。&lt;/p&gt;</description>
     </item>
     <item>
-      <title>论文笔记：Fuzzing: A Survey for Roadmap</title>
-      <link>https://nanhang.top/posts/paper/roadmap/</link>
+      <title>VSCode调试Linux Kernel</title>
+      <link>http://localhost:1313/posts/linux/debug/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/paper/roadmap/</guid>
+      <guid>http://localhost:1313/posts/linux/debug/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;h2 id=&#34;编译内核&#34;&gt;编译内核&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;安装工具&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;安装编译链工具：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo apt update
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo apt install -y build-essential libncurses-dev flex bison libssl-dev libelf-dev bc
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo apt install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;下载内核源码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;tar -xJf linux-5.15.167.tar.xz
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; linux-5.15.167
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;编译&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;#配置编译工具链&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;make &lt;span class=&#34;nv&#34;&gt;ARCH&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;arm64 &lt;span class=&#34;nv&#34;&gt;CROSS_COMPILE&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;aarch64-linux-gnu- defconfig
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTUALIZATION
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_KVM
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_KVM_ARM_HOST
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTIO
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTIO_PCI
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTIO_BLK
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTIO_NET
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;./scripts/config --enable CONFIG_VIRTIO_CONSOLE
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;#更新配置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;make &lt;span class=&#34;nv&#34;&gt;ARCH&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;arm64 &lt;span class=&#34;nv&#34;&gt;CROSS_COMPILE&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;aarch64-linux-gnu- olddefconfig  
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;#编译&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;make &lt;span class=&#34;nv&#34;&gt;ARCH&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;arm64 &lt;span class=&#34;nv&#34;&gt;CROSS_COMPILE&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;aarch64-linux-gnu- -j&lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;nproc&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后的结果如下：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>初探LLVM框架</title>
+      <link>http://localhost:1313/posts/mobile/obf/llvm/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/obf/llvm/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>论文笔记：Fuzzing: A Survey for Roadmap</title>
+      <link>http://localhost:1313/posts/paper/roadmap/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/paper/roadmap/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;p&gt;看了 arttnba3 师傅的关于这篇论文的博客想要好好读一下这篇论文，但是没有找到免费的 PDF 文档，而 ACM 官网下载要钱，而且还是doler。所以就直接看 arttnba3 师傅的博客了，这篇文章就是看 arttnba3 师傅的博客记的笔记，几乎就是完全转载了 arttnba3 的博客，仅对格式做了一些小小的修改，特此声明一下。&lt;/p&gt;</description>
     </item>
     <item>
       <title>论文笔记：Fuzzing: Art, Science, and Engineering</title>
-      <link>https://nanhang.top/posts/paper/art/</link>
+      <link>http://localhost:1313/posts/paper/art/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/paper/art/</guid>
+      <guid>http://localhost:1313/posts/paper/art/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;论文题目：模糊测试：艺术、科学和工程&lt;/p&gt;
@@ -120,11 +243,19 @@
     </item>
     <item>
       <title>论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing</title>
-      <link>https://nanhang.top/posts/paper/llamafuzz/</link>
+      <link>http://localhost:1313/posts/paper/llamafuzz/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/paper/llamafuzz/</guid>
+      <guid>http://localhost:1313/posts/paper/llamafuzz/</guid>
       <description>&lt;h2 id=&#34;0x00-前言&#34;&gt;0x00 前言&lt;/h2&gt;
 &lt;p&gt;由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>小程序逆向入门</title>
+      <link>http://localhost:1313/posts/mobile/js/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/js/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

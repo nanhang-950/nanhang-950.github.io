@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>加固开发 on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E5%BC%80%E5%8F%91/</link>
+    <description>Recent content in 加固开发 on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E5%BC%80%E5%8F%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>OLLVM混淆和反混淆</title>
+      <link>http://localhost:1313/posts/mobile/confron/ollvm/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/confron/ollvm/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>初探LLVM框架</title>
+      <link>http://localhost:1313/posts/mobile/obf/llvm/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/obf/llvm/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

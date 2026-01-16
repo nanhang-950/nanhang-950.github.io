@@ -178,20 +178,6 @@ code.has-jax {
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Android APP脱壳入门
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>加固简介 Android 应用加固（壳）是为了防止逆向分析、DEX dump、调试和修改，保护代码和资源的完整性与安全。随着技术发展，加固经历了四代演进：
-第一代：整体 Dex 加密 核心特性：
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Android APP脱壳入门" href="http://localhost:1313/posts/mobile/android/obf/shell/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
     <h2 class="entry-hint-parent">Android APP抓包
     </h2>
   </header>
@@ -202,7 +188,7 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Android APP抓包" href="http://localhost:1313/posts/mobile/android/bag/"></a>
+  <a class="entry-link" aria-label="post link to Android APP抓包" href="http://localhost:1313/posts/mobile/bag/"></a>
 </article>
 
 <article class="post-entry tag-entry"> 
@@ -211,10 +197,11 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
     </h2>
   </header>
   <div class="entry-content">
-    <p></p>
+    <p>简介 Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。
+...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Frida攻略" href="http://localhost:1313/posts/mobile/android/frida/"></a>
+  <a class="entry-link" aria-label="post link to Frida攻略" href="http://localhost:1313/posts/mobile/frida/"></a>
 </article>
 
 <article class="post-entry tag-entry"> 
@@ -228,7 +215,46 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios/base/"></a>
+  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios-base/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">OLLVM混淆和反混淆
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 简介 OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to OLLVM混淆和反混淆" href="http://localhost:1313/posts/mobile/confron/ollvm/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">初探LLVM框架
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>简介 LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 初探LLVM框架" href="http://localhost:1313/posts/mobile/obf/llvm/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">小程序逆向入门
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 小程序逆向入门" href="http://localhost:1313/posts/mobile/js/"></a>
 </article>
     </main>
     
@@ -267,6 +293,18 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>

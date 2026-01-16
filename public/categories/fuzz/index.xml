@@ -2,42 +2,61 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Fuzz on 南行&#39;s Blog</title>
-    <link>https://nanhang.top/categories/fuzz/</link>
+    <link>http://localhost:1313/categories/fuzz/</link>
     <description>Recent content in Fuzz on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="https://nanhang.top/categories/fuzz/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/fuzz/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>AFL模糊测试入门</title>
+      <link>http://localhost:1313/posts/fuzz/afl/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/fuzz/afl/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。&lt;/p&gt;
+&lt;h2 id=&#34;基本概念&#34;&gt;基本概念&lt;/h2&gt;
+&lt;h3 id=&#34;模糊测试简介&#34;&gt;模糊测试简介&lt;/h3&gt;
+&lt;p&gt;Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是&lt;strong&gt;自动生成随机输入&lt;/strong&gt;到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>AFL源码分析</title>
+      <link>http://localhost:1313/posts/fuzz/afl-src/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/fuzz/afl-src/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;熟悉了 AFL 的使用之后，接下来应该分析一下 AFL 的源代码来理解 AFL 的 Fuzz 原理。关于 AFL 的源码分析已经有很多前辈珠玉在前了，所以也想过到底要不要写这篇文章。想了想还是打算动笔，也算是对自己学到的东西做总结。&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Go Fuzz</title>
-      <link>https://nanhang.top/posts/fuzz/go/</link>
+      <link>http://localhost:1313/posts/fuzz/go/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/go/</guid>
+      <guid>http://localhost:1313/posts/fuzz/go/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzzing 的需求。因此，人们在基于传统的 Fuzz 工具的基础上，逐步为这些语言构建了 Fuzz 工具。&lt;/p&gt;</description>
     </item>
     <item>
       <title>libFuzzer浅探</title>
-      <link>https://nanhang.top/posts/fuzz/libfuzzer/</link>
+      <link>http://localhost:1313/posts/fuzz/libfuzzer/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/libfuzzer/</guid>
+      <guid>http://localhost:1313/posts/fuzz/libfuzzer/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C++ 项目的单元测试。&lt;/p&gt;</description>
     </item>
     <item>
       <title>Rust Fuzz</title>
-      <link>https://nanhang.top/posts/fuzz/rust/</link>
+      <link>http://localhost:1313/posts/fuzz/rust/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/rust/</guid>
+      <guid>http://localhost:1313/posts/fuzz/rust/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;传统的 AFL、libFuzzer 和 honggfuzz 主要支持用 C/C++ 语言开发的项目。但是现在随着 Rust、Go 等新兴编译型语言的兴起，相应的出现了对这些语言开发的项目进行 Fuzz 的需求。因此，人们在基于传统的 Fuzz 思想的基础上，逐步为这些语言构建了 Fuzz 工具。本文所要学习的 cargo-fuzz 正是如此。&lt;/p&gt;</description>
     </item>
     <item>
       <title>Syzkaller初探</title>
-      <link>https://nanhang.top/posts/fuzz/syzkaller/</link>
+      <link>http://localhost:1313/posts/fuzz/syzkaller/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/fuzz/syzkaller/</guid>
+      <guid>http://localhost:1313/posts/fuzz/syzkaller/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;h3 id=&#34;基本知识&#34;&gt;基本知识&lt;/h3&gt;
 &lt;p&gt;Syzkaller 是 Google 的安全研究人员开发并维护的开源内核 Fuzz 工具，目前主要由 &lt;a href=&#34;https://github.com/dvyukov&#34;&gt;dvyukov&lt;/a&gt; 维护。它是使用 Go 语言编写的，也有少部分 C 代码，具有部署快速、使用简便的特点，同时还支持多种操作系统如：Linux、Android、Windows、openbsd、darwin 等系统。不过它支持最全面的还是 Linux 系统。&lt;/p&gt;</description>

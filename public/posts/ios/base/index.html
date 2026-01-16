@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="zh" dir="auto" data-theme="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, nofollow">
 <title>IOS逆向入门 | 南行&#39;s Blog</title>
 <meta name="keywords" content="">
 <meta name="description" content="越狱
 我的设备：iPhone X，IOS 16.1.1
 越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。">
 <meta name="author" content="">
-<link rel="canonical" href="https://nanhang.top/posts/ios/base/">
+<link rel="canonical" href="http://localhost:1313/posts/ios/base/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="16x16" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="apple-touch-icon" href="https://nanhang.top/assets/favicon.jpg">
-<link rel="mask-icon" href="https://nanhang.top/assets/favicon.jpg">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="zh" href="https://nanhang.top/posts/ios/base/">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/ios/base/">
 <noscript>
     <style>
         #theme-toggle,
@@ -106,78 +106,13 @@ code.has-jax {
     border: inherit;
     color: #515151;
 }
-</style><meta property="og:url" content="https://nanhang.top/posts/ios/base/">
-  <meta property="og:site_name" content="南行&#39;s Blog">
-  <meta property="og:title" content="IOS逆向入门">
-  <meta property="og:description" content="越狱 我的设备：iPhone X，IOS 16.1.1
-越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。">
-  <meta property="og:locale" content="zh">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2025-11-30T23:30:38+00:00">
-    <meta property="article:modified_time" content="2025-11-30T23:30:38+00:00">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="IOS逆向入门">
-<meta name="twitter:description" content="越狱
-我的设备：iPhone X，IOS 16.1.1
-越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。">
-
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position":  1 ,
-      "name": "Posts",
-      "item": "https://nanhang.top/posts/"
-    }, 
-    {
-      "@type": "ListItem",
-      "position":  2 ,
-      "name": "IOS逆向入门",
-      "item": "https://nanhang.top/posts/ios/base/"
-    }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "IOS逆向入门",
-  "name": "IOS逆向入门",
-  "description": "越狱 我的设备：iPhone X，IOS 16.1.1\n越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。\n",
-  "keywords": [
-    
-  ],
-  "articleBody": "越狱 我的设备：iPhone X，IOS 16.1.1\n越狱（Jailbreak）是对 iOS 系统安全/限制的一种突破，目的是获取更高权限（如 root）和安装非 App Store 的软件（侧载）。越狱常用于安全研究、定制系统或安装调试工具（例如 Frida）。\n越狱可以分为有根越狱和无根越狱：\n有根越狱：越狱后以 root 身份长期存在，重启后仍保持越狱状态（或能自动恢复）。多见于较老 iOS 版本与设备。 无根越狱：越狱状态随系统重启丢失（重启需要重新越狱），安装的插件/应用仍在但不可使用，待再次越狱后恢复可用。 越狱流程 设备参数：\n无 ID 锁（必须要求） IOS 版本：16.1.1 全网最详细的苹果ios设备一键越狱教程\n通过爱思助手实现一键越狱，我这里跟进系统版本使用的是 dopamine。\n越狱中间需要登陆 Apple ID，可以自己去注册一个。然后还需要做一个设置，在通用-\u003eVPN与设备管理中选择信任。\n在越狱中会过程中会让我们在手机端设置 root 密码，后面 ssh 连接 iPhone 的时候会需要使用。\nIOS App安装机制 AppStore 下载 用描述文件安装 证书签名安装：根据苹果的设定，所有的 app 源文件，打包成 ipa 后缀的文件，都是需要证书签名，然后才能安装在苹果设备上的，上面的描述文件模式，也有做签名操作，只是在签名的时候，苹果允许以描述文件的形式导出（我自己的理解，不知道对不对了）这个证书可以是 apple ID 账号，也可以是 udid，也可以是企业证书 testflight 测试版安装：这个有的正能量的 app 也会选择的，不过有设备数量限制，只能多少设备安装 巨魔安装：这个是利用了苹果的漏洞，实现直接用 ipa 文件安装，且不需要用证书签名，这个操作又叫做侧载，巨魔的安装条件也很苛刻，只有部分设备，部分 ios 版本才可以的 越狱后安装 openssh 通过 Slieo 搜索安装，通过 mobile 登陆，这里的密码就是越狱的时候设置的密码。\n然后搜索安装。\n巨魔商店 首先下载 TrollInstallerX：下载巨魔\n然后在 Slieo 中添加源：https://repo.6ziz.com\n然后在 Slieo 中搜索安装 AppSync 补丁，之后打开 TrollInstallerX 安装巨魔。\nfrida 这里我选择的是 16.7.19，在 github 上下载 frida iPhone 版。 安装：\nscp .\\frida_16.7.19_iphoneos-arm64.deb mobile@192.168.6.171:/var/jb/var/mobile dpkg -i frida_16.7.19_iphoneos-arm64.deb # 运行服务端 frida-server -l 0.0.0.0:6666 测试：\n基础知识 IOS 源自 MacOS，而 MacOS 又基于 Unix 系统内核，因此其目录结构基本与 Unix 系统相同，实际上 IOS 系统包含两类目录，一类是保留的 Unix 传统目录，另一类是 IOS/MacOS 特有的目录。\n沙盒结构 沙盒也叫沙箱，其原理是把应用程序生成和修改的文件重定向到自身文件夹中。在沙盒机制下，每个程序之间的文件夹不能互相访问。\n为了保证系统安全，IOS 采用了这种机制。IOS 应用程序在安装时会创建属于自己的沙盒文件，沙盒的根目录有三个文件夹，分别是 ：\nDocuments：用于存储应用程序的数据，改路径可通过配置来实现 ITunes 文件共享，可被 ITunes 备份。 Library：目录下有两个子目录 Preferences：保存应用程序的偏好设置文件，ITunes 同步设备时会备份该目录。 Caches：主要存放缓存文件，用来保存应用程序运行时产生的需要持久化的数据，这些数据一般存储体积比较大，但也不是特别重要，需要用户负责删除，ITunes 同步设备时不会备份该目录。 tmp：保存应用程序运行时所需的临时数据，使用完毕后再将相应的文件从改目录删除。应用程序没有运行时，系统也可能会清除该目录下的文件。ITunes 同步设备时不会备份该目录。 应用结构 使用 IOS 系统，普通用户只有从 App Store 下载 App，而对于安全人员来说，还可以从越狱商店下载 App。\n它们具有以下差别：\nApplications：存放的是 IOS 系统自身的 App 以及从越狱商店安装的 App。 App Store 下载的 App 则存放在/var/containers/Bundle/Application目录。 安装包的差别：\n越狱商店的 App 安装包格式通常为 deb。 而 App Store 的 App 安装包格式通常是 ipa。 文件权限的差别：\n越狱商店的 App 能够以 root 权限运行。 App Store 的 App 只能以 mobile 权限运行。 IPA 文件和 APK 文件一样都是 ZIP 文件，一个 IPA 包中必然存在一个 Payload 文件夹，里面存放的*.app文件夹才是真正的包内容。\nInfo.plist文件是应用的主要配置文件。 *.lproj文件夹：存放各种本地化的字符串。 资源文件： 文件权限 iOS 是一个多用户操作系统，每个用户扮演着不同的角色，对系统的控制权也各不相同。虽然表面上 iOS 设备只有一个“用户”，但实际上系统内部有多个账户与权限层级，用于实现安全隔离和访问控制。\niOS 基于 Darwin 内核（即 macOS 的底层），同样使用 UNIX 权限模型（UID、GID、rwx 权限）。 在 iOS 中，主要存在以下几类用户：\n用户 UID 说明 root 0 超级用户，拥有系统全部控制权 mobile 501 普通 App 运行的主要用户（SpringBoard、App Sandbox） _installd / _networkd / _locationd 等 各种系统服务专用用户，权限受限 _securityd 安全相关进程（密钥管理、签名验证） _analyticsd 分析与日志进程 非越狱设备中，App 永远以 mobile 用户身份运行，并被严格限制在自己的沙盒中。\niOS 文件权限遵循标准的 UNIX 模型：\n-rwxr-xr-- 1 root wheel 12345 Jan 17 12:00 AppBinary 含义如下：\n符号 含义 r 读权限 (read) w 写权限 (write) x 执行权限 (execute) owner/group/others 分别对应文件拥有者、所属组、其他用户的权限 不过，iOS 在此基础上引入了多层额外机制以强化安全性。\nMach-O文件 Mach-O（Mach Object file format） 是 MacOS、iOS 等 Apple 系统中可执行文件、动态库（dylib）、内核扩展（kext）和调试符号（dSYM）的底层文件格式。\n它是 Apple 自定义的可执行格式，功能类似于 Windows 的 PE 和 Linux 的 ELF。常见的有可执行文件和动态链接库。可执行文件和 ELF 文件一样无扩展名，动态链接库以 dylib 为扩展名。\n砸壳 IOS 端 App 在上线前会由苹果商店进行 FairPlayDRM 数字版权加密保护，要对应用进行分析就必须先解密，从而得到原始未加密的二进制文件。\n砸壳工具：frida-ios-dump\nfrida-ios-dump 是一款基于 frida 的 ios 脱壳工具。\nwget https://github.com/AloneMonkey/frida-ios-dump 安装依赖：\npip3 install -r requirements.txt --upgrade 脚本使用很简单，修改 dump.py 配置一下你的 ssh ip 和端口、账号密码，它设置的默认端口为 2222 ，我们可以直接改成 22。\n运行查看：\npython3 dump.py -l 这里我通过 AI 对脚本做了一些修改，主要是指定 frida 服务端的地址和端口。\n运行命令\npython dump.py --frida-host 192.168.6.171 --frida-port 6666 图书 然后就可以使用 zip 解压缩 计算器.ipa 文件。\nunzip ./计算器.ipa 反编译 反编译分析的目标是 Mach-O 文件，一般都是应用程序的名字。\n我们也可以通过file命令来判断目标：\nfile * | grep -i mach IOS APP 都是使用 OC 或者是 Swift 开发的，我们可以使用 IDA 进行反编译分析：\n抓包 Reqable 是一个移动端非常优秀的抓包工具，我们可以通过它来抓取 IOS APP 的数据包。\nReqable 可以直接在 App Store 中安装 。\n然后我们需要在手机端安装证书，这里跟着应用上操作就行。\n然后我们就可以配置移动端和电脑端的协同，这里和 Android 一样都是扫码连接。\n然后在电脑端我们可以直接选定左边手机端的 IP，这样我们就指挥接收它的数据包。\n参考 57《iOS逆向教程之快速入门》_哔哩哔哩_bilibili 从iPhone越狱到打造完美手机 | LOTUS BLOG iOS逆向 - 应用脱壳iOS端APP在上线之前，会经过苹果商店进行FairPlayDRM数字版本加密保护，俗称加壳 iOS逆向分析工具使用汇总逆向App总体思路 UI分析 Cycript 、Reveal; 代码分析 代码在Mach-O 安装Frida插件 · iOS逆向开发：越狱包管理器\n",
-  "wordCount" : "2842",
-  "inLanguage": "zh",
-  "datePublished": "2025-11-30T23:30:38Z",
-  "dateModified": "2025-11-30T23:30:38Z",
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "https://nanhang.top/posts/ios/base/"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "南行's Blog",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://nanhang.top/assets/favicon.jpg"
-    }
-  }
-}
-</script>
+</style>
 </head>
 <body id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://nanhang.top/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
@@ -203,32 +138,32 @@ code.has-jax {
         </div>
         <ul id="menu">
             <li>
-                <a href="https://nanhang.top/" title="南行&#39;s Blog">
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
                     <span>首页</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/archives/" title="归档">
+                <a href="http://localhost:1313/archives/" title="归档">
                     <span>归档</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/categories/" title="Categories">
+                <a href="http://localhost:1313/categories/" title="Categories">
                     <span>分类</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/tags/" title="Tags">
+                <a href="http://localhost:1313/tags/" title="Tags">
                     <span>标签</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/search/" title="搜索">
+                <a href="http://localhost:1313/search/" title="搜索">
                     <span>搜索</span>
                 </a>
             </li>
             <li>
-                <a href="https://nanhang.top/about/" title="About">
+                <a href="http://localhost:1313/about/" title="About">
                     <span>关于</span>
                 </a>
             </li>

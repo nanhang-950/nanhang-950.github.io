@@ -10,7 +10,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <link rel="canonical" href="http://localhost:1313/tags/%E5%B0%8F%E7%A8%8B%E5%BA%8F/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.e105e5001e5a6a4bdfd2fc39297ee1c1f9ed55bbfa466311bf23402970d44059.css" integrity="sha256-4QXlAB5aakvf0vw5KX7hwfntVbv6RmMRvyNAKXDUQFk=" rel="preload stylesheet" as="style">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
@@ -178,14 +178,15 @@ code.has-jax {
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">小程序逆向基础
+    <h2 class="entry-hint-parent">小程序逆向入门
     </h2>
   </header>
   <div class="entry-content">
-    <p></p>
+    <p>前言 现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。
+...</p>
   </div>
-  <footer class="entry-footer"><span title='2025-09-25 13:31:00 +0000 UTC'>2025年9月25日</span></footer>
-  <a class="entry-link" aria-label="post link to 小程序逆向基础" href="http://localhost:1313/posts/mobile/misc/xxc/"></a>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 小程序逆向入门" href="http://localhost:1313/posts/mobile/js/"></a>
 </article>
     </main>
     
@@ -224,6 +225,18 @@ code.has-jax {
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>

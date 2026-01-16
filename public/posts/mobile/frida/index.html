@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Frida攻略 | 南行&#39;s Blog</title>
+<meta name="keywords" content="frida">
+<meta name="description" content="简介
+Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/frida/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/frida/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Frida攻略
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a><ul>
+                            
+                    <li>
+                        <a href="#legacy-style-enumeration-api-%e7%a7%bb%e9%99%a4" aria-label="Legacy-style enumeration API 移除">Legacy-style enumeration API 移除</a></li>
+                    <li>
+                        <a href="#memory-%e8%af%bb%e5%86%99-api-%e7%8e%b0%e4%bb%a3%e5%8c%96" aria-label="Memory 读写 API 现代化">Memory 读写 API 现代化</a></li>
+                    <li>
+                        <a href="#%e9%9d%99%e6%80%81-module-api-%e7%a7%bb%e9%99%a4" aria-label="静态 Module API 移除">静态 Module API 移除</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba" aria-label="环境搭建">环境搭建</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e4%bd%bf%e7%94%a8" aria-label="基本使用">基本使用</a><ul>
+                            
+                    <li>
+                        <a href="#frida-ps" aria-label="frida-ps">frida-ps</a></li>
+                    <li>
+                        <a href="#%e6%93%8d%e4%bd%9c%e6%a8%a1%e5%bc%8f" aria-label="操作模式">操作模式</a></li>
+                    <li>
+                        <a href="#frida%e8%84%9a%e6%9c%ac%e5%9f%ba%e7%a1%80" aria-label="frida脚本基础">frida脚本基础</a></li>
+                    <li>
+                        <a href="#frida-hook" aria-label="Frida Hook">Frida Hook</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#frida-labs" aria-label="Frida-Labs">Frida-Labs</a><ul>
+                            
+                    <li>
+                        <a href="#frida-lab-1" aria-label="Frida Lab 1">Frida Lab 1</a></li>
+                    <li>
+                        <a href="#frida-lab-2" aria-label="Frida Lab 2">Frida Lab 2</a></li>
+                    <li>
+                        <a href="#frida-lab-3" aria-label="Frida Lab 3">Frida Lab 3</a></li>
+                    <li>
+                        <a href="#frida-lab-4" aria-label="Frida Lab 4">Frida Lab 4</a></li>
+                    <li>
+                        <a href="#frida-lab-5" aria-label="Frida Lab 5">Frida Lab 5</a></li>
+                    <li>
+                        <a href="#frida-lab-6" aria-label="Frida Lab 6">Frida Lab 6</a></li>
+                    <li>
+                        <a href="#frida-lab-7" aria-label="Frida Lab 7">Frida Lab 7</a></li>
+                    <li>
+                        <a href="#frida-lab-8" aria-label="Frida Lab 8">Frida Lab 8</a></li>
+                    <li>
+                        <a href="#frida-lab-9" aria-label="Frida Lab 9">Frida Lab 9</a></li>
+                    <li>
+                        <a href="#frida-lab-10" aria-label="Frida Lab 10">Frida Lab 10</a></li>
+                    <li>
+                        <a href="#frida-lab-11" aria-label="Frida Lab 11">Frida Lab 11</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#objection" aria-label="objection">objection</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e6%90%ad%e5%bb%ba-1" aria-label="环境搭建">环境搭建</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e4%bd%bf%e7%94%a8" aria-label="基础使用">基础使用</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e6%9c%ac%e7%94%a8%e6%b3%95" aria-label="基本用法">基本用法</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80api" aria-label="基础API">基础API</a></li>
+                    <li>
+                        <a href="#objection%e5%86%85%e5%ad%98%e6%bc%ab%e6%b8%b8" aria-label="objection内存漫游">objection内存漫游</a></li>
+                    <li>
+                        <a href="#objectionhook" aria-label="objectionHook">objectionHook</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#rpc" aria-label="RPC">RPC</a></li>
+                    <li>
+                        <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%ae%9a%e4%bd%8d" aria-label="定位">定位</a></li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8" aria-label="利用">利用</a></li>
+                    <li>
+                        <a href="#%e8%a7%84%e6%a8%a1%e5%8c%96%e5%88%a9%e7%94%a8" aria-label="规模化利用">规模化利用</a>
+                    </li>
+                </ul>
+                </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。</p>
+<p>什么是 Hook？Hook 指的是拦截并修改应用程序或 Android 系统本身中函数或方法行为的过程。比如，我们可以 hook 应用里的某个方法，通过插入自己的实现来改变它的功能。</p>
+<p>Frida 与 Xposed 的对比：Xposed 配置麻烦，难以 hook 底层代码，Frida 持久化 Hook 相对麻烦。</p>
+<p>frida17 相比于 过去的 frida 版本 api 发生了一些变化：</p>
+<h3 id="legacy-style-enumeration-api-移除">Legacy-style enumeration API 移除<a hidden class="anchor" aria-hidden="true" href="#legacy-style-enumeration-api-移除">#</a></h3>
+<p>以前：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="nx">Process</span><span class="p">.</span><span class="nx">enumerateModules</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">onMatch</span><span class="p">(</span><span class="nx">module</span><span class="p">)</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span> <span class="p">},</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">onComplete</span><span class="p">()</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>现代方式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="k">for</span> <span class="p">(</span><span class="kr">const</span> <span class="nx">module</span> <span class="k">of</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">enumerateModules</span><span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">module</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li><strong>原因</strong>：大多数平台的枚举操作本身很快，提供异步接口没必要。</li>
+<li><strong>TypeScript 用户</strong>：只需要使用现代风格，无需改动旧代码，除非依赖老版本 typings。</li>
+</ul>
+<h3 id="memory-读写-api-现代化">Memory 读写 API 现代化<a hidden class="anchor" aria-hidden="true" href="#memory-读写-api-现代化">#</a></h3>
+<p>以前：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">playerHealth</span> <span class="o">=</span> <span class="nx">Memory</span><span class="p">.</span><span class="nx">readU32</span><span class="p">(</span><span class="nx">ptr</span><span class="p">(</span><span class="s1">&#39;0x1234&#39;</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl"><span class="nx">Memory</span><span class="p">.</span><span class="nx">writeU32</span><span class="p">(</span><span class="nx">ptr</span><span class="p">(</span><span class="s1">&#39;0x1234&#39;</span><span class="p">),</span> <span class="mi">100</span><span class="p">);</span>
+</span></span></code></pre></div><p>现代方式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">playerHealthLocation</span> <span class="o">=</span> <span class="nx">ptr</span><span class="p">(</span><span class="s1">&#39;0x1234&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">playerHealth</span> <span class="o">=</span> <span class="nx">playerHealthLocation</span><span class="p">.</span><span class="nx">readU32</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="nx">playerHealthLocation</span><span class="p">.</span><span class="nx">writeU32</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li>支持链式写入：</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="nx">ptr</span><span class="p">(</span><span class="s1">&#39;0x1234&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="nx">writeU32</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="nx">writeU16</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">writeU16</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+</span></span></code></pre></div><blockquote>
+<p>旧版 <code>Memory.readXXX</code> / <code>Memory.writeXXX</code> 已移除。</p>
+</blockquote>
+<h3 id="静态-module-api-移除">静态 Module API 移除<a hidden class="anchor" aria-hidden="true" href="#静态-module-api-移除">#</a></h3>
+<p>以下静态方法已经删除：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Module.ensureInitialized()
+</span></span><span class="line"><span class="cl">Module.findBaseAddress()
+</span></span><span class="line"><span class="cl">Module.getBaseAddress()
+</span></span><span class="line"><span class="cl">Module.findExportByName()
+</span></span><span class="line"><span class="cl">Module.getExportByName()
+</span></span><span class="line"><span class="cl">Module.findSymbolByName()
+</span></span><span class="line"><span class="cl">Module.getSymbolByName()
+</span></span></code></pre></div><p>迁移方式：</p>
+<ul>
+<li><code>Module.getSymbolByName(null, 'open')</code> → <code>Module.getGlobalExportByName('open')</code></li>
+<li>其他方法通过先获取模块再操作：</li>
+</ul>
+<p>以前：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="nx">Module</span><span class="p">.</span><span class="nx">getExportByName</span><span class="p">(</span><span class="s1">&#39;libc.so&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nx">Module</span><span class="p">.</span><span class="nx">getBaseAddress</span><span class="p">(</span><span class="s1">&#39;libc.so&#39;</span><span class="p">);</span>
+</span></span></code></pre></div><p>现代方式：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">libc</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">getModuleByName</span><span class="p">(</span><span class="s1">&#39;libapp.so&#39;</span><span class="p">);</span> <span class="c1">//获取当前进程中名为 `&#34;libc.so&#34;` 的模块对象。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">openImpl</span> <span class="o">=</span> <span class="nx">libc</span><span class="p">.</span><span class="nx">getExportByName</span><span class="p">(</span><span class="s1">&#39;open&#39;</span><span class="p">);</span>   <span class="c1">//获取 `libc.so` 中名为 `&#34;open&#34;` 的导出函数的地址。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">const</span> <span class="nx">base</span> <span class="o">=</span> <span class="nx">libc</span><span class="p">.</span><span class="nx">base</span><span class="p">;</span> <span class="c1">//获取 libc.so 模块的基址
+</span></span></span></code></pre></div><h2 id="环境搭建">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建">#</a></h2>
+<p>安装 python 库：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip3 install frida
+</span></span><span class="line"><span class="cl">pip3 install frida-tools
+</span></span></code></pre></div><p>下载相应版本的<code>frida-server</code>服务端，然后 push 到模拟器。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">adb push .<span class="se">\f</span>rida-server-17.0.5-android-x86_64 /data/local/tmp
+</span></span><span class="line"><span class="cl">adb shell
+</span></span><span class="line"><span class="cl">su root
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> /data/local/tmp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#加可执行权限</span>
+</span></span><span class="line"><span class="cl">chmod +x frida-server-17.0.5-android-x86_64
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">./frida-server-17.0.5-android-x86_64
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#也可以自定义端口</span>
+</span></span><span class="line"><span class="cl">./frida-server-17.0.5-android-x86_64 -l 0.0.0.0:6666
+</span></span></code></pre></div><h2 id="基本使用">基本使用<a hidden class="anchor" aria-hidden="true" href="#基本使用">#</a></h2>
+<h3 id="frida-ps">frida-ps<a hidden class="anchor" aria-hidden="true" href="#frida-ps">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida-ps -Uai
+</span></span></code></pre></div><ul>
+<li><code>-U</code>：表示连接 USB 设备</li>
+<li><code>-a</code>：列出所有进程</li>
+<li><code>-i</code>：显示详细信息。</li>
+</ul>
+<p>我们可以通过 frida-ps 获取目标 APP 的包名。</p>
+<p>获得特定的包名：</p>
+<pre tabindex="0"><code>frida-ps -Uai | grep &#34;应用名称&#34;
+</code></pre><p>为了将 frida 附加到一个应用程序，我们需要先获取该应用的包名。一旦获得包名，就可以使用以下命令附加 frida：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida -U -f 包名
+</span></span></code></pre></div><p>Frida存在两种操作模式：第一，通过命令行直接将JavaScript脚本 注入进程中，对进程进行操作，这种模式称为CLI（命令行）模式；第 二，使用Python脚本间接完成JavaScript脚本的注入工作，这种模式称为 RPC(1) （Remote Procedure Call，远程过程调用）模式，这种模式虽然加 入了Python的包装，但实际对进程进行操作的还是JavaScript脚本。因此 本章将重点以CLI模式讲解Frida的使用。</p>
+<p>Frida 具体操作 APP 的方式有两种：</p>
+<ul>
+<li>一种是spawn（调用）模式，简而言之就是将启动App的权利交由 Frida来控制。当使用spawn模式时，即使目标App已经启动，在使用 Frida对程序进行注入时，还是会由Frida将App重新启动并注入。在命令 行模式中，frida命令加上-f参数就会以spawn模式操作目标App。</li>
+<li>另一种是attach（附加）模式，这种模式是建立在目标App已经启动的情况下，Frida直接利用ptrace原理注入程序进而完成Hook操作。在 CLI模式中，如果不添加-f参数，则默认通过attach模式注入App。</li>
+</ul>
+<h3 id="操作模式">操作模式<a hidden class="anchor" aria-hidden="true" href="#操作模式">#</a></h3>
+<ul>
+<li>CLI 模式：通过命令行直接将 js 脚本注入进程中；</li>
+<li>RPC 模式：使用 Python 进行 js 脚本的注入工作，实际对进程进行操作的还是 js 脚本，可以通过 RPC 传输给 Python 脚本进行复杂数据的处理。</li>
+</ul>
+<p>注入模式和启动命令：</p>
+<ul>
+<li>Spawn 模式：将启动 App 的权利交由 Frida 来控制，即使目标 App 已经启动，在使用 Frida 注入程序是还是会重启 App</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida -U -f 进程名 -l hook.js
+</span></span></code></pre></div><ul>
+<li>Attach 模式：在目标 App 已经启动的情况下，Frida 通过 ptrace 注入程序从而执行 Hook 操作。
+<ul>
+<li>s在 CLI 模式中，如果不添加 -f 参数，则默认会通过 attach 模式注入 App</li>
+<li>适用于已经运行的App，不会重新启动 App，对用户体验影响较小</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida -U 进程名 -l hook.js
+</span></span></code></pre></div><h3 id="frida脚本基础">frida脚本基础<a hidden class="anchor" aria-hidden="true" href="#frida脚本基础">#</a></h3>
+<p>基础语法：</p>
+<ul>
+<li><code>Java.use(className)</code>：获取指定的 Java 类并使其在 JavaScript 代码中可用。</li>
+<li><code>Java.perform(callback)</code>：确保回调函数在 Java 的主线程上执行。</li>
+<li><code>Java.choose(className,callbacks)</code>：枚举指定类的所有实例。</li>
+<li><code>Java.cast(obj,cls)</code>：将一个 Java 对象转换成另一个 Java 类的实例。</li>
+<li><code>Java.enumerateLoadedClasses(callbacks)</code>：枚举进程中已经加载的所有 Java 类。</li>
+<li><code>Java.enumerateClassLoaders(callbacks)</code>：枚举进程中存在的所有 Java 类加载器。</li>
+<li><code>Java.enumerateMethods(targetClassMethod)</code>：枚举指定类的所有方法。</li>
+</ul>
+<p>日志输出语法区别：</p>
+<ul>
+<li><code>console.log()</code>：使用 js 直接进行日志打印。</li>
+<li><code>send()</code>：frida 专有方法，用于发送数据或日志到外部 python 脚本</li>
+<li><code>hexdump()</code>：是用来打印内存空间的值，可以说是相当便捷的查看内存的方式了。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">libc</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">findBaseAddress</span><span class="p">(</span><span class="s1">&#39;libc.so&#39;</span><span class="p">);</span><span class="c1">// 获取 so 的基址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">hexdump</span><span class="p">(</span><span class="nx">libc</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">offset</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span><span class="c1">// 相对偏移
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nx">length</span><span class="o">:</span> <span class="mi">64</span><span class="p">,</span><span class="c1">//dump 的大小
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nx">header</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">ansi</span><span class="o">:</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl"><span class="p">}));</span>
+</span></span></code></pre></div><p>Hook 框架模板：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">hookTest</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="nx">setImmediate</span><span class="p">(</span><span class="nx">main</span><span class="p">);</span>
+</span></span></code></pre></div><p>通过以下方法获取 Java 类的 JavaScript 包装器：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;java.lang.String&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>通过调用<code>$new</code>来实例化这些类：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">string_class</span><span class="o">=</span><span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;java.lang.String&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">string_instance</span><span class="o">=</span><span class="nx">string_class</span><span class="p">.</span><span class="nx">$new</span><span class="p">(</span><span class="s2">&#34;Testing&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nx">string_instance</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span></code></pre></div><p>我们可以通过在类上覆盖方法来替换方法的实现：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">string_class</span><span class="p">.</span><span class="nx">charAt</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;charAt overridden!&#34;</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="s2">&#34;X&#34;</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>我们通过右击某个类将其复制为 frida 片段。</p>
+<p>创建一个脚本来跟踪活动：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">let</span> <span class="nx">ActivityClass</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;android.app.Acitivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ActivityClass</span><span class="p">.</span><span class="nx">onResume</span><span class="p">.</span><span class="nx">implementation</span><span class="o">=</span><span class="kd">function</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;Activity resumed:&#34;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getClass</span><span class="p">().</span><span class="nx">getName</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">		<span class="k">this</span><span class="p">.</span><span class="nx">onResume</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><p>跟踪活动片段的脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">let</span> <span class="nx">FragmentClass</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;android.fragment.app.Fragment&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">FragmentClass</span><span class="p">.</span><span class="nx">onResume</span><span class="p">.</span><span class="nx">implementation</span><span class="o">=</span><span class="kd">function</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;Fragment resumed:&#34;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getClass</span><span class="p">().</span><span class="nx">getName</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">		<span class="k">this</span><span class="p">.</span><span class="nx">onResume</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><p>Frida的脚本模板：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="o">&lt;</span><span class="nx">class_reference</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;&lt;package_name&gt;.&lt;class&gt;&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="o">&lt;</span><span class="nx">class_reference</span><span class="o">&gt;</span><span class="p">.</span><span class="o">&lt;</span><span class="nx">method_to_hook</span><span class="o">&gt;</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">args</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">      我们对该方法自己的实现
+</span></span></span><span class="line"><span class="cl"><span class="cm">    */</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><h3 id="frida-hook">Frida Hook<a hidden class="anchor" aria-hidden="true" href="#frida-hook">#</a></h3>
+<p>常见数据类型</p>
+<ul>
+<li>Int64</li>
+<li>Uint64</li>
+<li>NativePointer
+<ul>
+<li>运算：add、sub、and、or、xor、shr、shi、not</li>
+<li>读取内存：readPointer、readByteArray、readCString、read58、readU8、readU16、readS64、readU64、readS32、readU32、readShort、readUshort、readInt、readUint、readFloat、readDouble</li>
+<li>写入内存：writePoniter、writeByteArray、writeUtf8String、write58、writeU8、writeS16、writeU16、writeS64、writeU64、writeS32、writeU32、writeShort、writeUShort、writeint、writeUint、writeFloat、writeDouble</li>
+</ul>
+</li>
+<li>NativeFunction</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">friendFunctionNmae</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NativeFunction</span><span class="p">(</span><span class="nx">friendFunctionPtr</span><span class="p">,</span><span class="s1">&#39;void&#39;</span><span class="p">,[</span><span class="s1">&#39;pointer&#39;</span><span class="p">,</span><span class="s1">&#39;pointer&#39;</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">returnvalue</span> <span class="o">=</span> <span class="nx">Memory</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="nx">sizefLargeObject</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">friendlyFunctionName</span><span class="p">(</span><span class="nx">returnvalue</span><span class="p">,</span><span class="nx">thisPtr</span><span class="p">);</span>
+</span></span></code></pre></div><p><strong>常用模块</strong></p>
+<p>process：</p>
+<ul>
+<li>Process.id()：返回附加进程的 pid</li>
+<li>Process.getCurrentThreadid()：获取当前线程id</li>
+</ul>
+<p>Hook 模板：</p>
+<pre tabindex="0"><code>function main(){
+	Interceptor.attach(addr,{
+		onEnter(args){
+		
+	},
+	onLeave(retval)
+	
+	});
+}
+setImmediate(main)
+</code></pre><p>在Frida脚本中实现native层Hook的API函数 是Interceptor.attach()函数，它的第一个参数是要Hook的函数地 址，第二个参数是一个callbacks回调。</p>
+<p>在callbacks回调中存在两个 函数：onEnter()函数是在函数调用前产生的回调，在这个函数中可 以处理函数参数的相关内容，被Hook的函数参数内容以数组的方式 存储在onEnter()函数的参数args中；onLeave()函数则是在被Hook的目标函数执行完成后执行的函数，被Hook的函数返回值用 onLeave()函数中的retval变量来表示。</p>
+<h2 id="frida-labs">Frida-Labs<a hidden class="anchor" aria-hidden="true" href="#frida-labs">#</a></h2>
+<p>这个仓库包含一系列专为学习 Android 上 Frida 而设计的挑战。这些挑战并不像硬核的 CTF（Capture The Flag）题目那样困难，而是更适合作为 Frida 入门学习的资源。</p>
+<h3 id="frida-lab-1">Frida Lab 1<a hidden class="anchor" aria-hidden="true" href="#frida-lab-1">#</a></h3>
+<p>先获取包名<code>com.ad2001.frida0x1</code>。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250525153928.png" style="zoom:50%;" />
+<p>应用界面</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250525153957.png" style="zoom: 50%;" />
+<p>应用要求我们输入数字。</p>
+<p>jadx 反编译分析，通过<code>AndroidManifest.xml</code>定位到<code>MainAcitivity</code></p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821104020.png" style="zoom:50%;" />
+<p><code>get_random</code>函数返回一个<code>0~100</code>之间的数字。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821130507.png" style="zoom:50%;" />
+<p><code>check</code>函数会i将按此</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250525154521.png" style="zoom:50%;" />
+<p>要使得校验结果正确我们有两种办法：</p>
+<ul>
+<li>hook get_random 方法</li>
+</ul>
+<p>既然随机数是在<code>get_random()</code>方法中生成的，我们可以 hook 这个方法获取它的返回值，或者直接覆盖返回值，让<code>get_random()</code>返回我们想让<code>check()</code>方法接收的任意值。</p>
+<p>我们已经获取了包名，接下来要确认 hook 的方法所在的类名，<code>get_random</code>方法在<code>MainActivity</code>之下，所以我们编写如下脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Java</span><span class="p">.</span><span class="na">perform</span><span class="p">(</span><span class="n">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">var</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Java</span><span class="p">.</span><span class="na">use</span><span class="p">(</span><span class="s">&#34;com.ad2001.frida0x1.MainActivity&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">})</span><span class="w">
+</span></span></span></code></pre></div><p>然后我们修改脚本，添加对<code>get_random</code>方法的自定义实现。</p>
+<p><code>get_random</code>方法源码如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kt">int</span><span class="w"> </span><span class="nf">get_random</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Random</span><span class="p">().</span><span class="na">nextInt</span><span class="p">(</span><span class="n">100</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>frida 脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x1.MainActivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">a</span><span class="p">.</span><span class="nx">get_random</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;This method is hooked&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">ret_val</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get_random</span><span class="p">();</span> <span class="c1">//调用原方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;The return value is &#34;</span> <span class="o">+</span> <span class="nx">ret_val</span><span class="p">);</span> <span class="c1">//输出原始返回值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;The value to bypass the check &#34;</span> <span class="o">+</span> <span class="p">(</span><span class="nx">ret_val</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span><span class="p">));</span> <span class="c1">// 计算绕过输入
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nx">ret_val</span><span class="p">;</span> <span class="c1">// 返回原始随机数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><p>这段脚本的作用是：当<code>get_random()</code>被调用时，会执行我们自定义的代码（这里是打印一行日志）。因为<code>get_random()</code>不带参数，所以<code>function()</code>里不写参数。</p>
+<p>我们在 hook 里用 <code>this.get_random()</code> 调用原方法，把结果存 <code>ret_val</code>，打印出来。</p>
+<p>但是这样会崩溃，因为没返回值给调用者。</p>
+<p>正确做法是返回这个原始返回值，同时打印信息，并算出绕过检查的值：</p>
+<p>运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida -U -f com.ad2001.frida0x1 -l .<span class="se">\l</span>ab1.js
+</span></span></code></pre></div><img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821105233.png" style="zoom:50%;" />
+<p>输入 132 拿到 flag。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821105251.png" style="zoom:50%;" />
+<ul>
+<li>hook check 方法</li>
+</ul>
+<p>传递给<code>check()</code>方法的参数包含了随机数，因此我们可以尝试 hook 这个方法，获取它的参数，从而发现随机数。</p>
+<p>我们尝试之前提到的第二种方法：hook <code>check()</code> 方法并捕获它的参数，因为传给 <code>check()</code> 的参数中包含了随机数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kt">void</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">4</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">i2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>查看 <code>check</code> 函数的参数，第一个参数 <code>i</code> 是随机数，第二个参数 <code>i2</code> 是用户输入的数字。我们用 Frida 捕获并打印这两个参数。</p>
+<p>hook 带参数的方法时，需要用 <code>overload(arg_type)</code> 指定参数类型，并且在 hook 函数里写出对应的参数。这里 <code>check()</code> 接受两个整型参数，所以写法如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">a</span><span class="p">.</span><span class="nx">check</span><span class="p">.</span><span class="nx">overload</span><span class="p">(</span><span class="kr">int</span><span class="p">,</span> <span class="kr">int</span><span class="p">).</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>拿到参数后，关键是保证 <code>check</code> 函数正常执行，因为它里头有生成 flag 的逻辑。我们只需调用原始的 <code>check()</code> 函数，并把参数传回去即可。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x1.MainActivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">a</span><span class="p">.</span><span class="nx">check</span><span class="p">.</span><span class="nx">overload</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">).</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 参数：check(random, input)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;随机数是 &#34;</span> <span class="o">+</span> <span class="nx">a</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;用户输入是 &#34;</span> <span class="o">+</span> <span class="nx">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="p">.</span><span class="nx">check</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span> <span class="c1">// 继续调用原始的 check 方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>既然要获得 flag，输入必须满足 <code>(random * 2 + 4)</code>，那为什么不直接调用 <code>check()</code>，传入满足条件的数字呢？这样我们就不必关心随机数，自己造参数。</p>
+<p>试试看。我用 <code>4</code> 作为随机数，<code>(4 * 2 + 4) = 12</code> 作为用户输入。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x1.MainActivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">a</span><span class="p">.</span><span class="nx">check</span><span class="p">.</span><span class="nx">overload</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">).</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="p">.</span><span class="nx">check</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><h3 id="frida-lab-2">Frida Lab 2<a hidden class="anchor" aria-hidden="true" href="#frida-lab-2">#</a></h3>
+<ul>
+<li>Hook 静态方法</li>
+</ul>
+<p>分析 APK 可知应用目前唯一做的事情就是设置 TextView 的内容。显然我们的 flag 存在于<code>get_flag()</code>方法中。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821110327.png" style="zoom:50%;" />
+<p>但这个方法在任何地方都没有被调用。<code>get_flag()</code>方法的作用是解密 flag 并将其设置到 TextView 中。通过初步观察，可以看出它使用了 AES 加密。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821110420.png" style="zoom:50%;" />
+<p>另外，该方法内部还有一个<code>if</code>判断，检查传入参数<code>a</code>是否等于<code>4919</code>。因此，我们只需要调用 <code>get_flag()</code> 方法并传入正确的参数，即可获得 flag。</p>
+<p>获取包名，然后编写 frida 脚本。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x2.MainActivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">a</span><span class="p">.</span><span class="nx">get_flag</span><span class="p">(</span><span class="mi">4919</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><p>Hook 成功：</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821110749.png" style="zoom:50%;" />
+<h3 id="frida-lab-3">Frida Lab 3<a hidden class="anchor" aria-hidden="true" href="#frida-lab-3">#</a></h3>
+<ul>
+<li>知识点：修改变量的值</li>
+</ul>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821111249.png" style="zoom:50%;" />
+<p>onClick 是按钮的点击事件处理函数，其中校验了<code>Checker.code</code>变量是否为 512。如果满足，则执行成功逻辑，否则输出<code>TAR AGAIN</code>。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821111152.png" style="zoom:50%;" />
+<p><code>Checkr.code</code>变量在<code>Checker</code>类中声明，并且<code>Checker</code>类还定义了一个<code>increase</code>方法，每调用一次可以将<code>code</code>变量加 2。</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821111358.png)</p>
+<p>我们有两种 hook 方法：</p>
+<p>这里同样首先要获取包名，但由于我们需要操作的变量或方法在<code>Checker</code>类中，所以我们需要将操作的类修改为<code>Checker</code>类。</p>
+<ul>
+<li>直接更改变量的值</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span> <span class="p">(){</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x3.Checker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">a</span><span class="p">.</span><span class="nx">code</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">512</span><span class="p">;</span>  <span class="c1">// 修改 code 的值为 512
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></div><ul>
+<li>调用<code>increase()</code>方法 256 次</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x3.Checker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="mi">256</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;第 &#34;</span> <span class="o">+</span> <span class="nx">i</span> <span class="o">+</span> <span class="s2">&#34; 次调用 increase() 方法&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">a</span><span class="p">.</span><span class="nx">increase</span><span class="p">();</span>  <span class="c1">// 调用方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>以上两种方式都可以成功 hook。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821111804.png" style="zoom:50%;" />
+<h3 id="frida-lab-4">Frida Lab 4<a hidden class="anchor" aria-hidden="true" href="#frida-lab-4">#</a></h3>
+<ul>
+<li>创建一个类的实例</li>
+</ul>
+<p><code>Check</code>类中的<code>get_flag</code>方法很明显是用于获取 flag 的，所以我们可以通过调用这个方法获取 flag。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821112702.png" style="zoom:67%;" />
+<p>但是这个方法不是静态方法并且也没有被调用，所以我们要首先创建该类的一个实例，然后才能通过这个实例调用该方法。</p>
+<p>frida 脚本：</p>
+<p>这里同样要选择<code>Check</code>类。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">check</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x4.Check&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">check_obj</span> <span class="o">=</span> <span class="nx">check</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span> <span class="c1">// 创建类对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">check_obj</span><span class="p">.</span><span class="nx">get_flag</span><span class="p">(</span><span class="mi">1337</span><span class="p">);</span> <span class="c1">// 调用方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;FLAG &#34;</span> <span class="o">+</span> <span class="nx">res</span><span class="p">);</span> <span class="c1">// 打印结果
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">})</span>
+</span></span></code></pre></div><p>hook 成功：</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821112947.png)</p>
+<h3 id="frida-lab-5">Frida Lab 5<a hidden class="anchor" aria-hidden="true" href="#frida-lab-5">#</a></h3>
+<ul>
+<li>知识点：调用一个已有实例的方法</li>
+</ul>
+<p>在<code>MainActivity</code>中，我们发现了一个叫<code>flag</code>的方法，这个方法的功能是解密 flag 并将其设置到 TextView 上，但它并没有在程序中被调用。此外，要通过<code>if</code>判断，还需要传入一个参数<code>code</code>值需为<code>1337</code>，这和我们在上一节中遇到的情况非常相似，不过这次这个方法是在<code>MainActivity</code>中。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821113049.png" style="zoom:50%;" />
+<p>这里我们并不能像上节一样直接创建<code>MainActivity</code>的类实例，但是当 Android 应用启动时，系统会自动创建并管理<code>MainActivity</code>的实例。所以我们可以通过 Frida 获取这个已经存在的实例，然后调用<code>flag()</code>方法。</p>
+<p>frida 脚本：</p>
+<p>这里使用了一个新的 api：<code>Java.choose()</code>，它用于在运行时枚举内存中已存在的某个类的所有实例。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">performNow</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">Java</span><span class="p">.</span><span class="nx">choose</span><span class="p">(</span><span class="s1">&#39;com.ad2001.frida0x5.MainActivity&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onMatch</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;找到 MainActivity 实例&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">instance</span><span class="p">.</span><span class="nx">flag</span><span class="p">(</span><span class="mi">1337</span><span class="p">);</span> <span class="c1">// 调用方法
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><ul>
+<li><code>onMatch</code>：当找到类的一个实例时，会执行此函数。参数<code>instance</code>就是这个实例。</li>
+<li><code>onComplete</code>：所有匹配完成后的回调，可以不写。</li>
+</ul>
+<p>hook 成功：</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821113745.png" style="zoom:50%;" />
+<h3 id="frida-lab-6">Frida Lab 6<a hidden class="anchor" aria-hidden="true" href="#frida-lab-6">#</a></h3>
+<ul>
+<li>调用带对象参数的方法</li>
+</ul>
+<p>这里同样是通过<code>get_flag</code>方法获取 flag，不同的是<code>get_flag</code>方法的参数是<code>Checker</code>对象参数。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821114009.png" style="zoom:67%;" />
+<p>并且要求<code>Checker</code>类中的变量<code>num1</code>和<code>num2</code>的值为<code>1134</code>和<code>4321</code>。</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821114141.png)</p>
+<p>所以我们需要先创建<code>Checker</code>类的实例，然后设置<code>num1 = 1234</code>，<code>num2 = 4321</code>；然后获取<code>MainActivity</code>的实例，之后调用<code>get_flag</code>方法并传入<code>Checker</code>实例。</p>
+<p>frida 脚本：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">performNow</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">Java</span><span class="p">.</span><span class="nx">choose</span><span class="p">(</span><span class="s1">&#39;com.ad2001.frida0x6.MainActivity&#39;</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onMatch</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;Instance found&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      <span class="kd">var</span> <span class="nx">checker</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x6.Checker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">      <span class="kd">var</span> <span class="nx">checker_obj</span>  <span class="o">=</span> <span class="nx">checker</span><span class="p">.</span><span class="nx">$new</span><span class="p">();</span>  <span class="c1">// 创建实例
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">checker_obj</span><span class="p">.</span><span class="nx">num1</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">1234</span><span class="p">;</span> <span class="c1">// 设置值为 1134
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">checker_obj</span><span class="p">.</span><span class="nx">num2</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">4321</span><span class="p">;</span> <span class="c1">// 设置值为 4321
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">instance</span><span class="p">.</span><span class="nx">get_flag</span><span class="p">(</span><span class="nx">checker_obj</span><span class="p">);</span> <span class="c1">// 调用 flag 方法并传参
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">});</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>hook 成功：</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821114827.png" style="zoom:50%;" />
+<h3 id="frida-lab-7">Frida Lab 7<a hidden class="anchor" aria-hidden="true" href="#frida-lab-7">#</a></h3>
+<ul>
+<li>Hook 构造函数</li>
+</ul>
+<p>flag 方法用于获取 flag，传参<code>Checker</code>对象参数，要求变量<code>num1</code>和<code>num2</code>都必须大于 512：</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821114931.png" style="zoom:50%;" />
+<p><code>Checker</code>类中定义了一个构造函数，它接受两个整数参数。这两个值被赋给类的成员变量<code>num1</code>和<code>num2</code>。</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821115030.png)</p>
+<p>一种解决方法是获取或创建一个<code>Checker</code>类的实例，并修改其中的变量值。然后，我们可以获取<code>MainActivity</code>的实例，并将这个 <code>Checker</code>实例作为参数传入<code>flag</code>函数。</p>
+<p>与上节不同的是这次<code>Checker</code>类有一个构造函数，使用<code>$init</code>操作符表示构造函数。</p>
+<ul>
+<li>16</li>
+</ul>
+<pre tabindex="0"><code>Java.perform(function() {
+  var a = Java.use(&#34;com.ad2001.frida0x7.Checker&#34;);
+  a.$init.implementation = function(param){
+    this.$init(600, 600);
+  }
+});
+</code></pre><ul>
+<li>17</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.frida0x7.Checker&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">a</span><span class="p">.</span><span class="nx">$init</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">param</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="p">.</span><span class="nx">$init</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">600</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>通过这种方式，<code>MainActivity</code>中创建的<code>Checker</code>实例就会使用我们传入的值，从而满足<code>flag</code>方法的判断条件。</p>
+<p>hook 成功：</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821151116.png" style="zoom:50%;" />
+<h3 id="frida-lab-8">Frida Lab 8<a hidden class="anchor" aria-hidden="true" href="#frida-lab-8">#</a></h3>
+<ul>
+<li>native 函数 hook</li>
+</ul>
+<p>分析 apk 发现要求<code>cmpstr</code>方法校验我们的输入，如果结果为<code>1</code>则我们的输入就是 flag。而<code>cmpstr</code>方法是一个<code>native</code>方法，所以我们需要分析 so 文件来分析这个方法。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821151325.png" style="zoom:50%;" />
+<p>以下的<code>frida0x8</code>就是我们要分析的 so 文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Systen</span><span class="p">.</span><span class="na">loadLibrary</span><span class="p">(</span><span class="s">&#34;frida0x8&#34;</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div><p>用 ida 打开 apk 然后 ctrl+f 搜索 frida0x8 字符串，出现了四个不同架构的 so 文件，我们可以随意选择一个分析。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821152032.png" style="zoom:50%;" />
+<p>在函数窗口搜索<code>cmpstr</code>，发现只有一个函数，然后点击反编译分析这个函数。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821152458.png" style="zoom:50%;" />
+<p>方法原型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">extern</span><span class="w"> </span><span class="s">&#34;C&#34;</span><span class="w"> </span><span class="n">JNIEXPORT</span><span class="w"> </span><span class="n">jint</span><span class="w"> </span><span class="n">JNICALL</span><span class="w">  
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nf">Java_com_ad2001_frida0x8_MainActivity_cmpstr</span><span class="p">(</span><span class="n">JNIEnv</span><span class="w"> </span><span class="o">*</span><span class="n">env</span><span class="p">,</span><span class="w"> </span><span class="n">jobject</span><span class="w"> </span><span class="n">thiz</span><span class="p">,</span><span class="w"> </span><span class="n">jstring</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w">
+</span></span></span></code></pre></div><ul>
+<li>参数：<code>env</code>为 JNI 环境，<code>thiz</code>为 Java 对象，<code>str</code>为 Java 字符串。</li>
+</ul>
+<p>代码中的<code>JNIEnv::GetStringUTFChars</code>函数用于在 native 代码中获取 Java <code>String</code>对象的 UTF-8 编码表示，即将 Java 的 <code>jstring</code>转换成 C 风格的字符串。</p>
+<p>然后代码将 GSJEB|OBUJWF`MBOE~ 字符串每位减去 1，再与输入进行比较是否相等。</p>
+<ul>
+<li>如果相等返回 1，否则返回 0。</li>
+</ul>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821152845.png)</p>
+<p>我们可以通过 frida hook <code>strcmp</code>函数，来打印它比较时的参数。</p>
+<p><code>Interceptor</code> API 用于 hook native 函数，模板如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">targetAddress</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Entering &#39;</span> <span class="o">+</span> <span class="nx">functionName</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 如果需要，可以修改或打印参数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onLeave</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">retval</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Leaving &#39;</span> <span class="o">+</span> <span class="nx">functionName</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 如果需要，可以修改或打印返回值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><ul>
+<li><code>Interceptor.attach</code>：绑定回调到指定函数地址，<code>targetAddress</code> 是要 hook 的 native 函数地址。</li>
+<li><code>onEnter</code>：函数进入时调用，可访问参数 <code>args</code>。</li>
+<li><code>onLeave</code>：函数返回前调用，可访问返回值 <code>retval</code>。</li>
+</ul>
+<p>这里我们需要获取 native 函数的地址，可以通过以下 frida api 方法获取：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">addr</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">findGlobalExportByName</span><span class="p">(</span><span class="s2">&#34;strcmp&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">addr</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>Module.findGlobalExportByName(exportName)</code>函数用来查找全局导出符号的地址，不需要指定模块名称，它会在所有已加载模块中搜索。</p>
+<p>接下来我们开始编写 hook <code>strcmp</code> 的脚本：</p>
+<p>直接 hook <code>strcmp</code>的话我们会 hook 应用中所有的<code>strcmp</code>，但是这样很难观察结果。所以我们可以通过特定字符串过滤，根据反编译我们已知在 app 中的输入是第一个参数，所以我们可以尝试过滤第一个参数。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">strcmp_adr</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">findGlobalExportByName</span><span class="p">(</span><span class="s2">&#34;strcmp&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nx">Interceptor</span><span class="p">.</span><span class="nx">attach</span><span class="p">(</span><span class="nx">strcmp_adr</span><span class="p">,</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">arg0</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">readUtf8String</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nx">arg0</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s2">&#34;hello&#34;</span><span class="p">))</span> <span class="p">{</span> <span class="c1">//如果第一个参数包含 hello，则打印日志
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;正在 hook strcmp 函数&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&#34;Flag 是 &#34;</span><span class="o">+</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">readUtf8String</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">onLeave</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">retval</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>在 app 中输入 hello，然后点击按钮就可以成功 hook。</p>
+<img src="./../../../../Security/Mobile/混淆开发/assets/Pasted image 20250821161140.png" style="zoom:50%;" />
+<p>hook 结果：</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821161213.png)</p>
+<h3 id="frida-lab-9">Frida Lab 9<a hidden class="anchor" aria-hidden="true" href="#frida-lab-9">#</a></h3>
+<ul>
+<li>修改 native 函数的返回值</li>
+</ul>
+<p>jadx 分析，要求<code>check_flag</code>方法的返回值为<code>1337</code>，而<code>check_flag</code>方法为 native 方法，在<code>a0x9</code>中。</p>
+<img src="./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821161644.png" style="zoom:50%;" />
+<p>ida 分析<code>check_flag</code>函数，发现它直接返回<code>1</code>。</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821161823.png)</p>
+<p>接下来我们通过 frida hook 修改<code>check_flag</code>函数的返回值：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">MainActivity</span> <span class="o">=</span> <span class="nx">Java</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s2">&#34;com.ad2001.a0x9.MainActivity&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">MainActivity</span><span class="p">.</span><span class="nx">check_flag</span><span class="p">.</span><span class="nx">implementation</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">this</span><span class="p">.</span><span class="nx">check_flag</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">1337</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p>点一下按钮即可 hook 成功。</p>
+<img src="./assets/Pasted image 20250821163847.png" style="zoom:50%;" />
+<h3 id="frida-lab-10">Frida Lab 10<a hidden class="anchor" aria-hidden="true" href="#frida-lab-10">#</a></h3>
+<ul>
+<li>调用一个 native 函数</li>
+</ul>
+<p>资源文件中存在 kotlin 目录，可以判断这个 apk 是使用 kotlin 开发的。</p>
+<img src="./assets/Pasted image 20250821164238.png" style="zoom:50%;" />
+<p>代码中声明了一个<code>native</code>方法<code>stringFromJni</code>，我们使用 ida 分析 so 文件。</p>
+<p>在函数表中发现了<code>get_flag</code>函数。</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821164807.png)</p>
+<p>跟进分析：</p>
+<p>![](./../../../../Security/Mobile/保护对抗/assets/Pasted image 20250821165020.png)</p>
+<p>分析发现<code>get_flag</code>函数没有在 Java 层和 native 层任何地方被调用。</p>
+<p>这个函数接受两个整数，将它们相加，如果结果等于 3，就进入循环，对硬编码字符串<code>&quot;FPE&gt;9q8A&gt;BK-)20A-#Y&quot;</code>进行解码，然后打印解密后的 flag。所以要获取 flag，我们只需要调用这个方法。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">adr</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">findGlobalExportByName</span><span class="p">(</span><span class="s2">&#34;get_flag&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">get_flag_ptr</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NativePointer</span><span class="p">(</span><span class="nx">adr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">get_flag</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NativeFunction</span><span class="p">(</span><span class="nx">get_flag_ptr</span><span class="p">,</span> <span class="s1">&#39;void&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"><span class="nx">get_flag</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>  <span class="c1">// 调用函数，打印解码后的 flag
+</span></span></span></code></pre></div><h3 id="frida-lab-11">Frida Lab 11<a hidden class="anchor" aria-hidden="true" href="#frida-lab-11">#</a></h3>
+<ul>
+<li>使用 X86Writer 和 ARM64Writer 进行指令修补</li>
+</ul>
+<p>X86Writer 往往用于我们使用的模拟器，而 ARM64Writer 则是用于真机。</p>
+<p>按钮会调用<code>getFlag</code>，但因为 if 条件永远不成立，flag 永远不会打印。所以我们可以通过 patch 让跳转不发生从而打印 flag。</p>
+<p>反编译加载的 so 文件：</p>
+<p>分析汇编：</p>
+<pre tabindex="0"><code>00115244  subs w8, w8, #0x539
+00115248  b.ne  LAB_0011532c
+0011524c  b     LAB_00115250
+</code></pre><p><code>b.ne</code> 是“非零跳转”，我们要阻止它跳。</p>
+<p>不像 x86 要补齐长度，ARM64 每条指令固定 <strong>4 个字节</strong>，放心覆盖。</p>
+<p>我们用 <code>putBImm()</code> 指令，将其改为：</p>
+<pre tabindex="0"><code>b &lt;下一条指令地址&gt;
+</code></pre><p>即强制不跳。</p>
+<ul>
+<li>16</li>
+<li>17</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">Java</span><span class="p">.</span><span class="nx">perform</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">base</span> <span class="o">=</span> <span class="nx">Process</span><span class="p">.</span><span class="nx">getModuleByName</span><span class="p">(</span><span class="s2">&#34;libfrida0xb.so&#34;</span><span class="p">).</span><span class="nx">base</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">adr</span> <span class="o">=</span> <span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x15248</span><span class="p">);</span>   <span class="c1">// b.ne 的位置
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kd">var</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">base</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="mh">0x1524c</span><span class="p">);</span> <span class="c1">// 下一条指令的地址（不跳转）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ARM64 指令必须 4 字节对齐
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Memory</span><span class="p">.</span><span class="nx">protect</span><span class="p">(</span><span class="nx">adr</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&#34;rwx&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// Frida 17 必须指定 pc，否则 writer 会报错
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kd">var</span> <span class="nx">writer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Arm64Writer</span><span class="p">(</span><span class="nx">adr</span><span class="p">,</span> <span class="p">{</span> <span class="nx">pc</span><span class="o">:</span> <span class="nx">adr</span> <span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">writer</span><span class="p">.</span><span class="nx">putBImm</span><span class="p">(</span><span class="nx">target</span><span class="p">);</span>  <span class="c1">// 写入无条件跳转
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">writer</span><span class="p">.</span><span class="nx">flush</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">writer</span><span class="p">.</span><span class="nx">dispose</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></div><p><img alt="image-20251115143140866" decoding="async" loading="lazy" src="./assets/image-20251115143140866.png" style="max-width: 100%; height: auto;"></p>
+<h2 id="objection">objection<a hidden class="anchor" aria-hidden="true" href="#objection">#</a></h2>
+<p>objection 是基于 frida 的命令行 hook 集合工具，可以让你不写代码，敲几句命令就可以对 java 函数进行hook，但是局限性在于仅仅适合对 Java 层进行 Hook。</p>
+<p>Objection是一个将各种常用功能整合进工具中 供我们直接在命令行中使用的利器，Objection甚至可以不写一行代 码就能进行App的逆向分析。</p>
+<h3 id="环境搭建-1">环境搭建<a hidden class="anchor" aria-hidden="true" href="#环境搭建-1">#</a></h3>
+<p>虚拟环境：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkvirtualenv 新建环境
+</span></span><span class="line"><span class="cl">rmvirtualenv 删除环境
+</span></span></code></pre></div><p>环境配置：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip install <span class="nv">objection</span><span class="o">==</span>1.11.0
+</span></span><span class="line"><span class="cl">pip install frida-tools<span class="o">==</span>9.2.4
+</span></span></code></pre></div><h3 id="基础使用">基础使用<a hidden class="anchor" aria-hidden="true" href="#基础使用">#</a></h3>
+<p>注入命令：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">objection -g 包名 explore
+</span></span></code></pre></div><p>启动前就 hook：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">objection -g 进程名 explore --startup-command <span class="s2">&#34;android hooking watch class 路径.类名&#34;</span>
+</span></span></code></pre></div><p>将 frida 注入 apk：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">objection patchapk -s apk_name.apk
+</span></span></code></pre></div><p>Objection 将提取、修补、重新打包、对齐和签署应用程序，因此这是让 Frida 运行的一种非常快速和简单的方法。</p>
+<p>请注意，应用程序将在启动时等待 Frida 连接到它，因此要启动应用程序，我们必须运行：</p>
+<h3 id="基本用法">基本用法<a hidden class="anchor" aria-hidden="true" href="#基本用法">#</a></h3>
+<p>通过 objection 注入目标应用，注入成功后便进入了Objection的REPL界面。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">objection -g com.android.settings explore
+</span></span></code></pre></div><p>在学习Objection的REPL界面命令之前，首先要了解空格键的作 用。在 Objection REPL 界面中，当不知道命令时通过按空格键就会提示可用的命令，在出现提示后通过上下选择键及回车键便可以输入命令。</p>
+<ul>
+<li>jobs命令：用于查看和管理当前所执行 Hook 的任务。</li>
+<li>Frida命令：查看 frida 相关信息。</li>
+<li>内存漫游相关命令：Objection可以快速便捷地打印出内存 中的各种类的相关信息，这对App快速定位有着无可比拟的优势，下 面介绍几个常用命令。
+<ul>
+<li>android hooking list classes：列出内存中的所有类；</li>
+<li>android hooking search classes display：搜索包含 display 关键词的类；</li>
+<li>android hooking search methods <key>：从内存中搜索所有包含关键词key的方法。</li>
+<li>android hooking list class_methods：使用以下命令查看关心的类的所有方法；</li>
+<li>android hooking list activities：列出进程所有的activity。</li>
+<li>android hooking list services：列出进程所有的service</li>
+<li>android hooking list receivers：列出进程所有的receivers。</li>
+<li>android hooking list providers：列出进程所有的providers。</li>
+</ul>
+</li>
+<li>Hook相关命令：
+<ul>
+<li>android hooking watch class_method <classname>：hook构造函数。
+<ul>
+<li><code>android hooking watch class_method java.io.File.$init --dump-args --dump-backtrace --dump-return</code>：&ndash;dump-args、&ndash;dump backtrace、&ndash;dump-return三个参数，分别用于打印函数的参数、 调用栈以及返回值。这三个参数对逆向分析的帮助是非常大的：有些 函数的明文和密文非常有可能放在参数和返回值中，而打印调用栈可 以让分析者快速进行调用链的溯源。另外需要注意的是，此时虽然只确定了Hook构造函数，但是默 认会Hook对应方法的所有重载。同时，在输出的最后一行显示 Registering job 7s9a29pxmt4，这表示这个Hook被作为一个“作 业”添加到Objection的作业系统中了，此时运行job list命令可以查 看到这个“作业”的相关信息。</li>
+<li>测试结束后，可以根据作业的 id 来删除作业，取消对这些函数的 hook。可以通过<code>jobs list</code>查看作业id，然后通过<code>jobs kill id</code>删除它。</li>
+</ul>
+</li>
+<li>android hooking watch class <classname>：对指定类classname中所有函数 hook。
+<ul>
+<li><code>android hookinig watch class java.io.File</code>：</li>
+</ul>
+</li>
+<li>android heap search instances <classname>：对实例的搜索。
+<ul>
+<li><code>android heap search instances java.io.File</code>：这里仍以 java.io.File 类为例，搜索到很多 File 的实例，并且打印 出对应的Handle和toString()的结果。</li>
+</ul>
+</li>
+<li>主动调用：
+<ul>
+<li>android heap execute <Handle> <methodname>：这里的实例方法指的是没有参数的实例方法。不过这里使用 execute 带参数会报错。</li>
+<li>android heap evaluate <Handle>：在进入一个迷你编辑器环境后，输入想要执行的脚本内容，确认 编辑完成，然后按Esc键退出编辑器，最后按回车键，即会开始执行 这行脚本并输出结果。这里的脚本内容和在编辑器中直接编写的脚本 内容是一样的。heap evaluate既可以执行有参函数，也可以执行无参函数，这 里不再演示，留待读者自行研究。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre tabindex="0"><code>objection -N -h 192.168.31.52 -p 8888 -g com.shimeng.qq2693533893 explore 
+</code></pre><h3 id="基础api">基础API<a hidden class="anchor" aria-hidden="true" href="#基础api">#</a></h3>
+<ol>
+<li>memory list modules 查看内存中加载的库</li>
+<li>memory list exports so 名词 查看库的导出函数</li>
+<li>android hooking list activities 查看内存中加载的 activity/android hooking list services 查看内存中加载的services</li>
+<li>android intent launch_activity 类名-启动 activity 或 service（可以用于一些没有验证的 activity，在一些简单的ctf中有时候可以出奇效）</li>
+<li>关闭 ssl 校验 android sslpinning disable</li>
+<li>关闭 root 检测：android root disable</li>
+</ol>
+<h3 id="objection内存漫游">objection内存漫游<a hidden class="anchor" aria-hidden="true" href="#objection内存漫游">#</a></h3>
+<ol>
+<li>内存搜刮类实例</li>
+</ol>
+<pre tabindex="0"><code></code></pre><ol start="2">
+<li></li>
+</ol>
+<h3 id="objectionhook">objectionHook<a hidden class="anchor" aria-hidden="true" href="#objectionhook">#</a></h3>
+<ol>
+<li>
+<p>hook类的所有方法</p>
+</li>
+<li>
+<p>hook方法的参数、返回值和调用栈</p>
+</li>
+<li>
+<p>hook 类的所有方法</p>
+</li>
+</ol>
+<p>objection 切换 activity：</p>
+<pre tabindex="0"><code>android intent launch_activity com.chanson.business.MainActivit
+</code></pre><h2 id="rpc">RPC<a hidden class="anchor" aria-hidden="true" href="#rpc">#</a></h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">package_name</span> <span class="o">=</span> <span class="s2">&#34;INSERT_PACKAGE_HERE&#34;</span>  <span class="c1"># 替换为目标包名，例如 &#34;com.example.app&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">js_script</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">function main() {
+</span></span></span><span class="line"><span class="cl"><span class="s2">    return &#34;hello from injected script&#34;;
+</span></span></span><span class="line"><span class="cl"><span class="s2">}
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">rpc.exports = {
+</span></span></span><span class="line"><span class="cl"><span class="s2">    main: main
+</span></span></span><span class="line"><span class="cl"><span class="s2">};
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">on_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[frida message] </span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">data</span> <span class="k">if</span> <span class="n">data</span> <span class="k">else</span> <span class="s2">&#34;&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ * ] Looking for app: &#34;</span> <span class="o">+</span> <span class="n">package_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">device</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_usb_device</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ * ] Spawning app...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pid</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">spawn</span><span class="p">([</span><span class="n">package_name</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 先 attach（在进程停在 spawn 状态时 attach），然后创建并加载脚本，</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 确保脚本在进程继续运行前已经注入。这是关键改动点。</span>
+</span></span><span class="line"><span class="cl">    <span class="n">session</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="n">js_script</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="n">on_message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ * ] Loading script into spawned process...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 脚本已加载后再 resume，让应用继续执行（脚本能尽早生效）</span>
+</span></span><span class="line"><span class="cl">    <span class="n">device</span><span class="o">.</span><span class="n">resume</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ + ] App launched and script loaded. PID=</span><span class="si">%d</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="n">pid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ + ] rpc result:&#34;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ ! ] rpc call failed:&#34;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ * ] Press Ctrl+C to quit.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">except</span> <span class="n">frida</span><span class="o">.</span><span class="n">ServerNotRunningError</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ - ] Frida server is not running! Start frida-server on the device and try again.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">except</span> <span class="n">frida</span><span class="o">.</span><span class="n">ProcessNotFoundError</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ - ] Unable to find process. Make sure the package name is correct and the app is installed.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">except</span> <span class="n">frida</span><span class="o">.</span><span class="n">NotSupportedError</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ - ] Operation not supported on this device.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">[ - ] Interrupted. Exiting...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;[ - ] Unexpected error:&#34;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">finally</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="s1">&#39;session&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">            <span class="n">session</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">pass</span>
+</span></span></code></pre></div><p>frida 提供了一种跨平台的 rpc（远程过程调用）机制，通过 frida rpc 可以在主机和目标设备之间进行通信，并在目标设备上执行代码，简单理解就是可以不需要分析某些复杂加密，通过传入参数获取返回值，进而来实现 python 来调用的一系列操作。</p>
+<p>rpc 就是让 Python 端可以调用你注入到目标进程中的 JavaScript 脚本中的函数，就像调用本地函数一样。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span><span class="o">,</span><span class="nn">sys</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">jsCode</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34; ...... &#34;&#34;&#34;</span> 
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">rpcfunc</span><span class="p">()</span> 
+</span></span><span class="line"><span class="cl"><span class="n">process</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_usb_device</span><span class="p">()</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="s1">&#39;包名&#39;</span><span class="p">)</span> <span class="c1"># 获取USB设备并附加到应用 </span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="n">jsCode</span><span class="p">)</span> <span class="c1"># 创建并加载脚本 </span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span><span class="c1"># 执行脚本 </span>
+</span></span><span class="line"><span class="cl"><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="c1"># 保持脚本运行状态，防止它执行完毕后立即退出</span>
+</span></span></code></pre></div><p>spawn 方式启动</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span><span class="o">,</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="n">jsCode</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34; ...... &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">rpcfunc</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">device</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_usb_device</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">pid</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">spawn</span><span class="p">([</span><span class="s2">&#34;包名&#34;</span><span class="p">])</span>    <span class="c1">#以挂起方式创建进程</span>
+</span></span><span class="line"><span class="cl"><span class="n">process</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="n">jsCode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">device</span><span class="o">.</span><span class="n">resume</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>  <span class="c1">#加载完脚本, 恢复进程运行</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span></code></pre></div><p>连接非标准端口</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span><span class="o">,</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="n">jsCode</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34; ...... &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">rpcfunc</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">process</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_device_manager</span><span class="p">()</span><span class="o">.</span><span class="n">add_remote_device</span><span class="p">(</span><span class="s1">&#39;192.168.1.22:6666&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="s1">&#39;包名&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="n">jsCode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">frida-tools<span class="o">==</span>9.2.4，uvicorn，fastapi，requests
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fastapi</span> <span class="kn">import</span> <span class="n">FastAPI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fastapi.responses</span> <span class="kn">import</span> <span class="n">JSONResponse</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span><span class="o">,</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">uvicorn</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 创建FastAPI应用实例</span>
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 定义一个GET请求的路由&#39;/download-images/&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="nd">@app.get</span><span class="p">(</span><span class="s2">&#34;/download-images/&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">download_images</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 定义处理frida消息的回调函数</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">on_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">message_type</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">message_type</span> <span class="o">==</span> <span class="s1">&#39;send&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[* message]&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;payload&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="k">elif</span> <span class="n">message_type</span> <span class="o">==</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">stack</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;stack&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[* error]&#39;</span><span class="p">,</span> <span class="n">stack</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Frida脚本代码，用于在目标应用内部执行</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jsCode</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    function getinfo(){
+</span></span></span><span class="line"><span class="cl"><span class="s2">        var result = [];
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Java.perform(function(){
+</span></span></span><span class="line"><span class="cl"><span class="s2">            Java.choose(&#34;com.zj.wuaipojie.ui.ChallengeNinth&#34;,{
+</span></span></span><span class="line"><span class="cl"><span class="s2">                onMatch:function(instance){
+</span></span></span><span class="line"><span class="cl"><span class="s2">                    instance.setupScrollListener(); // 调用目标方法
+</span></span></span><span class="line"><span class="cl"><span class="s2">                },
+</span></span></span><span class="line"><span class="cl"><span class="s2">                onComplete:function()</span><span class="si">{}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">            });
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">            Java.choose(&#34;com.zj.wuaipojie.entity.ImageEntity&#34;,{
+</span></span></span><span class="line"><span class="cl"><span class="s2">                onMatch:function(instance){
+</span></span></span><span class="line"><span class="cl"><span class="s2">                    var name = instance.getName();
+</span></span></span><span class="line"><span class="cl"><span class="s2">                    var cover = instance.getCover();
+</span></span></span><span class="line"><span class="cl"><span class="s2">                    result.push({name: name, cover: cover}); // 收集数据
+</span></span></span><span class="line"><span class="cl"><span class="s2">                },
+</span></span></span><span class="line"><span class="cl"><span class="s2">                onComplete:function()</span><span class="si">{}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">            });
+</span></span></span><span class="line"><span class="cl"><span class="s2">        });
+</span></span></span><span class="line"><span class="cl"><span class="s2">        return result; // 返回收集的结果
+</span></span></span><span class="line"><span class="cl"><span class="s2">    }
+</span></span></span><span class="line"><span class="cl"><span class="s2">    rpc.exports = {
+</span></span></span><span class="line"><span class="cl"><span class="s2">        getinfo: getinfo // 导出函数供外部调用
+</span></span></span><span class="line"><span class="cl"><span class="s2">    };
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 使用frida连接到设备并附加到指定进程</span>
+</span></span><span class="line"><span class="cl">    <span class="n">process</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_usb_device</span><span class="p">()</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="s2">&#34;com.zj.wuaipojie&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 创建并加载Frida脚本</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="n">jsCode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s2">&#34;message&#34;</span><span class="p">,</span> <span class="n">on_message</span><span class="p">)</span>  <span class="c1"># 设置消息处理回调</span>
+</span></span><span class="line"><span class="cl">    <span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>  <span class="c1"># 加载脚本</span>
+</span></span><span class="line"><span class="cl">    <span class="n">getcovers</span> <span class="o">=</span> <span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">getinfo</span><span class="p">()</span>  <span class="c1"># 调用脚本中的函数获取信息</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">getcovers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 返回获取的信息作为JSON响应</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">getcovers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 主入口，运行FastAPI应用</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&#34;127.0.0.1&#34;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>  <span class="c1"># 使用uvicorn作为ASGI服务器启动应用</span>
+</span></span></code></pre></div><p>Frida 脚本中使用 <code>rpc.exports</code> 暴露函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-js" data-lang="js"><span class="line"><span class="cl"><span class="nx">rpc</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">hello</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;Hello from target process!&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Python 端使用 <code>script.exports.functionName()</code> 来调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">frida</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">session</span> <span class="o">=</span> <span class="n">frida</span><span class="o">.</span><span class="n">get_usb_device</span><span class="p">()</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="s2">&#34;com.example.app&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">create_script</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&#34;agent.js&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">script</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 调用 JavaScript 中的 rpc.exports.hello</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">hello</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 调用加法</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">exports</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span></span></code></pre></div><h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<blockquote>
+<p>Frida三板斧</p>
+</blockquote>
+<h3 id="定位">定位<a hidden class="anchor" aria-hidden="true" href="#定位">#</a></h3>
+<blockquote>
+<p>objection辅助定位</p>
+</blockquote>
+<p>Objection在逆向过程中最 强大的功能其实是从海量的代码中快速定位关键的程序逻辑。Frida 需要每次手动编写代码去Hook从静态分析到的函数，进而观察其参数和返回值是否与需求相符，Objection将常用的一些功能集成在一起，使得逆向开发和分析人员在分析过程中不需要浪费精力在编写代码上。</p>
+<h3 id="利用">利用<a hidden class="anchor" aria-hidden="true" href="#利用">#</a></h3>
+<blockquote>
+<p>Frida脚本修改参数、主动调用</p>
+</blockquote>
+<p>在使用Frida将代码注入App前，我们先取消Objection的 Hook，然后进行Frida脚本的注入。这里取消Objection对目标函数 的Hook是因为不能使用Objection和Frida对同一个函数进行Hook， 否则会报错。</p>
+<p>使用Frida对Hook函数进行内部逻辑的修改以 及对函数的主动调用。当然，这只是一种对Hook函数进行利用的方 式，读者还可以在Hook时对函数的返回值进行修改，甚至完整替换 函数的内部逻辑等其他使用方式进行测试</p>
+<h3 id="规模化利用">规模化利用<a hidden class="anchor" aria-hidden="true" href="#规模化利用">#</a></h3>
+<blockquote>
+<p>Python规模化利用</p>
+</blockquote>
+<p>在完成关键函数的定位与主动调用后，如果想要大规模地对关键函数进行调用，此时就会用到RPC。</p>
+<p>既然是批量数据的调用，就需要修改原有的主动调用脚本call.js 的内容，将原本只调用一次的<code>sub()</code>函数修改为可以调用多次的格式， 并且需要将完成主动调用的函数修改为导出的rpc函数。</p>
+<p>在修改完毕后还需要重新对这个脚本进行测试，并且在确认脚本没有错误后方能使用Python进行RPC调用。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/frida/">Frida</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

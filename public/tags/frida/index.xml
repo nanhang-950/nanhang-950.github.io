@@ -2,19 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Frida on 南行&#39;s Blog</title>
-    <link>https://nanhang.top/tags/frida/</link>
+    <link>http://localhost:1313/tags/frida/</link>
     <description>Recent content in Frida on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="https://nanhang.top/tags/frida/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/frida/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Frida攻略</title>
-      <link>https://nanhang.top/posts/android/frida/</link>
+      <link>http://localhost:1313/posts/mobile/frida/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/frida/</guid>
-      <description></description>
+      <guid>http://localhost:1313/posts/mobile/frida/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

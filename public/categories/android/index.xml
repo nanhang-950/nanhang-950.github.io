@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Android on 南行&#39;s Blog</title>
-    <link>https://nanhang.top/categories/android/</link>
+    <link>http://localhost:1313/categories/android/</link>
     <description>Recent content in Android on 南行&#39;s Blog</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
-    <atom:link href="https://nanhang.top/categories/android/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/categories/android/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Android APP脱壳入门</title>
-      <link>https://nanhang.top/posts/android/obf/shell/</link>
+      <link>http://localhost:1313/posts/android/obf/shell/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/obf/shell/</guid>
+      <guid>http://localhost:1313/posts/android/obf/shell/</guid>
       <description>&lt;h2 id=&#34;加固简介&#34;&gt;加固简介&lt;/h2&gt;
 &lt;p&gt;Android 应用加固（壳）是为了防止逆向分析、DEX dump、调试和修改，保护代码和资源的完整性与安全。随着技术发展，加固经历了四代演进：&lt;/p&gt;
 &lt;h3 id=&#34;第一代整体-dex-加密&#34;&gt;第一代：整体 Dex 加密&lt;/h3&gt;
@@ -21,9 +21,9 @@
     </item>
     <item>
       <title>Android APP抓包</title>
-      <link>https://nanhang.top/posts/android/bag/</link>
+      <link>http://localhost:1313/posts/android/bag/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/bag/</guid>
+      <guid>http://localhost:1313/posts/android/bag/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
 &lt;p&gt;反抓包的对抗：&lt;/p&gt;
 &lt;ul&gt;
@@ -44,10 +44,11 @@
     </item>
     <item>
       <title>Frida攻略</title>
-      <link>https://nanhang.top/posts/android/frida/</link>
+      <link>http://localhost:1313/posts/android/frida/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>https://nanhang.top/posts/android/frida/</guid>
-      <description></description>
+      <guid>http://localhost:1313/posts/android/frida/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

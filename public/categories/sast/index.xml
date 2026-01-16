@@ -7,14 +7,6 @@
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
-    <lastBuildDate>Sun, 31 Aug 2025 23:16:38 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/categories/sast/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Joern漏洞挖掘</title>
-      <link>http://localhost:1313/posts/sast/joern/</link>
-      <pubDate>Sun, 31 Aug 2025 23:16:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/sast/joern/</guid>
-      <description></description>
-    </item>
   </channel>
 </rss>
