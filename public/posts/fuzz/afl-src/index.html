@@ -1503,9 +1503,61 @@ Block C    Block D --+
 </ul>
 <h4 id="随机变异">随机变异<a hidden class="anchor" aria-hidden="true" href="#随机变异">#</a></h4>
 <p>生成随机数，在前面四种变异方法里面随机的选一种变异方法。</p>
-<p>![](./assets/Pasted image 20250327000016.png)</p>
 <ul>
-<li>splice，文件拼接</li>
+<li>
+<p>0 Filp single bit</p>
+</li>
+<li>
+<p>1 Set byte to interesting value</p>
+</li>
+<li>
+<p>2 Set word to interesting value</p>
+</li>
+<li>
+<p>3 Set dword to interesting value</p>
+</li>
+<li>
+<p>4 Randomly subtract from byte</p>
+</li>
+<li>
+<p>5 Randomly add to byte</p>
+</li>
+<li>
+<p>6 Randomly subtract from word</p>
+</li>
+<li>
+<p>7 Randomly add to word</p>
+</li>
+<li>
+<p>8 Randomly subtract from dword</p>
+</li>
+<li>
+<p>9 Randomly add to dword</p>
+</li>
+<li>
+<p>10 Set a random byte to a random value</p>
+</li>
+<li>
+<p>11 Delete Bytes</p>
+</li>
+<li>
+<p>12 Delete Bytes</p>
+</li>
+<li>
+<p>13 Clone bytes（75%）or insert a block of constant bytes（25%）</p>
+</li>
+<li>
+<p>14 Overwrite bytes with a randomly selected chunk（75%）or fixed bytes（25%）</p>
+</li>
+<li>
+<p>15 Overwrite bytes with an extra</p>
+</li>
+<li>
+<p>16 Insert an extra</p>
+</li>
+<li>
+<p>splice，文件拼接</p>
+</li>
 </ul>
 <p>如果当前我们正在变异的是样本a，如果进行文件拼接变异，就会从以前的变异中拿出一个文件，然后对比这两个文件是否有差异，如果是相似的就不做操作。如果文件差异较大，则进行合并。再继续投喂进程。如果得到优良反馈则判断这是一个正确的样本，否则是无效的。</p>
 <ul>

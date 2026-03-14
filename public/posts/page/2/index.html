@@ -178,7 +178,20 @@ code.has-jax {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Linux Kernel Pwn入门
+    <h2 class="entry-hint-parent">libFuzzer浅探
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>简介 libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C&#43;&#43; 项目的单元测试。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to libFuzzer浅探" href="http://localhost:1313/posts/fuzz/libfuzzer/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Linux Kernel Pwn 入门
     </h2>
   </header>
   <div class="entry-content">
@@ -188,7 +201,7 @@ code.has-jax {
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Linux Kernel Pwn入门" href="http://localhost:1313/posts/linux/kernel/"></a>
+  <a class="entry-link" aria-label="post link to Linux Kernel Pwn 入门" href="http://localhost:1313/posts/kernel/base/"></a>
 </article>
 
 <article class="post-entry"> 
@@ -220,19 +233,6 @@ code.has-jax {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">OLLVM混淆和反混淆
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>前言 简介 OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to OLLVM混淆和反混淆" href="http://localhost:1313/posts/mobile/confron/ollvm/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
     <h2 class="entry-hint-parent">Rust Fuzz
     </h2>
   </header>
@@ -255,33 +255,6 @@ code.has-jax {
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
   <a class="entry-link" aria-label="post link to Syzkaller初探" href="http://localhost:1313/posts/fuzz/syzkaller/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">VSCode调试Linux Kernel
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>前言 编译内核 安装工具 安装编译链工具：
-sudo apt update sudo apt install -y build-essential libncurses-dev flex bison libssl-dev libelf-dev bc sudo apt install gcc-aarch64-linux-gnu g&#43;&#43;-aarch64-linux-gnu 下载内核源码 wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.167.tar.xz tar -xJf linux-5.15.167.tar.xz cd linux-5.15.167 编译 #配置编译工具链 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig ./scripts/config --enable CONFIG_VIRTUALIZATION ./scripts/config --enable CONFIG_KVM ./scripts/config --enable CONFIG_KVM_ARM_HOST ./scripts/config --enable CONFIG_VIRTIO ./scripts/config --enable CONFIG_VIRTIO_PCI ./scripts/config --enable CONFIG_VIRTIO_BLK ./scripts/config --enable CONFIG_VIRTIO_NET ./scripts/config --enable CONFIG_VIRTIO_CONSOLE #更新配置 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig #编译 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) 编译后的结果如下：
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to VSCode调试Linux Kernel" href="http://localhost:1313/posts/linux/debug/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">初探LLVM框架
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>简介 LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to 初探LLVM框架" href="http://localhost:1313/posts/mobile/obf/llvm/"></a>
 </article>
 
 <article class="post-entry"> 
@@ -310,12 +283,36 @@ sudo apt update sudo apt install -y build-essential libncurses-dev flex bison li
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
   <a class="entry-link" aria-label="post link to 论文笔记：Fuzzing: Art, Science, and Engineering" href="http://localhost:1313/posts/paper/art/"></a>
 </article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>0x00 前言 由于想要了解一下大语言模型在模糊测试领域的应用研究，所以经 Th3r 师傅的推荐来阅读一下这篇论文。不过由于本人英语很垃圾，所以就是拿小绿鲸一边翻译一边阅读。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 论文笔记：LAMAFUZZ：Large Language Model Enhanced Greybox Fuzzing" href="http://localhost:1313/posts/paper/llamafuzz/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">小程序逆向入门
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 现如今微信小程序的使用范围越来越广，逐渐形成了一个生态。由此相应的小程序安全也成了人们关注的问题。所以与时俱进，我们也需要学习小程序的安全。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to 小程序逆向入门" href="http://localhost:1313/posts/mobile/js/"></a>
+</article>
 <footer class="page-footer">
   <nav class="pagination">
     <a class="prev" href="http://localhost:1313/posts/">
       «&nbsp;上一页&nbsp;
-    </a>
-    <a class="next" href="http://localhost:1313/posts/page/3/">下一页&nbsp;&nbsp;»
     </a>
   </nav>
 </footer>

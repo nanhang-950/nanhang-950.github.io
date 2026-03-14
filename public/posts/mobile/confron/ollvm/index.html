@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="noindex, nofollow">
 <title>OLLVM混淆和反混淆 | 南行&#39;s Blog</title>
-<meta name="keywords" content="加固开发">
+<meta name="keywords" content="加固与对抗">
 <meta name="description" content="前言
 简介
 OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。">
@@ -1076,7 +1076,7 @@ BV 即 BitVector 意思是位向量</p>
 <p>在反混淆场景下的二进制分析任务中，经常需要区分正常指令和混淆产生的垃圾指令，我们可以借助污点分析来区分正常指令和非正常指令。</p>
 <h3 id="控制流平坦化">控制流平坦化<a hidden class="anchor" aria-hidden="true" href="#控制流平坦化">#</a></h3>
 <p>在反混淆场景下的二进制分析任务中，经常需要区分正常指令和混淆产生的垃圾指令，我们可以借助污点分析来区分正常指令和非正常指令。</p>
-<img src="assets/image-20250129220357-dy3vi2x.png" alt="image" width="60%" style="zoom:50%;" >
+<img src="/assets/image-20250129220357-dy3vi2x.png" alt="image" width="60%" style="zoom:50%;" >
 <p>这样能够找出所有状态变量相关的指令，包括内存加载、寄存器移动、加减、比较等指令。</p>
 <h3 id="虚假控制流">虚假控制流<a hidden class="anchor" aria-hidden="true" href="#虚假控制流">#</a></h3>
 <p>如下图是一个 Hikari 虚假控制流（简称 bcf）效果。</p>
@@ -1417,7 +1417,7 @@ taint_state = taint_successors[0]
 
   <footer class="post-footer">
     <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E5%BC%80%E5%8F%91/">加固开发</a></li>
+      <li><a href="http://localhost:1313/tags/%E5%8A%A0%E5%9B%BA%E4%B8%8E%E5%AF%B9%E6%8A%97/">加固与对抗</a></li>
     </ul>
   </footer>
 </article>

@@ -7,6 +7,42 @@
     <generator>Hugo -- 0.152.2</generator>
     <language>zh</language>
     <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/categories/iot/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>DIR815 溢出漏洞复现</title>
+      <link>http://localhost:1313/posts/iot/dir815/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/iot/dir815/</guid>
+      <description>&lt;h2 id=&#34;mips-架构知识&#34;&gt;MIPS 架构知识&lt;/h2&gt;
+&lt;h3 id=&#34;基础概念&#34;&gt;基础概念&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;MIPS 固定 &lt;code&gt;4&lt;/code&gt; 字节指令长度&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;栈是从内存的高地址向低地址方向增长的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;叶子函数：函数内部没有再调用其他函数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;非叶子函数：函数内部调用其他函数的函数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;流水线效应：在分析 MIPS 汇编代码时会发现，其跳转到函数或者分支跳转语句的下一条都是 &lt;code&gt;nop&lt;/code&gt; （），这是因为 MIPS 采用了高度的流水线，其中最重要的是跳转指令导致的&lt;strong&gt;分支延迟效应&lt;/strong&gt;。在分支跳转语句后面那条语句叫做&lt;strong&gt;分支延迟槽&lt;/strong&gt;，当跳转语句刚执行的一瞬间，跳转到的地址刚填充好（填充到程序计数器），&lt;strong&gt;还没有执行程序计数器中存放的指令，分支延迟槽的指令已经被执行了，这就是流水线效应&lt;/strong&gt;（几条指令被同时执行，只是处于不同的阶段， &lt;strong&gt;MIPS 不像其他架构那样存在流水线阻塞&lt;/strong&gt;），为了避免出现问题，因此在分支跳转语句的下一条指令通常是 &lt;code&gt;nop&lt;/code&gt; 指令或者其他有用的指令。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Tenda AC15漏洞复现</title>
+      <link>http://localhost:1313/posts/iot/tenda/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/iot/tenda/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。&lt;/p&gt;
+&lt;h2 id=&#34;获取固件&#34;&gt;获取固件&lt;/h2&gt;
+&lt;p&gt;从官网下载固件：&lt;a href=&#34;https://www.tenda.com.cn/material/show/102680&#34;&gt;AC15升级软件_腾达(Tenda)官方网站&lt;/a&gt;
+&lt;img src=&#34;http://localhost:1313/assets/Pasted%20image%2020250514230701.png&#34; style=&#34;width: 80%;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;解压下载的压缩包就可以拿到固件&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>

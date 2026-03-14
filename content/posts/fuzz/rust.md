@@ -117,7 +117,7 @@ cargo fuzz run fuzz_target_1
 
 在跑了一会之后程序就直接 crash 了，并将 crash 样本保存到了`artifacts/fuzz_target_1`中。
 
-<img src="assets/Pasted%20image%2020250711154408.png" style="zoom: 50%;" />
+<img src="/assets/Pasted%20image%2020250711154408.png" style="zoom: 50%;" />
 
 根据调用栈跟踪发现具体问题在`#18 ... rust-url/src/parser.rs:287:46`，错误信息为：
 
@@ -193,7 +193,7 @@ cargo fuzz coverage fuzz_target_1
 
 最后在`fuzz/coverage/fuzz_target_1`目录下生成了覆盖率文件`coverage.profdata`。
 
-<img src="assets/Pasted%20image%2020250711220637.png" style="zoom: 67%;" />
+<img src="/assets/Pasted%20image%2020250711220637.png" style="zoom: 67%;" />
 
 
 ### 可视化覆盖率信息
@@ -208,7 +208,7 @@ cargo cov -- show fuzz/target/x86_64-unknown-linux-gnu/release/fuzz_target_1 \
   > coverage.html
 ```
 
-<img src="assets/Pasted%20image%2020250711224857.png" style="zoom: 67%;" />
+<img src="/assets/Pasted%20image%2020250711224857.png" style="zoom: 67%;" />
 
 终端查看：
 
@@ -219,7 +219,7 @@ cargo cov -- show --use-color \
   --show-regions --show-instantiations
 ```
 
-<img src="assets/Pasted%20image%2020250711222737.png" style="zoom:50%;" />
+<img src="/assets/Pasted%20image%2020250711222737.png" style="zoom:50%;" />
 
 ## 参考
 

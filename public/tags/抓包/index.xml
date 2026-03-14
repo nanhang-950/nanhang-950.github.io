@@ -10,24 +10,17 @@
     <lastBuildDate>Sun, 30 Nov 2025 23:30:38 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/%E6%8A%93%E5%8C%85/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Android APP抓包</title>
+      <title>Android APP抓包入门</title>
       <link>http://localhost:1313/posts/mobile/bag/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
       <guid>http://localhost:1313/posts/mobile/bag/</guid>
       <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
-&lt;p&gt;反抓包的对抗：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;代理检测&lt;/li&gt;
-&lt;li&gt;VPN检测&lt;/li&gt;
-&lt;li&gt;SSL Pinning&lt;/li&gt;
-&lt;li&gt;双向认证&lt;/li&gt;
-&lt;/ul&gt;
 &lt;p&gt;常用工具：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Yakit：和 burpsuite 差不多的抓包方式。&lt;/li&gt;
 &lt;li&gt;Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。&lt;/li&gt;
-&lt;li&gt;OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。&lt;/li&gt;
-&lt;li&gt;r0Capture：&lt;/li&gt;
+&lt;li&gt;OkHttp：OkHttp 是Android 最流行的网络库，抓包工具通过 hook 接口来抓包。&lt;/li&gt;
+&lt;li&gt;r0Capture：hook 抓包通杀脚本。&lt;/li&gt;
 &lt;li&gt;eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。&lt;/p&gt;</description>

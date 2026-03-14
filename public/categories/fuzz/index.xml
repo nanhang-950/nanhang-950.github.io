@@ -14,11 +14,9 @@
       <link>http://localhost:1313/posts/fuzz/afl/</link>
       <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
       <guid>http://localhost:1313/posts/fuzz/afl/</guid>
-      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-&lt;p&gt;玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。&lt;/p&gt;
-&lt;h2 id=&#34;基本概念&#34;&gt;基本概念&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;基本概念&#34;&gt;基本概念&lt;/h2&gt;
 &lt;h3 id=&#34;模糊测试简介&#34;&gt;模糊测试简介&lt;/h3&gt;
-&lt;p&gt;Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是&lt;strong&gt;自动生成随机输入&lt;/strong&gt;到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。&lt;/p&gt;</description>
+&lt;p&gt;&lt;strong&gt;Fuzz Testing&lt;/strong&gt;（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是&lt;strong&gt;自动生成随机输入&lt;/strong&gt;到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。&lt;/p&gt;</description>
     </item>
     <item>
       <title>AFL源码分析</title>

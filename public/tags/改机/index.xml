@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>改机 on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/%E6%94%B9%E6%9C%BA/</link>
+    <description>Recent content in 改机 on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Thu, 05 Feb 2026 21:35:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%94%B9%E6%9C%BA/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android 系统启动流程分析</title>
+      <link>http://localhost:1313/posts/mobile/custom/start_process/</link>
+      <pubDate>Thu, 05 Feb 2026 21:35:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/custom/start_process/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;h2 id=&#34;整体启动认知&#34;&gt;整体启动认知&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;Android&lt;/code&gt;系统启动主要分为四个阶段：&lt;code&gt;Bootloader&lt;/code&gt;阶段、&lt;code&gt;Kernel&lt;/code&gt;阶段、&lt;code&gt;Init&lt;/code&gt;进程阶段和&lt;code&gt;System Server&lt;/code&gt;启动阶段，下面看一下这几个阶段的启动流程。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

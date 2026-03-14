@@ -218,9 +218,7 @@ code.has-jax {
                     <li>
                         <a href="#%e6%9f%a5%e7%9c%8b%e5%b7%a5%e7%a8%8b" aria-label="查看工程">查看工程</a></li>
                     <li>
-                        <a href="#%e8%a7%a3%e5%af%86-1" aria-label="解密">解密</a></li>
-                    <li>
-                        <a href="#killwxapkg" aria-label="KillWxapkg">KillWxapkg</a></li></ul>
+                        <a href="#%e8%a7%a3%e5%af%86-1" aria-label="解密">解密</a></li></ul>
                     </li>
                     <li>
                         <a href="#%e6%8a%93%e5%8c%85" aria-label="抓包">抓包</a><ul>
@@ -231,7 +229,7 @@ code.has-jax {
                         <a href="#%e6%8a%93%e5%8c%85%e5%b0%8f%e7%a8%8b%e5%ba%8f" aria-label="抓包小程序">抓包小程序</a></li></ul>
                     </li>
                     <li>
-                        <a href="#js%e9%80%86%e5%90%91" aria-label="JS逆向">JS逆向</a><ul>
+                        <a href="#%e5%bc%80%e5%90%afdevtools" aria-label="开启Devtools">开启Devtools</a><ul>
                             
                     <li>
                         <a href="#%e8%b0%83%e7%94%a8%e5%a0%86%e6%a0%88" aria-label="调用堆栈">调用堆栈</a></li>
@@ -351,7 +349,7 @@ code.has-jax {
 <h3 id="小程序架构分析">小程序架构分析<a hidden class="anchor" aria-hidden="true" href="#小程序架构分析">#</a></h3>
 <p>微信小程序采用了框架化开发，主要分为视图层、逻辑层、JSBridge。JS 负责业务逻辑层的实现，而视图层则由 WXML 和 WXSS 来共同实现，前者其实就是一种微信定义的模板语言，而后者类似 CSS。</p>
 <p>从下面的微信小程序架构图上可以清晰的看出，小程序借助的是 JSBridge 实现了对底层 API 接口的调用，所以在小程序里面开发，开发者不用太多去考虑 IOS、安卓的实现差异的问题，安心在上层的视图层和逻辑层进行开发即可。</p>
-<img src="./assets/xxc.png" alt="xxc" style="zoom:50%;" />
+<img src="/assets/xxc.png" alt="xxc" style="zoom:50%;" />
 <ul>
 <li>视图层</li>
 </ul>
@@ -427,27 +425,6 @@ npm install cssbeautify
 <p>在 UnpackMiniApp 文件夹中创建<code>wxpack</code>文件夹。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">mkdir</span> <span class="n">wxpack</span>
 </span></span></code></pre></div><p>微信开发者工具下载：<a href="https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html">下载</a></p>
-<h3 id="killwxapkg">KillWxapkg<a hidden class="anchor" aria-hidden="true" href="#killwxapkg">#</a></h3>
-<p>开启微信开发者模式</p>
-<p>KillWxapkg 支持的微信最高版本为 v3.9.12.75（11275_x64）</p>
-<p>在</p>
-<table>
-  <thead>
-      <tr>
-          <th>版本号</th>
-          <th>下载链接（官方或镜像）</th>
-          <th>说明</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>v3.9.12.75（11275_x64）</td>
-          <td></td>
-          <td></td>
-      </tr>
-  </tbody>
-</table>
-<p>在设置中关闭微信自动更新。</p>
 <h2 id="抓包">抓包<a hidden class="anchor" aria-hidden="true" href="#抓包">#</a></h2>
 <p>使用电脑版微信抓包。</p>
 <h3 id="配置微信代理">配置微信代理<a hidden class="anchor" aria-hidden="true" href="#配置微信代理">#</a></h3>
@@ -465,8 +442,17 @@ npm install cssbeautify
 <h3 id="抓包小程序">抓包小程序<a hidden class="anchor" aria-hidden="true" href="#抓包小程序">#</a></h3>
 <p>现在就可以抓小程序的包了，将之前的数据包清空后，打开要抓取的小程序。比如这里我们选择瑞幸咖啡，然后就会获取到小程序的数据包：</p>
 <img src="assets/image-20250923201256949.png" alt="image-20250923201256949" style="zoom:50%;" />
-<h2 id="js逆向">JS逆向<a hidden class="anchor" aria-hidden="true" href="#js逆向">#</a></h2>
-<p>JS 逆向是指对网页或应用中运行的 JavaScript 代码进行分析、理解其逻辑和数据流的过程。理解 JS 如何工作，包括函数调用、加密算法、接口请求、数据处理等。JS 逆向常用于 Web 端的爬虫。</p>
+<h2 id="开启devtools">开启Devtools<a hidden class="anchor" aria-hidden="true" href="#开启devtools">#</a></h2>
+<p>通过工具开启微信的 Devtools 进行 JS 调试。</p>
+<p>下载工具：<a href="https://pan.baidu.com/share/init?surl=ow2FeAH1ucEWgYJcfzgUNQ&amp;pwd=xjfe">下载</a></p>
+<p>下载相应版本的微信：<a href="https://github.com/tom-snow/wechat-windows-versions/releases/download/v3.9.12.17/WeChatSetup-3.9.12.17.exe">下载微信</a></p>
+<p>开启微信之前首先清除<code>C:\Users\用户\AppData\Roaming\Tencent\WeChat\XPlugin\Plugins\RadiumWMPF</code>下的所有目录，然后再打开微信，之后再启动工具。</p>
+<p>之后点击小程序的图标就可以开启 Devtools。</p>
+<img src="/assets/image-20260102121753791.png" alt="image-20260102121753791" style="zoom: 67%;" />
+<p>开启后：</p>
+<img src="/assets/image-20260102121831997.png" alt="image-20260102121831997" style="zoom: 33%;" />
+<p>不过开启 Devtools 有封号风险，最好专门注册一个新账号来使用。</p>
+<p>之后我们逆向小程序就可以通过 JS 逆向的方式来分析了，下面了解一些 JS 逆向的基本知识。</p>
 <h3 id="调用堆栈">调用堆栈<a hidden class="anchor" aria-hidden="true" href="#调用堆栈">#</a></h3>
 <p>调用堆栈是 JavaScript 引擎用于管理函数调用顺序的一种数据结构（遵循“后进先出”原则）。</p>
 <p>工作原理：</p>
@@ -509,15 +495,14 @@ npm install cssbeautify
 </ol>
 <p>调用堆栈可以帮我们追踪函数执行顺序，调试时可通过堆栈信息定位代码执行路径（如报错时的“堆栈跟踪”）。</p>
 <h3 id="调试">调试<a hidden class="anchor" aria-hidden="true" href="#调试">#</a></h3>
-<p>使用 Chrome 浏览器调试分析。</p>
-<p>F12，然后打开源代码/来源：</p>
-<img src="./assets/image-20250925173253505.png" alt="image-20250925173253505" style="zoom:50%;" />
+<p>使用 Chrome 浏览器调试分析，F12，然后打开源代码/来源：</p>
+<img src="/assets/image-20250925173253505.png" alt="image-20250925173253505" style="zoom:50%;" />
 <p>作用域、调用堆栈、XHR断点这三个功能需要重点认识：</p>
-<img src="./assets/image-20250925173341154.png" alt="image-20250925173341154" style="zoom:50%;" />
+<img src="/assets/image-20250925173341154.png" alt="image-20250925173341154" style="zoom:50%;" />
 <p>我们输入账号密码-&gt; 浏览器接受到我们的账号密码-&gt; 根据js进行加密-&gt; 发送到对方的服务器（网页）</p>
 <p>服务器接收数据-&gt; 对我们的数据进行解密-&gt; 判断我们的数据解密后是否正常-&gt; 正常就返回正常结果（否则返回报错）</p>
 <p>抓包与数据分析。</p>
-<img src="./assets/20250819144531-19ac4efa-7cc8-1.png" alt="20250819144531-19ac4efa-7cc8-1" style="zoom:50%;" />
+<img src="/assets/20250819144531-19ac4efa-7cc8-1.png" alt="20250819144531-19ac4efa-7cc8-1" style="zoom:50%;" />
 <ul>
 <li>按钮1：让代码继续执行，运行到下一个断点中断执行，如果没有设置断点会直接运行完代码</li>
 <li>按钮2：跳过下一个函数调用。既不遇到函数时，执行下一步；遇到函数时，不进入函数直接执行；</li>
@@ -527,21 +512,19 @@ npm install cssbeautify
 <li>按钮6：停用/激活全部断点</li>
 </ul>
 <p>右键 top 选择在所有文件中搜索。</p>
-<img src="./assets/image-20250925174952273.png" alt="image-20250925174952273" style="zoom:50%;" />
+<img src="/assets/image-20250925174952273.png" alt="image-20250925174952273" style="zoom:50%;" />
 <p>根据登陆信息，在所有文件中搜索登陆结果关键字，然后打断点：</p>
-<img src="./assets/image-20250925175423178.png" alt="image-20250925175423178" style="zoom:50%;" />
+<img src="/assets/image-20250925175423178.png" alt="image-20250925175423178" style="zoom:50%;" />
 <p>之后再次点击登陆按钮执行断点。</p>
-<img src="./assets/image-20250925175617808.png" alt="image-20250925175617808" style="zoom:50%;" />
+<img src="/assets/image-20250925175617808.png" alt="image-20250925175617808" style="zoom:50%;" />
 <p>在作用域的闭包变量名中找到了 logindata。</p>
-<img src="./assets/image-20250925180315899.png" alt="image-20250925180315899" style="zoom:50%;" />
+<img src="/assets/image-20250925180315899.png" alt="image-20250925180315899" style="zoom:50%;" />
 <p>这样就可以成功把运行的 js 代码给断下来了。</p>
 <h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
 <blockquote>
-<p><a href="https://www.bilibili.com/video/BV13NpXzgEW3?spm_id_from=333.788.videopod.sections&amp;vd_source=edca928f1ab30d19924c36939a858238">小程序实战2——某幸咖啡，AES、MD5_哔哩哔哩_bilibili</a>
-<a href="https://xiaoeeyu.github.io/2024/09/16/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F-%E6%9F%90%E6%9F%90%E7%89%9B%E4%BB%94%E5%9F%8E/">微信小程序-某某牛仔城 | xiaoeryu</a>
+<p><a href="https://xiaoeeyu.github.io/2024/09/16/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F-%E6%9F%90%E6%9F%90%E7%89%9B%E4%BB%94%E5%9F%8E/">微信小程序-某某牛仔城 | xiaoeryu</a>
 <a href="https://oacia.dev/wechat-mini-program-with-devtool">微信小程序devtool抓包+反编译wxapkg | oacia = oaciaのBbBlog~ = DEVIL or SWEET</a>
-<a href="https://xz.aliyun.com/news/18630">手把手js逆向断点调试&amp;js逆向前端加密对抗&amp;企业SRC实战分享-先知社区</a>
-<a href="https://blog.csdn.net/m0_54428859/article/details/131947617">云片滑块&ndash;逆向案例-CSDN博客</a></p>
+<a href="https://xz.aliyun.com/news/18630">手把手js逆向断点调试&amp;js逆向前端加密对抗&amp;企业SRC实战分享-先知社区</a></p>
 </blockquote>
 
 

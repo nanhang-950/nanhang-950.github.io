@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="tty_struct 基础知识
+tty_struct 是 kernel pwn 中非常有价值的数据结构。我们可以通过利用这个数据结构来达到提权的目的。
+tty_struct结构
+struct tty_struct {
+    const struct tty_operations *ops;  // ★ 虚表，可控即代码执行
+
+    struct tty_driver *driver;
+    int index;
+
+    struct tty_bufhead buf;            // read/write 缓冲区
+
+    unsigned long flags;
+    ...                                 // 许多成员
+};
+首先我们查看 tty_struct 的源码。实际上，我并不了解太多 TTY 的内部逻辑，但只要知道该结构如何被使用，就足够进行利用。我们主要关注 /dev/ptmx 的初始化与 ioctl 实现。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/kernel/tty_struct/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/kernel/tty_struct/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#tty_struct-%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86" aria-label="tty_struct 基础知识">tty_struct 基础知识</a><ul>
+                            
+                    <li>
+                        <a href="#tty_struct%e7%bb%93%e6%9e%84" aria-label="tty_struct结构">tty_struct结构</a></li>
+                    <li>
+                        <a href="#%e5%88%9d%e5%a7%8b%e5%8c%96%e4%b8%8e-open" aria-label="初始化与 open">初始化与 open</a></li>
+                    <li>
+                        <a href="#tty_file_private-%e7%9a%84%e5%88%86%e9%85%8d" aria-label="tty_file_private 的分配">tty_file_private 的分配</a></li>
+                    <li>
+                        <a href="#tty_add_file" aria-label="tty_add_file">tty_add_file</a></li>
+                    <li>
+                        <a href="#ioctl" aria-label="ioctl">ioctl</a></li>
+                    <li>
+                        <a href="#%e4%bd%a0%e8%83%bd%e5%81%9a%e4%bb%80%e4%b9%88" aria-label="你能做什么">你能做什么</a><ul>
+                            
+                    <li>
+                        <a href="#kheap-%e6%b3%84%e6%bc%8f" aria-label="kheap 泄漏">kheap 泄漏</a></li>
+                    <li>
+                        <a href="#%e5%9f%ba%e4%ba%8e-tty_struct-%e7%9a%84-rip-%e5%8a%ab%e6%8c%81" aria-label="基于 tty_struct 的 RIP 劫持">基于 <code>tty_struct</code> 的 RIP 劫持</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%89%a7%e8%a1%8c%e8%b7%af%e5%be%84" aria-label="执行路径">执行路径</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-corctf2022-corjail" aria-label="例题 CorCTF2022-Corjail">例题 CorCTF2022-Corjail</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a2%98%e7%9b%ae%e5%88%86%e6%9e%90" aria-label="题目分析">题目分析</a></li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8%e6%80%9d%e8%b7%af" aria-label="利用思路">利用思路</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="tty_struct-基础知识">tty_struct 基础知识<a hidden class="anchor" aria-hidden="true" href="#tty_struct-基础知识">#</a></h2>
+<p><code>tty_struct</code> 是 kernel pwn 中非常有价值的数据结构。我们可以通过利用这个数据结构来达到提权的目的。</p>
+<h3 id="tty_struct结构">tty_struct结构<a hidden class="anchor" aria-hidden="true" href="#tty_struct结构">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">tty_struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="k">struct</span> <span class="n">tty_operations</span> <span class="o">*</span><span class="n">ops</span><span class="p">;</span>  <span class="c1">// ★ 虚表，可控即代码执行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">tty_driver</span> <span class="o">*</span><span class="n">driver</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">index</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">tty_bufhead</span> <span class="n">buf</span><span class="p">;</span>            <span class="c1">// read/write 缓冲区
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">...</span>                                 <span class="c1">// 许多成员
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></div><p>首先我们查看 <code>tty_struct</code> 的源码。实际上，我并不了解太多 TTY 的内部逻辑，但只要知道该结构如何被使用，就足够进行利用。我们主要关注 <code>/dev/ptmx</code> 的初始化与 <code>ioctl</code> 实现。</p>
+<hr>
+<h3 id="初始化与-open">初始化与 open<a hidden class="anchor" aria-hidden="true" href="#初始化与-open">#</a></h3>
+<p><code>/dev/ptmx</code> 字符设备在 <code>/drivers/tty/pty.c</code> 中初始化：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">void</span> <span class="n">__init</span> <span class="nf">unix98_pty_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">tty_default_fops</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ptmx_fops</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ptmx_fops</span><span class="p">.</span><span class="n">open</span> <span class="o">=</span> <span class="n">ptmx_open</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  <span class="nf">cdev_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ptmx_cdev</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ptmx_fops</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="nf">cdev_add</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ptmx_cdev</span><span class="p">,</span> <span class="nf">MKDEV</span><span class="p">(</span><span class="n">TTYAUX_MAJOR</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">     <span class="nf">register_chrdev_region</span><span class="p">(</span><span class="nf">MKDEV</span><span class="p">(</span><span class="n">TTYAUX_MAJOR</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#34;/dev/ptmx&#34;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">panic</span><span class="p">(</span><span class="s">&#34;Couldn&#39;t register /dev/ptmx driver&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">device_create</span><span class="p">(</span><span class="n">tty_class</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nf">MKDEV</span><span class="p">(</span><span class="n">TTYAUX_MAJOR</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">&#34;ptmx&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>对应的 <code>file_operations</code> 与 <code>tty_fops</code> 几乎完全一致，只是 <code>.open</code> 变成了 <code>ptmx_open</code>。
+因此，当你 <code>open(&quot;/dev/ptmx&quot;)</code> 时，会调用 <code>ptmx_open()</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kt">int</span> <span class="nf">ptmx_open</span><span class="p">(</span><span class="k">struct</span> <span class="n">inode</span> <span class="o">*</span><span class="n">inode</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">filp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">tty_struct</span> <span class="o">*</span><span class="n">tty</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="n">retval</span> <span class="o">=</span> <span class="nf">tty_alloc_file</span><span class="p">(</span><span class="n">filp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="n">tty</span> <span class="o">=</span> <span class="nf">tty_init_dev</span><span class="p">(</span><span class="n">ptm_driver</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">tty_add_file</span><span class="p">(</span><span class="n">tty</span><span class="p">,</span> <span class="n">filp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这就是相关结构初始化的地方。</p>
+<hr>
+<h3 id="tty_file_private-的分配">tty_file_private 的分配<a hidden class="anchor" aria-hidden="true" href="#tty_file_private-的分配">#</a></h3>
+<p>首先 <code>tty_alloc_file()</code> 会通过 <code>kmalloc()</code> 分配一个 <code>struct tty_file_private</code>，并将其设置为 <code>file-&gt;private_data</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">tty_alloc_file</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">tty_file_private</span> <span class="o">*</span><span class="n">priv</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">priv</span> <span class="o">=</span> <span class="nf">kmalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">priv</span><span class="p">),</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl">  <span class="n">file</span><span class="o">-&gt;</span><span class="n">private_data</span> <span class="o">=</span> <span class="n">priv</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li><code>struct tty_file_private</code> 大小为 <strong>0x20</strong>，因此使用 <code>kmalloc-32</code>。</li>
+<li>接着调用 <code>tty_init_dev()</code>，其内部会初始化一个 <code>struct tty_struct</code> 并返回。</li>
+</ul>
+<p><code>tty_struct</code> 的大小为 <strong>0x2B8</strong>，因此使用 <code>kmalloc-1024</code>。其中重要成员如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">tty_struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">magic</span><span class="p">;</span>                <span class="c1">// 魔数校验
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">kref</span> <span class="n">kref</span><span class="p">;</span>         <span class="c1">// 引用计数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">struct</span> <span class="n">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">tty_driver</span> <span class="o">*</span><span class="n">driver</span><span class="p">;</span><span class="c1">// 必须有效
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">const</span> <span class="k">struct</span> <span class="n">tty_operations</span> <span class="o">*</span><span class="n">ops</span><span class="p">;</span>  <span class="c1">// vtable
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h3 id="tty_add_file">tty_add_file<a hidden class="anchor" aria-hidden="true" href="#tty_add_file">#</a></h3>
+<p><code>tty_struct</code> 分配完成后，<code>tty_add_file()</code> 被调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">tty_add_file</span><span class="p">(</span><span class="k">struct</span> <span class="n">tty_struct</span> <span class="o">*</span><span class="n">tty</span><span class="p">,</span> <span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">tty_file_private</span> <span class="o">*</span><span class="n">priv</span> <span class="o">=</span> <span class="n">file</span><span class="o">-&gt;</span><span class="n">private_data</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">priv</span><span class="o">-&gt;</span><span class="n">tty</span> <span class="o">=</span> <span class="n">tty</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">priv</span><span class="o">-&gt;</span><span class="n">file</span> <span class="o">=</span> <span class="n">file</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>它将 <code>tty_struct</code> 的指针写入 <code>tty_file_private.tty</code>。</p>
+<p><strong>这一点非常关键，因为通过读取 <code>tty_file_private</code>，你可以泄露出 <code>tty_struct</code> 的堆地址。</strong></p>
+<hr>
+<h3 id="ioctl">ioctl<a hidden class="anchor" aria-hidden="true" href="#ioctl">#</a></h3>
+<p>当你对 <code>/dev/ptmx</code> 调用 <code>ioctl()</code> 时，会执行 <code>tty_ioctl()</code>。其中，首先会通过 <code>file</code> 找到对应的 <code>tty_struct</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">tty_struct</span> <span class="o">*</span><span class="n">tty</span> <span class="o">=</span> <span class="nf">file_tty</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+</span></span></code></pre></div><p>实现如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">static</span> <span class="kr">inline</span> <span class="k">struct</span> <span class="n">tty_struct</span> <span class="o">*</span><span class="nf">file_tty</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="p">((</span><span class="k">struct</span> <span class="n">tty_file_private</span> <span class="o">*</span><span class="p">)</span><span class="n">file</span><span class="o">-&gt;</span><span class="n">private_data</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">tty</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>接下来会执行 &ldquo;paranoia check&rdquo; 来检查 <code>tty_struct.magic</code> 是否为 <code>0x5401</code>：</p>
+<p>若不匹配，<code>tty_ioctl()</code> 会直接返回。</p>
+<p>随后进入 switch，如果找不到对应的 ioctl：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">default</span><span class="o">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">tty</span><span class="o">-&gt;</span><span class="n">ops</span><span class="o">-&gt;</span><span class="n">ioctl</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">retval</span> <span class="o">=</span> <span class="n">tty</span><span class="o">-&gt;</span><span class="n">ops</span><span class="o">-&gt;</span><span class="nf">ioctl</span><span class="p">(</span><span class="n">tty</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">arg</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">!=</span> <span class="o">-</span><span class="n">ENOIOCTLCMD</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span></code></pre></div><p>也就是说：</p>
+<p><strong>它会调用 <code>tty-&gt;ops-&gt;ioctl</code>，这是可以被我们利用的控制流劫持点。</strong></p>
+<hr>
+<h3 id="你能做什么">你能做什么<a hidden class="anchor" aria-hidden="true" href="#你能做什么">#</a></h3>
+<p>核心利用能力分两类：</p>
+<ol>
+<li><strong>kheap 泄漏（堆地址 + kbase 泄漏）</strong></li>
+<li><strong>RIP 劫持（利用 kROP）</strong></li>
+</ol>
+<h4 id="kheap-泄漏">kheap 泄漏<a hidden class="anchor" aria-hidden="true" href="#kheap-泄漏">#</a></h4>
+<p>假设你有以下条件：</p>
+<ul>
+<li><code>kmalloc-32</code> UAF</li>
+<li><code>kmalloc-1024</code> UAF</li>
+<li>对 <code>kmalloc-1024</code> 有写原语（全写或部分写）</li>
+</ul>
+<p>则可以：kmalloc-32 UAF → 泄漏 kmalloc-1024 地址</p>
+<p>因为：</p>
+<ul>
+<li><code>tty_file_private</code>（32 字节）包含 <code>tty_struct</code> 的地址</li>
+<li><code>tty_struct</code> 在 kmalloc-1024</li>
+</ul>
+<p>kmalloc-1024 UAF → 泄漏 kbase</p>
+<p>因为：</p>
+<ul>
+<li><code>tty_struct.ops</code> 指向内核中的 <code>ptmx_fops</code></li>
+<li>从而间接泄漏内核基址</li>
+</ul>
+<hr>
+<h4 id="基于-tty_struct-的-rip-劫持">基于 <code>tty_struct</code> 的 RIP 劫持<a hidden class="anchor" aria-hidden="true" href="#基于-tty_struct-的-rip-劫持">#</a></h4>
+<p>这是核心部分，也是为什么该结构对 kernel pwn 极其宝贵。</p>
+<p>假设：</p>
+<p>你能从 <code>tty_struct</code> 头部连续写至少 0x200 字节。</p>
+<p>那么你可以通过覆盖 <code>tty_struct.ops</code> 来获取 RIP。
+注意：</p>
+<ul>
+<li><strong>不能破坏 <code>magic = 0x5401</code></strong></li>
+<li>否则 <code>tty_ioctl()</code> 会拒绝继续执行</li>
+</ul>
+<hr>
+<p>为什么需要 “两阶段 ROP”</p>
+<p>在启用 KPTI 的系统上，你不能直接跳到用户态 payload。
+因此需要：</p>
+<ol>
+<li>在内核空间进行 stack pivot（修改 RSP）</li>
+<li>进入稳定 ROP 链</li>
+</ol>
+<p>而普通内核中几乎不会出现 <code>mov rsp, &lt;controlled&gt;</code> 这种 gadget。</p>
+<p>于是我们利用 tty_struct 自身来做 “预 ROP（pre-ROP）”。</p>
+<p>完整布局示例</p>
+<pre tabindex="0"><code>struct tty_struct {
+  +000: magic, kref : 0x5401
+  +008: dev;        : pop rsp gadget（作为 leave 的返回地址）
+  +010: driver;     : &amp;tty_struct + 0x170（pivot 目标，必须为有效地址）
+  +018: ops;        : &amp;tty_struct + 0x50
+  +020: index;
+  ...
+  +050: fake vtable（size=0x120，包含 leave gadget）
+  ...
+  +170: 实际 ROP 链
+  ...
+}
+</code></pre><h3 id="执行路径">执行路径<a hidden class="anchor" aria-hidden="true" href="#执行路径">#</a></h3>
+<ol>
+<li><code>tty_ioctl()</code> → jmp 到 fake vtable，执行 <code>leave</code></li>
+<li><code>leave</code>：
+<ul>
+<li><code>mov rsp, rbp</code>（rsp 指向 tty_struct 顶部）</li>
+<li><code>pop rbp</code> → rbp = magic|kref</li>
+</ul>
+</li>
+<li>返回地址位于 <code>dev</code> 字段 → <code>pop rsp</code></li>
+<li><code>pop rsp</code> 将 RSP 设置为 <code>driver</code></li>
+<li>RSP 指向 +0x170 → 执行真正的 ROP 链</li>
+</ol>
+<h2 id="例题-corctf2022-corjail">例题 CorCTF2022-Corjail<a hidden class="anchor" aria-hidden="true" href="#例题-corctf2022-corjail">#</a></h2>
+<h3 id="题目分析">题目分析<a hidden class="anchor" aria-hidden="true" href="#题目分析">#</a></h3>
+<h3 id="利用思路">利用思路<a hidden class="anchor" aria-hidden="true" href="#利用思路">#</a></h3>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://henrymartin262.github.io/2024/04/26/CorCTF2022-Corjail/#tty-struct">CorCTF2022-Corjail - Henry Martin</a></p>
+<p><a href="https://xz.aliyun.com/news/11934">corCTF 2022-CoRJail:利用Linux kernel中的poll_list对象-先知社区</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/ret2ptregs/">利用 pt_regs 构造通用内核 ROP - CTF Wiki</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

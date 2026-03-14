@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Hook on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/hook/</link>
+    <description>Recent content in Hook on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sat, 24 Jan 2026 22:57:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/hook/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android eBPF 初探</title>
+      <link>http://localhost:1313/posts/mobile/hook/ebpf/</link>
+      <pubDate>Sat, 24 Jan 2026 22:57:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/hook/ebpf/</guid>
+      <description>&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;eBPF 是 Linux 内核提供的一种动态 Hook 机制，可以将自定义代码逻辑 Hook 到指定内核事件上，当内核触发该事件时就会调用相应的自定义代码逻辑。&lt;/p&gt;
+&lt;p&gt;为了让您更具体地了解 eBPF 可以做什么，让我们为您提供一个非详尽的列表，列出可以使用 eBPF 完成的小程序：&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

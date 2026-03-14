@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>隐藏 Magisk&amp;Xposed | 南行&#39;s Blog</title>
+<meta name="keywords" content="检测对抗">
+<meta name="description" content="前言
+看到群里的大佬发了一个隐藏环境入门 PDF 文档，于是跟着复现一下。
+Magisk hide
+
+在设置中找到并点击隐藏 Magisk 应用
+
+
+
+设置一个新的 Magisk 应用名称并确认：
+
+
+片刻后会生产一个随机包名的面具包，然后让我们添加一个快捷方式到桌面，我们可以通过该快捷方式打开面具。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/risk/hide/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/risk/hide/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      隐藏 Magisk&amp;Xposed
+    </h1>
+    <div class="post-meta"><span title='2026-01-17 09:51:38 +0000 UTC'>2026年1月17日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#magisk-hide" aria-label="Magisk hide">Magisk hide</a></li>
+                    <li>
+                        <a href="#xposed-hide" aria-label="Xposed hide">Xposed hide</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<p>看到群里的大佬发了一个隐藏环境入门 PDF 文档，于是跟着复现一下。</p>
+<h2 id="magisk-hide">Magisk hide<a hidden class="anchor" aria-hidden="true" href="#magisk-hide">#</a></h2>
+<ul>
+<li>在设置中找到并点击隐藏 Magisk 应用</li>
+</ul>
+<img src="/assets/image-20260123153918898.png" alt="image-20260123153918898" style="zoom:50%;" />
+<ul>
+<li>设置一个新的 Magisk 应用名称并确认：</li>
+</ul>
+<img src="/assets/image-20260123153947280.png" alt="image-20260123153947280" style="zoom:50%;" />
+<p>片刻后会生产一个随机包名的面具包，然后让我们添加一个快捷方式到桌面，我们可以通过该快捷方式打开面具。</p>
+<ul>
+<li>在设置中开启 Zygisk：</li>
+</ul>
+<img src="/assets/image-20260123154154895.png" alt="image-20260123154154895" style="zoom:50%;" />
+<p>然后重启手机，再次打开面具。</p>
+<ul>
+<li>在设置中开启遵守排除列表：</li>
+</ul>
+<img src="/assets/image-20260212173058834.png" alt="image-20260212173058834" style="zoom:50%;" />
+<ul>
+<li>在设置中点击配置排除列表，然后在排除列表中选择需要隐藏 ROOT 的对应应用。</li>
+</ul>
+<p>例如 Duck Detector。</p>
+<img src="/assets/image-20260212173126432.png" alt="image-20260212173126432" style="zoom:50%;" />
+<p>注意将应用下的选项全部开启，否则可能会出现隐藏 ROOT 失败的问题。</p>
+<img src="/assets/image-20260212173208197.png" alt="image-20260212173208197" style="zoom:50%;" />
+<p>但是此时排除列表中的应用是无法使用虚拟框架和模块的。如果我想对某个排除列表中的应用使用虚拟框架和模块</p>
+<p>就需要使用到 Shamiko 模块：<a href="https://github.com/LSPosed/LSPosed.github.io/releases">Releases · LSPosed/LSPosed.github.io</a></p>
+<p>在面具 Magisk 的模块功能中使用本地安装刷入该模块，然后重启手机。再次打开面具 Magsik，在其模块功能中可以看到 Shamiko 模块已经成功刷入并加载。</p>
+<p>此时 Shamiko 中有显示 Shamiko doesn&rsquo;t work since enforce denylist is enabled：</p>
+<img src="/assets/image-20260212174007490.png" alt="image-20260212174007490" style="zoom:50%;" />
+<ul>
+<li>成功隐藏：</li>
+</ul>
+<img src="/assets/image-20260212173929665.png" alt="image-20260212173929665" style="zoom:50%;" />
+<h2 id="xposed-hide">Xposed hide<a hidden class="anchor" aria-hidden="true" href="#xposed-hide">#</a></h2>
+<p>HMA（Hide My Applist）是一个用于隐藏应用或拒绝应用列表请求的 Xposed 模块。</p>
+<p>但是这个模块的更新速度较慢，所以出现了它的好用的分支 HMA-OSS</p>
+<p>下载：https://github.com/frknkrc44/HMA-OSS/releases</p>
+<p>以下介绍它的使用步骤：</p>
+<blockquote>
+<p>重要提示：在 LSPosed 中仅勾选系统框架，绝对不要勾选其它应用。</p>
+</blockquote>
+<ul>
+<li>打开 HMA-OSS 应用，点击应用管理。</li>
+</ul>
+<img src="/assets/image-20260117012503170.png" alt="image-20260117012503170" style="zoom:50%;" />
+<ul>
+<li>选择要隐藏 applist 的应用</li>
+</ul>
+<p>这里选择 Duck Detector 应用来检测是否成功绕过 Root和 Xposed 检测。</p>
+<img src="/assets/image-20260117013751009.png" alt="image-20260117013751009" style="zoom:50%;" />
+<ul>
+<li>然后启用隐藏</li>
+</ul>
+<img src="/assets/image-20260117013824831.png" alt="image-20260117013824831" style="zoom:50%;" />
+<ul>
+<li>点击模板设置</li>
+</ul>
+<img src="/assets/image-20260117013915164.png" alt="image-20260117013915164" style="zoom:50%;" />
+<ul>
+<li>保持黑名单模式不变，打开应用预设</li>
+</ul>
+<img src="/assets/image-20260117013134561.png" alt="image-20260117013134561" style="zoom:50%;" />
+<ul>
+<li>勾选全部</li>
+</ul>
+<img src="/assets/image-20260117013201442.png" alt="image-20260117013201442" style="zoom:50%;" />
+<ul>
+<li>最后打开 Duck 发现顺利隐藏</li>
+</ul>
+<img src="/assets/image-20260117013620222.png" alt="image-20260117013620222" style="zoom:50%;" />
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/">检测对抗</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

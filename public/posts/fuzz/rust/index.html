@@ -375,7 +375,7 @@ mv seed.txt corpus/fuzz_target_1
 <p>通过<code>cargo fuzz run</code>运行目标，自动编译带插桩的目标。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cargo fuzz run fuzz_target_1
 </span></span></code></pre></div><p>在跑了一会之后程序就直接 crash 了，并将 crash 样本保存到了<code>artifacts/fuzz_target_1</code>中。</p>
-<img src="assets/Pasted%20image%2020250711154408.png" style="zoom: 50%;" />
+<img src="/assets/Pasted%20image%2020250711154408.png" style="zoom: 50%;" />
 <p>根据调用栈跟踪发现具体问题在<code>#18 ... rust-url/src/parser.rs:287:46</code>，错误信息为：</p>
 <pre tabindex="0"><code>thread &#39;&lt;unnamed&gt;&#39; panicked at ... attempt to subtract with overflow
 </code></pre><p>说明某个地方发生了<code>x - y</code>的运算，其中<code>x &lt; y</code>，在 release 模式下没有检查，但是我们通过 ASan 捕捉到了。</p>
@@ -420,7 +420,7 @@ mv seed.txt corpus/fuzz_target_1
 </span></span><span class="line"><span class="cl">cargo fuzz coverage fuzz_target_1
 </span></span></code></pre></div><p>这里 cargo fuzz 会自动测试<code>corpus/fuzz_target_1</code>目录下的语料。</p>
 <p>最后在<code>fuzz/coverage/fuzz_target_1</code>目录下生成了覆盖率文件<code>coverage.profdata</code>。</p>
-<img src="assets/Pasted%20image%2020250711220637.png" style="zoom: 67%;" />
+<img src="/assets/Pasted%20image%2020250711220637.png" style="zoom: 67%;" />
 <h3 id="可视化覆盖率信息">可视化覆盖率信息<a hidden class="anchor" aria-hidden="true" href="#可视化覆盖率信息">#</a></h3>
 <p>生成 HTML 格式覆盖率报告：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cargo cov -- show fuzz/target/x86_64-unknown-linux-gnu/release/fuzz_target_1 <span class="se">\
@@ -428,13 +428,13 @@ mv seed.txt corpus/fuzz_target_1
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  --Xdemangler<span class="o">=</span>rustfilt <span class="se">\
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  --instr-profile<span class="o">=</span>fuzz/coverage/fuzz_target_1/coverage.profdata <span class="se">\
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  &gt; coverage.html
-</span></span></code></pre></div><img src="assets/Pasted%20image%2020250711224857.png" style="zoom: 67%;" />
+</span></span></code></pre></div><img src="/assets/Pasted%20image%2020250711224857.png" style="zoom: 67%;" />
 <p>终端查看：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cargo cov -- show --use-color <span class="se">\
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  --instr-profile<span class="o">=</span>fuzz/coverage/fuzz_target_1/coverage.profdata <span class="se">\
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  fuzz/target/x86_64-unknown-linux-gnu/release/fuzz_target_1 <span class="se">\
 </span></span></span><span class="line"><span class="cl"><span class="se"></span>  --show-regions --show-instantiations
-</span></span></code></pre></div><img src="assets/Pasted%20image%2020250711222737.png" style="zoom:50%;" />
+</span></span></code></pre></div><img src="/assets/Pasted%20image%2020250711222737.png" style="zoom:50%;" />
 <h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
 <blockquote>
 <p><a href="https://github.com/rust-fuzz/trophy-case">rust-fuzz/trophy-case: 🏆 Collection of bugs uncovered by fuzzing Rust code</a>

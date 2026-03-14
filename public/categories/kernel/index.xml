@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Kernel on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/categories/kernel/</link>
+    <description>Recent content in Kernel on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Thu, 01 Jan 2026 13:03:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/categories/kernel/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Linux Kernel modprobe_path覆盖利用技术</title>
+      <link>http://localhost:1313/posts/kernel/modprobe_path/</link>
+      <pubDate>Thu, 01 Jan 2026 13:03:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/kernel/modprobe_path/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;今年的 ccb&amp;amp;ciscn 初赛有一道 Linux 内核的 Pwn 题，让我这个内核菜鸡被直接“硬控”了。现在初赛都上内核了。。。&lt;/p&gt;
+&lt;p&gt;赛后搞到了 WP，于是正好趁着元旦假期有时间好好复现一下，分析了一下这道题的利用技术的原理，于是就有了这篇文章。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Linux Kernel Pwn 入门</title>
+      <link>http://localhost:1313/posts/kernel/base/</link>
+      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/kernel/base/</guid>
+      <description>&lt;h2 id=&#34;基础知识&#34;&gt;基础知识&lt;/h2&gt;
+&lt;h3 id=&#34;内核是什么&#34;&gt;内核是什么？&lt;/h3&gt;
+&lt;p&gt;操作系统内核是一个特殊的程序，其用来管理软件发起的 IO 请求，将其转换为指令交由 CPU 执行，是现代操作系统最基本的部分。&lt;/p&gt;
+&lt;p&gt;其功能主要有以下两点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;控制并与硬件进行交互；&lt;/li&gt;
+&lt;li&gt;提供应用能运行的环境。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;intel CPU 将 CPU 的特权级别分为 4 个级别：Ring 0、Ring 1、Ring 2、Ring 3。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

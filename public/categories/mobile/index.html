@@ -178,30 +178,58 @@ code.has-jax {
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Android APP抓包
+    <h2 class="entry-hint-parent">Android APP 组件安全入门
     </h2>
   </header>
   <div class="entry-content">
-    <p>简介 反抓包的对抗：
-代理检测 VPN检测 SSL Pinning 双向认证 常用工具：
-Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。 OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。 r0Capture： eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。 为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。
+    <p>简介 安卓 RCE 的核心思想是找到一个可以被远程触发的入口点，并利用这个入口点来执行任意代码。这个过程分为两步：
+触发点（Trigger）：寻找一个可以被远程控制，且会处理恶意数据的接口。这个接口可以是应用程序的某个功能、某个系统服务，甚至是底层的通信协议 代码执行（Execution）：利用触发点，让系统执行攻击者预设的代码。这通常涉及到内存破坏、反序列化、或动态加载恶意代码 安卓RCE的主要利用途径：
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Android APP抓包" href="http://localhost:1313/posts/mobile/bag/"></a>
+  <footer class="entry-footer"><span title='2026-02-03 14:40:38 +0000 UTC'>2026年2月3日</span></footer>
+  <a class="entry-link" aria-label="post link to Android APP 组件安全入门" href="http://localhost:1313/posts/mobile/sec/"></a>
 </article>
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Frida攻略
+    <h2 class="entry-hint-parent">Android eBPF 初探
     </h2>
   </header>
   <div class="entry-content">
-    <p>简介 Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。
+    <p>简介 eBPF 是 Linux 内核提供的一种动态 Hook 机制，可以将自定义代码逻辑 Hook 到指定内核事件上，当内核触发该事件时就会调用相应的自定义代码逻辑。
+为了让您更具体地了解 eBPF 可以做什么，让我们为您提供一个非详尽的列表，列出可以使用 eBPF 完成的小程序：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-01-24 22:57:38 +0000 UTC'>2026年1月24日</span></footer>
+  <a class="entry-link" aria-label="post link to Android eBPF 初探" href="http://localhost:1313/posts/mobile/hook/ebpf/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">隐藏 Magisk&amp;Xposed
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 看到群里的大佬发了一个隐藏环境入门 PDF 文档，于是跟着复现一下。
+Magisk hide 在设置中找到并点击隐藏 Magisk 应用 设置一个新的 Magisk 应用名称并确认： 片刻后会生产一个随机包名的面具包，然后让我们添加一个快捷方式到桌面，我们可以通过该快捷方式打开面具。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-01-17 09:51:38 +0000 UTC'>2026年1月17日</span></footer>
+  <a class="entry-link" aria-label="post link to 隐藏 Magisk&Xposed" href="http://localhost:1313/posts/mobile/risk/hide/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android APP抓包入门
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>简介 常用工具：
+Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。 OkHttp：OkHttp 是Android 最流行的网络库，抓包工具通过 hook 接口来抓包。 r0Capture：hook 抓包通杀脚本。 eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。 为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Frida攻略" href="http://localhost:1313/posts/mobile/frida/"></a>
+  <a class="entry-link" aria-label="post link to Android APP抓包入门" href="http://localhost:1313/posts/mobile/bag/"></a>
 </article>
 
 <article class="post-entry tag-entry"> 
@@ -215,33 +243,7 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios-base/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">OLLVM混淆和反混淆
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>前言 简介 OLLVM（Obfuscator-LLVM）是瑞士西部应用科学大学安全小组于 2010 年 6 月发起的一个开源项目，旨在基于 LLVM 构建一套通用的代码混淆工具，以提升软件在逆向工程面前的安全性。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to OLLVM混淆和反混淆" href="http://localhost:1313/posts/mobile/confron/ollvm/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">初探LLVM框架
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>简介 LLVM（Low Level Virtual Machine）是一个开源的编译器基础设施项目，旨在提供可重用的编译器和工具链技术，支持编译器的开发、优化和分析，从而帮助开发者创建高效的程序和工具。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to 初探LLVM框架" href="http://localhost:1313/posts/mobile/obf/llvm/"></a>
+  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios/"></a>
 </article>
 
 <article class="post-entry tag-entry"> 

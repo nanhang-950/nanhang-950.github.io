@@ -7,9 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>AFL模糊测试入门 | 南行&#39;s Blog</title>
 <meta name="keywords" content="">
-<meta name="description" content="前言
-玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。
-基本概念
+<meta name="description" content="基本概念
 模糊测试简介
 Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是自动生成随机输入到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。">
 <meta name="author" content="">
@@ -192,8 +190,6 @@ code.has-jax {
 
             <div class="inner"><ul>
                     <li>
-                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
-                    <li>
                         <a href="#%e5%9f%ba%e6%9c%ac%e6%a6%82%e5%bf%b5" aria-label="基本概念">基本概念</a><ul>
                             
                     <li>
@@ -236,8 +232,6 @@ code.has-jax {
                         <a href="#fuzzing" aria-label="Fuzzing">Fuzzing</a></li>
                     <li>
                         <a href="#crash%e5%88%86%e6%9e%90" aria-label="crash分析">crash分析</a></li>
-                    <li>
-                        <a href="#vscodegdb%e5%88%86%e6%9e%90" aria-label="vscode&#43;gdb分析">vscode+gdb分析</a></li>
                     <li>
                         <a href="#afl-analyze" aria-label="afl-analyze">afl-analyze</a></li></ul>
                     </li>
@@ -288,76 +282,6 @@ code.has-jax {
                         <a href="#frida" aria-label="Frida">Frida</a></li>
                     <li>
                         <a href="#lcov" aria-label="lcov">lcov</a></li></ul>
-                    </li>
-                    <li>
-                        <a href="#harness" aria-label="Harness">Harness</a><ul>
-                            
-                    <li>
-                        <a href="#%e5%9f%ba%e6%9c%ac%e7%a4%ba%e4%be%8b" aria-label="基本示例">基本示例</a></li>
-                    <li>
-                        <a href="#%e6%8c%81%e4%b9%85%e5%8c%96%e6%a8%a1%e5%bc%8f" aria-label="持久化模式">持久化模式</a></li>
-                    <li>
-                        <a href="#libfuzzer%e5%85%bc%e5%ae%b9" aria-label="libFuzzer兼容">libFuzzer兼容</a></li>
-                    <li>
-                        <a href="#%e4%bf%ae%e6%94%b9%e6%ba%90%e4%bb%a3%e7%a0%81" aria-label="修改源代码">修改源代码</a></li>
-                    <li>
-                        <a href="#libxml2%e7%bc%96%e8%af%91fuzz" aria-label="libxml2编译Fuzz">libxml2编译Fuzz</a></li>
-                    <li>
-                        <a href="#%e7%a7%8d%e5%ad%90%e8%af%ad%e6%96%99%e5%ba%93%e5%88%9b%e5%bb%ba" aria-label="种子语料库创建">种子语料库创建</a></li>
-                    <li>
-                        <a href="#%e8%87%aa%e5%ae%9a%e4%b9%89%e5%ad%97%e5%85%b8" aria-label="自定义字典">自定义字典</a></li>
-                    <li>
-                        <a href="#fuzzing-1" aria-label="Fuzzing">Fuzzing</a></li>
-                    <li>
-                        <a href="#crash%e5%88%86%e7%b1%bb" aria-label="Crash分类">Crash分类</a></li>
-                    <li>
-                        <a href="#%e6%a1%88%e4%be%8b" aria-label="案例">案例</a><ul>
-                            
-                    <li>
-                        <a href="#%e4%bf%ae%e6%94%b9-afl-untracerc" aria-label="修改 afl-untracer.c">修改 afl-untracer.c</a></li>
-                    <li>
-                        <a href="#%e7%94%9f%e6%88%90-patchestxt-%e6%96%87%e4%bb%b6" aria-label="生成 patches.txt 文件">生成 patches.txt 文件</a></li>
-                    <li>
-                        <a href="#fuzzing-2" aria-label="Fuzzing">Fuzzing</a></li>
-                    <li>
-                        <a href="#%e6%b5%8b%e8%af%95%e4%b8%8e%e8%b0%83%e8%af%95" aria-label="测试与调试">测试与调试</a></li></ul>
-                    </li></ul>
-                    </li>
-                    <li>
-                        <a href="#%e4%ba%8c%e8%bf%9b%e5%88%b6%e7%a8%8b%e5%ba%8f" aria-label="二进制程序">二进制程序</a><ul>
-                            
-                    <li>
-                        <a href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae-1" aria-label="环境配置">环境配置</a></li>
-                    <li>
-                        <a href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae-2" aria-label="环境配置">环境配置</a></li>
-                    <li>
-                        <a href="#%e5%bb%b6%e8%bf%9f%e5%88%9d%e5%a7%8b%e5%8c%96" aria-label="延迟初始化">延迟初始化</a></li>
-                    <li>
-                        <a href="#cmplog" aria-label="CMPLOG">CMPLOG</a></li>
-                    <li>
-                        <a href="#%e9%93%be%e6%8e%a5%e8%af%b4%e6%98%8e" aria-label="链接说明">链接说明</a></li>
-                    <li>
-                        <a href="#%e6%80%a7%e8%83%bd%e5%af%b9%e6%af%94" aria-label="性能对比">性能对比</a></li>
-                    <li>
-                        <a href="#%e8%a6%86%e7%9b%96%e4%bf%a1%e6%81%af" aria-label="覆盖信息">覆盖信息</a></li>
-                    <li>
-                        <a href="#persistent%e6%a8%a1%e5%bc%8f" aria-label="Persistent模式">Persistent模式</a><ul>
-                            
-                    <li>
-                        <a href="#start-%e5%9c%b0%e5%9d%80" aria-label="START 地址">START 地址</a></li>
-                    <li>
-                        <a href="#ret-%e5%9c%b0%e5%9d%80" aria-label="RET 地址">RET 地址</a></li>
-                    <li>
-                        <a href="#offset" aria-label="OFFSET">OFFSET</a></li>
-                    <li>
-                        <a href="#%e9%87%8d%e7%bd%ae%e5%af%84%e5%ad%98%e5%99%a8%e7%8a%b6%e6%80%81" aria-label="重置寄存器状态">重置寄存器状态</a></li>
-                    <li>
-                        <a href="#exit-%e6%97%b6%e9%87%8d%e7%bd%ae" aria-label="exit() 时重置">exit() 时重置</a></li></ul>
-                    </li>
-                    <li>
-                        <a href="#%e9%83%a8%e5%88%86%e6%8f%92%e6%a1%a9-1" aria-label="部分插桩">部分插桩</a></li>
-                    <li>
-                        <a href="#%e5%ae%9e%e4%be%8b" aria-label="实例">实例</a></li></ul>
                     </li>
                     <li>
                         <a href="#%e5%90%8e%e8%a8%80" aria-label="后言">后言</a></li>
@@ -466,22 +390,17 @@ code.has-jax {
     }
     
 </script>
-  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
-<p>玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。</p>
-<h2 id="基本概念">基本概念<a hidden class="anchor" aria-hidden="true" href="#基本概念">#</a></h2>
+  <div class="post-content"><h2 id="基本概念">基本概念<a hidden class="anchor" aria-hidden="true" href="#基本概念">#</a></h2>
 <h3 id="模糊测试简介">模糊测试简介<a hidden class="anchor" aria-hidden="true" href="#模糊测试简介">#</a></h3>
-<p>Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是<strong>自动生成随机输入</strong>到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。</p>
-<p><img decoding="async" loading="lazy" src="./assets/Fuzz.drawio.png" style="max-width: 100%; height: auto;"></p>
+<p><strong>Fuzz Testing</strong>（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是<strong>自动生成随机输入</strong>到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Fuzz.drawio.png" style="max-width: 100%; height: auto;"></p>
 <p>Fuzz testing 在检测安全漏洞中大放异彩，其通过生成大量的测试用例（test cases）并观测执行结果来寻找漏洞，并且已在大量的应用中发现了上千个漏洞。虽然非常高效，fuzz 仍缺乏系统化的对其缺陷的分析。</p>
 <ul>
 <li>fuzz 需要缩小输入空间（input space）与缺陷空间（defect space，触发缺陷的输入）间的差距；在一个应用当中，漏洞（defects）的存在是分散的（spare），这意味着 defects space 要比 input space 小得多。</li>
 <li>fuzzing 生成大量的测试用例进行重复测试——这需要一种自动化的方法；由于查询与漏洞的复杂性，自动化地执行不同的程序会是一个挑战。</li>
 </ul>
-<p>整个 Fuzzing 流程大致可以拆分为三个部分，分别是：数据投喂、数据变异、目标监控。</p>
-<p>模糊测试一般是一个自动或半自动的过程，这个过程包括反复操纵目标软件并为其提供处理数据。</p>
-<p>所有的模糊器都可分为两大类：基于变异的模糊器，这种模糊器对已有数据样本应用变异技术以创建测试用例。</p>
-<p>基于生成的模糊器，这种模糊器通过对目标协议或文件格式建模的方法从头开始产生测试用例。</p>
-<p>模糊测试（或模糊测试）是一种自动化软件测试技术，它基于向程序提供随机/突变的输入值并监控其异常/崩溃。</p>
+<p>模糊测试（Fuzzing）是一种自动化的、用于发现软件缺陷或漏洞的测试技术，主要通过向程序输入随机或不合法的数据来测试其健壮性。模糊测试的核心目标是通过不合理或意外的输入触发程序中的异常行为、崩溃或安全漏洞。</p>
+<p>整个 Fuzzing 流程大致可以拆分为三个部分，分别是：<strong>数据投喂</strong>、<strong>数据变异</strong>、<strong>目标监控</strong>。</p>
 <p>覆盖率引导的进化模糊测试：</p>
 <ul>
 <li>
@@ -493,10 +412,75 @@ code.has-jax {
 </ul>
 <p>核心原理</p>
 <ul>
-<li><strong>异常输入测试</strong>：向程序提供非预期输入以发现漏洞</li>
-<li><strong>自动化变异</strong>：对有效输入进行随机修改生成测试用例</li>
-<li><strong>覆盖率引导</strong>：通过代码覆盖率优化测试效率(灰盒测试)</li>
+<li>
+<p><strong>异常输入测试</strong>：向程序提供非预期输入以发现漏洞</p>
+</li>
+<li>
+<p><strong>自动化变异</strong>：对有效输入进行随机修改生成测试用例</p>
+</li>
+<li>
+<p><strong>覆盖率引导</strong>：通过代码覆盖率优化测试效率(灰盒测试)</p>
+</li>
+<li>
+<p>种子：初始输入样本</p>
+</li>
+<li>
+<p>变异：通过修改种子生成新输入</p>
+</li>
+<li>
+<p>覆盖率：衡量测试覆盖代码路径的指标</p>
+</li>
+<li>
+<p>崩溃（crash）：程序因异常输入导致的错误</p>
+</li>
 </ul>
+<p>举一个简单的例子来讲解什么是模糊测试。如下我们有一段简单的代码，代码接收一个数字的输入，它有一个 Bug 会在输入数字 100 时触发，但我们并不知道这个程序存在这个 Bug。我们可以从输入数字 1 开始不断的尝试，逐次递增输入数字，最终发现在数字递增到 100 时程序崩溃退出。</p>
+<p>以上我们不断输入尝试的行为就是模糊测试。我们输入的第一个数字 1 就是模糊测试的种子，逐次递增数字就是我们模糊测试的变异策略，最后我们发现这个 Bug 后记录下反馈来分析 Bug 产生的原因。</p>
+<ul>
+<li>目标 demo</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nf">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">num</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="mi">100</span><span class="p">)</span> <span class="nf">abort</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">((</span><span class="n">num</span> <span class="o">*</span> <span class="mi">1337</span><span class="p">)</span> <span class="o">==</span> <span class="mh">0xdeadbeef</span><span class="p">)</span> <span class="nf">abort</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="mh">0x41424344</span><span class="p">)</span> <span class="nf">abort</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>实际生产环境中 fuzz 目标往往有数万行乃至百万行代码，逐行检查效率太低，自动化才是王道。由此出现了模糊测试。模糊测试自动完成：1. 执行目标程序、2. 输入测试数据、3. 报告执行结果，执行这些操作的程序称为 fuzzer，根据开发和执行效率需求，会选择不同语言实现。</p>
+<ul>
+<li>fuzzer demo</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"></code></pre></div><p>在模糊测试出现前，为了验证<strong>程序功能</strong>是否正常，会编写测试脚本或<strong>单元测试</strong>，这与模糊测试的方向不同：前者寻找程序异常，后者仅验证程序功能是否按预期执行。</p>
+<p>这也解释了为什么模糊测试被归类在安全领域。正常情况下用户会按照<strong>预期方式</strong>使用服务，因此通过单元测试就代表服务能正常运行。但并非所有用户都会规范操作，如果程序未对这些非预期操作进行检查，就可能存在漏洞，轻则导致服务终止，重则让攻击者获得主机控制权。模糊测试的概念恰好符合攻击者视角：执行程序并输入随机生成的数据，通过执行结果检查当前输入是否满足触发漏洞的条件。</p>
+<p>简而言之，模糊测试用于发现程序漏洞，帮助开发者及时修复，避免被攻击者利用。</p>
+<ul>
+<li>基于生成：根据目标格式规范生成输入</li>
+<li>基于变异：对现有输入样本进行随机修改</li>
+<li>灰盒/白盒模糊测试：结合代码覆盖率反馈</li>
+</ul>
+<p>灰盒模糊测试的工作流程</p>
+<img src="/assets/Pasted image 20250326185550.png" width="80%">
+<p>AFL 工作流程</p>
+<p>![](/assets/Pasted image 20250326185758.png)</p>
+<p>AFL 的基于一个理论：执行覆盖的代码越多，越有可能触发异常，这里采用边覆盖率代表覆盖代码的多寡</p>
+<p>高级主题：</p>
+<ul>
+<li>覆盖率优化：学习如何利用代码覆盖率反馈提升效率</li>
+<li>符号执行：结合模糊测试与符号执行</li>
+<li>语料库管理：优化种子库，提升变异策略</li>
+<li>漏洞分析：使用调试工具分析崩溃原因</li>
+</ul>
+<h3 id="模糊测试分类">模糊测试分类<a hidden class="anchor" aria-hidden="true" href="#模糊测试分类">#</a></h3>
 <p>主要类型</p>
 <table>
   <thead>
@@ -522,72 +506,8 @@ code.has-jax {
           <td>轻量级插桩，兼顾效率与深度</td>
           <td>大多数现代Fuzzer采用</td>
       </tr>
-      <tr>
-          <td>模糊测试（Fuzzing）是一种自动化的、用于发现软件缺陷或漏洞的测试技术，主要通过向程序输入随机或不合法的数据来测试其健壮性。模糊测试的核心目标是通过不合理或意外的输入触发程序中的异常行为、崩溃或安全漏洞。</td>
-          <td></td>
-          <td></td>
-      </tr>
   </tbody>
 </table>
-<ul>
-<li>种子：初始输入样本</li>
-<li>变异：通过修改种子生成新输入</li>
-<li>覆盖率：衡量测试覆盖代码路径的指标</li>
-<li>崩溃（crash）：程序因异常输入导致的错误</li>
-</ul>
-<p>举一个简单的例子来讲解什么是模糊测试。如下我们有一段简单的代码，代码接收一个数字的输入，它有一个 Bug 会在输入数字 100 时触发，但我们并不知道这个程序存在这个 Bug。我们可以从输入数字 1 开始不断的尝试，逐次递增输入数字，最终发现在数字递增到 100 时程序崩溃退出。</p>
-<p>以上我们不断输入尝试的行为就是模糊测试。我们输入的第一个数字 1 就是模糊测试的种子，逐次递增数字就是我们模糊测试的变异策略，最后我们发现这个 Bug 后记录下反馈来分析 Bug 产生的原因。</p>
-<p>举个简单例子，文件<strong>test.c</strong>是待测试程序的源代码，该程序从stdin读取8字节后输出，但在输出前会比较输入(<code>input</code>) (1)的前两个字节是否为<code>AB</code>，如果是就会执行有问题的代码(2)，并触发段错误导致程序终止。这里(1)对应真实程序中的某些执行条件，(2)对应存在问题的代码。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">input</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Enter a number: &#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">scanf</span><span class="p">(</span><span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">input</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="mi">100</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Critical error triggered!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nf">abort</span><span class="p">();</span>  <span class="c1">// 程序崩溃
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Processing %d: OK</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>实际生产环境中 fuzz 目标往往有数万行乃至百万行代码，逐行检查效率太低，自动化才是王道。此出现了模糊测试。模糊测试自动完成：1. 执行目标程序、2. 输入测试数据、3. 报告执行结果，执行这些操作的程序称为fuzzer，根据开发和执行效率需求，会选择不同语言实现。</p>
-<p>fuzzer.py：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>  
-</span></span><span class="line"><span class="cl"><span class="err">​</span>  
-</span></span><span class="line"><span class="cl"><span class="n">target</span> <span class="o">=</span> <span class="s1">&#39;./test&#39;</span>  
-</span></span><span class="line"><span class="cl"><span class="n">inps</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AA&#39;</span><span class="p">,</span> <span class="s1">&#39;BB&#39;</span><span class="p">,</span> <span class="s1">&#39;BA&#39;</span><span class="p">,</span> <span class="s1">&#39;AB&#39;</span><span class="p">]</span>  
-</span></span><span class="line"><span class="cl"><span class="err">​</span>  
-</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">inps</span><span class="p">:</span>  
-</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>  
-</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">target</span><span class="p">],</span> <span class="nb">input</span><span class="o">=</span><span class="n">inp</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span> <span class="c1"># (1)  </span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;bug found with input: &#39;</span><span class="si">{</span><span class="n">inp</span><span class="si">}</span><span class="s2">&#39;&#34;</span><span class="p">)</span>  
-</span></span><span class="line"><span class="cl"><span class="err">​</span>  
-</span></span><span class="line"><span class="cl"><span class="c1"># (输出)  </span>
-</span></span><span class="line"><span class="cl"><span class="c1"># bug found with input: &#39;AB&#39;</span>
-</span></span></code></pre></div><p>在模糊测试出现前，为了验证<strong>程序功能</strong>是否正常，会编写测试脚本或<strong>单元测试</strong>，这与模糊测试的方向不同：前者寻找程序异常，后者仅验证程序功能是否按预期执行。</p>
-<p>这也解释了为什么模糊测试被归类在安全领域。正常情况下用户会按照<strong>预期方式</strong>使用服务，因此通过单元测试就代表服务能正常运行。但并非所有用户都会规范操作，如果程序未对这些非预期操作进行检查，就可能存在漏洞，轻则导致服务终止，重则让攻击者获得主机控制权。模糊测试的概念恰好符合攻击者视角：执行程序并输入随机生成的数据，通过执行结果检查当前输入是否满足触发漏洞的条件。</p>
-<p>简而言之，模糊测试用于发现程序漏洞，帮助开发者及时修复，避免被攻击者利用。</p>
-<ul>
-<li>基于生成：根据目标格式规范生成输入</li>
-<li>基于变异：对现有输入样本进行随机修改</li>
-<li>灰盒/白盒模糊测试：结合代码覆盖率反馈</li>
-</ul>
-<p>灰盒模糊测试的工作流程</p>
-<img src="./../../../../Security/Binary/Fuzz/assets/Pasted image 20250326185550.png" width="80%">
-<p>AFL 工作流程</p>
-<p>![](./assets/Pasted image 20250326185758.png)</p>
-<p>AFL 的基于一个理论：执行覆盖的代码越多，越有可能触发异常，这里采用边覆盖率代表覆盖代码的多寡</p>
-<p>高级主题：</p>
-<ul>
-<li>覆盖率优化：学习如何利用代码覆盖率反馈提升效率</li>
-<li>符号执行：结合模糊测试与符号执行</li>
-<li>语料库管理：优化种子库，提升变异策略</li>
-<li>漏洞分析：使用调试工具分析崩溃原因</li>
-</ul>
-<h3 id="模糊测试分类">模糊测试分类<a hidden class="anchor" aria-hidden="true" href="#模糊测试分类">#</a></h3>
 <p>基于输入的生成方式，fuzzing 可以分为：</p>
 <ul>
 <li><strong>基于生成的</strong> （generation-based）：基于文法（grammars）或有效语料库（valid corpus）从头开始生成；如 Fig2 所示，其从一组种子中直接获得输入</li>
@@ -657,14 +577,14 @@ code.has-jax {
 <ul>
 <li>函数：代码执行时调用到哪些函数；</li>
 <li>基本块：以指令跳转为作划分边界的；</li>
-<li>边界：edge相比于基本块多记录了一些执行边界的信息。</li>
+<li>边界：edge 相比于基本块多记录了一些执行边界的信息。</li>
 </ul>
 <p>代码覆盖率是模糊测试中一个极其重要的概念，使用代码覆盖率可以评估和改进测试过程，执行到的代码越多，找到 bug 的可能性就越大，毕竟，在覆盖的代码中并不能 100% 发现 bug，在未覆盖的代码中却是 100% 找不到任何 bug 的。</p>
 <p>代码覆盖率是一种度量代码的覆盖程度的方式，也就是指源代码中的某行代码是否已执行；对二进制程序，还可将此概念理解为汇编代码中的某条指令是否已执行。其计量方式很多，但无论是 GCC 的 GCOV 还是 LLVM 的 SanitizerCoverage，都提供函数（function）、基本块（basic-block）、边界（edge）三种级别的覆盖率检测。</p>
 <ul>
 <li>基本块</li>
 </ul>
-<p>缩写为BB，指一组顺序执行的指令，BB中第一条指令被执行后，后续的指令也会被全部执行，每个BB中所有指令的执行次数是相同的，也就是说一个BB必须满足以下特征：</p>
+<p>缩写为 BB，指一组顺序执行的指令，BB中第一条指令被执行后，后续的指令也会被全部执行，每个BB中所有指令的执行次数是相同的，也就是说一个 BB 必须满足以下特征：</p>
 <ul>
 <li>只有一个入口点，BB中的指令不是任何<strong>跳转指令</strong>的目标。</li>
 <li>只有一个退出点，只有最后一条指令使执行流程转移到另一个BB</li>
@@ -673,17 +593,17 @@ code.has-jax {
 <ul>
 <li>边（edge）</li>
 </ul>
-<p>AFL 通过插桩代码捕获边（edge）覆盖率。那么什么是edge呢？我们可以将程序看成一个控制流图（CFG），图的每个节点表示一个基本块，而edge就被用来表示在基本块之间的转跳。知道了每个基本块和跳转的执行次数，就可以知道程序中的每个语句和分支的执行次数，从而获得比记录BB更细粒度的覆盖率信息。</p>
+<p>AFL 通过插桩代码捕获边（edge）覆盖率。那么什么是edge呢？我们可以将程序看成一个控制流图（CFG），图的每个节点表示一个基本块，而 edge 就被用来表示在基本块之间的转跳。知道了每个基本块和跳转的执行次数，就可以知道程序中的每个语句和分支的执行次数，从而获得比记录BB更细粒度的覆盖率信息。</p>
 <ul>
 <li>元组</li>
 </ul>
-<p>具体到AFL的实现中，使用二元组(branch_src, branch_dst)来记录<strong>当前基本块</strong> + <strong>前一基本块</strong> 的信息，从而获取目标的执行流程和代码覆盖情况，伪代码如下：</p>
+<p>具体到 AFL 的实现中，使用二元组（branch_src, branch_dst）来记录<strong>当前基本块</strong> + <strong>前一基本块</strong> 的信息，从而获取目标的执行流程和代码覆盖情况，伪代码如下：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">cur_location</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">COMPILE_TIME_RANDOM</span><span class="o">&gt;</span><span class="p">;</span>            <span class="c1">//用一个随机数标记当前基本块
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">shared_mem</span><span class="p">[</span><span class="n">cur_location</span> <span class="o">^</span> <span class="n">prev_location</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>        <span class="c1">//将当前块和前一块异或保存到shared_mem[]
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">prev_location</span> <span class="o">=</span> <span class="n">cur_location</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>                <span class="c1">//cur_location右移1位区分从当前块到当前块的转跳
 </span></span></span></code></pre></div><p>实际插入的汇编代码，如下图所示，首先保存各种寄存器的值并设置<code>ecx/rcx</code>，然后调用<code>__afl_maybe_log</code>，这个方法的内容相当复杂，这里就不展开讲了，但其主要功能就和上面的伪代码相似，用于记录覆盖率，放入一块共享内存中。</p>
 <h3 id="afl-fuzz流程">AFL Fuzz流程<a hidden class="anchor" aria-hidden="true" href="#afl-fuzz流程">#</a></h3>
-<img src="./assets/Fuzz流程.drawio.png" alt="Fuzz流程" width="80%">
+<img src="/assets/Fuzz流程.drawio.png" alt="Fuzz流程" width="80%">
 <p>覆盖测试-&gt;感知进程-&gt;路径反馈-&gt;基于反馈变异数据</p>
 <p>AFL 是一种流行的开源模糊测试工具，专门用于发现程序中的漏洞。它主要通过自动化地生成输入数据并将其提供给程序，观察程序的崩溃或异常行为，从而发现潜在的安全漏洞。</p>
 <p>AFL++ 是 AFL 的加强版，旨在解决 AFL 中的一些局限性并增强其功能。AFL++ 保持了 AFL 的大部分功能，但增加了更多的特性和性能优化，使其成为现代模糊测试的更强大工具。所以这里我们直接学习 AFL++。</p>
@@ -745,7 +665,7 @@ code.has-jax {
 <pre tabindex="0"><code>afl-fuzz -i in -o out -- ./test   
 </code></pre><h3 id="afl状态窗口">AFL状态窗口<a hidden class="anchor" aria-hidden="true" href="#afl状态窗口">#</a></h3>
 <p>状态屏幕显示 fuzzing 的实时信息，包括性能、覆盖率和异常情况。
-<img src="./assets/Pasted image 20250312230349.png" alt="图片" width="80%"></p>
+<img src="/assets/Pasted image 20250312230349.png" alt="图片" width="80%"></p>
 <p>为了帮助您决定何时按Ctrl-C停止，循环计数器会进行颜色编码。在第一次循环时，计数器显示为品红色，如果后续循环仍然有新发现，它会变为黄色，然后变成蓝色，最终当模糊器一段时间没有看到新发现时，会变成绿色。</p>
 <p>AFL 的终端 UI 使用不同颜色来快速提示运行状态：</p>
 <table>
@@ -1083,28 +1003,12 @@ code.has-jax {
 <li><code>@@</code>：占位符，表示AFL会将变异后的文件作为参数传递给目标程序。</li>
 </ul>
 <p>若出现核心转储提示，执行：</p>
-<img src="./assets/Pasted image 20250414145110.png" width="80%">
+<img src="/assets/Pasted image 20250414145110.png" width="80%">
 <h3 id="crash分析">crash分析<a hidden class="anchor" aria-hidden="true" href="#crash分析">#</a></h3>
 <p>gdb调试</p>
 <p>首先定义到发生崩溃的点，动静结合。</p>
 <p>通过ida静态分析结合动态分析进行定位。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">gdb --args <span class="nv">$HOME</span>/Desktop/Fuzz/training/fuzzing_xpdf/install/bin/pdftotext <span class="nv">$HOME</span>/Desktop/Fuzz/training/fuzzing_xpdf/out/default/crashes/id:000000,sig:11,src:000182,time:11158,execs:4841,op:havoc,rep:2 <span class="nv">$HOME</span>/Desktop/Fuzz/training/fuzzing_xpdf/output
-</span></span></code></pre></div><h3 id="vscodegdb分析">vscode+gdb分析<a hidden class="anchor" aria-hidden="true" href="#vscodegdb分析">#</a></h3>
-<p>通过 vscode+gdb 进行动态调试。</p>
-<p>在 vscode 要调试的文件目录下创建一个<code>.vscode</code>目录，并在目录下编写一个<code>launch.json</code>文件。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;version&#34;</span><span class="p">:</span> <span class="s2">&#34;0.2.0&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;configurations&#34;</span><span class="p">:</span> <span class="p">[</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;Debug&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;gdb&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;request&#34;</span><span class="p">:</span> <span class="s2">&#34;launch&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;target&#34;</span><span class="p">:</span> <span class="s2">&#34;./uaf&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;cwd&#34;</span><span class="p">:</span> <span class="s2">&#34;${workspaceFolder}&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nt">&#34;valuesFormatting&#34;</span><span class="p">:</span> <span class="s2">&#34;parseText&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">]</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></div><h3 id="afl-analyze">afl-analyze<a hidden class="anchor" aria-hidden="true" href="#afl-analyze">#</a></h3>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">afl-analyze -i 输入文件 目标文件
 </span></span></code></pre></div><p>可以得到造成该 crash 的原始输入，以及其中真正造成 crash 的部分；</p>
@@ -1507,7 +1411,7 @@ fun:process_data
 </span></span><span class="line"><span class="cl">$ ./afl-fuzz <span class="o">[</span>...<span class="o">]</span> -S fuzzer11 -f file11.txt ./fuzzed/binary @@
 </span></span><span class="line"><span class="cl">$ ./afl-fuzz <span class="o">[</span>...<span class="o">]</span> -S fuzzer12 -f file12.txt ./fuzzed/binary @@
 </span></span></code></pre></div><p>如果不使用 -f 选项并且让 afl-fuzz 自动生成文件名，通常不会有问题。</p>
-<img src="./../../../../Security/Binary/Fuzz/Linux/assets/Pasted image 20250520134848.png" width="80%">
+<img src="/assets/Pasted image 20250520134848.png" alt="Pasted image 20250520134848" style="zoom:67%;" />
 <h4 id="多系统并行化">多系统并行化<a hidden class="anchor" aria-hidden="true" href="#多系统并行化">#</a></h4>
 <p>多系统并行化的基本操作原理与第 2 节中解释的机制相似。关键区别在于，您需要编写一个简单的脚本，执行以下两个操作：</p>
 <ul>
@@ -1712,672 +1616,13 @@ fun:process_data
 </span></span></code></pre></div><p>这里面的一个需要注意的点是，lcov是利用的 GCC 的一些功能，所以我们在指定 CC 的时候，需要使用 afl-gcc，而基于 llvm 的 afl-clang-fast/afl-clang-lto 都无法成功进行 lcov 的初始化，这也是 lcov 不方便的地方。</p>
 <p>fuzz 的速度会变慢，所以这里可以使用 Master-Slave 模式来加快 fuzz 速度。</p>
 <p>代码覆盖率对于 AFL 这种基于覆盖引导的 fuzzer 来说，意义重大，判定 fuzzer 效果好坏的关键因素之一就是看其代码覆盖率的高低。在对 fuzzer 进行优化和改进时，往往也是朝着可以提升代码覆盖率的方向去更改，毕竟执行越多的代码，越有可能发现更多的问题。</p>
-<h2 id="harness">Harness<a hidden class="anchor" aria-hidden="true" href="#harness">#</a></h2>
-<p>在测试一些库的时候我们需要编写一个包装脚本来进行对目标库的封装。</p>
-<p>在针对有些目标的时候我们通常需要修改目标的源代码使其支持被测试。</p>
-<h3 id="基本示例">基本示例<a hidden class="anchor" aria-hidden="true" href="#基本示例">#</a></h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="kt">int</span> <span class="nf">readconf</span><span class="p">(</span><span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">);</span>  <span class="c1">// 被 fuzz 的目标函数
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="nf">fopen</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">readconf</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><h3 id="持久化模式">持久化模式<a hidden class="anchor" aria-hidden="true" href="#持久化模式">#</a></h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="kt">int</span> <span class="nf">readconf</span><span class="p">(</span><span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="cp">#ifdef __AFL_HAVE_MANUAL_CONTROL
-</span></span></span><span class="line"><span class="cl"><span class="cp">#  define AFL_INIT() __AFL_INIT()
-</span></span></span><span class="line"><span class="cl"><span class="cp">#else
-</span></span></span><span class="line"><span class="cl"><span class="cp">#  define AFL_INIT()
-</span></span></span><span class="line"><span class="cl"><span class="cp">#endif
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">__AFL_FUZZ_INIT</span><span class="p">();</span>  <span class="c1">// 初始化持久模式
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">AFL_INIT</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">__AFL_FUZZ_TESTCASE_BUF</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">len</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nf">__AFL_LOOP</span><span class="p">(</span><span class="mi">10000</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="n">len</span> <span class="o">=</span> <span class="n">__AFL_FUZZ_TESTCASE_LEN</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="n">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="nf">fmemopen</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="s">&#34;r&#34;</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">fp</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="nf">readconf</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">        <span class="nf">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><h3 id="libfuzzer兼容">libFuzzer兼容<a hidden class="anchor" aria-hidden="true" href="#libfuzzer兼容">#</a></h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;archive.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;archive_entry.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">archive</span> <span class="o">*</span><span class="n">a</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">archive_entry</span> <span class="o">*</span><span class="n">entry</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// 跳过太小输入
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
-</span></span><span class="line"><span class="cl">  <span class="n">a</span> <span class="o">=</span> <span class="nf">archive_read_new</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="c1">// 启用常见格式支持（tar/zip/cpio）
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">archive_read_support_format_all</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">  <span class="nf">archive_read_support_filter_all</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="nf">archive_read_open_memory</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span> <span class="o">!=</span> <span class="n">ARCHIVE_OK</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nf">archive_read_free</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">while</span> <span class="p">(</span><span class="nf">archive_read_next_header</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">entry</span><span class="p">)</span> <span class="o">==</span> <span class="n">ARCHIVE_OK</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buff</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">size_t</span> <span class="n">size</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="p">(</span><span class="nf">archive_read_data_block</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buff</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">offset</span><span class="p">)</span> <span class="o">==</span> <span class="n">ARCHIVE_OK</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">      <span class="c1">// 消耗数据避免优化器忽略逻辑
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">buff</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="nf">archive_read_free</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>AFL ++ 在编译和运行时提供了一种 libFuzzer 模式，实现方式如下：</p>
-<p>编译时兼容，当 AFL++ 检测到目标代码定义了：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">Data</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">Size</span><span class="p">);</span>
-</span></span></code></pre></div><p>它就会自动使用提供的适配器（入口点）：</p>
-<p>内部自动插入如下主函数。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="n">u8</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="nf">load_file</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">len</span><span class="p">);</span>  <span class="c1">// 加载 @@ 指定的输入文件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nf">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">len</span><span class="p">);</span>   <span class="c1">// 调用 fuzzing 主函数
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span></code></pre></div><p>编译方式：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">afl-clang-fast -o fuzz_target fuzz_target.c
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;algorithm&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;vector&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;libxml/parser.h&#34;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;libxml/tree.h&#34;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;libxml/xmlversion.h&#34;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">ignore</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">msg</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="c1">// Error handler to avoid spam of error messages from libxml parser.
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Entry point for LibFuzzer.
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="kt">int</span> <span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="n">xmlSetGenericErrorFunc</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ignore</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">uint8_t</span><span class="o">&gt;</span> <span class="n">buffer</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">  <span class="n">std</span><span class="o">::</span><span class="n">copy</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span> <span class="o">+</span> <span class="n">size</span><span class="p">,</span> <span class="n">buffer</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="n">xmlRegexpPtr</span> <span class="n">x</span> <span class="o">=</span> <span class="n">xmlRegexpCompile</span><span class="p">(</span><span class="n">buffer</span><span class="p">.</span><span class="n">data</span><span class="p">());</span>
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">xmlRegFreeRegexp</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stddef.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;./libxml2/include/libxml/parser.h&#34;</span><span class="cp">
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
-</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">ignore</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">msg</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="c1">// Error handler to avoid spam of error messages from libxml parser.
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">extern</span> <span class="s">&#34;C&#34;</span> <span class="kt">int</span> <span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span><span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="n">xmlSetGenericErrorFunc</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ignore</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">doc</span> <span class="o">=</span> <span class="n">xmlReadMemory</span><span class="p">(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">char</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">                               <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="s">&#34;noname.xml&#34;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="n">xmlFreeDoc</span><span class="p">(</span><span class="n">doc</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><h3 id="修改源代码">修改源代码<a hidden class="anchor" aria-hidden="true" href="#修改源代码">#</a></h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-diff" data-lang="diff"><span class="line"><span class="cl"><span class="gd">--- vlc-demux-run_backup.c	2017-11-24 07:29:18.000000000 -0800
-</span></span></span><span class="line"><span class="cl"><span class="gd"></span><span class="gi">+++ vlc-demux-run.c	2021-11-04 19:03:32.966251147 -0700
-</span></span></span><span class="line"><span class="cl"><span class="gi"></span><span class="gu">@@ -31,7 +31,7 @@
-</span></span></span><span class="line"><span class="cl"><span class="gu"></span> #include &lt;stdio.h&gt;
-</span></span><span class="line"><span class="cl"> #include &#34;src/input/demux-run.h&#34;
-</span></span><span class="line"><span class="cl"> 
-</span></span><span class="line"><span class="cl"><span class="gd">-int main(int argc, char *argv[])
-</span></span></span><span class="line"><span class="cl"><span class="gd"></span><span class="gi">+int main2(int argc, char *argv[])
-</span></span></span><span class="line"><span class="cl"><span class="gi"></span> {
-</span></span><span class="line"><span class="cl">     const char *filename;
-</span></span><span class="line"><span class="cl">     struct vlc_run_args args;
-</span></span><span class="line"><span class="cl"><span class="gu">@@ -49,3 +49,66 @@
-</span></span></span><span class="line"><span class="cl"><span class="gu"></span> 
-</span></span><span class="line"><span class="cl">     return -vlc_demux_process_path(&amp;args, filename);
-</span></span><span class="line"><span class="cl"> }
-</span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+//#include &lt;fstream&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;errno.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;stdlib.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;fcntl.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;sys/types.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;sys/stat.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;unistd.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#include &lt;inttypes.h&gt;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+int main(int argc, char **argv){
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	if (argc != 2) {
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		fprintf(stderr, &#34;Usage %s &lt;input file&gt; \n&#34;, argv[0]);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		return -1;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	}
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	struct vlc_run_args args;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	libvlc_instance_t *vlc;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	vlc_run_args_init(&amp;args);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	vlc = libvlc_create(&amp;args);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	int len;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	unsigned char *buf;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	//string filename(argv[1]);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#ifdef __AFL_COMPILER
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	while (__AFL_LOOP(1000)) {
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#endif
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		int fd = open(argv[1], O_RDONLY);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		if(fd &lt; 0){
-</span></span></span><span class="line"><span class="cl"><span class="gi">+			printf(&#34;Error opening file \n&#34;);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+			printf(&#34;Errno: %i\n&#34;, errno);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+			return -1;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		}
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		struct stat st;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		stat(argv[1], &amp;st);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		len = st.st_size;
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		buf = (unsigned char *)malloc(len);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		read(fd, buf, len);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+//		libvlc_demux_process_memory(vlc, &amp;args, buf, len);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+		vlc_demux_process_memory(&amp;args, buf, len);
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#ifdef __AFL_COMPILER
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+	}
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+#endif
-</span></span></span><span class="line"><span class="cl"><span class="gi">+
-</span></span></span><span class="line"><span class="cl"><span class="gi">+}
-</span></span></span></code></pre></div><h3 id="libxml2编译fuzz">libxml2编译Fuzz<a hidden class="anchor" aria-hidden="true" href="#libxml2编译fuzz">#</a></h3>
-<p>构建并安装 libxml2：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt-get install python-dev  
-</span></span><span class="line"><span class="cl"><span class="nv">CC</span><span class="o">=</span>afl-clang-lto <span class="nv">CXX</span><span class="o">=</span>afl-clang-lto++ <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&#34;-fsanitize=address&#34;</span> <span class="nv">CXXFLAGS</span><span class="o">=</span><span class="s2">&#34;-fsanitize=address&#34;</span> <span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">&#34;-fsanitize=address&#34;</span> ./configure --prefix<span class="o">=</span><span class="s2">&#34;</span><span class="nv">$HOME</span><span class="s2">/Fuzzing_libxml2/libxml2-2.9.4/install&#34;</span> --disable-shared --without-debug --without-ftp --without-http --without-legacy --without-python <span class="nv">LIBS</span><span class="o">=</span><span class="s1">&#39;-ldl&#39;</span>  
-</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>  
-</span></span><span class="line"><span class="cl">make install
-</span></span></code></pre></div><p>现在，我们可以测试是否安装成功：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./xmllint --memory ./test/wml.xml
-</span></span></code></pre></div><h3 id="种子语料库创建">种子语料库创建<a hidden class="anchor" aria-hidden="true" href="#种子语料库创建">#</a></h3>
-<p>首先，我们需要一些 XML 示例文件。我们将使用提供的 <strong>SampleInput.xml</strong> 文件：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir afl_in <span class="o">&amp;&amp;</span> <span class="nb">cd</span> afl_in  
-</span></span><span class="line"><span class="cl">wget https://raw.githubusercontent.com/antonio-morales/Fuzzing101/main/Exercise%205/SampleInput.xml  
-</span></span><span class="line"><span class="cl"><span class="nb">cd</span> ..
-</span></span></code></pre></div><h3 id="自定义字典">自定义字典<a hidden class="anchor" aria-hidden="true" href="#自定义字典">#</a></h3>
-<p>接下来，创建一个 XML 字典。你也可以使用 AFL++ 提供的 XML 字典：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir dictionaries <span class="o">&amp;&amp;</span> <span class="nb">cd</span> dictionaries  
-</span></span><span class="line"><span class="cl">wget https://raw.githubusercontent.com/AFLplusplus/AFLplusplus/stable/dictionaries/xml.dict  
-</span></span><span class="line"><span class="cl"><span class="nb">cd</span> ..
-</span></span></code></pre></div><h3 id="fuzzing-1">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing-1">#</a></h3>
-<p>为了捕获漏洞，必须启用 <code>--valid</code> 参数。我还通过 <strong>-x 参数</strong> 设置了字典路径，并通过 <strong>-D 参数</strong> 启用了确定性变异（仅对于主模糊测试器）：</p>
-<p>例如，我使用以下命令运行了模糊测试：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">afl-fuzz -m none -i ./afl_in -o afl_out -s <span class="m">123</span> -x ./dictionaries/xml.dict -D -M master -- ./xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude @@
-</span></span></code></pre></div><p>你可以使用以下命令运行另一个从实例：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">afl-fuzz -m none -i ./afl_in -o afl_out -s <span class="m">234</span> -S slave1 -- ./xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude @@
-</span></span></code></pre></div><h3 id="crash分类">Crash分类<a hidden class="anchor" aria-hidden="true" href="#crash分类">#</a></h3>
-<p>要调试一个使用 ASan 构建的程序非常简单，你只需要将崩溃文件输入程序：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./xmllint --memory --noenc --nocdata --dtdattr --loaddtd --valid --xinclude <span class="s1">&#39;./afl_out/default/crashes/id:000000,sig:06,src:003963,time:12456489,op:havoc,rep:4&#39;</span>
-</span></span></code></pre></div><h3 id="案例">案例<a hidden class="anchor" aria-hidden="true" href="#案例">#</a></h3>
-<p>简化概括，整体算法流程如下：</p>
-<ol>
-<li>将用户提供的初始测试用例加载到队列中。</li>
-<li>从队列中取出下一个输入文件。</li>
-<li>尝试将测试用例缩减到不会改变程序行为的最小尺寸。</li>
-<li>使用各种平衡且经过验证的传统模糊策略反复变异文件。</li>
-<li>如果生成的变异导致新的状态转移（由插桩记录），将其加入队列作为新条目。</li>
-<li>返回步骤 2。</li>
-</ol>
-<p>同时，AFL++ 会定期清理已过时的测试用例，并执行其他基于插桩的优化步骤。</p>
-<p>通过模糊测试，还会生成一个<strong>小而自包含的有趣测试用例集合</strong>（corpus），可用于进一步测试，比如浏览器、办公应用、图形工具或闭源软件的压力测试。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># LLVM 插桩模式</span>
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">AFL_LLVM_INSTRUMENT</span><span class="o">=</span>CLASSIC,CTX <span class="c1">#传统覆盖率插桩，CTX上下文敏感插桩，记录调用上下文</span>
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">AFL_LLVM_CMPLOG</span><span class="o">=</span><span class="m">1</span> <span class="c1">#开启比较日志，记录程序中的比较操作，并尝试生成输入来“满足”这些比较，从而探索更多代码路径</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 运行</span>
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">AFL_AUTORESUME</span><span class="o">=</span><span class="m">1</span> <span class="c1">#自动从上一次的测试状态继续，而不是从头开始</span>
-</span></span></code></pre></div><p>对动态库进行模糊测试有两种方法，都需要编写小型 harness 调用库，然后使用 FRIDA 或 QEMU 模式进行模糊，并使用 <code>AFL_INST_LIBS=1</code> 或 <code>AFL_QEMU/FRIDA_INST_RANGES</code>。</p>
-<p>另一种更慢且不精确的方法是使用 <code>utils/afl_untracer/</code>，模板为 <code>afl-untracer.c</code>。</p>
-<p><code>afl-untracer</code> 是一个示例骨架文件，可以方便地用于 fuzz 封闭源代码的库。</p>
-<p>相比 QEMU 模式，它 <strong>占用更少内存</strong>，并且速度 <strong>快 3~5 倍</strong>，但粒度更粗，且不提供诸如 <code>compcov</code> 或 <code>cmplog</code> 这样的高级功能。</p>
-<p>目前支持 <strong>Intel（i386/x86_64）</strong> 和 <strong>AARCH64</strong> 平台。</p>
-<p>该思路基于 <a href="https://github.com/FoRTE-Research/UnTracer-AFL">UnTracer</a>，并由 <a href="https://github.com/googleprojectzero/p0tools/tree/master/TrapFuzz">Trapfuzz</a> 进行修改。</p>
-<p>当前实现速度较慢，因为陷阱（traps）不会在每次运行时被移除，但相对而言能提供更 <strong>准确的覆盖信息</strong>。</p>
-<p>使用方法：</p>
-<h4 id="修改-afl-untracerc">修改 afl-untracer.c<a hidden class="anchor" aria-hidden="true" href="#修改-afl-untracerc">#</a></h4>
-<ol>
-<li>打开并修改 <code>afl-untracer.c</code>，然后执行 <code>make</code> 编译。</li>
-<li>要定制 <code>afl-untracer.c</code>，请先阅读文件头部说明，然后查找并编辑 <code>STEP 1</code>、<code>STEP 2</code> 和 <code>STEP 3</code> 的位置。</li>
-</ol>
-<hr>
-<h4 id="生成-patchestxt-文件">生成 patches.txt 文件<a hidden class="anchor" aria-hidden="true" href="#生成-patchestxt-文件">#</a></h4>
-<ol>
-<li>使用 <code>ida_get_patchpoints.py</code>（IDA Pro）或 <code>ghidra_get_patchpoints.java</code>（Ghidra）生成目标库的 <code>patches.txt</code> 文件。</li>
-<li><code>patches.txt</code> 文件需要通过环境变量 <code>AFL_UNTRACER_FILE</code> 指定。</li>
-</ol>
-<blockquote>
-<p>如果不想打开 Ghidra GUI，可以使用 headless 模式：</p>
-</blockquote>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">/opt/ghidra/support/analyzeHeadless /tmp/ tmp<span class="nv">$$</span> -import libtestinstr.so -postscript ./ghidra_get_patchpoints.java
-</span></span><span class="line"><span class="cl">rm -rf /tmp/tmp<span class="nv">$$</span>
-</span></span></code></pre></div><p>生成的文件默认位于 <code>~/Desktop/patches.txt</code>。</p>
-<h4 id="fuzzing-2">Fuzzing<a hidden class="anchor" aria-hidden="true" href="#fuzzing-2">#</a></h4>
-<p>示例（在修改好 <code>afl-untracer.c</code>、编译完成并生成 <code>patches.txt</code> 后）：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/path/to/target/library <span class="nv">AFL_UNTRACER_FILE</span><span class="o">=</span>./patches.txt afl-fuzz -i in -o out -- ./afl-untracer
-</span></span></code></pre></div><blockquote>
-<p>也可以通过 <code>afl-network-proxy</code> 进行远程 fuzz。</p>
-</blockquote>
-<h4 id="测试与调试">测试与调试<a hidden class="anchor" aria-hidden="true" href="#测试与调试">#</a></h4>
-<p>可以使用以下命令进行调试：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make <span class="nv">DEBUG</span><span class="o">=</span><span class="m">1</span>
-</span></span><span class="line"><span class="cl"><span class="nv">AFL_UNTRACER_FILE</span><span class="o">=</span>./patches.txt <span class="nv">AFL_DEBUG</span><span class="o">=</span><span class="m">1</span> gdb ./afl-untracer
-</span></span></code></pre></div><p>然后可以方便地在 <code>&quot;breakpoint&quot;</code> 和 <code>&quot;fuzz&quot;</code> 位置设置断点。</p>
-<h2 id="二进制程序">二进制程序<a hidden class="anchor" aria-hidden="true" href="#二进制程序">#</a></h2>
-<p>Black Box（黑盒 fuzz）就是在没有源代码的情况下对已经被编译好的二进制程序进行 fuzz。这样我们就无法编译插桩了，这样我们该怎么 fuzz 这个程序呢？</p>
-<ul>
-<li>
-<p>静态二进制重写</p>
-<ul>
-<li>Trampoline（跳转） - 将基本块的开头指令改成 <code>{call, jmp} XXXX</code>，跳到指定地址 <code>XXXX</code>，该地址中放置用于收集覆盖度的指令，同时还会执行/修复原本的程序片段，最后再跳回原始代码。</li>
-</ul>
-</li>
-<li>
-<p>重新组装（Reassemble） - 尝试将新增的指令嵌入原本的基本块中，挑战在于如何重新组织原指令，使其仍能维持原程序逻辑，并且新增的指令不会影响程序执行。</p>
-</li>
-<li>
-<p>动态二进制插桩</p>
-<ul>
-<li>通过模拟器模拟程序执行，特别是在将基本块转成IR之前，先插入一段收集覆盖度的IR，在动态模拟执行时就能知道执行了哪些基本块。</li>
-</ul>
-</li>
-</ul>
-<p>动态和静态各自的优点：</p>
-<ul>
-<li>动态：可以获得数据的状态，比如结构或类型，结果较为准确。</li>
-<li>静态：只做一次分析和修正，就能节省后续执行带来的开销。</li>
-</ul>
-<p>在实际应用中我们应用最多的就是动态二进制插桩。</p>
-<p>QEMU 是一个用于模拟程序执行的工具，主要应用于测试程序的执行，或者执行不同指令集的程序。QEMU 实际上分为两种模式：全系统仿真和用户模式仿真，前者是包含操作系统执行的模拟，后者仅模拟程序的执行。QEMU 的代码库非常庞大，由多个组件组成，因此无法做非常详细的介绍，但大致的流程如下：</p>
-<ol>
-<li><strong>初始化</strong> - 一些初始化服务，比如内存管理等，必须在执行程序之前完成。</li>
-<li><strong>处理执行文件</strong> - 读取用户指定的执行文件并解析其元数据。</li>
-<li><strong>模拟执行</strong> - QEMU 提供了多种模拟方式，但基本上都很复杂。最直观的方式是：逐行读取指令，查看指令的助记符（如 <code>add</code>、<code>sub</code> 等），执行相应的处理器，记录执行结果，然后执行下一条指令。</li>
-</ol>
-<p>AFL 的二进制模式是通过 QEMU 模拟器实现的。不过，QEMU 默认并不会记录覆盖率，因此需要修改 QEMU 的源代码来实现这一功能。相关的 patch 文件可以在 <a href="https://github.com/google/AFL/tree/master/qemu_mode/patches">AFL repo qemu_mode/patches</a> 中找到，下面简要介绍一下这些修改的内容。</p>
-<p>有一些 diff 文件仅做了一些初始化和配置，以下是简要的文字说明：</p>
-<ul>
-<li>
-<p><code>syscall.diff</code> - 更新 kill 处理，确保发送 <code>SIGABRT</code> 时 forkserver 线程能够接收到。</p>
-</li>
-<li>
-<p><code>configure.diff / memfd.diff</code> - 使用内存映射（memory mapping）而不是内存文件描述符（memory fd）。</p>
-</li>
-<li>
-<p><code>elfload.diff</code> - 在解析执行文件的元数据时，初始化 <code>afl_start_code</code> 和 <code>afl_end_code</code>，这两个标记代表需要被收集覆盖率的程序代码地址的起始和结束位置，<code>afl_entry_point</code>用来记录程序的入口点。</p>
-</li>
-<li>
-<p><code>AFL_QEMU_CPU_SNIPPET2</code> 宏会在执行到程序代码地址等同于 <code>afl_entry_point</code> 时唤醒 fork server，并记录新的覆盖率。</p>
-</li>
-<li>
-<p><code>AFL_QEMU_CPU_SNIPPET1</code> 宏则会提前通知 QEMU 进行转换，避免在 fork 后还要重新进行转换，从而减少额外的开销。</p>
-<ul>
-<li>QEMU 转换会将原本程序的汇编代码转换为 QEMU 能够理解的形式（IR），然后模拟执行时会更快。</li>
-</ul>
-</li>
-</ul>
-<p>针对二进制程序进行 fuzzing，有两种方法：一种是动态二进制插桩，另一种是静态二进制重写。</p>
-<p>根据官方文档描述，QEMU 模式和 Frida 模式是最快的，当然是可以使用持久模式且程序足够稳定。否则可以尝试 Zafl、RetroWrite、Dyninst；如果这些都失败，再尝试标准的 FRIDA/QEMU 模式，并使用 <code>AFL_ENTRYPOINT</code> + <code>AFL_EXITPOINT</code>。unicorn_mode 多用于非 Linux 系统及异架构程序。</p>
-<p><strong>静态二进制重写</strong>：</p>
-<p>二进制重写器是 AFL++ 的替代方案，速度快但不总是可用。</p>
-<ul>
-<li>ZAFL：<a href="https://git.zephyr-software.com/opensrc/zafl">开源软件 / zafl ·GitLab 的</a></li>
-<li><a href="https://github.com/HexHive/retrowrite">HexHive/retrowrite：RetroWrite &ndash; 改造编译器通过二进制重写</a></li>
-<li><a href="https://git.zephyr-software.com/opensrc/zafl">开源软件 / zafl ·GitLab 的</a></li>
-<li><a href="https://github.com/HexHive/retrowrite">HexHive/retrowrite：RetroWrite &ndash; 改造编译器通过二进制重写</a></li>
-</ul>
-<p><strong>动态二进制插桩</strong>：</p>
-<table>
-  <thead>
-      <tr>
-          <th>模式</th>
-          <th>依赖</th>
-          <th>源码</th>
-          <th>二进制</th>
-          <th>特点</th>
-          <th>场景</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>coresight_mode</td>
-          <td>ARM CoreSight 硬件</td>
-          <td>否</td>
-          <td>可</td>
-          <td>硬件跟踪，低开销</td>
-          <td>ARM/IoT 设备</td>
-      </tr>
-      <tr>
-          <td>frida_mode</td>
-          <td>Frida</td>
-          <td>否</td>
-          <td>可</td>
-          <td>动态 hook</td>
-          <td>Android/iOS，API hook</td>
-      </tr>
-      <tr>
-          <td>nyx_mode</td>
-          <td>KVM + QEMU</td>
-          <td>可</td>
-          <td>可</td>
-          <td>全系统仿真，快照，加分布式</td>
-          <td>复杂 Linux 用户态程序</td>
-      </tr>
-      <tr>
-          <td>qemu_mode</td>
-          <td>QEMU</td>
-          <td>否</td>
-          <td>可</td>
-          <td>二进制插桩</td>
-          <td>二进制-only，交叉平台</td>
-      </tr>
-      <tr>
-          <td>unicorn_mode</td>
-          <td>Unicorn</td>
-          <td>否</td>
-          <td>可</td>
-          <td>CPU 仿真，灵活、快速</td>
-          <td>单函数/固件/IoT fuzzing</td>
-      </tr>
-  </tbody>
-</table>
-<h3 id="环境配置-1">环境配置<a hidden class="anchor" aria-hidden="true" href="#环境配置-1">#</a></h3>
-<p>使用<code>-Q</code>参数开启 qemu mode。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>:<span class="s1">&#39;/opt/Adobe/Reader9/Reader/intellinux/lib&#39;</span> afl-fuzz -Q -i ./afl_in/ -o ./afl_out/ -t <span class="m">2000</span> -- /opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript @@
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">afl-fuzz -Q -i ./in -o ./out -t <span class="m">2000</span> -- mb @@
-</span></span></code></pre></div><p>但现在模糊测试速度非常慢：在我的机器上大约每秒7次执行。那么，我们如何提高模糊测试速度呢？</p>
-<p>我们接下来了解 qemu 的持久模式。</p>
-<p>QEMU 模式是 AFL++ 的“原生”解决方案，位于 <code>./qemu_mode/</code> 目录中。编译后，可通过 <code>afl-fuzz -Q</code> 使用。它是最易用的替代方案，甚至适用于跨平台二进制。</p>
-<p>对于 Linux 程序及其库，这是通过 QEMU 的“用户空间仿真模式”（user space emulation）实现的。QEMU 是独立于 AFL++ 的项目，但可以方便地构建该功能：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nb">cd</span> qemu_mode
-</span></span><span class="line"><span class="cl">./build_qemu_support.sh
-</span></span></code></pre></div><p>推荐的 QEMU 模式设置：</p>
-<ul>
-<li>运行一个 <code>afl-fuzz -Q</code> 实例，使用 CMPLOG（<code>-c 0</code> + <code>AFL_COMPCOV_LEVEL=2</code>）</li>
-<li>运行一个 <code>afl-fuzz -Q</code> 实例，使用 QASAN（<code>AFL_USE_QASAN=1</code>）</li>
-<li>运行一个 <code>afl-fuzz -Q</code> 实例，使用 LAF（<code>AFL_PRELOAD=libcmpcov.so</code> + <code>AFL_COMPCOV_LEVEL=2</code>），或者使用 FRIDA 模式，将 <code>-Q</code> 换成 <code>-O</code> 并去掉 LAF 实例</li>
-</ul>
-<p>然后根据剩余核心数运行尽可能多的实例，可使用 <code>-Q</code> 模式或静态二进制重写器（如 Dyninst、RetroWrite、ZAFL 等）。
-二进制重写器各有优缺点，但 ZAFL 是不错的选择。</p>
-<p>如果二进制重写器可用，则可以正常使用 afl-fuzz，其速度大约是 QEMU 模式的两倍（但比 QEMU 持久模式慢）。</p>
-<p>QEMU 模式速度下降约 50%。可以通过以下方式提高速度：</p>
-<ul>
-<li>使用 AFL_ENTRYPOINT 将 forkserver 入口移动到更晚的基本块（+5-10%）</li>
-<li>使用持久模式（可实现 150-300% 的速度提升）</li>
-<li>使用 AFL_CODE_START/AFL_CODE_END 仅插桩特定部分</li>
-</ul>
-<blockquote>
-<p>持久模式约比编译时插桩慢 2-5 倍，并且不利于并行化，但对于二进制模糊测试可显著提升速度。</p>
-</blockquote>
-<h3 id="环境配置-2">环境配置<a hidden class="anchor" aria-hidden="true" href="#环境配置-2">#</a></h3>
-<pre tabindex="0"><code>CPU_TARGET=i386 ./build_qemu_support.sh
-make distrib
-sudo make install
-</code></pre><p>针对黑盒、仅有二进制目标的仪器化是通过QEMU的“用户仿真”模式实现的。这也允许执行跨架构的代码——例如，在x86上运行ARM二进制程序。</p>
-<p>QEMU使用基本块作为翻译单元；仪器化则是在此基础上实现的，模型类似于编译时钩子：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">if</span> <span class="p">(</span><span class="n">block_address</span> <span class="o">&gt;</span> <span class="n">elf_text_start</span> <span class="o">&amp;&amp;</span> <span class="n">block_address</span> <span class="o">&lt;</span> <span class="n">elf_text_end</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="n">cur_location</span> <span class="o">=</span> <span class="p">(</span><span class="n">block_address</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">block_address</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
-</span></span><span class="line"><span class="cl">    <span class="n">shared_mem</span><span class="p">[</span><span class="n">cur_location</span> <span class="o">^</span> <span class="n">prev_location</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">prev_location</span> <span class="o">=</span> <span class="n">cur_location</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p>QEMU模式的启动相对较慢；为了解决这个问题，AFL fork服务器通过提供仿真器与父进程之间的通信通道来进行优化。该通道用于通知父进程任何新遇到的块的地址，并将其添加到翻译缓存中，以便将来子进程可以复用。</p>
-<p>通过这些优化，QEMU模式的开销大约为2-5倍，相比之下，PIN的开销超过100倍。</p>
-<p>我们前面所学习的都是通过 AFL 对开源程序进行 Fuzz，下面我们学习如何通过 qemu_mode 对闭源程序进行 Fuzz。</p>
-<p><code>AFL_USE_QASAN</code></p>
-<p>使用 qemu fuzz 其它架构的程序，或者将 afl 移植到异架构设备上。</p>
-<p>告诉 qemu 从某个地址启动 forkserver，循环起始的地址，循环结束的地址。</p>
-<p>通过环境变量进行持续性的 fuzz。</p>
-<ul>
-<li>编译</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#编译qemu</span>
-</span></span><span class="line"><span class="cl">./build_qemu_support.sh
-</span></span><span class="line"><span class="cl"><span class="c1">#fuzz异架构</span>
-</span></span><span class="line"><span class="cl"><span class="nv">CPU_TARGET</span><span class="o">=</span>arm ./build_qemu_support.sh
-</span></span><span class="line"><span class="cl"><span class="c1">#移植</span>
-</span></span><span class="line"><span class="cl"><span class="nv">STATIC</span><span class="o">=</span><span class="m">1</span> <span class="nv">HOST</span><span class="o">=</span>arm-linux-gnueabi <span class="nv">CPU_TARGET</span><span class="o">=</span>arm ./build_qemu_support.sh
-</span></span></code></pre></div><ul>
-<li>使用</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">afl-fuzz -i in -o out -m none -Q ./test
-</span></span></code></pre></div><h3 id="延迟初始化">延迟初始化<a hidden class="anchor" aria-hidden="true" href="#延迟初始化">#</a></h3>
-<ul>
-<li>设置 <code>AFL_ENTRYPOINT</code> 可将 forkserver 移到目标程序特定位置（如文件打开前），提升性能。</li>
-<li>设置 <code>AFL_EXITPOINT</code> 可指定地址终止 forked 实例。</li>
-</ul>
-<h3 id="cmplog">CMPLOG<a hidden class="anchor" aria-hidden="true" href="#cmplog">#</a></h3>
-<ul>
-<li>基于 Redqueen 项目。</li>
-<li>对 CMP 指令中的即时值建立动态字典，并尝试在输入中解锁匹配。</li>
-<li>支持 x86、x86_64、arm、aarch64。</li>
-<li>启用方法：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">afl-fuzz -c /path/to/target
-</span></span></code></pre></div><h3 id="链接说明">链接说明<a hidden class="anchor" aria-hidden="true" href="#链接说明">#</a></h3>
-<ul>
-<li>仅支持 Linux。</li>
-<li>插桩仅跟踪第一个 ELF 文件的 <code>.text</code>，不追踪共享库。</li>
-<li>因此：
-<ol>
-<li>想分析的库需静态链接。</li>
-<li>C 标准库等可动态链接，以避免无效插桩。</li>
-</ol>
-</li>
-<li>设置 <code>AFL_INST_LIBS=1</code> 可插桩所有基本块。</li>
-</ul>
-<h3 id="性能对比">性能对比<a hidden class="anchor" aria-hidden="true" href="#性能对比">#</a></h3>
-<ul>
-<li>为与 <code>afl-clang-fast</code> 结果对比，需：
-<ul>
-<li>非插桩二进制使用相同优化参数。</li>
-<li>测试部分需静态链接。</li>
-</ul>
-</li>
-</ul>
-<p>示例：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&#34;-O3 -funroll-loops&#34;</span> ./configure --disable-shared
-</span></span><span class="line"><span class="cl">make clean all
-</span></span></code></pre></div><blockquote>
-<p>否则速度或覆盖对比意义不大。</p>
-</blockquote>
-<hr>
-<h3 id="覆盖信息">覆盖信息<a hidden class="anchor" aria-hidden="true" href="#覆盖信息">#</a></h3>
-<ul>
-<li>可使用 QEMU 插件 <code>drcov.c</code> 收集覆盖信息，输出 Drcov 格式。</li>
-<li>可用工具分析：
-<ul>
-<li><a href="https://github.com/gaasedelen/lighthouse">lighthouse</a></li>
-<li><a href="https://github.com/WorksButNotTested/lightkeeper">lightkeeper</a></li>
-<li><a href="https://github.com/nccgroup/Cartographer">Cartographer</a></li>
-</ul>
-</li>
-<li>编译插件：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">make plugins
-</span></span></code></pre></div><ul>
-<li>加载插件：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">afl-qemu-trace -plugin qemuafl/build/contrib/plugins/libdrcov.so,arg<span class="o">=</span><span class="nv">filename</span><span class="o">=</span>/tmp/target.drcov.trace &lt;target&gt; &lt;args&gt;
-</span></span></code></pre></div><ul>
-<li>执行完成后，覆盖信息写入 <code>/tmp/target.drcov.trace</code>。</li>
-</ul>
-<h3 id="persistent模式">Persistent模式<a hidden class="anchor" aria-hidden="true" href="#persistent模式">#</a></h3>
-<p>默认情况下，AFL++ 每次变异一个输入样本就会重新启动目标程序，这在 Fuzzing 大型程序的时候非常低效。</p>
-<p>持久模式通过在一次程序运行中处理多个输入来显著提高性能，避免每次都要重新启动程序。</p>
-<p>插入<code>AFL_LOOP</code>是我们告诉 AFL++ 要启用持久模式的方式。但在这种情况下，我们无法访问源代码。</p>
-<p>使用<code>AFL_QEMU_PERSISTENT_ADDR</code>指定一个函数的地址，告诉 AFL++ 在那里插入持久循环钩子，从而避免重复加载程序。</p>
-<p>通过 IDA 反编译工具反编译目标程序，然后寻找合适的偏移量：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo apt install valgrind kcachegrind
-</span></span></code></pre></div><ul>
-<li><code>valgrind</code>：内存调试和性能分析</li>
-<li><code>kcachegrind</code>：用于可视化性能分析数据</li>
-</ul>
-<p>使用 callgrind 收集运行数据：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>:<span class="s1">&#39;/opt/Adobe/Reader9/Reader/intellinux/lib&#39;</span> <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>valgrind --tool<span class="o">=</span>callgrind /opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript sample.pdf
-</span></span></code></pre></div><p>使用 <code>kcachegrind</code> 打开生成的 <code>callgrind.out.*</code> 文件：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">kcachegrind
-</span></span></code></pre></div><p>建议你在 kcachegrind 中查看<code>count</code>字段，识别只执行 1 次的函数，并尝试在 afl-fuzz 中达到超过 90% 的稳定性分数。</p>
-<p>设置<code>AFL_QEMU_PERSISTENT_GPR=1</code>环境变量，它将在每个持久周期中保存和恢复通用寄存器的原始值。</p>
-<p>现在，我们可以用以下命令行运行模糊测试器</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">AFL_QEMU_PERSISTENT_ADDR</span><span class="o">=</span>0x085478AC <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">AFL_QEMU_PERSISTENT_GPR</span><span class="o">=</span><span class="m">1</span> <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>:<span class="s1">&#39;/opt/Adobe/Reader9/Reader/intellinux/lib&#39;</span> <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>afl-fuzz -Q -i ./afl_in/ -o ./afl_out/ -t <span class="m">2000</span> -- <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>/opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript @@
-</span></span></code></pre></div><p>如你所见，执行时间提高了4倍。</p>
-<p>Persistent 模式允许你在两个地址之间持续 fuzz 目标程序，而无需每次都 fork 子进程。这能将 fuzzing 速度提高 <strong>2~5 倍</strong>，因此非常有价值。</p>
-<p>目前，Persistent 模式仅支持 <strong>x86/x86_64、arm 和 aarch64</strong> 架构。</p>
-<p>如何使用 Persistent 模式：</p>
-<h4 id="start-地址">START 地址<a hidden class="anchor" aria-hidden="true" href="#start-地址">#</a></h4>
-<ul>
-<li>持续循环的起始地址由环境变量 <code>AFL_QEMU_PERSISTENT_ADDR</code> 指定。</li>
-<li>这个地址可以是任意指令的地址。
-<ul>
-<li>如果指向函数开头，使用起来最简单。</li>
-<li>如果在函数中间，需要设置 <strong>RET、OFFSET 或 EXITS</strong>（见 2.2、2.3、2.6）。</li>
-</ul>
-</li>
-<li>地址必须为十六进制（带 <code>0x</code> 前缀）或十进制数。</li>
-<li>如果未设置 RET 和 EXITS，QEMU 会假设 START 是函数入口，并自动将返回地址 patch 回 START（类似 WinAFL）。</li>
-</ul>
-<p><strong>注意 PIE/PIC 二进制：</strong></p>
-<ul>
-<li>amd64: 需加 <code>0x4000000000</code></li>
-<li>32-bit: 加 <code>0x40000000</code></li>
-<li>aarch64: 通常为 <code>0x5500000000</code></li>
-</ul>
-<p>可以通过：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">AFL_QEMU_DEBUG_MAPS</span><span class="o">=</span><span class="m">1</span> afl-qemu-trace TARGET-BINARY
-</span></span></code></pre></div><p>打印进程内存映射来确认基址。</p>
-<p>如果 START 地址无效，<code>afl-fuzz</code> 启动时会报错，提示找不到 forkserver。</p>
-<h4 id="ret-地址">RET 地址<a hidden class="anchor" aria-hidden="true" href="#ret-地址">#</a></h4>
-<ul>
-<li>RET 地址是持续循环的结束指令。</li>
-<li>模拟器在翻译到 RET 指令时会跳回 START。</li>
-<li>可选，仅在循环结束不是函数末尾时需要设置。</li>
-<li>设置方法：<code>AFL_QEMU_PERSISTENT_RET</code>，PIE/PIC 下同样需加基址。</li>
-</ul>
-<h4 id="offset">OFFSET<a hidden class="anchor" aria-hidden="true" href="#offset">#</a></h4>
-<p>仅 x86/x86_64</p>
-<ul>
-<li>如果 START 不是函数开头，且未设置 RET，则需要通过 OFFSET 来找到返回地址在栈上的位置。</li>
-<li>设置变量：<code>AFL_QEMU_PERSISTENT_RETADDR_OFFSET</code>。</li>
-</ul>
-<p><strong>获取方法：</strong></p>
-<ol>
-<li>使用 gdb 附加目标。</li>
-<li>在 main 设置断点（PIE/PIC 二进制必须）。</li>
-<li>运行目标并输入合法命令行。</li>
-<li>在包含 START 的函数设置断点。</li>
-<li>在 START 地址设置断点。</li>
-<li>运行到函数入口断点，打印 ESP：<code>print $esp</code>。</li>
-<li>继续到 START 断点，再打印 ESP。</li>
-<li>两次 ESP 的差值就是 OFFSET。</li>
-</ol>
-<h4 id="重置寄存器状态">重置寄存器状态<a hidden class="anchor" aria-hidden="true" href="#重置寄存器状态">#</a></h4>
-<ul>
-<li>通常需要在每次循环开始时恢复通用寄存器状态。</li>
-<li>推荐设置：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">AFL_QEMU_PERSISTENT_GPR</span><span class="o">=</span><span class="m">1</span>
-</span></span></code></pre></div><ul>
-<li>例如将 <code>main()</code> 用作 START 时，如果不恢复寄存器，<code>argc</code> 会在第二次循环丢失。</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">  <span class="c1">// 执行逻辑
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span></code></pre></div><h4 id="exit-时重置">exit() 时重置<a hidden class="anchor" aria-hidden="true" href="#exit-时重置">#</a></h4>
-<ul>
-<li>可以让 QEMU 在遇到 <code>exit_group</code> syscall 时回到 START，而不是退出程序。</li>
-<li>设置环境变量：<code>AFL_QEMU_PERSISTENT_EXITS</code>。</li>
-</ul>
-<h3 id="部分插桩-1">部分插桩<a hidden class="anchor" aria-hidden="true" href="#部分插桩-1">#</a></h3>
-<ul>
-<li>指定仅插桩地址空间的一部分：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">AFL_QEMU_INST_RANGES</span><span class="o">=</span>A,B,C...
-</span></span></code></pre></div><ul>
-<li>排除某些区域：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">AFL_QEMU_EXCLUDE_RANGES</span><span class="o">=</span>A,B,C...
-</span></span></code></pre></div><blockquote>
-<p>排除范围优先于包含范围或 <code>AFL_INST_LIBS</code>。</p>
-</blockquote>
-<h3 id="实例">实例<a hidden class="anchor" aria-hidden="true" href="#实例">#</a></h3>
-<ul>
-<li>Fuzzing</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">AFL_USE_QASAN</span><span class="o">=</span><span class="m">1</span> <span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$LD_LIBRARY_PATH</span>:<span class="s1">&#39;/opt/Adobe/Reader9/Reader/intellinux/lib&#39;</span> /usr/local/bin/afl-qemu-trace -- /opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript <span class="o">[</span>crashFilePath<span class="o">]</span> 
-</span></span></code></pre></div><ul>
-<li>Crash分析</li>
-</ul>
-<p>在发生 crash 之后，使用 afl-qemu-trace 来查看最终的crash信息：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>opt/Adobe/Reader9/Reader/intellinux/lib /usr/local/bin/afl-qemu-trace -- /opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript <span class="o">[</span>crashFilePath<span class="o">]</span> 
-</span></span></code></pre></div><p>直接按照上面的常规的命令来执行 trace，会报页错误。所以我们使用另外一种方法—— <a href="https://github.com/andreafioraldi/qasan">QASAN</a></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">AFL_USE_QASAN</span><span class="o">=</span><span class="m">1</span> <span class="nv">ACRO_INSTALL_DIR</span><span class="o">=</span>/opt/Adobe/Reader9/Reader <span class="nv">ACRO_CONFIG</span><span class="o">=</span>intellinux <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>opt/Adobe/Reader9/Reader/intellinux/lib /usr/local/bin/afl-qemu-trace -- /opt/Adobe/Reader9/Reader/intellinux/bin/acroread -toPostScript <span class="o">[</span>crashFilePath<span class="o">]</span> 
-</span></span></code></pre></div><h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
+<h2 id="后言">后言<a hidden class="anchor" aria-hidden="true" href="#后言">#</a></h2>
 <p>在 AFL++ 的 utils 目录中提供了各种各样的辅助 Fuzz 的工具。除了 AFL 之外常用的还有 libFuzzer 和 honggfuzz。其中 libFuzzer 是一个和 AFL 完全不同的 Fuzz 工具，它是一种新的思想的实现，可以说后来的 go-fuzz 等工具都是基于它的思想来实现的。</p>
 <h2 id="reference">Reference<a hidden class="anchor" aria-hidden="true" href="#reference">#</a></h2>
 <blockquote>
-<p>Fuzzing: A Survey for Roadmap
-<a href="https://github.com/u1f383/fuzzing-learning-in-30-days/tree/main">u1f383/fuzzing-learning-in-30-days</a>
+<p>Fuzzing: A Survey for Roadmap</p>
+<p>Fuzzing Book</p>
+<p><a href="https://github.com/u1f383/fuzzing-learning-in-30-days/tree/main">u1f383/fuzzing-learning-in-30-days</a>
 <a href="https://paper.seebug.org/841/">AFL 漏洞挖掘技术漫谈（一）：用 AFL 开始你的第一次 Fuzzing</a>
 <a href="https://paper.seebug.org/842/#_4">AFL 漏洞挖掘技术漫谈（二）：Fuzz 结果分析和代码覆盖率</a>
 <a href="https://www.v4ler1an.com/2020/12/afl%E4%BA%8C%E4%B8%89%E4%BA%8B1/#%E4%B8%80%E7%AE%80%E4%BB%8B">AFL二三事 &ndash; 1 - V4ler1an</a>

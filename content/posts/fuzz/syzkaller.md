@@ -801,7 +801,7 @@ proc_open_mode = S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, 
 在 Syzkaller 项目根目录下执行以下命令以创建对应的`.const`文件：
 
 ```shell
-bin/syz-extract -os linux -sourcedir /root/linux-6.12.38 -arch amd64 vuln.txt
+bin/syz-extract -os linux -sourcedir /root/linux-6.12.38 -arch 386,amd64
 ```
 
 然后就会在`sys/linux`目录下生成`*.const`文件，然后通过 syz-sysgen 将描述文件翻译成 go 代码结构。而且由于我们新增了 syscall 描述文件所以我们需要重建 Syzkaller。

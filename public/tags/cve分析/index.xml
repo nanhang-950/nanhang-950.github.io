@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>CVE分析 on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/cve%E5%88%86%E6%9E%90/</link>
+    <description>Recent content in CVE分析 on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Thu, 22 Jan 2026 22:57:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/cve%E5%88%86%E6%9E%90/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CVE-2022-0847漏洞分析</title>
+      <link>http://localhost:1313/posts/kernel/cve/cve-2022-0847/</link>
+      <pubDate>Thu, 22 Jan 2026 22:57:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/kernel/cve/cve-2022-0847/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;在 X 上看了两篇推送的 DirtyPipe 漏洞的分析文章，遂决定复现分析一下。&lt;/p&gt;
+&lt;p&gt;下载环境：&lt;/p&gt;
+&lt;h2 id=&#34;漏洞信息&#34;&gt;漏洞信息&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;DirtyPipe&lt;/strong&gt; 是 Linux 内核中的一个严重本地权限提升漏洞，它允许普通用户在满足条件的情况下覆盖普通用户权限不允许写入的文件，进而可能以 root 权限执行操作。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

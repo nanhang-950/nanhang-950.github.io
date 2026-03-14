@@ -229,6 +229,64 @@ code.has-jax {
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2 class="entry-hint-parent">Android APP 组件安全入门
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>简介 安卓 RCE 的核心思想是找到一个可以被远程触发的入口点，并利用这个入口点来执行任意代码。这个过程分为两步：
+触发点（Trigger）：寻找一个可以被远程控制，且会处理恶意数据的接口。这个接口可以是应用程序的某个功能、某个系统服务，甚至是底层的通信协议 代码执行（Execution）：利用触发点，让系统执行攻击者预设的代码。这通常涉及到内存破坏、反序列化、或动态加载恶意代码 安卓RCE的主要利用途径：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-03 14:40:38 +0000 UTC'>2026年2月3日</span></footer>
+  <a class="entry-link" aria-label="post link to Android APP 组件安全入门" href="http://localhost:1313/posts/mobile/sec/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Android eBPF 初探
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>简介 eBPF 是 Linux 内核提供的一种动态 Hook 机制，可以将自定义代码逻辑 Hook 到指定内核事件上，当内核触发该事件时就会调用相应的自定义代码逻辑。
+为了让您更具体地了解 eBPF 可以做什么，让我们为您提供一个非详尽的列表，列出可以使用 eBPF 完成的小程序：
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-01-24 22:57:38 +0000 UTC'>2026年1月24日</span></footer>
+  <a class="entry-link" aria-label="post link to Android eBPF 初探" href="http://localhost:1313/posts/mobile/hook/ebpf/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">隐藏 Magisk&amp;Xposed
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 看到群里的大佬发了一个隐藏环境入门 PDF 文档，于是跟着复现一下。
+Magisk hide 在设置中找到并点击隐藏 Magisk 应用 设置一个新的 Magisk 应用名称并确认： 片刻后会生产一个随机包名的面具包，然后让我们添加一个快捷方式到桌面，我们可以通过该快捷方式打开面具。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-01-17 09:51:38 +0000 UTC'>2026年1月17日</span></footer>
+  <a class="entry-link" aria-label="post link to 隐藏 Magisk&Xposed" href="http://localhost:1313/posts/mobile/risk/hide/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">部署本地大模型配置MCP
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 在一些线下断网环境下，我们如果仍然需要使用大模型。
+部署ollama 通过 ollama 进行本地大模型部署。
+官网下载部署 通过在官网下载相应系统的安装包安装 ollama。
+官网：https://ollama.com/download
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-01-16 20:51:38 +0000 UTC'>2026年1月16日</span></footer>
+  <a class="entry-link" aria-label="post link to 部署本地大模型配置MCP" href="http://localhost:1313/posts/llm/mcp/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2 class="entry-hint-parent">Linux Kernel modprobe_path覆盖利用技术
     </h2>
   </header>
@@ -238,34 +296,7 @@ code.has-jax {
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2026-01-01 13:03:38 +0000 UTC'>2026年1月1日</span></footer>
-  <a class="entry-link" aria-label="post link to Linux Kernel modprobe_path覆盖利用技术" href="http://localhost:1313/posts/linux/modprobe_path/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Linux Kernel Double Fetch
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>Double Fetch简介 Double Fetch 从漏洞原理上来说，是一种内核态与用户态之间的条件竞争。
-在 Linux 等现代操作系统中，虚拟内存地址通常被划分为内核空间和用户空间。内核空间负责运行内核、驱动模块代码等，权限较高。而用户空间运行用户代码，并通过系统调用进入内核完成相关功能代码通常情况下，用户空间向内核传递数据时，内核先通过通过copy_from_user等拷贝函数将用户数据拷贝至内核空间进行校验及相关处理，但在输入数据较为复杂时，内核可能只引用其指针，而将数据暂时保存在用户空间进行后续处理。此时，该数据存在被其他恶意线程篡改风险，造成内核验证通过数据与实际使用数据不一致，导致内核代码执行异常。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-12-02 09:30:38 +0000 UTC'>2025年12月2日</span></footer>
-  <a class="entry-link" aria-label="post link to Linux Kernel Double Fetch" href="http://localhost:1313/posts/linux/double_fetch/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Linux Kernel UAF
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>简介 虚拟内存基础 由于 Slab 分配器是一个相当复杂且高级的主题，但对于开始 Linux 内核编程来说非常必要，我写了这篇文档来解释它是如何工作的。我会先简要说明 Buddy 分配器，以便让大家理解为什么 Slab 分配器在 Linux 内核中很有用，然后再详细介绍 Slab 分配器。本篇文章基于 Linux 5.3.13 内核（撰写本文时的最新稳定版本 — 2019 年 11 月 15 日 22:13:17 CET）。我将以 x86-64 系统为例，页面大小如下：
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-12-01 09:30:38 +0000 UTC'>2025年12月1日</span></footer>
-  <a class="entry-link" aria-label="post link to Linux Kernel UAF" href="http://localhost:1313/posts/linux/kernel_uaf/"></a>
+  <a class="entry-link" aria-label="post link to Linux Kernel modprobe_path覆盖利用技术" href="http://localhost:1313/posts/kernel/modprobe_path/"></a>
 </article>
 
 <article class="post-entry"> 
@@ -274,8 +305,7 @@ code.has-jax {
     </h2>
   </header>
   <div class="entry-content">
-    <p>前言 玩 Fuzz 也有一段时间了，也是想通过本文对 Fuzz 的原理思想和 AFL 的工具的使用做一个总结。也是对这些内容做一个整理吧。希望可以帮助到后来者。
-基本概念 模糊测试简介 Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是自动生成随机输入到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。
+    <p>基本概念 模糊测试简介 Fuzz Testing（Fuzzing，即模糊测试）是一种自动化的软件测试方法，其核心概念是自动生成随机输入到程序中，并监控程序异常（如崩溃、断言失败等），以发现可能的程序错误。
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
@@ -297,30 +327,16 @@ code.has-jax {
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Android APP抓包
+    <h2 class="entry-hint-parent">Android APP抓包入门
     </h2>
   </header>
   <div class="entry-content">
-    <p>简介 反抓包的对抗：
-代理检测 VPN检测 SSL Pinning 双向认证 常用工具：
-Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。 OkHttp：OkHttp是Android最流行的网络库，抓包工具通过 hook 接口来抓包。 r0Capture： eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。 为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。
+    <p>简介 常用工具：
+Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、VPN模式，可绕过系统代理拦截 Flutter。 OkHttp：OkHttp 是Android 最流行的网络库，抓包工具通过 hook 接口来抓包。 r0Capture：hook 抓包通杀脚本。 eCapture：内核级 hook 抓包，无需证书捕获 TLS 明文。 为了能够拦截 TLS/SSL 通信，我们需要我们的代理工具的证书才能被设备信任。通过 android 设置，我们可以轻松地将证书安装到“用户”CA 存储中。
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Android APP抓包" href="http://localhost:1313/posts/mobile/bag/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Frida攻略
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>简介 Frida 是一款开源的动态插桩工具，可以插入一些代码到原生 App 的内存空间去动态地监视和修改其行为，支持 Windows、Mac、Linux、Android 或者 IOS。从安卓层面来讲，可以实现 Java 层和 Native 层 Hook 操作。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to Frida攻略" href="http://localhost:1313/posts/mobile/frida/"></a>
+  <a class="entry-link" aria-label="post link to Android APP抓包入门" href="http://localhost:1313/posts/mobile/bag/"></a>
 </article>
 
 <article class="post-entry"> 
@@ -347,20 +363,7 @@ Yakit：和 burpsuite 差不多的抓包方式。 Reqable：支持standalone、V
 ...</p>
   </div>
   <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios-base/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">libFuzzer浅探
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>简介 libFuzzer 是一个基于覆盖率引导的进化模糊测试引擎，旨在通过代码覆盖优化输入数据，从而发现潜在的程序漏洞。libFuzzer 以库的形式链接到目标代码中，专门用于测试指定的目标函数。通过动态地将 fuzz 输入提供给目标函数，libFuzzer 能够有效地引导测试过程，优化覆盖的路径，并且通常用于 C/C&#43;&#43; 项目的单元测试。
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
-  <a class="entry-link" aria-label="post link to libFuzzer浅探" href="http://localhost:1313/posts/fuzz/libfuzzer/"></a>
+  <a class="entry-link" aria-label="post link to IOS逆向入门" href="http://localhost:1313/posts/mobile/ios/"></a>
 </article>
 <footer class="page-footer">
   <nav class="pagination">

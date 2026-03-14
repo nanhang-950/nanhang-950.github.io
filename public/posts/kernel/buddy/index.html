@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel Buddy 漏洞利用 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Cross-Cache Overflow &amp; Page-level Heap Fengshui
+【Exploit trick】针对 cred 结构的 cross cache 利用（corCTF 2022-cache-of-castaways）-CSDN博客
+Page-level UAF
+Page-level UAF 同样是针对 buddy system 的利用手法，这种攻击手法主要指的是对内存页本身 / 内存页结构体 page 的释放后利用，例如：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/kernel/buddy/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/kernel/buddy/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel Buddy 漏洞利用
+    </h1>
+    <div class="post-meta"><span title='2025-12-01 09:30:38 +0000 UTC'>2025年12月1日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#cross-cache-overflow--page-level-heap-fengshui" aria-label="Cross-Cache Overflow &amp; Page-level Heap Fengshui">Cross-Cache Overflow &amp; Page-level Heap Fengshui</a></li>
+                    <li>
+                        <a href="#page-level-uaf" aria-label="Page-level UAF">Page-level UAF</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%be%8b%e9%a2%98-d3ctf2023-d3kcache" aria-label="例题 D^3CTF2023 d3kcache">例题 D^3CTF2023 d3kcache</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#cross-cache-uaf" aria-label="Cross-Cache UAF">Cross-Cache UAF</a><ul>
+                            
+                    <li>
+                        <a href="#kbook" aria-label="kbook">kbook</a>
+                    </li>
+                </ul>
+                </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="cross-cache-overflow--page-level-heap-fengshui">Cross-Cache Overflow &amp; Page-level Heap Fengshui<a hidden class="anchor" aria-hidden="true" href="#cross-cache-overflow--page-level-heap-fengshui">#</a></h2>
+<p><a href="https://blog.csdn.net/panhewu9919/article/details/127733027">【Exploit trick】针对 cred 结构的 cross cache 利用（corCTF 2022-cache-of-castaways）-CSDN博客</a></p>
+<h2 id="page-level-uaf">Page-level UAF<a hidden class="anchor" aria-hidden="true" href="#page-level-uaf">#</a></h2>
+<p><strong>Page-level UAF</strong> 同样是<strong>针对 buddy system</strong> 的利用手法，这种攻击手法主要指的是对内存页本身 / 内存页结构体 <code>page</code> 的释放后利用，例如：</p>
+<ul>
+<li>我们可以通过内存页重分配的方式将 UAF page 分配为指定 <code>kmem_cache</code> 的 <code>slub pages</code> ，<strong>从而实现无需任何限制的跨</strong> <code>kmem_cache</code> <strong>的 UAF 利用</strong>。</li>
+<li>我们可以通过内存页重分配的方式将 UAF page 分配为指定进程的页表，从而实现 <strong>任意内存映射攻击</strong>。</li>
+<li>我们可以通过 slab objects 的全部释放导致的 slab free 后对实现 page 上数据的 UAF，从而 <strong>将对内核对象的 UAF 读写转换为对 page 的 UAF 读写</strong> 。</li>
+<li>&hellip;&hellip;</li>
+</ul>
+<p>作为近几年新出现的利用手法，page-level UAF 还有更多值得我们去探索的地方。</p>
+<blockquote>
+<p>注：我们不使用 <a href="https://i.blackhat.com/BH-US-24/Presentations/US24-Qian-PageJack-A-Powerful-Exploit-Technique-With-Page-Level-UAF-Thursday.pdf">某 “团伙” 重新命名的 “PageJack”</a> 这个叫法，仅 CTF-Wiki 页面的发布时间便至少早于 BlackHat 2024 USA 一年多（更早时候便应当在一些小圈子里已有传播）。对一个至少一年多前就公开的旧事物，在一年多后承认并使用来自非原创作者的命名无疑是荒谬的。</p>
+</blockquote>
+<h3 id="例题-d3ctf2023-d3kcache">例题 D^3CTF2023 d3kcache<a hidden class="anchor" aria-hidden="true" href="#例题-d3ctf2023-d3kcache">#</a></h3>
+<h2 id="cross-cache-uaf">Cross-Cache UAF<a hidden class="anchor" aria-hidden="true" href="#cross-cache-uaf">#</a></h2>
+<p>Cross-Cache UAF 又称作 Cross-Cache attack，在这个场景下我们通常拥有对某个特定内核对象的 UAF，但该对象本身及与其来自相同 <code>kmem_cache</code> 的内核对象都不具有足够的使得我们可以完成内核利用的能力，此时我们就可以考虑将其对应的 SLUB page 释放回 buddy system，再在另外一个 <code>kmem_cache</code> 上做堆喷将该 SLUB page 取回，从而将 UAF 漏洞迁移到另一种内核对象上。</p>
+<p>这通常遵循如下攻击范式（<strong>存在一些变体，但本质原理与思想相同</strong>）：</p>
+<ul>
+<li>首先分配大量来自于同一 <code>kmem_cache</code> 的附属对象，其中最后一批分配的对象（称为 <code>Object Set A</code>）来自于同一张 SLUB page（称为 <code>Page S</code>）</li>
+<li>接下来分配漏洞对象 <code>victim</code> ，与上面的对象一同来自于 <code>Page S</code></li>
+<li>接下来分配大量来自于同一 <code>kmem_cache</code> 的附属对象，其中开头分配的一批对象（称为 <code>Object Set B</code>）与上面的对象一同来自于 <code>Page S</code></li>
+<li>释放大量附属对象，填充满 <code>cpu-&gt;partial</code> 与 <code>node-&gt;partial</code>，最后一批释放 <code>Object Set A</code>、<code>victim</code>、<code>Object Set B</code>，从而使得 <code>Page S</code> 回到 buddy system</li>
+<li>在目标 <code>kmem_cache</code> 上进行堆喷，使其从 buddy system 分配 <code>Page S</code> 作为其 SLUB page</li>
+<li>利用 UAF 漏洞进行攻击，具体取决于漏洞权能（如 Double Free、UAF 读写等）</li>
+</ul>
+<p>存在另一个常用变体：</p>
+<ul>
+<li>首先分配大量来自于同一 <code>kmem_cache</code> 的附属对象，选取其中一批来自于同一张 SLUB page（称为 <code>Page S</code>）的对象作为攻击目标（称为 <code>Object Set A</code>）</li>
+<li>接下来释放 <code>Object Set A</code> 当中的一个对象，从而在 <code>Page S</code> 中创造出一个 Free Slot</li>
+<li>接下来分配漏洞对象 <code>victim</code> ，占用这一个 Free Slot</li>
+<li>释放大量附属对象，填充满 <code>cpu-&gt;partial</code> 与 <code>node-&gt;partial</code>，最后一批释放 <code>Object Set A</code>、<code>victim</code>，从而使得 <code>Page S</code> 回到 buddy system</li>
+<li>在目标 <code>kmem_cache</code> 上进行堆喷，使其从 buddy system 分配 <code>Page S</code> 作为其 SLUB page</li>
+<li>利用 UAF 漏洞进行攻击，具体取决于漏洞权能（如 Double Free、UAF 读写等）</li>
+</ul>
+<p>这里我们使用 <a href="https://dl.acm.org/doi/pdf/10.1145/3548606.3560585">DirtyCred</a> 论文中的图片作为示例：</p>
+<p><img alt="img" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/buddy/figure/cross-cache-uaf.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="kbook">kbook<a hidden class="anchor" aria-hidden="true" href="#kbook">#</a></h3>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

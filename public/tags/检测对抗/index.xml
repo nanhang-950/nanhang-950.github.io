@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>检测对抗 on 南行&#39;s Blog</title>
+    <link>http://localhost:1313/tags/%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/</link>
+    <description>Recent content in 检测对抗 on 南行&#39;s Blog</description>
+    <generator>Hugo -- 0.152.2</generator>
+    <language>zh</language>
+    <copyright>©2025 南行&amp;rsquo;s Blog</copyright>
+    <lastBuildDate>Sat, 17 Jan 2026 09:51:38 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/%E6%A3%80%E6%B5%8B%E5%AF%B9%E6%8A%97/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>隐藏 Magisk&amp;Xposed</title>
+      <link>http://localhost:1313/posts/mobile/risk/hide/</link>
+      <pubDate>Sat, 17 Jan 2026 09:51:38 +0000</pubDate>
+      <guid>http://localhost:1313/posts/mobile/risk/hide/</guid>
+      <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;看到群里的大佬发了一个隐藏环境入门 PDF 文档，于是跟着复现一下。&lt;/p&gt;
+&lt;h2 id=&#34;magisk-hide&#34;&gt;Magisk hide&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;在设置中找到并点击隐藏 Magisk 应用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;img src=&#34;http://localhost:1313/assets/image-20260123153918898.png&#34; alt=&#34;image-20260123153918898&#34; style=&#34;zoom:50%;&#34; /&gt;
+&lt;ul&gt;
+&lt;li&gt;设置一个新的 Magisk 应用名称并确认：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;img src=&#34;http://localhost:1313/assets/image-20260123153947280.png&#34; alt=&#34;image-20260123153947280&#34; style=&#34;zoom:50%;&#34; /&gt;
+&lt;p&gt;片刻后会生产一个随机包名的面具包，然后让我们添加一个快捷方式到桌面，我们可以通过该快捷方式打开面具。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

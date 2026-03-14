@@ -175,6 +175,37 @@ code.has-jax {
     IOT
   </h1>
 </header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">DIR815 溢出漏洞复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>MIPS 架构知识 基础概念 MIPS 固定 4 字节指令长度
+栈是从内存的高地址向低地址方向增长的
+叶子函数：函数内部没有再调用其他函数
+非叶子函数：函数内部调用其他函数的函数
+流水线效应：在分析 MIPS 汇编代码时会发现，其跳转到函数或者分支跳转语句的下一条都是 nop （），这是因为 MIPS 采用了高度的流水线，其中最重要的是跳转指令导致的分支延迟效应。在分支跳转语句后面那条语句叫做分支延迟槽，当跳转语句刚执行的一瞬间，跳转到的地址刚填充好（填充到程序计数器），还没有执行程序计数器中存放的指令，分支延迟槽的指令已经被执行了，这就是流水线效应（几条指令被同时执行，只是处于不同的阶段， MIPS 不像其他架构那样存在流水线阻塞），为了避免出现问题，因此在分支跳转语句的下一条指令通常是 nop 指令或者其他有用的指令。
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to DIR815 溢出漏洞复现" href="http://localhost:1313/posts/iot/dir815/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Tenda AC15漏洞复现
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>前言 基于 “学习漏洞挖掘最好的方法就是复现漏洞本身。” 的思想，所以选择复现 Tenda AC15 的几个漏洞来学习 IOT 漏洞挖掘。
+获取固件 从官网下载固件：AC15升级软件_腾达(Tenda)官方网站 解压下载的压缩包就可以拿到固件
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-11-30 23:30:38 +0000 UTC'>2025年11月30日</span></footer>
+  <a class="entry-link" aria-label="post link to Tenda AC15漏洞复现" href="http://localhost:1313/posts/iot/tenda/"></a>
+</article>
     </main>
     
 <a href="#top" aria-label="go to top" class="top-link" id="top-link">
@@ -212,6 +243,18 @@ code.has-jax {
         }
     });
 </script>
-</body>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
 
 </html>

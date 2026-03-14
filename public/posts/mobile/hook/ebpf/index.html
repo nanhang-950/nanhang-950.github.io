@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Android eBPF 初探 | 南行&#39;s Blog</title>
+<meta name="keywords" content="Hook">
+<meta name="description" content="简介
+eBPF 是 Linux 内核提供的一种动态 Hook 机制，可以将自定义代码逻辑 Hook 到指定内核事件上，当内核触发该事件时就会调用相应的自定义代码逻辑。
+为了让您更具体地了解 eBPF 可以做什么，让我们为您提供一个非详尽的列表，列出可以使用 eBPF 完成的小程序：">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/mobile/hook/ebpf/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.06b120a65aeb9368e0ceaf40b7f104e3773d33d49b58d97f1c5e76995fbc7718.css" integrity="sha256-BrEgplrrk2jgzq9At/EE43c9M9SbWNl/HF52mV&#43;8dxg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="http://localhost:1313/assets/favicon.jpg">
+<link rel="mask-icon" href="http://localhost:1313/assets/favicon.jpg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="http://localhost:1313/posts/mobile/hook/ebpf/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><script type="text/javascript"
+        async
+        src="https://cdn.bootcss.com/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="南行&#39;s Blog (Alt + H)">南行&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="南行&#39;s Blog">
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/archives/" title="归档">
+                    <span>归档</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>分类</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="搜索">
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>关于</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Android eBPF 初探
+    </h1>
+    <div class="post-meta"><span title='2026-01-24 22:57:38 +0000 UTC'>2026年1月24日</span>
+
+</div>
+  </header> <aside id="toc-container" class="toc-container wide">
+    <div class="toc">
+        <details  open>
+            <summary accesskey="c" title="(Alt + C)">
+                <span class="details">目录</span>
+            </summary>
+
+            <div class="inner"><ul>
+                    <li>
+                        <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
+                    <li>
+                        <a href="#%e5%8e%9f%e7%90%86" aria-label="原理">原理</a></li>
+                    <li>
+                        <a href="#ebpf-%e7%a8%8b%e5%ba%8f%e5%bc%80%e5%8f%91" aria-label="eBPF 程序开发">eBPF 程序开发</a><ul>
+                            
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e6%80%81%e7%a8%8b%e5%ba%8f" aria-label="内核态程序">内核态程序</a></li>
+                    <li>
+                        <a href="#%e7%94%a8%e6%88%b7%e6%80%81%e7%a8%8b%e5%ba%8f" aria-label="用户态程序">用户态程序</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%bc%80%e5%8f%91%e5%ae%9e%e4%be%8b" aria-label="开发实例">开发实例</a><ul>
+                            
+                    <li>
+                        <a href="#%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae" aria-label="环境配置">环境配置</a></li>
+                    <li>
+                        <a href="#%e5%86%85%e6%a0%b8%e6%80%81%e7%a8%8b%e5%ba%8f-1" aria-label="内核态程序">内核态程序</a></li>
+                    <li>
+                        <a href="#%e7%94%a8%e6%88%b7%e6%80%81%e7%a8%8b%e5%ba%8f-1" aria-label="用户态程序">用户态程序</a></li>
+                    <li>
+                        <a href="#%e7%bc%96%e8%af%91" aria-label="编译">编译</a></li></ul>
+                    </li>
+                    <li>
+                        <a href="#%e5%8f%82%e8%80%83" aria-label="参考">参考</a>
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</aside>
+<script>
+    let activeElement;
+    let elements;
+    
+    document.addEventListener('DOMContentLoaded', function (event) {
+        checkTocPosition();
+    
+        elements = document.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]');
+        if (elements.length > 0) {
+            
+            activeElement = elements[0];
+            const id = encodeURI(activeElement.getAttribute('id')).toLowerCase();
+            document.querySelector(`.inner ul li a[href="#${id}"]`).classList.add('active');
+        }
+    
+        
+        const topLink = document.getElementById('top-link');
+        if (topLink) {
+            topLink.addEventListener('click', (event) => {
+                
+                event.preventDefault();
+    
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, false);
+    
+    window.addEventListener('resize', function(event) {
+        checkTocPosition();
+    }, false);
+    
+    window.addEventListener('scroll', () => {
+        
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+        
+        if (scrollPosition === 0) {
+            return;
+        }
+    
+        
+        if (elements && elements.length > 0) {
+            
+            activeElement = Array.from(elements).find((element) => {
+                if ((getOffsetTop(element) - scrollPosition) > 0 && 
+                    (getOffsetTop(element) - scrollPosition) < window.innerHeight / 2) {
+                    return element;
+                }
+            }) || activeElement;
+    
+            elements.forEach(element => {
+                const id = encodeURI(element.getAttribute('id')).toLowerCase();
+                const tocLink = document.querySelector(`.inner ul li a[href="#${id}"]`);
+                if (element === activeElement){
+                    tocLink.classList.add('active');
+    
+                    
+                    const tocContainer = document.querySelector('.toc .inner');
+                    const linkOffsetTop = tocLink.offsetTop;
+                    const containerHeight = tocContainer.clientHeight;
+                    const linkHeight = tocLink.clientHeight;
+    
+                    
+                    const scrollPosition = linkOffsetTop - (containerHeight / 2) + (linkHeight / 2);
+                    tocContainer.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+                } else {
+                    tocLink.classList.remove('active');
+                }
+            });
+        }
+    }, false);
+    
+    const main = parseInt(getComputedStyle(document.body).getPropertyValue('--article-width'), 10);
+    const toc = parseInt(getComputedStyle(document.body).getPropertyValue('--toc-width'), 10);
+    const gap = parseInt(getComputedStyle(document.body).getPropertyValue('--gap'), 10);
+    
+    function checkTocPosition() {
+        const width = document.body.scrollWidth;
+    
+        if (width - main - (toc * 2) - (gap * 4) > 0) {
+            document.getElementById("toc-container").classList.add("wide");
+        } else {
+            document.getElementById("toc-container").classList.remove("wide");
+        }
+    }
+    
+    function getOffsetTop(element) {
+        if (!element.getClientRects().length) {
+            return 0;
+        }
+        let rect = element.getBoundingClientRect();
+        let win = element.ownerDocument.defaultView;
+        return rect.top + win.pageYOffset;   
+    }
+    
+</script>
+  <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
+<p>eBPF 是 Linux 内核提供的一种动态 Hook 机制，可以将自定义代码逻辑 Hook 到指定内核事件上，当内核触发该事件时就会调用相应的自定义代码逻辑。</p>
+<p>为了让您更具体地了解 eBPF 可以做什么，让我们为您提供一个非详尽的列表，列出可以使用 eBPF 完成的小程序：</p>
+<ul>
+<li><code>top</code>或<code>ps</code>：允许您查看进程及其在 CPU 和 RAM 方面占用的内容</li>
+<li><code>tcpdump</code>：用于监视服务器上的网络流</li>
+<li><code>strace</code>：它允许您查看进程的系统调用</li>
+</ul>
+<p>还有其它使用 eBPF 的程序，例如 systemd（初始化系统）。</p>
+<h2 id="原理">原理<a hidden class="anchor" aria-hidden="true" href="#原理">#</a></h2>
+<p>在传统程序中，我们有一个源代码。从这个源代码中，我们创建程序，如果它是编译语言，则对其进行编译：</p>
+<p>![](./assets/Pasted image 20250823080648.png)</p>
+<p>在 eBPF 中，不是一个程序，而是两个程序：</p>
+<ul>
+<li>将在用户空间中编译的 eBPF 代码，但只能在内核空间中运行；</li>
+<li>一个用户空间代码，主要加载刚刚编译到内核中的 eBPF 二进制文件。</li>
+</ul>
+<p>![](./assets/Pasted image 20250823080652.png)</p>
+<p>我们稍后会看到，可以在内核空间和用户空间之间进行通信（通过 eBPF 映射），也可以在内核空间 eBPF 程序之间进行通信（通过尾部调用）。</p>
+<p>![](./assets/Pasted image 20250823080752.png)</p>
+<p>从上面可以看出，一个完整的 eBPF 程序通常分为用户态和内核态两部分：用户态负责 eBPF 程序的加载、事件绑定以及 eBPF 程序运行结果的汇总输出；内核态运行在 eBPF 虚拟机中，负责定制和控制系统的运行状态；内核态的 eBPF 程序通过 BPF 映射（Map）用户态程序交互</p>
+<img src="./assets/Pasted image 20250823082806.png" style="zoom: 80%;" />
+<p><strong>bpf 系统调用：</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;linux/bpf.h&gt;  </span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>  
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">bpf</span><span class="p">(</span><span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="k">union</span> <span class="n">bpf_attr</span> <span class="o">*</span><span class="n">attr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">size</span><span class="p">);</span>
+</span></span></code></pre></div><ul>
+<li><code>cmd</code>: 操作命令，比如 <code>BPF_PROG_LOAD</code> 就是加载 eBPF 程序。</li>
+<li><code>attr</code>: 操作命令对应的属性。</li>
+<li><code>size</code>: 属性的大小。</li>
+</ul>
+<h2 id="ebpf-程序开发">eBPF 程序开发<a hidden class="anchor" aria-hidden="true" href="#ebpf-程序开发">#</a></h2>
+<h3 id="内核态程序">内核态程序<a hidden class="anchor" aria-hidden="true" href="#内核态程序">#</a></h3>
+<p>内核态的 eBPF 程序在内核视角就是 eBPF 字节码，可以用 C 或 Rust 编译而来，分以下几种方案：</p>
+<ul>
+<li>
+<p>• libbpf:</p>
+<ul>
+<li>• 开发语言：C</li>
+<li>• 编译依赖：libbpf （用到为编译器提供的宏，如 SEC）。</li>
+<li>• 运行依赖：无</li>
+<li>• 内核要求：内核开启 BTF 特性，需要非常较新的发行版才会默认开启（如 RHEL 8.2+ 和 Ubuntu 20.10+ 等）。</li>
+</ul>
+</li>
+<li>
+<p>• bcc：</p>
+<ul>
+<li>• 开发语言：C</li>
+<li>• 编译/运行依赖：bcc、LLVM、内核头文件（bcc 方案是目标机器上进行编译并运行的）</li>
+</ul>
+</li>
+<li>
+<p>• Aya：</p>
+<ul>
+<li>• 开发语言：Rust</li>
+<li>• 编译依赖：Rust 环境、Aya</li>
+<li>• 运行依赖：无</li>
+</ul>
+</li>
+</ul>
+<p>eBPF 框架有两种类型：</p>
+<ul>
+<li>那些使用两种不同编程语言的语言：一种用于内核空间，另一种用于用户空间；如 ebpf go；</li>
+<li>那些在内核和用户空间中使用单一语言的语言，如 Aya。</li>
+</ul>
+<h3 id="用户态程序">用户态程序<a hidden class="anchor" aria-hidden="true" href="#用户态程序">#</a></h3>
+<p>用户态程序主要负责将内核态 eBPF 程序加载到内核并运行，然后通过 BPF 映射读取内核态 eBPF 程序输出的数据，最后做相应的业务逻辑处理，它可以用任何语言编写，下面列举了一些常用的方案：</p>
+<ul>
+<li>ebpf-go：
+<ul>
+<li>开发语言：go</li>
+<li>编译依赖：go、cilium/ebpf</li>
+<li>运行依赖：无</li>
+</ul>
+</li>
+<li>Libbpf：
+<ul>
+<li>开发语言：C/C++</li>
+<li>编译依赖：需要 clang / LLVM（运行时编译 eBPF 程序）</li>
+<li>运行依赖：支持 eBPF 的 Linux 内核 + libbpf（用户态库）+ 内核 BTF（CO-RE 场景下）</li>
+</ul>
+</li>
+<li>Aya：
+<ul>
+<li>开发语言：Rust</li>
+<li>编译依赖：Rust 环境、Aya</li>
+<li>运行依赖：无</li>
+</ul>
+</li>
+</ul>
+<img src="./assets/Pasted image 20250823073812.png" alt="image" width="60%">
+<h2 id="开发实例">开发实例<a hidden class="anchor" aria-hidden="true" href="#开发实例">#</a></h2>
+<p>参考项目：https://github.com/maiyao1988/ebpf-plugin.git</p>
+<p>编写一个 hook 全部 syscall 的 程序。</p>
+<p><img alt="ebpf-tools" decoding="async" loading="lazy" src="./assets/ebpf-tools.png" style="max-width: 100%; height: auto;"></p>
+<h3 id="环境配置">环境配置<a hidden class="anchor" aria-hidden="true" href="#环境配置">#</a></h3>
+<p>开发 eBPF 程序需要手机的内核版本高于 5.10。</p>
+<pre tabindex="0"><code>go mod init hello
+go get github.com/cilium/ebpf@v0.17.1
+
+sudo apt update
+sudo apt install clang llvm libelf-dev gcc make git
+</code></pre><ul>
+<li>hello.c</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//go:build ignore
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 告诉 Go 工具链忽略该文件（否则 go build 会尝试编译这个 C 文件）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;vmlinux.h&#34;              // 由 BTF 生成的内核类型定义（支持 CO-RE）</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bpf/bpf_helpers.h&gt;      // eBPF helper 函数与 SEC() 宏定义</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 声明 eBPF 程序的 License
+</span></span></span><span class="line"><span class="cl"><span class="c1">// 使用 GPL 是为了能够调用 GPL-only 的 helper（如 bpf_printk）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">char</span> <span class="n">_license</span><span class="p">[]</span> <span class="nf">SEC</span><span class="p">(</span><span class="s">&#34;license&#34;</span><span class="p">)</span> <span class="o">=</span> <span class="s">&#34;GPL&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * Tracepoint eBPF program
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 挂载点：
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *   syscalls:sys_enter_execve
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 触发时机：
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *   每次进程调用 execve 系统调用时
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * ctx：
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *   tracepoint 上下文，类型来自 vmlinux.h
+</span></span></span><span class="line"><span class="cl"><span class="cm"> *   可用于读取系统调用参数和寄存器状态
+</span></span></span><span class="line"><span class="cl"><span class="cm"> */</span>
+</span></span><span class="line"><span class="cl"><span class="nf">SEC</span><span class="p">(</span><span class="s">&#34;tracepoint/syscalls/sys_enter_execve&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">handle_execve_tp</span><span class="p">(</span><span class="k">struct</span> <span class="n">trace_event_raw_sys_enter</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * 将字符串输出到内核 trace buffer
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * 可通过以下命令查看：
+</span></span></span><span class="line"><span class="cl"><span class="cm">     *   sudo cat /sys/kernel/debug/tracing/trace_pipe
+</span></span></span><span class="line"><span class="cl"><span class="cm">     *
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * ⚠️ 仅用于调试，生产环境不推荐使用
+</span></span></span><span class="line"><span class="cl"><span class="cm">     */</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">bpf_printk</span><span class="p">(</span><span class="s">&#34;Hello world&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * 对于 tracepoint 类型的 eBPF 程序：
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * - 返回值不会影响系统调用行为
+</span></span></span><span class="line"><span class="cl"><span class="cm">     * - 通常直接返回 0
+</span></span></span><span class="line"><span class="cl"><span class="cm">     */</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><ul>
+<li>main.go</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="cp">//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpf hello hello.c</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;context&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;log&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;os&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;os/signal&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;syscall&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;github.com/cilium/ebpf/link&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;github.com/cilium/ebpf/rlimit&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 1️⃣ 移除内存锁限制，允许 eBPF 程序和 map 加载到内核</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">rlimit</span><span class="p">.</span><span class="nf">RemoveMemlock</span><span class="p">();</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;Removing memlock:&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 2️⃣ 加载编译好的 eBPF 对象（hello_bpf.o）</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">//    loadHelloObjects 来自 hello_bpf.go 自动生成</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">objs</span><span class="w"> </span><span class="nx">helloObjects</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nf">loadHelloObjects</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">objs</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;Loading eBPF objects:&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">objs</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w"> </span><span class="c1">// 程序退出时释放资源</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 3️⃣ 将 eBPF 程序 attach 到 tracepoint: syscalls:sys_enter_execve</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">tp</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">link</span><span class="p">.</span><span class="nf">Tracepoint</span><span class="p">(</span><span class="s">&#34;syscalls&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;sys_enter_execve&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">objs</span><span class="p">.</span><span class="nx">HandleExecveTp</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;Attaching Tracepoint: %s&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nx">tp</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span><span class="w"> </span><span class="c1">// 程序退出时 detach</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;eBPF program attached to tracepoint. Press Ctrl+C to exit.&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 4️⃣ 阻塞程序，直到收到 Ctrl+C 或 SIGTERM</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">stop</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">signal</span><span class="p">.</span><span class="nf">NotifyContext</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Interrupt</span><span class="p">,</span><span class="w"> </span><span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">defer</span><span class="w"> </span><span class="nf">stop</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Received signal, exiting...&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><ul>
+<li>下载 bpf-tools：https://github.com/libbpf/bpftool/releases</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 推送到设备</span>
+</span></span><span class="line"><span class="cl">adb push bpftool /data/local/tmp/
+</span></span><span class="line"><span class="cl">adb shell chmod +x /data/local/tmp/bpftool
+</span></span></code></pre></div><ul>
+<li>获取内核符号</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1">#进入Android设备</span>
+</span></span><span class="line"><span class="cl">adb shell
+</span></span><span class="line"><span class="cl">su
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> /data/local/tmp
+</span></span><span class="line"><span class="cl">./bpftool btf dump file /sys/kernel/btf/vmlinux format c &gt; vmlinux.h
+</span></span><span class="line"><span class="cl">adb pull /data/local/tmp/vmlinux.h ./
+</span></span></code></pre></div><h3 id="内核态程序-1">内核态程序<a hidden class="anchor" aria-hidden="true" href="#内核态程序-1">#</a></h3>
+<p>内核态程序只能通过 C 语言编写，只能使用内核导出的函数或内核 bpf 库中的函数。</p>
+<h3 id="用户态程序-1">用户态程序<a hidden class="anchor" aria-hidden="true" href="#用户态程序-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">go generate
+</span></span><span class="line"><span class="cl">go build
+</span></span></code></pre></div><h3 id="编译">编译<a hidden class="anchor" aria-hidden="true" href="#编译">#</a></h3>
+<p>目前 ebpf-go 库并不认 Android 是 Linux，所以需要自行将库中<code>/internal/platform/platform.go</code>中的 Linux 这一项改为</p>
+<pre tabindex="0"><code>runtime.GOOS == &#34;linux&#34; || runtime.GOOS == &#34;android&#34; 
+</code></pre><p>构建：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">GOOS</span><span class="o">=</span>android <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span><span class="nv">GOARCH</span><span class="o">=</span>arm64 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>go build
+</span></span></code></pre></div><h2 id="参考">参考<a hidden class="anchor" aria-hidden="true" href="#参考">#</a></h2>
+<blockquote>
+<p><a href="https://ebpf.io/labs/">eBPF - 简介、教程和社区资源</a>
+<a href="https://www.bilibili.com/video/BV17hBQBqEda/?spm_id_from=333.1387.favlist.content.click&amp;vd_source=edca928f1ab30d19924c36939a858238">【第拾壹期 REVERSE 分享会】驱动逆向 &amp; Ebpf &amp; 某实战逆向 &amp; Angr &amp; 自定义ROM &amp; Frida</a>
+[<a href="https://bbs.kanxue.com/thread-275176.htm">原创] 60秒学会用eBPF-BCC hook系统调用 ( 2 ) hook安卓所有syscall-Android安全-看雪安全社区｜专业技术交流与安全研究论坛</a></p>
+</blockquote>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/hook/">Hook</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<a href="#top" aria-label="go to top" class="top-link" id="top-link">
+    <span class="topInner">
+        <svg class="topSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+            <path d="M12 6H0l6-6z" />
+        </svg>
+        <span id="read_progress"></span>
+    </span>
+</a>
+
+<script>
+    
+    document.addEventListener('scroll', function () {
+        const readProgress = document.getElementById("read_progress");
+
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+        let percent = scrollTop / docHeight;
+        percent = Math.min(Math.max(percent, 0), 1);
+
+        readProgress.innerText = Math.round(percent * 100) + "%";
+    });
+
+    
+    const topBtn = document.getElementById("top-link");
+    window.addEventListener("scroll", function () {
+        if (document.documentElement.scrollTop > 200) {
+            topBtn.style.visibility = "visible";
+            topBtn.style.opacity = "1";
+        } else {
+            topBtn.style.visibility = "hidden";
+            topBtn.style.opacity = "0";
+        }
+    });
+</script>
+<script>
+    
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    });
+</script></body>
+
+</html>
