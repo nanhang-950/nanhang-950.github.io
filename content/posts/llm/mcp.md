@@ -1,5 +1,5 @@
 ---
-title: 部署本地大模型配置MCP
+title: 部署本地大模型
 date: 2026-01-16 20:51:38
 categories: LLM
 tags:
@@ -9,7 +9,7 @@ top:
 
 ## 前言
 
-在一些线下断网环境下，我们如果仍然需要使用大模型。
+在一些线下断网环境下的比赛中，如果遇到不懂的知识点时，我们习惯性地使用大模型进行查询，但没有网络时就会感到不习惯。不过，我们可以通过部署本地大模型来解决这一问题。
 
 ## 部署ollama
 
@@ -77,7 +77,7 @@ docker exec -it ollama /bin/bash
 
 ### 下拉模型
 
-`hf.co/byteshape/Qwen3-30B-A3B-Instruct-2507-GGUF`是一个经过量化之后的模型。
+`hf.co/byteshape/Qwen3-30B-A3B-Instruct-2507-GGUF`是一个经过量化之后的模型，效果还是比较好的。
 
 文章：[一个30B的Qwen模特走进了树莓派......以及实时运行](https://byteshape.com/blogs/Qwen3-30B-A3B-Instruct-2507/)
 
@@ -104,75 +104,8 @@ echo "FROM hf.co/byteshape/Qwen3-30B-A3B-Instruct-2507-GGUF:latest" > Modelfile
 ollama create qwen3-30b -f Modelfile
 ```
 
-## 配置MCP
-
-### 配置本地模型
-
-ollama api：
-
-```
-http://host.docker.internal:11434
-```
-
-- 测试 Chat API：
-
-```shell
-curl http://localhost:11434/api/chat `
-  -H "Content-Type: application/json" `
-  -d '{
-    "model": "hf.co/byteshape/Qwen3-30B-A3B-Instruct-2507-GGUF",
-    "messages": [
-      { "role": "system", "content": "你是一个代码分析专家" },
-      { "role": "user", "content": "malloc 失败后为什么必须检查返回值？" }
-    ],
-    "stream": false
-  }'
-```
-
-- 打开 Github Copilot 聊天界面，然后选择 Ollama 模型。
-
-<img src="/assets/image-20260205202846692.png" alt="image-20260205202846692" style="zoom:50%;" />
-
-### 添加MCP Server
-
-在 VSCode 上栏中运行`MCP: Open User Configuration`命令，该命令会在您的用户配置文件中打开`mcp.json`文件。然后，可以手动将服务器配置添加到该文件中。
-
-添加配置文件内容：
-
-```json
-{
-  "mcpServers": {
-    "ida-pro-mcp": {
-      "command": "C:\\Program Files\\Python\\python3\\python.exe",
-      "args": [
-        "C:\\Users\\nanhang\\AppData\\Roaming\\Python\\Python313\\site-packages\\ida_pro_mcp\\server.py"
-      ],
-      "timeout": 1800,
-      "disabled": false,
-      "env": {
-        "PYTHONPATH": "C:\\Users\\nanhang\\AppData\\Local\\DBG\\WinDbgScripts"
-      }
-    },
-    "jadx-mcp-server": {
-      "command": "C:\\Program Files\\Python\\python3\\python.exe",
-      "args": [
-        "H:\\Tools\\AndroidTools\\jadx-mcp-server\\jadx_mcp_server.py"
-      ]
-    }
-  }
-}
-```
-
 ## 测试
 
-随便找一道逆向题测试一下效果：
+效果还行，聊胜于无。
 
-题目链接：https://files.buuoj.cn/files/ee7f29503c7140ae31d8aafc1a7ba03f/attachment.tar
-
-UPX 脱个壳，然后使用 ida-pro-mcp 分析求解：
-
-```
-## 求解CTF逆向题
-分析代码逻辑，逆向找到flag
-```
-
+![image-20260321204010091](/assets/image-20260321204010091.png)

@@ -10,29 +10,12 @@
     <lastBuildDate>Fri, 16 Jan 2026 20:51:38 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/categories/llm/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>部署本地大模型配置MCP</title>
+      <title>部署本地大模型</title>
       <link>http://localhost:1313/posts/llm/mcp/</link>
       <pubDate>Fri, 16 Jan 2026 20:51:38 +0000</pubDate>
       <guid>http://localhost:1313/posts/llm/mcp/</guid>
       <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-&lt;p&gt;在一些线下断网环境下，我们如果仍然需要使用大模型。&lt;/p&gt;
-&lt;h2 id=&#34;部署ollama&#34;&gt;部署ollama&lt;/h2&gt;
-&lt;p&gt;通过 ollama 进行本地大模型部署。&lt;/p&gt;
-&lt;h3 id=&#34;官网下载部署&#34;&gt;官网下载部署&lt;/h3&gt;
-&lt;p&gt;通过在官网下载相应系统的安装包安装 ollama。&lt;/p&gt;
-&lt;p&gt;官网：https://ollama.com/download&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>LLM Agent 开发入门</title>
-      <link>http://localhost:1313/posts/llm/agent/</link>
-      <pubDate>Sun, 30 Nov 2025 23:30:38 +0000</pubDate>
-      <guid>http://localhost:1313/posts/llm/agent/</guid>
-      <description>&lt;blockquote&gt;
-&lt;p&gt;无名侠师傅课程的学习笔记&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
-&lt;h3 id=&#34;什么是-llm&#34;&gt;什么是 LLM&lt;/h3&gt;
-&lt;p&gt;LLM 是一种擅长理解和生成人类语言的 AI 模型。他们接受了大量文本数据的训练，使他们能够学习语言的模式、结构甚至细微差别。&lt;/p&gt;</description>
+&lt;p&gt;在一些线下断网环境下的比赛中，如果遇到不懂的知识点时，我们习惯性地使用大模型进行查询，但没有网络时就会感到不习惯。不过，我们可以通过部署本地大模型来解决这一问题。&lt;/p&gt;</description>
     </item>
     <item>
       <title>LLM安全入门</title>

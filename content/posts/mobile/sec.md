@@ -9,7 +9,7 @@ top:
 
 ## 简介
 
-<img src="./assets/Pasted image 20240827230342.png" alt="Pasted image 20240827230342" style="zoom:50%;" />
+<img src="/assets/Pasted image 20240827230342.png" alt="Pasted image 20240827230342" style="zoom:50%;" />
 
 安卓 RCE 的核心思想是找到一个可以被远程触发的入口点，并利用这个入口点来执行任意代码。这个过程分为两步：
 
@@ -42,49 +42,6 @@ top:
 - WebView 远程代码执行安全
 - Intent 劫持
 
-## 获取目标
-
-### 从设备或中提取
-
-- 标准APK提取：
-
-```shell
-# 查找目标包名
-adb shell pm list packages | grep target
-
-# 获取真实路径
-adb shell pm path com.target.app
-
-# 拉取 APK
-adb pull /data/app/com.target.app-XXX/base.apk target.apk
-```
-
-- 处理分割 APK
-
-现代的Play商店发行版使用安卓应用捆绑包（*.apks）：谷歌不是为每个设备生成多个较小的 APK，而不是一个大型 APK。用户只需下载所需的内容：基础代码、特定的CPU架构、语言以及他们实际会用到的功能模块。
-
-为什么拆分会让分析变得复杂：如果你只抓base.apk，就会错过一些可能至关重要的代码。功能模块可能包含支付处理、管理面板或调试功能。架构特定的拆分包括可能存在内存损坏漏洞的原生库。
-
-识别拆散的 APK：
-
-```bash
-adb shell pm path com.target.app
-# Output shows multiple paths:
-# package:/data/app/com.target.app-XXX/base.apk
-# package:/data/app/com.target.app-XXX/split_config.arm64_v8a.apk
-# package:/data/app/com.target.app-XXX/split_config.en.apk
-```
-
-全部提取：
-
-```bash
-adb pull /data/app/com.target.app-XXX/ target_apk_bundle/
-```
-
-现在你已经掌握了完整的应用。将它们与 APKTool 合并进行统一分析，或者逐个分析每个模块，以了解功能如何划分不同模块。
-
-### 第三方商店下载
-
 ## 工具安装
 
 ### drozer
@@ -116,11 +73,9 @@ docker run -d -p 8000:8000 --name MobSF -v /tools/mobile/mobsf_data:/root/.MobSF
 
 **为什么 Drozer 在静态分析后很重要**：它显示哪些组件被导出，但不会告诉你它们是否真的存在漏洞。Drozer 允许你与这些组件交互，发送精心设计的输入以触发安全问题。
 
-
-
 点击右下角开启服务，默认端口为 31415。
 
-<img src="assets/Pasted%20image%2020250719183146.png" alt="image" width="50%" style="zoom:50%;" >
+<img src="/assets/Pasted%20image%2020250719183146.png" alt="image" width="50%" style="zoom:50%;" >
 
 
 然后我们需要设置一个合适的端口转发，以便电脑可以连接到代理在模拟器内部或设备上打开的 TCP 套接字。
@@ -132,7 +87,7 @@ drozer console connect
 
 连接成功就会显示以下图标：
 
-<img src="assets/Pasted%20image%2020250719183205.png" alt="image" width="60%">
+<img src="/assets/Pasted%20image%2020250719183205.png" alt="image" width="60%">
 
 常用的测试命令：
 
@@ -213,7 +168,7 @@ MobSF 可以进行静态分析和动态分析。
 
 通过网页界面上传你的APK。MobSF 会自动提取、反编译和分析所有内容。审查生成报告，发现按严重程度组织。
 
-<img src="assets/Pasted%20image%2020250820080522.png" alt="image" width="80%">
+<img src="/assets/Pasted%20image%2020250820080522.png" alt="image" width="80%">
 
 
 
@@ -229,33 +184,6 @@ MobSF 可以进行静态分析和动态分析。
 - 运行时行为（哪些组件被激活，它们的作用）
 - 文件系统作（创建、修改、访问的文件）
 - 对敏感系统功能的 API 调用
-
-**为什么动态分析可以补充静态分析**：代码可能包含从未被调用的端点，或只有在特定条件下才会激活的安全检查。动态分析显示了用户使用该应用时实际发生的事情。
-
-MobSF 的局限性：
-
-MobSF擅长系统性检查，但存在盲点：
-
-**业务逻辑缺陷依然隐形**：利用允许用户访问其他账户的IDOR漏洞，需要你理解API应执行什么。扫描仪无法知道应该拒绝用户456的请求。`/api/user/123`
-
-**误报需要验证**：MobSF 可能会标记评论中留下的测试 API 密钥，或者看似秘密但实际上未被使用的硬编码字符串。
-
-**自定义漏洞模式**：应用实现特有的安全问题——竞赛条件、状态管理漏洞、复杂的认证绕过——需要人工调查。
-
-**上下文依赖性漏洞**：某物是否真正可利用取决于 MobSF 无法评估的具体情况。导出的组件乍一看可能存在漏洞，但内部仍会强制执行正确的权限检查。
-
-以MobSF的发现为起点。每一个被标记的问题都需要人工验证。这真的可以被利用吗？这会影响真正的安全吗？我能证明风险吗？
-
-**推荐阅读** [*如何发现SSTI、缓存中毒、业务逻辑漏洞：顶级虫子赏金猎人的方法论建议*](https://www.yeswehack.com/learn-bug-bounty/ssti-cache-poisoning-logic-vulnerabilities)
-
-### adb
-
-adb 常用的一些命令：
-
-- `adb shell am monitor`：监控当前打开的 Activity（可用来发现包名）。
-- `adb shell dumpsys activity top`：查看当前 Activity（抓当前 app 的界面组件信息）。
-
-
 
 ## 基础知识
 

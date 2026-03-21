@@ -197,14 +197,6 @@ code.has-jax {
                     <li>
                         <a href="#%e7%ae%80%e4%bb%8b" aria-label="简介">简介</a></li>
                     <li>
-                        <a href="#%e8%8e%b7%e5%8f%96%e7%9b%ae%e6%a0%87" aria-label="获取目标">获取目标</a><ul>
-                            
-                    <li>
-                        <a href="#%e4%bb%8e%e8%ae%be%e5%a4%87%e6%88%96%e4%b8%ad%e6%8f%90%e5%8f%96" aria-label="从设备或中提取">从设备或中提取</a></li>
-                    <li>
-                        <a href="#%e7%ac%ac%e4%b8%89%e6%96%b9%e5%95%86%e5%ba%97%e4%b8%8b%e8%bd%bd" aria-label="第三方商店下载">第三方商店下载</a></li></ul>
-                    </li>
-                    <li>
                         <a href="#%e5%b7%a5%e5%85%b7%e5%ae%89%e8%a3%85" aria-label="工具安装">工具安装</a><ul>
                             
                     <li>
@@ -218,9 +210,7 @@ code.has-jax {
                     <li>
                         <a href="#drozer-1" aria-label="drozer">drozer</a></li>
                     <li>
-                        <a href="#mobsf-1" aria-label="MobSF">MobSF</a></li>
-                    <li>
-                        <a href="#adb" aria-label="adb">adb</a></li></ul>
+                        <a href="#mobsf-1" aria-label="MobSF">MobSF</a></li></ul>
                     </li>
                     <li>
                         <a href="#%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86" aria-label="基础知识">基础知识</a><ul>
@@ -494,7 +484,7 @@ code.has-jax {
     
 </script>
   <div class="post-content"><h2 id="简介">简介<a hidden class="anchor" aria-hidden="true" href="#简介">#</a></h2>
-<img src="./assets/Pasted image 20240827230342.png" alt="Pasted image 20240827230342" style="zoom:50%;" />
+<img src="/assets/Pasted image 20240827230342.png" alt="Pasted image 20240827230342" style="zoom:50%;" />
 <p>安卓 RCE 的核心思想是找到一个可以被远程触发的入口点，并利用这个入口点来执行任意代码。这个过程分为两步：</p>
 <ul>
 <li>触发点（Trigger）：寻找一个可以被远程控制，且会处理恶意数据的接口。这个接口可以是应用程序的某个功能、某个系统服务，甚至是底层的通信协议</li>
@@ -523,34 +513,6 @@ code.has-jax {
 <li>WebView 远程代码执行安全</li>
 <li>Intent 劫持</li>
 </ul>
-<h2 id="获取目标">获取目标<a hidden class="anchor" aria-hidden="true" href="#获取目标">#</a></h2>
-<h3 id="从设备或中提取">从设备或中提取<a hidden class="anchor" aria-hidden="true" href="#从设备或中提取">#</a></h3>
-<ul>
-<li>标准APK提取：</li>
-</ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># 查找目标包名</span>
-</span></span><span class="line"><span class="cl">adb shell pm list packages <span class="p">|</span> grep target
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 获取真实路径</span>
-</span></span><span class="line"><span class="cl">adb shell pm path com.target.app
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 拉取 APK</span>
-</span></span><span class="line"><span class="cl">adb pull /data/app/com.target.app-XXX/base.apk target.apk
-</span></span></code></pre></div><ul>
-<li>处理分割 APK</li>
-</ul>
-<p>现代的Play商店发行版使用安卓应用捆绑包（*.apks）：谷歌不是为每个设备生成多个较小的 APK，而不是一个大型 APK。用户只需下载所需的内容：基础代码、特定的CPU架构、语言以及他们实际会用到的功能模块。</p>
-<p>为什么拆分会让分析变得复杂：如果你只抓base.apk，就会错过一些可能至关重要的代码。功能模块可能包含支付处理、管理面板或调试功能。架构特定的拆分包括可能存在内存损坏漏洞的原生库。</p>
-<p>识别拆散的 APK：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">adb shell pm path com.target.app
-</span></span><span class="line"><span class="cl"><span class="c1"># Output shows multiple paths:</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># package:/data/app/com.target.app-XXX/base.apk</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># package:/data/app/com.target.app-XXX/split_config.arm64_v8a.apk</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># package:/data/app/com.target.app-XXX/split_config.en.apk</span>
-</span></span></code></pre></div><p>全部提取：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">adb pull /data/app/com.target.app-XXX/ target_apk_bundle/
-</span></span></code></pre></div><p>现在你已经掌握了完整的应用。将它们与 APKTool 合并进行统一分析，或者逐个分析每个模块，以了解功能如何划分不同模块。</p>
-<h3 id="第三方商店下载">第三方商店下载<a hidden class="anchor" aria-hidden="true" href="#第三方商店下载">#</a></h3>
 <h2 id="工具安装">工具安装<a hidden class="anchor" aria-hidden="true" href="#工具安装">#</a></h2>
 <h3 id="drozer">drozer<a hidden class="anchor" aria-hidden="true" href="#drozer">#</a></h3>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">pip3 install drozer
@@ -567,12 +529,12 @@ code.has-jax {
 <p><a href="https://github.com/ReversecLabs/drozer">Drozer</a> 提供了一个交互式框架，用于测试 Android 的进程间通信（IPC）机制——即应用程序之间通信和功能暴露的方式。</p>
 <p><strong>为什么 Drozer 在静态分析后很重要</strong>：它显示哪些组件被导出，但不会告诉你它们是否真的存在漏洞。Drozer 允许你与这些组件交互，发送精心设计的输入以触发安全问题。</p>
 <p>点击右下角开启服务，默认端口为 31415。</p>
-<img src="assets/Pasted%20image%2020250719183146.png" alt="image" width="50%" style="zoom:50%;" >
+<img src="/assets/Pasted%20image%2020250719183146.png" alt="image" width="50%" style="zoom:50%;" >
 <p>然后我们需要设置一个合适的端口转发，以便电脑可以连接到代理在模拟器内部或设备上打开的 TCP 套接字。</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">adb forward tcp:31415 tcp:31415
 </span></span><span class="line"><span class="cl">drozer console connect
 </span></span></code></pre></div><p>连接成功就会显示以下图标：</p>
-<img src="assets/Pasted%20image%2020250719183205.png" alt="image" width="60%">
+<img src="/assets/Pasted%20image%2020250719183205.png" alt="image" width="60%">
 <p>常用的测试命令：</p>
 <ul>
 <li><code>run MODULE</code>：执行模块（功能）</li>
@@ -654,7 +616,7 @@ code.has-jax {
 <li>静态分析：</li>
 </ul>
 <p>通过网页界面上传你的APK。MobSF 会自动提取、反编译和分析所有内容。审查生成报告，发现按严重程度组织。</p>
-<img src="assets/Pasted%20image%2020250820080522.png" alt="image" width="80%">
+<img src="/assets/Pasted%20image%2020250820080522.png" alt="image" width="80%">
 <ul>
 <li>动态分析</li>
 </ul>
@@ -668,21 +630,6 @@ code.has-jax {
 <li>运行时行为（哪些组件被激活，它们的作用）</li>
 <li>文件系统作（创建、修改、访问的文件）</li>
 <li>对敏感系统功能的 API 调用</li>
-</ul>
-<p><strong>为什么动态分析可以补充静态分析</strong>：代码可能包含从未被调用的端点，或只有在特定条件下才会激活的安全检查。动态分析显示了用户使用该应用时实际发生的事情。</p>
-<p>MobSF 的局限性：</p>
-<p>MobSF擅长系统性检查，但存在盲点：</p>
-<p><strong>业务逻辑缺陷依然隐形</strong>：利用允许用户访问其他账户的IDOR漏洞，需要你理解API应执行什么。扫描仪无法知道应该拒绝用户456的请求。<code>/api/user/123</code></p>
-<p><strong>误报需要验证</strong>：MobSF 可能会标记评论中留下的测试 API 密钥，或者看似秘密但实际上未被使用的硬编码字符串。</p>
-<p><strong>自定义漏洞模式</strong>：应用实现特有的安全问题——竞赛条件、状态管理漏洞、复杂的认证绕过——需要人工调查。</p>
-<p><strong>上下文依赖性漏洞</strong>：某物是否真正可利用取决于 MobSF 无法评估的具体情况。导出的组件乍一看可能存在漏洞，但内部仍会强制执行正确的权限检查。</p>
-<p>以MobSF的发现为起点。每一个被标记的问题都需要人工验证。这真的可以被利用吗？这会影响真正的安全吗？我能证明风险吗？</p>
-<p><strong>推荐阅读</strong> <a href="https://www.yeswehack.com/learn-bug-bounty/ssti-cache-poisoning-logic-vulnerabilities"><em>如何发现SSTI、缓存中毒、业务逻辑漏洞：顶级虫子赏金猎人的方法论建议</em></a></p>
-<h3 id="adb">adb<a hidden class="anchor" aria-hidden="true" href="#adb">#</a></h3>
-<p>adb 常用的一些命令：</p>
-<ul>
-<li><code>adb shell am monitor</code>：监控当前打开的 Activity（可用来发现包名）。</li>
-<li><code>adb shell dumpsys activity top</code>：查看当前 Activity（抓当前 app 的界面组件信息）。</li>
 </ul>
 <h2 id="基础知识">基础知识<a hidden class="anchor" aria-hidden="true" href="#基础知识">#</a></h2>
 <h3 id="四大组件">四大组件<a hidden class="anchor" aria-hidden="true" href="#四大组件">#</a></h3>
